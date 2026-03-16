@@ -1,0 +1,1 @@
+#define MUSIC_1_PATH "assets/music/white_records.mp3"

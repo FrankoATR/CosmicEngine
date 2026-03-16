@@ -1,0 +1,70 @@
+# ---- CMake ----
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# ---- Build folders ----
+build/
+bin/
+lib/
+out/
+Debug/
+Release/
+x64/
+*.dir/
+
+# ---- Compiled binaries ----
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.o
+*.obj
+*.pch
+*.pdb
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- Editor/IDE configs ----
+# VSCode
+.vscode/
+*.code-workspace
+
+# CLion / JetBrains
+.idea/
+cmake-build-*/
+
+# Visual Studio
+*.sln
+*.vcxproj*
+*.user
+*.filters
+
+# ---- OS junk ----
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# ---- Misc ----
+# Ignore engine-generated assets (opcional)
+assets/generated/
