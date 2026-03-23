@@ -136,14 +136,16 @@ namespace CosmicEngine
 
 		void Body::draw()
 		{
-			ResourceManager::GetInstance().RenderRectangle(
-				glm::vec3(position), 
-				glm::vec3(position + size), 
-				glm::vec3(position.x + size.x / 2, position.y + size.y / 2, position.z + size.z / 2), 
-				glm::vec3(0.0f, 0.0f, 0.0f), 
-				glm::vec3(1.0f, 0.0f, 0.0f), 
-				1.0f, 
-				2.0f);
+			ResourceManager::GetInstance().RenderParallelepipedLines(
+				position,
+				size,
+				glm::vec3(0.0f),
+				glm::vec3(0.0f),
+				glm::vec3(1.0f, 0.0f, 0.0f),
+				0.95f,
+				2.0f,
+				false,
+				ViewType::Projection);
 		}
 
 		glm::vec3 Body::GetPosition()

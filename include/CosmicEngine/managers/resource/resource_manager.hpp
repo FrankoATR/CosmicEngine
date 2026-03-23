@@ -223,12 +223,69 @@ namespace CosmicEngine
 
         #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
 
+            void RenderRectangle(
+                glm::vec2 point_1,
+                glm::vec2 point_2,
+                glm::vec2 pivot = glm::vec2(0.0f),
+                glm::vec2 rotation = glm::vec2(0.0f),
+                glm::vec3 color = glm::vec3(1.0f),
+                float alpha = 1.0f,
+                float lineWidth = 1.0f,
+                bool filled = false,
+                ViewType viewType = ViewType::Ortho
+            );
+
             void RenderPoint(
                 glm::vec3 coordinates,
                 glm::vec3 color,
                 float alpha = 1.0f,
                 float width = 1.0f,
                 ViewType viewType = ViewType::Ortho
+            );
+
+            void RenderLine(
+                glm::vec3 point_1,
+                glm::vec3 point_2,
+                glm::vec3 pivot = glm::vec3(0.0f),
+                glm::vec3 rotation = glm::vec3(0.0f),
+                glm::vec3 color = glm::vec3(1.0f),
+                float alpha = 1.0f,
+                float lineWidth = 1.0f,
+                ViewType viewType = ViewType::Ortho
+            );
+
+            void RenderTriangle(
+                glm::vec3 point_1,
+                glm::vec3 point_2,
+                glm::vec3 point_3,
+                glm::vec3 pivot = glm::vec3(0.0f),
+                glm::vec3 rotation = glm::vec3(0.0f),
+                glm::vec3 color = glm::vec3(1.0f),
+                float alpha = 1.0f,
+                float lineWidth = 1.0f,
+                bool filled = false,
+                ViewType viewType = ViewType::Ortho
+            );
+
+            void RenderRectangle(
+                glm::vec3 point_1,
+                glm::vec3 point_2,
+                glm::vec3 pivot = glm::vec3(0.0f),
+                glm::vec3 rotation = glm::vec3(0.0f),
+                glm::vec3 color = glm::vec3(1.0f),
+                float alpha = 1.0f,
+                float lineWidth = 1.0f,
+                bool filled = false,
+                ViewType viewType = ViewType::Ortho
+            );
+
+            void RenderParallelepipedLines(
+                glm::vec3 position,
+                glm::vec3 size = glm::vec3(1.0f),
+                glm::vec3 pivot = glm::vec3(0.0f),
+                glm::vec3 rotation = glm::vec3(0.0f),
+                glm::vec3 color = glm::vec3(1.0f),
+                float alpha = 1.0f,
                 float lineWidth = 1.0f,
                 bool filled = false,
                 ViewType viewType = ViewType::Ortho

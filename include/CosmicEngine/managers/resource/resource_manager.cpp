@@ -879,6 +879,43 @@ namespace CosmicEngine
 
     #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
 
+        void ResourceManager::RenderRectangle(glm::vec2 point_1, glm::vec2 point_2, glm::vec2 pivot, glm::vec2 rotation, glm::vec3 color, float alpha, float lineWidth, bool filled, ViewType viewType)
+        {
+            (void)filled;
+
+            auto dynamic_temp = Get_Dynamic_VAO_VBO("COSMIC_Rectangle");
+            std::vector<glm::vec2> vertices = {
+                point_1,
+                glm::vec2(point_2.x, point_1.y),
+                point_2,
+                glm::vec2(point_1.x, point_2.y)
+            };
+
+            glBindBuffer(GL_ARRAY_BUFFER, dynamic_temp.second);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(glm::vec2), vertices.data());
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            Shader *shapeShader = GetShader("COSMIC_Shape_2D");
+            shapeShader->Use();
+
+            glm::mat4 model(1.0f);
+            model = glm::translate(model, glm::vec3(pivot, 0.0f));
+            model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+            model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+            model = glm::translate(model, -glm::vec3(pivot, 0.0f));
+
+            shapeShader->SetMatrix4("model", model);
+            shapeShader->SetProjection("projection", viewType);
+            shapeShader->SetVec4("LineColor", glm::vec4(color, alpha));
+
+            glLineWidth(lineWidth);
+            glBindVertexArray(dynamic_temp.first);
+            glDrawArrays(GL_LINE_LOOP, 0, static_cast<GLsizei>(vertices.size()));
+            glBindVertexArray(0);
+
+            shapeShader->EndUse();
+        }
+
         void ResourceManager::RenderPoint(glm::vec3 coordinates, glm::vec3 color, float alpha, float width, ViewType viewType)
         {
             glPointSize(width);
@@ -971,7 +1008,17 @@ namespace CosmicEngine
         Shader *shapeShader = GetShader("COSMIC_Shape_3D");
         shapeShader->Use();
 
-        shapeShader->SetModel("model", position, size, rotation, pivot);
+        glm::mat4 model(1.0f);
+        glm::vec3 center = position + size * 0.5f;
+
+        model = glm::translate(model, center + pivot);
+        model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::translate(model, -pivot);
+        model = glm::scale(model, size);
+
+        shapeShader->SetMatrix4("model", model);
 
         shapeShader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
         shapeShader->SetMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());  // TODO OPTIMIZE FOR 3D AND FIX

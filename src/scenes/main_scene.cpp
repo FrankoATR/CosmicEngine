@@ -10,6 +10,9 @@
     #include <CosmicEngine/managers/storage/json/json_manager.hpp>
     #include <CosmicEngine/models/ui/derived/ui_button.hpp>
     #include <random>
+#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+    #include "../entities/collision_demo_object_3d.hpp"
+    #include <random>
 #endif
 
 #include GAMEMANAGE_HEADER
@@ -31,8 +34,9 @@ namespace
     constexpr int kInitialTestObjectCount = 18;
 
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
-    constexpr glm::vec3 kCollisionAreaPosition(-60.0f, -60.0f, -60.0f);
-    constexpr glm::vec3 kCollisionAreaSize(120.0f, 120.0f, 120.0f);
+    constexpr glm::vec3 kCollisionAreaPosition(-48.0f, -24.0f, -118.0f);
+    constexpr glm::vec3 kCollisionAreaSize(96.0f, 48.0f, 96.0f);
+    constexpr int kInitialTestObjectCount3D = 180;
 
 #else
     #error "[MainScene] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
@@ -104,7 +108,9 @@ void MainScene::init()
     }
 
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
-    BOD_MN.CreateCollisionArea(currentCollisionType, kCollisionAreaPosition, kCollisionAreaSize, 16, 5, 4);
+    Setup3DCameraControls();
+    ConfigureCollisionTestArea(currentCollisionType);
+    SpawnCollisionTestObjects3D(kInitialTestObjectCount3D);
 
 #else
     #error "[MainScene] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
@@ -121,6 +127,7 @@ void MainScene::ConfigureCollisionTestArea(CosmicEngine::CollisionType type)
 
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
     BOD_MN.CreateCollisionArea(type, kCollisionAreaPosition, kCollisionAreaSize, 16, 5, 4);
+    CollisionDemoObject3D::SetMovementArea(kCollisionAreaPosition, kCollisionAreaSize);
 
 #else
     #error "[MainScene] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
@@ -197,6 +204,94 @@ void MainScene::LoadJsonDemoObjects()
         std::cout << "No había objetos guardados para cargar" << std::endl;
     }
 }
+#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+void MainScene::ClearCollisionDemoObjects3D()
+{
+    auto existingObjects = OBJ_MN.FindByClassName(CollisionDemoObject3D::StaticClassName());
+    for (auto *object : existingObjects)
+    {
+        if (object)
+        {
+            OBJ_MN.Remove(object->GetID());
+        }
+    }
+}
+
+void MainScene::SpawnCollisionTestObjects3D(int count)
+{
+    static std::mt19937 generator(std::random_device{}());
+    constexpr glm::vec3 objectSize(2.0f, 2.0f, 2.0f);
+
+    std::uniform_real_distribution<float> xDistribution(kCollisionAreaPosition.x + 2.0f, kCollisionAreaPosition.x + kCollisionAreaSize.x - objectSize.x - 2.0f);
+    std::uniform_real_distribution<float> yDistribution(kCollisionAreaPosition.y + 2.0f, kCollisionAreaPosition.y + kCollisionAreaSize.y - objectSize.y - 2.0f);
+    std::uniform_real_distribution<float> zDistribution(kCollisionAreaPosition.z + 2.0f, kCollisionAreaPosition.z + kCollisionAreaSize.z - objectSize.z - 2.0f);
+    std::uniform_real_distribution<float> colorDistribution(0.25f, 0.95f);
+    std::uniform_real_distribution<float> speedDistribution(14.0f, 24.0f);
+
+    ClearCollisionDemoObjects3D();
+
+    for (int index = 0; index < count; ++index)
+    {
+        CollisionDemoObject3D *newObject = new CollisionDemoObject3D(
+            {xDistribution(generator), yDistribution(generator), zDistribution(generator)},
+            objectSize,
+            "Cube " + std::to_string(index + 1),
+            speedDistribution(generator));
+        newObject->SetColor({colorDistribution(generator), colorDistribution(generator), colorDistribution(generator)});
+        OBJ_MN.Add(newObject);
+    }
+}
+
+void MainScene::Setup3DCameraControls()
+{
+    CAM_MN.SetMovementSpeed(28.0f);
+    INP_MN.SetDisableMouse(true);
+
+    GM_MN.setMousePositionCallback([](double xpos, double ypos)
+    {
+        CAM_MN.Classic3DProcessMouseMovement(static_cast<float>(xpos), static_cast<float>(ypos));
+    });
+
+    GM_MN.setMouseScrollCallback([](double xoffset, double yoffset)
+    {
+        CAM_MN.Classic3DProcessMouseScroll(static_cast<float>(xoffset), static_cast<float>(yoffset));
+    });
+}
+
+void MainScene::Update3DCamera(double deltaTime)
+{
+    float frameDelta = static_cast<float>(deltaTime);
+
+    if (INP_MN.IsKeyPressed(GLFW_KEY_W, CosmicEngine::KeyRelease))
+    {
+        CAM_MN.Classic3DProcessKeyboard(CosmicEngine::FORWARD, frameDelta);
+    }
+
+    if (INP_MN.IsKeyPressed(GLFW_KEY_S, CosmicEngine::KeyRelease))
+    {
+        CAM_MN.Classic3DProcessKeyboard(CosmicEngine::BACKWARD, frameDelta);
+    }
+
+    if (INP_MN.IsKeyPressed(GLFW_KEY_A, CosmicEngine::KeyRelease))
+    {
+        CAM_MN.Classic3DProcessKeyboard(CosmicEngine::LEFT, frameDelta);
+    }
+
+    if (INP_MN.IsKeyPressed(GLFW_KEY_D, CosmicEngine::KeyRelease))
+    {
+        CAM_MN.Classic3DProcessKeyboard(CosmicEngine::RIGHT, frameDelta);
+    }
+
+    if (INP_MN.IsKeyPressed(GLFW_KEY_SPACE, CosmicEngine::KeyRelease))
+    {
+        CAM_MN.Classic3DProcessKeyboard(CosmicEngine::UP, frameDelta);
+    }
+
+    if (INP_MN.IsKeyPressed(GLFW_KEY_LEFT_SHIFT, CosmicEngine::KeyRelease))
+    {
+        CAM_MN.Classic3DProcessKeyboard(CosmicEngine::DOWN, frameDelta);
+    }
+}
 #endif
 
 void MainScene::reset()
@@ -213,8 +308,10 @@ void MainScene::draw()
     RS_MN.RenderRectangle(kCollisionAreaPosition, kCollisionAreaPosition + kCollisionAreaSize, glm::vec2(0.0f), glm::vec2(0.0f), glm::vec3(0.0f, 0.6f, 1.0f), 0.5f, 2.5f, false, CosmicEngine::ViewType::Ortho);
 
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
-    RS_MN.RenderText("3D collision area | 1 Grid | 2 QuadTree", "test_font", {-420.0f, -210.0f, 0.0f}, {0.55f, 0.85f, 0.95f});
-    RS_MN.RenderText("Modo actual: " + collisionMode + " | El area espacial se crea solo para modo 3D", "test_font", {-420.0f, -180.0f, 0.0f}, {0.55f, 0.85f, 0.95f});
+    RS_MN.RenderText("Demo colisiones 3D | 1 Grid | 2 Octree | R Respawn", "test_font", {-420.0f, -210.0f, 0.0f}, {0.55f, 0.85f, 0.95f});
+    RS_MN.RenderText("Modo actual: " + collisionMode + " | WASD mover | Space subir | Shift bajar | Mouse mirar", "test_font", {-420.0f, -180.0f, 0.0f}, {0.55f, 0.85f, 0.95f});
+    RS_MN.RenderText("Rueda zoom | B cuerpos debug | ESC salir", "test_font", {-420.0f, -150.0f, 0.0f}, {0.55f, 0.85f, 0.95f});
+    RS_MN.RenderParallelepipedLines(kCollisionAreaPosition, kCollisionAreaSize, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.65f, 1.0f), 0.85f, 2.25f, false, CosmicEngine::ViewType::Projection);
 
 #else
     #error "[MainScene] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
@@ -236,6 +333,8 @@ void MainScene::update(double deltaTime)
 
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
         SpawnCollisionTestObjects(kInitialTestObjectCount);
+#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+    SpawnCollisionTestObjects3D(kInitialTestObjectCount3D);
 #endif
     }
 
@@ -245,6 +344,8 @@ void MainScene::update(double deltaTime)
 
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
         SpawnCollisionTestObjects(kInitialTestObjectCount);
+#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+    SpawnCollisionTestObjects3D(kInitialTestObjectCount3D);
 #endif
     }
 
@@ -327,6 +428,28 @@ void MainScene::update(double deltaTime)
     if (INP_MN.IsKeyPressed(GLFW_KEY_S, CosmicEngine::KeyRelease))
     {
         CAM_MN.SetFocusPosition(CAM_MN.GetFocusPosition() + glm::vec2(0.0f, 10.0f));
+    }
+#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+    if (!BOD_MN.HasCollisionArea())
+    {
+        ConfigureCollisionTestArea(currentCollisionType);
+    }
+
+    if (INP_MN.IsKeyPressed(GLFW_KEY_B, CosmicEngine::KeyDown))
+    {
+        ToogleShowBodys();
+    }
+
+    Update3DCamera(deltaTime);
+
+    if (OBJ_MN.FindByClassName(CollisionDemoObject3D::StaticClassName()).empty())
+    {
+        SpawnCollisionTestObjects3D(kInitialTestObjectCount3D);
+    }
+
+    if (INP_MN.IsKeyPressed(GLFW_KEY_R, CosmicEngine::KeyDown))
+    {
+        SpawnCollisionTestObjects3D(kInitialTestObjectCount3D);
     }
 #endif
 

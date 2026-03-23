@@ -27,6 +27,11 @@ private:
     void CreateJsonDemoObject();
     void SaveJsonDemoObjects();
     void LoadJsonDemoObjects();
+#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+    void SpawnCollisionTestObjects3D(int count);
+    void ClearCollisionDemoObjects3D();
+    void Setup3DCameraControls();
+    void Update3DCamera(double deltaTime);
 #endif
 
     void ConfigureCollisionTestArea(CosmicEngine::CollisionType type);

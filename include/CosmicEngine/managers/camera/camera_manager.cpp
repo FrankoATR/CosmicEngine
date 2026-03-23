@@ -222,7 +222,7 @@ namespace CosmicEngine
     
         glm::mat4 CameraManager::GetProjectionMatrix() const
         {
-            return glm::perspective(glm::radians(zoom), GameManager::GetInstance().getWindowSize().x / GameManager::GetInstance().getWindowSize().y, 0.1f, 100.0f);
+            return glm::perspective(glm::radians(zoom), GameManager::GetInstance().getWindowSize().x / GameManager::GetInstance().getWindowSize().y, 0.1f, 300.0f);
         }
 
         void CameraManager::Classic3DProcessKeyboard(Camera_Movement direction, float deltaTime)
