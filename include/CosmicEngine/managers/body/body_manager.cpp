@@ -1,19 +1,15 @@
 #include "body_manager.hpp"
 
+#include "../../collisions/CollisionArea.hpp"
+#include "../../collisions/GameGridCollisions.hpp"
+#include "../../collisions/GameQuadTreeCollisions.hpp"
 #include "../../models/body/body.hpp"
 #include "../../models/object/object.hpp"
-
 #include "../../utils/log.hpp"
+
 #include <algorithm>
-
-#if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
-    #include "../../collisions/GameGridCollisions.hpp"
-
-#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
-
-#else
-    #error "[BodyManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
-#endif
+#include <cmath>
+#include <iostream>
 
 namespace CosmicEngine
 {
@@ -24,13 +20,85 @@ namespace CosmicEngine
     }
 
     BodyManager::BodyManager()
+        : nextEntityId(0), collisionArea(nullptr)
     {
         RUNTIME_INFO("Body manager created");
     }
 
     BodyManager::~BodyManager()
     {
+        if (collisionArea)
+        {
+            delete collisionArea;
+            collisionArea = nullptr;
+        }
+
         RUNTIME_INFO("Body manager destroyed");
+    }
+
+    void BodyManager::init()
+    {
+        collisionArea = nullptr;
+        nextEntityId = 0;
+        toDelete.clear();
+        RUNTIME_INFO("Body manager initialized");
+    }
+
+    void BodyManager::draw()
+    {
+        if (collisionArea)
+        {
+            collisionArea->DrawDebug();
+        }
+
+        for (Body *body : bodys)
+        {
+            if (body && body->GetParent() && body->GetParent()->GetVisible())
+            {
+                body->draw();
+            }
+        }
+    }
+
+    void BodyManager::update()
+    {
+        for (int id : toDelete)
+        {
+            Remove(id);
+        }
+        toDelete.clear();
+
+        if (collisionArea)
+        {
+            collisionArea->Clear();
+        }
+
+        for (Body *body : bodys)
+        {
+            if (!body || !body->GetParent())
+            {
+                continue;
+            }
+
+            if (body->GetParent()->IsAlive() && body->IsAlive())
+            {
+                body->update();
+
+                if (collisionArea)
+                {
+                    collisionArea->AddObject(body);
+                }
+            }
+            else
+            {
+                toDelete.push_back(body->GetID());
+            }
+        }
+
+        if (collisionArea)
+        {
+            collisionArea->FindCollisions();
+        }
     }
 
     void BodyManager::Add(Body *body)
@@ -39,231 +107,193 @@ namespace CosmicEngine
         {
             body->SetID(nextEntityId++);
             bodys.push_back(body);
+            return;
         }
-        else
-        {
-            delete body;
-            std::cerr << "Body needs to have a parent" << std::endl;
-        }
+
+        delete body;
+        std::cerr << "Body needs to have a parent" << std::endl;
     }
 
-    std::vector<Body *> BodyManager::FindAllByParent(Object* Parent)  // tal vez ordenarlos y buscar por binary search es mejor ?
+    std::vector<Body *> BodyManager::FindAllByParent(Object *parent)
     {
-        std::vector<Body *> bodys_found;
-        for (auto body : bodys)
+        std::vector<Body *> bodiesFound;
+        for (Body *body : bodys)
         {
-            if (body->GetParent() == Parent)
+            if (body && body->GetParent() == parent)
             {
-                bodys_found.push_back(body);
+                bodiesFound.push_back(body);
             }
         }
 
-        return bodys_found;
+        return bodiesFound;
     }
 
     void BodyManager::Remove(int entityId)
     {
-        auto it = std::find_if(bodys.begin(), bodys.end(), [entityId](Body* body) {
+        auto it = std::find_if(bodys.begin(), bodys.end(), [entityId](Body *body) {
             return body && body->GetID() == entityId;
         });
 
-        if (it != bodys.end()) {
-            Body* tmp = *it;
+        if (it != bodys.end())
+        {
+            Body *body = *it;
             bodys.erase(it);
-            delete tmp;
+            delete body;
         }
     }
 
-    #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
-
-        void BodyManager::init()
+    void BodyManager::SetCollisionArea(CollisionArea *newCollisionArea)
+    {
+        if (collisionArea)
         {
-            this->GridArea = nullptr;
-            this->nextEntityId = 0;
-            RUNTIME_INFO("Body manager initialized");
-        }
-        
-        void BodyManager::draw()
-        {
-
-            if (GridArea)
-            {
-                GridArea->DrawCells();
-            }
-
-            for (auto body : bodys)
-            {
-                if(body->GetParent()->GetVisible())
-                {
-                    body->draw();
-                }
-            }
+            collisionArea->Clear();
+            delete collisionArea;
         }
 
-        void BodyManager::update()
+        collisionArea = newCollisionArea;
+    }
+
+    void BodyManager::SetNewGridArea(GameGridCollisions *newGridArea)
+    {
+        SetCollisionArea(newGridArea);
+    }
+
+    void BodyManager::SetNewQuadTreeArea(GameQuadTreeCollisions *newQuadTreeArea)
+    {
+        SetCollisionArea(newQuadTreeArea);
+    }
+
+    CollisionType BodyManager::GetCollisionAreaType() const
+    {
+        if (!collisionArea)
         {
-            for(auto ID : toDelete)
-            {
-                Remove(ID);
-            }
-            toDelete.clear();
-
-            for (auto &body : bodys)
-            {
-                if (body->GetParent()->IsAlive() && body->IsAlive())
-                {
-                    if (GridArea)
-                    {
-                        body->update();
-                        GridArea->AddObject(body);                        
-                    }
-                }
-                else
-                {
-                    toDelete.push_back(body->GetID());
-                }
-            }
-
-            if (GridArea)
-            {
-                GridArea->Find_collision_grid();
-                GridArea->ClearGrid();
-            }
-
+            return CollisionType::Grid;
         }
 
-        void BodyManager::SetNewGridArea(GameGridCollisions * NewGridArea)
+        return collisionArea->GetType();
+    }
+
+    bool BodyManager::HasCollisionArea() const
+    {
+        return collisionArea != nullptr;
+    }
+
+#if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+    void BodyManager::CreateCollisionArea(CollisionType type, glm::vec2 position, glm::vec2 size, int subdivisionSize, int maxDepth, int maxObjectsPerNode)
+    {
+        if (size.x <= 0.0f || size.y <= 0.0f)
         {
-            if(GridArea)
-            {
-                GridArea->ClearGrid();
-                delete GridArea;
-            }
-            this->GridArea = NewGridArea;
+            RUNTIME_WARNING("Collision area size must be greater than zero");
+            return;
         }
 
-        void BodyManager::SetGridPosition(glm::vec2 NewPosition)
+        switch (type)
         {
-            if (GridArea)
+            case CollisionType::Grid:
             {
-                this->GridArea->SetPosition(NewPosition);
+                int safeCellSize = std::max(1, subdivisionSize);
+                int columns = std::max(1, static_cast<int>(std::ceil(size.x / static_cast<float>(safeCellSize))));
+                int arrows = std::max(1, static_cast<int>(std::ceil(size.y / static_cast<float>(safeCellSize))));
+                SetNewGridArea(new GameGridCollisions(position, arrows, columns, safeCellSize));
+                break;
             }
+
+            case CollisionType::QuadTree:
+                SetNewQuadTreeArea(new GameQuadTreeCollisions(position, size, maxDepth, maxObjectsPerNode));
+                break;
+        }
+    }
+
+    void BodyManager::SetGridPosition(glm::vec2 newPosition)
+    {
+        if (collisionArea)
+        {
+            collisionArea->SetPosition(newPosition);
+        }
+    }
+
+    glm::vec2 BodyManager::GetGridPosition()
+    {
+        if (collisionArea)
+        {
+            return collisionArea->GetPosition();
         }
 
-        glm::vec2 BodyManager::GetGridPosition()
+        return glm::vec2(0.0f);
+    }
+
+#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+    void BodyManager::CreateCollisionArea(CollisionType type, glm::vec3 position, glm::vec3 size, int subdivisionSize, int maxDepth, int maxObjectsPerNode)
+    {
+        if (size.x <= 0.0f || size.y <= 0.0f || size.z <= 0.0f)
         {
-            if (GridArea)
-            {
-                return this->GridArea->GetPosition();
-            }
-            else
-            {
-                return glm::vec2(0.0f);
-            }
+            RUNTIME_WARNING("Collision area size must be greater than zero");
+            return;
         }
 
-
-        void BodyManager::Clear()
+        switch (type)
         {
-    
-            if (GridArea)
+            case CollisionType::Grid:
             {
-                GridArea->ClearGrid();
-                delete GridArea;
-                GridArea = nullptr;
+                int safeCellSize = std::max(1, subdivisionSize);
+                int columns = std::max(1, static_cast<int>(std::ceil(size.x / static_cast<float>(safeCellSize))));
+                int rows = std::max(1, static_cast<int>(std::ceil(size.y / static_cast<float>(safeCellSize))));
+                int layers = std::max(1, static_cast<int>(std::ceil(size.z / static_cast<float>(safeCellSize))));
+                SetNewGridArea(new GameGridCollisions(position, rows, columns, layers, safeCellSize));
+                break;
             }
-    
-            while (!bodys.empty())
-            {
-                Body* body = bodys.back();
-                if(body)
-                {
-                    delete body;
-                }
-                bodys.pop_back();
-            }
-            bodys.clear();
-            
-            toDelete.clear();
-    
-            nextEntityId = 0;
-    
-            RUNTIME_INFO("Body manager cleared");
+
+            case CollisionType::QuadTree:
+                SetNewQuadTreeArea(new GameQuadTreeCollisions(position, size, maxDepth, maxObjectsPerNode));
+                break;
         }
-    
-        
+    }
 
-
-    #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
-        void BodyManager::init()
+    void BodyManager::SetGridPosition(glm::vec3 newPosition)
+    {
+        if (collisionArea)
         {
-            this->nextEntityId = 0;
-            RUNTIME_INFO("Body manager initialized");
+            collisionArea->SetPosition(newPosition);
         }
-        
-        void BodyManager::draw()
-        {
+    }
 
-            for (auto body : bodys)
-            {
-                if(body->GetParent()->GetVisible())
-                {
-                    body->draw();
-                }
-            }
+    glm::vec3 BodyManager::GetGridPosition()
+    {
+        if (collisionArea)
+        {
+            return collisionArea->GetPosition();
         }
 
-        void BodyManager::update()
+        return glm::vec3(0.0f);
+    }
+
+#else
+    #error "[BodyManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
+#endif
+
+    void BodyManager::Clear()
+    {
+        if (collisionArea)
         {
-            for(auto ID : toDelete)
-            {
-                Remove(ID);
-            }
-            toDelete.clear();
-
-            for (auto &body : bodys)
-            {
-                if (body->GetParent()->IsAlive() && body->IsAlive())
-                {
-                    body->update();
-                }
-                else
-                {
-                    toDelete.push_back(body->GetID());
-                }
-            }
-
+            collisionArea->Clear();
+            delete collisionArea;
+            collisionArea = nullptr;
         }
 
-
-        void BodyManager::Clear()
+        while (!bodys.empty())
         {
-
-
-            while (!bodys.empty())
+            Body *body = bodys.back();
+            if (body)
             {
-                Body* body = bodys.back();
-                if(body)
-                {
-                    delete body;
-                }
-                bodys.pop_back();
+                delete body;
             }
-            bodys.clear();
-            
-            toDelete.clear();
-
-            nextEntityId = 0;
-
-            RUNTIME_INFO("Body manager cleared");
+            bodys.pop_back();
         }
 
-        
+        bodys.clear();
+        toDelete.clear();
+        nextEntityId = 0;
 
-
-    #else
-        #error "[BodyManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
-    #endif
-
-
+        RUNTIME_INFO("Body manager cleared");
+    }
 }

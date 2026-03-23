@@ -778,7 +778,7 @@ namespace CosmicEngine
             void ResourceManager::RenderPoint(glm::vec2 coordinates, glm::vec3 color, float alpha, float width, ViewType viewType)
         {
             glPointSize(width);
-            RenderShape("COSMIC_Point", {coordinates}, coordinates, glm::vec3(0.0f), color, alpha, width, GL_POINTS, viewType);
+                RenderShape("COSMIC_Point", {coordinates}, coordinates, glm::vec2(0.0f), color, alpha, width, GL_POINTS, viewType);
             glPointSize(1.0f);
         }
 
@@ -827,7 +827,7 @@ namespace CosmicEngine
         model = glm::translate(model, -glm::vec3(pivot, 0.0f));
 
         shapeShader->SetMatrix4("model", model);
-        shapeShader->SetMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());
+        shapeShader->SetProjection("projection", viewType);
         shapeShader->SetVec4("LineColor", glm::vec4(color, alpha));
 
 

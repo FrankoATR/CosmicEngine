@@ -1,7 +1,6 @@
 #ifndef COSMIC_GAMEMANAGER_HPP
 #define COSMIC_GAMEMANAGER_HPP
 
-#include "../interfaces/imanager_singleton.hpp"
 #define GLFW_INCLUDE_NONE
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -13,7 +12,7 @@
 namespace CosmicEngine
 {
 
-    struct GameManagerInitParams : public ManagerInitParams
+    struct GameManagerInitParams
     {
         int screenWidth;
         int screenHeight;
@@ -26,13 +25,13 @@ namespace CosmicEngine
 
     class Scene;
 
-    class GameManager : public SingletonManager<GameManager>
+    class GameManager
     {
-        friend class SingletonManager<GameManager>;
-
     private:
         GameManager() = default;
         ~GameManager() = default;
+        GameManager(const GameManager &) = delete;
+        GameManager &operator=(const GameManager &) = delete;
 
         GLFWwindow *window;
         glm::vec2 baseAspectSize;
@@ -53,7 +52,9 @@ namespace CosmicEngine
         std::function<void(double, double)> mouseScrollCallback;
 
     public:
-        void init(const ManagerInitParams &params) override;
+        static GameManager &GetInstance();
+
+        void init(const GameManagerInitParams &params);
         void update();
         void shutdown();
 

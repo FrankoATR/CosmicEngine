@@ -48,10 +48,10 @@ namespace CosmicEngine
         else
         {
             ResourceManager::GetInstance().RenderRectangle(
-                glm::vec3(Position, 0.0f), 
-                glm::vec3(Position + Size, 0.0f), 
-                glm::vec3(Position.x + Size.x / 2, Position.y + Size.y / 2, 0.0f), 
-                glm::vec3(0.0f, 0.0f, 0.0f), 
+                Position,
+                Position + Size,
+                glm::vec2(Position.x + Size.x / 2, Position.y + Size.y / 2),
+                glm::vec2(0.0f, 0.0f),
                 color,
                 1.0f, 
                 1.0f,

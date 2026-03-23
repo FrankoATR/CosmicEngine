@@ -1,14 +1,18 @@
 #include "json_demo_object.hpp"
 
 #include <CosmicEngine/interfaces/definitions.hpp>
+#include <CosmicEngine/managers/body/body_manager.hpp>
 #include <CosmicEngine/managers/input/input_manager.hpp>
 #include <CosmicEngine/managers/resource/resource_manager.hpp>
+#include <CosmicEngine/managers/timer/timer_manager.hpp>
 #include <CosmicEngine/managers/storage/json/json_manager.hpp>
+#include <CosmicEngine/models/body/body.hpp>
 
 #include <GLFW/glfw3.h>
 
 #include <algorithm>
 #include <iostream>
+#include <random>
 
 const std::string &JsonDemoObject::StaticClassName()
 {
@@ -16,12 +20,139 @@ const std::string &JsonDemoObject::StaticClassName()
     return className;
 }
 
+glm::vec2 JsonDemoObject::movementAreaPosition = glm::vec2(-480.0f, -270.0f);
+glm::vec2 JsonDemoObject::movementAreaSize = glm::vec2(960.0f, 540.0f);
+
+void JsonDemoObject::SetMovementArea(glm::vec2 position, glm::vec2 size)
+{
+    movementAreaPosition = position;
+    movementAreaSize = size;
+}
+
 JsonDemoObject::JsonDemoObject(glm::vec2 position, glm::vec2 size, const std::string &label, int health, short int layerId)
     : Object(StaticClassName(), position, size, 0.0f, layerId),
       label(label),
       health(health),
-      moveSpeed(220.0f)
+      moveSpeed(95.0f),
+      bodyId(-1),
+            directionChangeTimer(nullptr),
+      currentDirection(glm::vec2(1.0f, 0.0f))
 {
+    CreateBody();
+    PickRandomDirection();
+        ResetDirectionTimer();
+}
+
+JsonDemoObject::~JsonDemoObject()
+{
+    if (bodyId >= 0)
+    {
+        BOD_MN.Remove(bodyId);
+        bodyId = -1;
+    }
+
+    if (directionChangeTimer)
+    {
+        directionChangeTimer->Destroy();
+        directionChangeTimer = nullptr;
+    }
+}
+
+void JsonDemoObject::CreateBody()
+{
+    CosmicEngine::Body *body = new CosmicEngine::Body(
+        this,
+        glm::vec2(0.0f, 0.0f),
+        GetSize(),
+        CALLBACK_COLLISION_EVENT(OnBodyCollision));
+
+    BOD_MN.Add(body);
+    bodyId = body->GetID();
+}
+
+void JsonDemoObject::PickRandomDirection()
+{
+    static std::mt19937 generator(std::random_device{}());
+    static std::uniform_real_distribution<float> angleDistribution(0.0f, 6.28318530718f);
+
+    float angle = angleDistribution(generator);
+    currentDirection = glm::normalize(glm::vec2(std::cos(angle), std::sin(angle)));
+}
+
+void JsonDemoObject::ResetDirectionTimer()
+{
+    static std::mt19937 generator(std::random_device{}());
+    static std::uniform_real_distribution<double> timerDistribution(1.0, 2.5);
+
+    double nextDirectionTime = timerDistribution(generator);
+
+    if (!directionChangeTimer)
+    {
+        directionChangeTimer = new CosmicEngine::Timer(nextDirectionTime, false, false);
+        CosmicEngine::TimerManager::GetInstance().Add(directionChangeTimer);
+        return;
+    }
+
+    directionChangeTimer->SetTargetTime(nextDirectionTime);
+    directionChangeTimer->reset();
+    directionChangeTimer->Play();
+}
+
+void JsonDemoObject::KeepInsideMovementArea()
+{
+    glm::vec2 position = GetPosition();
+    glm::vec2 size = GetSize();
+    glm::vec2 minPosition = movementAreaPosition;
+    glm::vec2 maxPosition = movementAreaPosition + movementAreaSize - size;
+
+    bool changedDirection = false;
+
+    if (position.x < minPosition.x)
+    {
+        position.x = minPosition.x;
+        currentDirection.x = std::abs(currentDirection.x);
+        changedDirection = true;
+    }
+    else if (position.x > maxPosition.x)
+    {
+        position.x = maxPosition.x;
+        currentDirection.x = -std::abs(currentDirection.x);
+        changedDirection = true;
+    }
+
+    if (position.y < minPosition.y)
+    {
+        position.y = minPosition.y;
+        currentDirection.y = std::abs(currentDirection.y);
+        changedDirection = true;
+    }
+    else if (position.y > maxPosition.y)
+    {
+        position.y = maxPosition.y;
+        currentDirection.y = -std::abs(currentDirection.y);
+        changedDirection = true;
+    }
+
+    if (changedDirection)
+    {
+        SetPosition(position);
+    }
+}
+
+void JsonDemoObject::OnBodyCollision(CosmicEngine::Object *other, CosmicEngine::BodyCollisionSide side)
+{
+    (void)side;
+
+    if (!other)
+    {
+        return;
+    }
+
+    if (other->GetClassName() == StaticClassName())
+    {
+        Destroy();
+        other->Destroy();
+    }
 }
 
 void JsonDemoObject::draw() const
@@ -33,34 +164,22 @@ void JsonDemoObject::draw() const
 
 void JsonDemoObject::update(float deltaTime)
 {
-    glm::vec2 movement(0.0f);
-
-    if (INP_MN.IsKeyPressed(GLFW_KEY_LEFT, CosmicEngine::KeyRelease))
+    if (directionChangeTimer && directionChangeTimer->IsTrigger())
     {
-        movement.x -= 1.0f;
-    }
-    if (INP_MN.IsKeyPressed(GLFW_KEY_RIGHT, CosmicEngine::KeyRelease))
-    {
-        movement.x += 1.0f;
-    }
-    if (INP_MN.IsKeyPressed(GLFW_KEY_UP, CosmicEngine::KeyRelease))
-    {
-        movement.y -= 1.0f;
-    }
-    if (INP_MN.IsKeyPressed(GLFW_KEY_DOWN, CosmicEngine::KeyRelease))
-    {
-        movement.y += 1.0f;
+        PickRandomDirection();
+        ResetDirectionTimer();
     }
 
-    if (movement != glm::vec2(0.0f))
-    {
-        SetPosition(GetPosition() + glm::normalize(movement) * moveSpeed * deltaTime);
-    }
+    SetVelocity(currentDirection * moveSpeed);
+    KeepInsideMovementArea();
 }
 
 CosmicEngine::Object *JsonDemoObject::Clone() const
 {
-    return new JsonDemoObject(*this);
+    JsonDemoObject *clone = new JsonDemoObject(GetPosition(), GetSize(), label, health, GetLayerId());
+    clone->SetColor(GetColor());
+    clone->SetRotation(GetRotation());
+    return clone;
 }
 
 std::vector<std::string> JsonDemoObject::GetAllValues() const

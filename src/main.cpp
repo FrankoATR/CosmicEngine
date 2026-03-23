@@ -23,10 +23,10 @@ int main()
 			GAME_BASE_RENDER_SCREEN_WIDTH,
 			GAME_BASE_RENDER_SCREEN_HEIGHT};
 
-		Manager<GameManager>().init(params);
-		Manager<GameManager>().setFirstScene(new MainScene);
-		Manager<GameManager>().update();
-		Manager<GameManager>().shutdown();
+		GameManager::GetInstance().init(params);
+		GameManager::GetInstance().setFirstScene(new MainScene);
+		GameManager::GetInstance().update();
+		GameManager::GetInstance().shutdown();
 
 		Logger::info("******************************** [END PROGRAM SUCCESSFULLY] ********************************");
 		Logger::shutdown();

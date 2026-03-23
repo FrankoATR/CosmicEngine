@@ -23,19 +23,20 @@
 
 namespace CosmicEngine
 {
-
-	void GameManager::init(const ManagerInitParams& params)
+	GameManager &GameManager::GetInstance()
 	{
-        RUNTIME_INFO(name + " created.");
+		static GameManager instance;
+		return instance;
+	}
 
-		const GameManagerInitParams* gameParams = dynamic_cast<const GameManagerInitParams*>(&params);
+	void GameManager::init(const GameManagerInitParams& params)
+	{
+		RUNTIME_INFO("Game manager created.");
 
-        if (!gameParams) Logger::error("NO PARAMS WAS SENT");
-
-        int screenWidth  = gameParams->screenWidth;
-        int screenHeight  = gameParams->screenHeight;
-        int baseScreenWidth = gameParams->baseScreenWidth;
-        int baseScreenHeight = gameParams->baseScreenHeight;
+        int screenWidth  = params.screenWidth;
+        int screenHeight  = params.screenHeight;
+        int baseScreenWidth = params.baseScreenWidth;
+        int baseScreenHeight = params.baseScreenHeight;
 
 		window = nullptr;
 		fullScreenMode = false;

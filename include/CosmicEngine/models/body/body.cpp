@@ -82,10 +82,10 @@ namespace CosmicEngine
 		void Body::draw()
 		{
 			ResourceManager::GetInstance().RenderRectangle(
-				glm::vec3(position, 0.0f), 
-				glm::vec3(position + size, 0.0f), 
-				glm::vec3(position.x + size.x / 2, position.y + size.y / 2, 0.0f), 
-				glm::vec3(0.0f, 0.0f, 0.0f), 
+				position,
+				position + size,
+				glm::vec2(position.x + size.x / 2, position.y + size.y / 2),
+				glm::vec2(0.0f, 0.0f),
 				glm::vec3(1.0f, 0.0f, 0.0f), 
 				1.0f, 
 				2.0f);

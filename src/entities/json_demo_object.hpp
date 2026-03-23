@@ -1,7 +1,10 @@
 #ifndef JSON_DEMO_OBJECT_HPP
 #define JSON_DEMO_OBJECT_HPP
 
+#include <CosmicEngine/models/body/body.hpp>
 #include <CosmicEngine/models/object/object.hpp>
+#include <CosmicEngine/models/timer/timer.hpp>
+#include <glm/glm.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -14,9 +17,22 @@ private:
     std::string label;
     int health;
     float moveSpeed;
+    int bodyId;
+    CosmicEngine::Timer *directionChangeTimer;
+    glm::vec2 currentDirection;
+
+    void CreateBody();
+    void PickRandomDirection();
+    void ResetDirectionTimer();
+    void KeepInsideMovementArea();
+    void OnBodyCollision(CosmicEngine::Object *other, CosmicEngine::BodyCollisionSide side);
+
+    static glm::vec2 movementAreaPosition;
+    static glm::vec2 movementAreaSize;
 
 public:
     static const std::string &StaticClassName();
+    static void SetMovementArea(glm::vec2 position, glm::vec2 size);
 
     JsonDemoObject(
         glm::vec2 position = glm::vec2(0.0f),
@@ -25,6 +41,7 @@ public:
         int health = 100,
         short int layerId = 0
     );
+    ~JsonDemoObject() override;
 
     void draw() const override;
     void update(float deltaTime) override;

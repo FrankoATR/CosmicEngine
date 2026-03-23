@@ -1,8 +1,11 @@
 #ifndef COSMIC_BODY_HPP
 #define COSMIC_BODY_HPP
 
-#define CALLBACK_COLLISION_EVENT(Method) [this](Object* other, BodyCollisionSide side) { this->Method(other, side); }
-
+#define CALLBACK_COLLISION_EVENT(Method) \
+    [this](CosmicEngine::Object* other, CosmicEngine::BodyCollisionSide side) \
+    { \
+        this->Method(other, side); \
+    }
 
 #include <glm/glm.hpp>
 #include <functional>
@@ -32,7 +35,9 @@ namespace CosmicEngine
         LEFT,
         RIGHT,
         TOP,
-        BOTTOM
+		BOTTOM,
+		FRONT,
+		BACK
     };
 
 	class Object;

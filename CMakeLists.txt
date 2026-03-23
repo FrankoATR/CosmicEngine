@@ -28,8 +28,13 @@ set(GAME_FIRST_SCENE
 
 set(GAME_SOURCE_FILES
     ${GAME_FIRST_SCENE}
-    ${CMAKE_SOURCE_DIR}/src/entities/json_demo_object.cpp
 )
+
+if(GAME_MODE_CONFIGURATION STREQUAL "GAME_2D_CONFIGURATION")
+    list(APPEND GAME_SOURCE_FILES
+        ${CMAKE_SOURCE_DIR}/src/entities/json_demo_object.cpp
+    )
+endif()
 
 
 #**************************************END USER VARIABLES**************************************#
@@ -76,8 +81,8 @@ set(ENGINE_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/network/network_manager.cpp
 
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/collisions/GameGridCollisions.cpp
-
-    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/interfaces/imanager.cpp
+    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/collisions/CollisionArea.cpp
+    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/collisions/GameQuadTreeCollisions.cpp
     
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/utils/logger.cpp
 

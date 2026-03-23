@@ -9,15 +9,10 @@ namespace CosmicEngine
 
     class Body;
     class Object;
-
-    #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
-        class GameGridCollisions;
-
-    #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
-
-    #else
-        #error "[BodyManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
-    #endif
+    enum class CollisionType : int;
+    class CollisionArea;
+    class GameGridCollisions;
+    class GameQuadTreeCollisions;
 
     class BodyManager
     {
@@ -30,15 +25,7 @@ namespace CosmicEngine
         std::vector<Body *> bodys;
         std::vector<int> toDelete;
         int nextEntityId;
-
-        #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
-            GameGridCollisions *GridArea;
-
-        #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
-
-        #else
-            #error "[BodyManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
-        #endif
+        CollisionArea *collisionArea;
 
     public:
         static BodyManager &GetInstance();
@@ -51,15 +38,22 @@ namespace CosmicEngine
         void Clear();
 
         std::vector<Body *> FindAllByParent(Object* parent);
-        
-        #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
-            void SetNewGridArea(GameGridCollisions*);
 
+        void SetCollisionArea(CollisionArea *newCollisionArea);
+        void SetNewGridArea(GameGridCollisions *newGridArea);
+        void SetNewQuadTreeArea(GameQuadTreeCollisions *newQuadTreeArea);
+        CollisionType GetCollisionAreaType() const;
+        bool HasCollisionArea() const;
+
+        #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+            void CreateCollisionArea(CollisionType type, glm::vec2 position, glm::vec2 size, int subdivisionSize = 64, int maxDepth = 5, int maxObjectsPerNode = 4);
             void SetGridPosition(glm::vec2 newPosition);
             glm::vec2 GetGridPosition();
 
         #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
-
+            void CreateCollisionArea(CollisionType type, glm::vec3 position, glm::vec3 size, int subdivisionSize = 64, int maxDepth = 5, int maxObjectsPerNode = 4);
+            void SetGridPosition(glm::vec3 newPosition);
+            glm::vec3 GetGridPosition();
 
         #else
             #error "[BodyManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
