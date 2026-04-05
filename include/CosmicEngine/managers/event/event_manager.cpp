@@ -10,9 +10,14 @@ namespace CosmicEngine
         return instance;
     }
 
-    void init()
+    void EventManager::init()
     {
         std::cout << "Event manager created" << std::endl;
+    }
+
+    bool EventManager::HasEvent(const std::string &eventName) const
+    {
+        return eventCallbacks.find(eventName) != eventCallbacks.end();
     }
 
     void EventManager::RemoveEvent(const std::string &eventName)

@@ -8,6 +8,8 @@
 #include "../../managers/camera/camera_manager.hpp"
 #include "../../managers/input/input_manager.hpp"
 #include "../../managers/timer/timer_manager.hpp"
+#include "../../managers/schedule/schedule_manager.hpp"
+#include "../../managers/animation/animation_manager.hpp"
 #include "../../managers/light/light_manager.hpp"
 #include "../../managers/ui/ui_manager.hpp"
 
@@ -118,6 +120,9 @@ namespace CosmicEngine
 
     void Scene::DrawManagers()
     {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         this->draw();
         
         ObjectManager::GetInstance().draw();
@@ -140,13 +145,9 @@ namespace CosmicEngine
     #if GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
         glDisable(GL_DEPTH_TEST);
     #endif
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
         UIManager::GetInstance().draw();
         InputManager::GetInstance().DrawMouseSprite();
 
-        glDisable(GL_BLEND);
     #if GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
         glEnable(GL_DEPTH_TEST);
     #endif
@@ -176,6 +177,8 @@ namespace CosmicEngine
         ResourceManager::GetInstance().Clear();
         EventManager::GetInstance().Clear();
         TimerManager::GetInstance().Clear();
+        ScheduleManager::GetInstance().Clear();
+        AnimationManager::GetInstance().Clear();
         UIManager::GetInstance().Clear();
         InputManager::GetInstance().ResetMouseSettings();
 

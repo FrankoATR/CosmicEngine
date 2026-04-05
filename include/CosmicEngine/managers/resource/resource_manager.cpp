@@ -726,7 +726,7 @@ namespace CosmicEngine
 
         textShader->Use();
         textShader->SetProjection("projection", viewType);
-        textShader->SetInt("COSMIC_text", 0);
+        textShader->SetInt("text", 0);
         textShader->SetVec3("textColor", color);
         glActiveTexture(GL_TEXTURE0);
         glBindVertexArray(fontResource->GetVAO());

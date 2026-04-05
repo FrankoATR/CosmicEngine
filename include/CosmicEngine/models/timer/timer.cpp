@@ -1,41 +1,71 @@
 #include "timer.hpp"
+
+#include <algorithm>
 #include <iostream>
 
 namespace CosmicEngine
 {
-    Timer::Timer(double TargetTime, bool Loop, bool Paused, Timer *flag) :  //Es necesario el flag o quedará mejor en Schedule ? o trabajar solo con almacenar el puntero del Timer/Schedule
-        TargetTime(TargetTime), Loop(Loop), Paused(Paused), flag(flag), ElapsedTime(0.0), Alive(true)
+    Timer::Timer(double TargetTime, bool Loop, bool Paused)
+        : TargetTime(std::max(0.0, TargetTime)),
+          ElapsedTime(0.0),
+          Loop(Loop),
+          Paused(Paused),
+          Triggered(false),
+          Alive(true),
+          Finished(false)
     {
-    
     }
 
     void Timer::update(double deltaTime)
     {
         Triggered = false;
 
-        if(!Paused)
+        if (!Alive || Paused)
         {
-            ElapsedTime += deltaTime;
+            return;
+        }
 
+        if (TargetTime <= 0.0)
+        {
+            Triggered = true;
+
+            if (Loop)
+            {
+                ElapsedTime = 0.0;
+            }
+            else
+            {
+                Finished = true;
+                Paused = true;
+            }
+
+            return;
+        }
+
+        ElapsedTime += std::max(0.0, deltaTime);
+
+        if (Loop)
+        {
             if (ElapsedTime >= TargetTime)
             {
-
                 Triggered = true;
 
-                ElapsedTime -= TargetTime;
-
-                if(!Loop)
+                while (ElapsedTime >= TargetTime)
                 {
-                    Paused = true;
-                    ElapsedTime = 0.0;
-                    if(flag) flag = nullptr;
-                    
+                    ElapsedTime -= TargetTime;
                 }
             }
 
+            return;
         }
 
-
+        if (ElapsedTime >= TargetTime)
+        {
+            ElapsedTime = TargetTime;
+            Triggered = true;
+            Finished = true;
+            Paused = true;
+        }
     }
 
     bool Timer::IsTrigger()
@@ -58,9 +88,15 @@ namespace CosmicEngine
         return this->ElapsedTime;
     }
 
+    double Timer::GetRemainingTime()
+    {
+        return std::max(0.0, TargetTime - ElapsedTime);
+    }
+
     void Timer::EnableLoop()
     {
         this->Loop = true;
+        this->Finished = false;
     }
 
     void Timer::DisableLoop()
@@ -74,9 +110,22 @@ namespace CosmicEngine
         return this->Loop;
     }
 
+    bool Timer::IsFinished()
+    {
+        return this->Finished;
+    }
+
     void Timer::reset()
     {
         this->ElapsedTime = 0.0;
+        this->Triggered = false;
+        this->Finished = false;
+    }
+
+    void Timer::Restart()
+    {
+        reset();
+        Play();
     }
 
     void Timer::Pause()
@@ -92,6 +141,19 @@ namespace CosmicEngine
     void Timer::Play()
     {
         this->Paused = false;
+
+        if (!Loop && Finished && ElapsedTime >= TargetTime)
+        {
+            reset();
+        }
+    }
+
+    void Timer::Stop()
+    {
+        this->Paused = true;
+        this->ElapsedTime = 0.0;
+        this->Triggered = false;
+        this->Finished = false;
     }
 
     void Timer::Destroy()

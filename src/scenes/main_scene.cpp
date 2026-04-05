@@ -3,6 +3,7 @@
 #include "../utilities/paths.hpp"
 
 #include <CosmicEngine/interfaces/definitions.hpp>
+#include <CosmicEngine/models/animation/animation_clip.hpp>
 #include <CosmicEngine/managers/resource/resource_manager.hpp>
 
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
@@ -20,6 +21,9 @@
 #include GAMEMANAGE_HEADER
 #include INPUTMANAGER_HEADER
 #include CAMERAMANAGER_HEADER
+#include EVENTMANAGER_HEADER
+#include SCHEDULEMANAGER_HEADER
+#include ANIMATIONMANAGER_HEADER
 #include RESOURCEMANAGER_HEADER
 #include OBJECTMANAGER_HEADER
 #include BODYMANAGER_HEADER
@@ -34,6 +38,10 @@ namespace
     constexpr glm::vec2 kCollisionAreaPosition(-1000.0f, -1000.0f);
     constexpr glm::vec2 kCollisionAreaSize(1840.0f, 1420.0f);
     constexpr int kInitialTestObjectCount = 18;
+    constexpr const char *kDemoSpriteSheetKey = "json_demo_sheet";
+    constexpr int kDemoSpriteSheetRows = 4;
+    constexpr int kDemoSpriteSheetColumns = 4;
+    constexpr int kDemoSpriteSheetPadding = 0;
 
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
     constexpr glm::vec3 kCollisionAreaPosition(-48.0f, -24.0f, -118.0f);
@@ -50,7 +58,9 @@ MainScene::MainScene()
     : Scene("MainScene"),
       currentCollisionType(CosmicEngine::CollisionType::Grid),
       jsonSavePath("json_demo_save.json"),
-      demoButton(nullptr)
+    demoButton(nullptr),
+    jsonSpawnEventListenerId(0),
+    jsonSpawnScheduledTaskId(0)
 {
 }
 
@@ -80,6 +90,8 @@ void MainScene::init()
     RS_MN.LoadFont("test_font", "assets/fonts/ThaleahFat.ttf", 32);
 
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+    Register2DAnimationExample();
+
     AUD_MN.Load("Music1", MUSIC_1_PATH, CosmicEngine::SoundType::Music);
     AUD_MN.SetPanRangeUnits(12.0f);
     AUD_MN.SetSfxVoicesPerSound(16);
@@ -115,6 +127,8 @@ void MainScene::init()
         SaveJsonDemoObjects();
     }
 
+    Setup2DSpawnScheduler();
+
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
     RS_MN.LoadTexture("test_texture2", "assets/textures/test.png");
 
@@ -147,6 +161,66 @@ void MainScene::ConfigureCollisionTestArea(CosmicEngine::CollisionType type)
 }
 
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+void MainScene::Register2DAnimationExample()
+{
+    // Example configuration for spritesheet animation in the 2D demo.
+    // Replace test.png with your own spritesheet and adjust rows/columns/padding.
+    RS_MN.LoadTextureSheet(kDemoSpriteSheetKey, "assets/textures/player2.png", kDemoSpriteSheetRows, kDemoSpriteSheetColumns, kDemoSpriteSheetPadding);
+
+    auto registerDirectionalClip = [](const std::string &clipName, int row)
+    {
+        if (ANM_MN.HasClip(clipName))
+        {
+            return;
+        }
+
+        std::vector<CosmicEngine::AnimationFrame> frames = {
+            {row, 0, 0.14},
+            {row, 1, 0.14},
+            {row, 2, 0.14},
+            {row, 3, 0.14}
+        };
+
+        ANM_MN.RegisterClip(CosmicEngine::AnimationClip(clipName, kDemoSpriteSheetKey, frames, true));
+    };
+
+    registerDirectionalClip("json_demo_move_down", 0);
+    registerDirectionalClip("json_demo_move_up", 1);
+    registerDirectionalClip("json_demo_move_left", 2);
+    registerDirectionalClip("json_demo_move_right", 3);
+}
+
+void MainScene::Setup2DSpawnScheduler()
+{
+    static const std::string kSpawnEventName = "main_scene.spawn_random_json_object";
+
+    if (jsonSpawnEventListenerId == 0)
+    {
+        jsonSpawnEventListenerId = EVT_MN.RegisterEventListener<const nlohmann::json &>(
+            kSpawnEventName,
+            std::function<void(const nlohmann::json &)>([this](const nlohmann::json &payload)
+            {
+                SpawnJsonDemoObjectFromPayload(payload);
+            }));
+    }
+
+    if (jsonSpawnScheduledTaskId != 0 && SCH_MN.HasTask(jsonSpawnScheduledTaskId))
+    {
+        return;
+    }
+
+    nlohmann::json payload = {
+        {"randomPosition", true},
+        {"size", {64.0f, 64.0f}},
+        {"health", 100},
+        {"layerId", 1},
+        {"labelPrefix", "JSON Auto"},
+        {"color", {0.35f, 0.85f, 0.55f}}
+    };
+
+    jsonSpawnScheduledTaskId = SCH_MN.ScheduleInterval(2.0, kSpawnEventName, payload, -1, "spawn_random_json_object_every_2_seconds");
+}
+
 void MainScene::ClearJsonDemoObjects()
 {
     auto existingObjects = OBJ_MN.FindByClassName(JsonDemoObject::StaticClassName());
@@ -157,6 +231,70 @@ void MainScene::ClearJsonDemoObjects()
             OBJ_MN.Remove(object->GetID());
         }
     }
+}
+
+void MainScene::SpawnRandomJsonDemoObject()
+{
+    static std::mt19937 generator(std::random_device{}());
+    std::uniform_real_distribution<float> xDistribution(kCollisionAreaPosition.x, kCollisionAreaPosition.x + kCollisionAreaSize.x - 64.0f);
+    std::uniform_real_distribution<float> yDistribution(kCollisionAreaPosition.y, kCollisionAreaPosition.y + kCollisionAreaSize.y - 64.0f);
+    std::uniform_real_distribution<float> colorDistribution(0.25f, 0.95f);
+
+    std::size_t objectCount = OBJ_MN.FindByClassName(JsonDemoObject::StaticClassName()).size();
+
+    JsonDemoObject *newObject = new JsonDemoObject(
+        {xDistribution(generator), yDistribution(generator)},
+        {64.0f, 64.0f},
+        "JSON Auto " + std::to_string(objectCount + 1),
+        100,
+        1);
+    newObject->SetColor({colorDistribution(generator), colorDistribution(generator), colorDistribution(generator)});
+    OBJ_MN.Add(newObject);
+}
+
+void MainScene::SpawnJsonDemoObjectFromPayload(const nlohmann::json &payload)
+{
+    static std::mt19937 generator(std::random_device{}());
+    std::uniform_real_distribution<float> xDistribution(kCollisionAreaPosition.x, kCollisionAreaPosition.x + kCollisionAreaSize.x - 64.0f);
+    std::uniform_real_distribution<float> yDistribution(kCollisionAreaPosition.y, kCollisionAreaPosition.y + kCollisionAreaSize.y - 64.0f);
+
+    bool randomPosition = payload.value("randomPosition", true);
+
+    glm::vec2 size(64.0f, 64.0f);
+    if (payload.contains("size") && payload["size"].is_array() && payload["size"].size() >= 2)
+    {
+        size.x = payload["size"][0].get<float>();
+        size.y = payload["size"][1].get<float>();
+    }
+
+    std::uniform_real_distribution<float> sizedXDistribution(kCollisionAreaPosition.x, kCollisionAreaPosition.x + kCollisionAreaSize.x - size.x);
+    std::uniform_real_distribution<float> sizedYDistribution(kCollisionAreaPosition.y, kCollisionAreaPosition.y + kCollisionAreaSize.y - size.y);
+
+    glm::vec2 position(
+        randomPosition ? sizedXDistribution(generator) : payload.value("x", kCollisionAreaPosition.x),
+        randomPosition ? sizedYDistribution(generator) : payload.value("y", kCollisionAreaPosition.y));
+
+    glm::vec3 color(0.35f, 0.85f, 0.55f);
+    if (payload.contains("color") && payload["color"].is_array() && payload["color"].size() >= 3)
+    {
+        color.r = payload["color"][0].get<float>();
+        color.g = payload["color"][1].get<float>();
+        color.b = payload["color"][2].get<float>();
+    }
+
+    int health = payload.value("health", 100);
+    short int layerId = static_cast<short int>(payload.value("layerId", 1));
+    std::string labelPrefix = payload.value("labelPrefix", std::string("JSON Auto"));
+    std::size_t objectCount = OBJ_MN.FindByClassName(JsonDemoObject::StaticClassName()).size();
+
+    JsonDemoObject *newObject = new JsonDemoObject(
+        position,
+        size,
+        labelPrefix + " " + std::to_string(objectCount + 1),
+        health,
+        layerId);
+    newObject->SetColor(color);
+    OBJ_MN.Add(newObject);
 }
 
 void MainScene::SpawnCollisionTestObjects(int count)
@@ -415,7 +553,7 @@ void MainScene::draw()
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
     std::string collisionMode = currentCollisionType == CosmicEngine::CollisionType::Grid ? "Grid" : "QuadTree";
     RS_MN.RenderText("Prueba colisiones JSON | 1 Grid | 2 QuadTree | R Respawn | G Guarda | C Carga", "test_font", {-420.0f, -210.0f, 0.0f}, {0.55f, 0.55f, 1.0f});
-    RS_MN.RenderText("Modo actual: " + collisionMode + " | WASD mueve camara | Click derecho crea objeto", "test_font", {-420.0f, -180.0f, 0.0f}, {0.55f, 0.55f, 1.0f});
+    RS_MN.RenderText("Modo actual: " + collisionMode + " | WASD mueve camara | Click derecho crea objeto | Animacion: sheet 2x2", "test_font", {-420.0f, -180.0f, 0.0f}, {0.55f, 0.55f, 1.0f});
     RS_MN.RenderRectangle(kCollisionAreaPosition, kCollisionAreaPosition + kCollisionAreaSize, glm::vec2(0.0f), glm::vec2(0.0f), glm::vec3(0.0f, 0.6f, 1.0f), 0.5f, 2.5f, false, CosmicEngine::ViewType::Ortho);
 
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION

@@ -1,6 +1,7 @@
 #include "json_demo_object.hpp"
 
 #include <CosmicEngine/interfaces/definitions.hpp>
+#include <CosmicEngine/managers/animation/animation_manager.hpp>
 #include <CosmicEngine/managers/body/body_manager.hpp>
 #include <CosmicEngine/managers/input/input_manager.hpp>
 #include <CosmicEngine/managers/resource/resource_manager.hpp>
@@ -36,11 +37,18 @@ JsonDemoObject::JsonDemoObject(glm::vec2 position, glm::vec2 size, const std::st
       moveSpeed(95.0f),
       bodyId(-1),
             directionChangeTimer(nullptr),
+            animationPlayer(nullptr),
       currentDirection(glm::vec2(1.0f, 0.0f))
 {
     CreateBody();
     PickRandomDirection();
-        ResetDirectionTimer();
+    animationPlayer = ANM_MN.CreatePlayer("json_demo_move_right", GetID());
+    if (animationPlayer)
+    {
+        animationPlayer->Play();
+        UpdateDirectionalAnimation();
+    }
+    ResetDirectionTimer();
 }
 
 JsonDemoObject::~JsonDemoObject()
@@ -55,6 +63,12 @@ JsonDemoObject::~JsonDemoObject()
     {
         directionChangeTimer->Destroy();
         directionChangeTimer = nullptr;
+    }
+
+    if (animationPlayer)
+    {
+        animationPlayer->Destroy();
+        animationPlayer = nullptr;
     }
 }
 
@@ -136,7 +150,34 @@ void JsonDemoObject::KeepInsideMovementArea()
     if (changedDirection)
     {
         SetPosition(position);
+        UpdateDirectionalAnimation();
     }
+}
+
+void JsonDemoObject::UpdateDirectionalAnimation()
+{
+    if (!animationPlayer)
+    {
+        return;
+    }
+
+    std::string clipName;
+    if (std::abs(currentDirection.x) >= std::abs(currentDirection.y))
+    {
+        clipName = currentDirection.x >= 0.0f ? "json_demo_move_right" : "json_demo_move_left";
+    }
+    else
+    {
+        clipName = currentDirection.y >= 0.0f ? "json_demo_move_down" : "json_demo_move_up";
+    }
+
+    if (animationPlayer->GetClipName() == clipName)
+    {
+        return;
+    }
+
+    animationPlayer->SetClip(ANM_MN.GetClip(clipName), true);
+    animationPlayer->Play();
 }
 
 void JsonDemoObject::OnBodyCollision(CosmicEngine::Object *other, CosmicEngine::BodyCollisionSide side)
@@ -157,8 +198,24 @@ void JsonDemoObject::OnBodyCollision(CosmicEngine::Object *other, CosmicEngine::
 
 void JsonDemoObject::draw() const
 {
-    RS_MN.Render2DSprite("test_texture2", position, size);
-    //RS_MN.RenderRectangle(position, position + size, glm::vec2(0.0f), glm::vec2(0.0f), GetColor(), 1.0f, 2.0f);
+    if (animationPlayer && !animationPlayer->GetTextureSheetKey().empty())
+    {
+        RS_MN.Render2DSpriteFromTextureSheet(
+            animationPlayer->GetTextureSheetKey(),
+            animationPlayer->GetCurrentRow(),
+            animationPlayer->GetCurrentColumn(),
+            position,
+            size,
+            rotation,
+            GetColor(),
+            transparency,
+            CosmicEngine::ViewType::Ortho);
+    }
+    else
+    {
+        RS_MN.Render2DSprite("test_texture2", position, size);
+    }
+
     RS_MN.RenderText(label + " HP: " + std::to_string(health), "test_font", {position.x, position.y - 30.0f, 0.0f}, {0.45f, 0.45f, 1.0f});
 }
 
@@ -167,6 +224,7 @@ void JsonDemoObject::update(float deltaTime)
     if (directionChangeTimer && directionChangeTimer->IsTrigger())
     {
         PickRandomDirection();
+        UpdateDirectionalAnimation();
         ResetDirectionTimer();
     }
 

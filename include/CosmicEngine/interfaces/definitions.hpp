@@ -22,6 +22,18 @@
 #define AUDIOMANAGER_HEADER <CosmicEngine/managers/audio/audio_manager.hpp>
 #define AUD_MN CosmicEngine::AudioManager::GetInstance()
 
+#define EVENTMANAGER_HEADER <CosmicEngine/managers/event/event_manager.hpp>
+#define EVT_MN CosmicEngine::EventManager::GetInstance()
+
+#define TIMERMANAGER_HEADER <CosmicEngine/managers/timer/timer_manager.hpp>
+#define TMR_MN CosmicEngine::TimerManager::GetInstance()
+
+#define SCHEDULEMANAGER_HEADER <CosmicEngine/managers/schedule/schedule_manager.hpp>
+#define SCH_MN CosmicEngine::ScheduleManager::GetInstance()
+
+#define ANIMATIONMANAGER_HEADER <CosmicEngine/managers/animation/animation_manager.hpp>
+#define ANM_MN CosmicEngine::AnimationManager::GetInstance()
+
 #define SCENEMANAGER_HEADER <CosmicEngine/managers/scene/scene_manager.hpp>
 #define SCN_MN CosmicEngine::SceneManager::GetInstance()
 

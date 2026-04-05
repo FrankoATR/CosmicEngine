@@ -4,6 +4,8 @@
 #include <CosmicEngine/collisions/CollisionArea.hpp>
 #include <CosmicEngine/Models/Scene/scene.hpp>
 
+#include <cstdint>
+#include <nlohmann/json.hpp>
 #include <string>
 
 namespace CosmicEngine
@@ -23,8 +25,14 @@ private:
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
     std::string jsonSavePath;
     CosmicEngine::UIElement *demoButton;
+    std::uint64_t jsonSpawnEventListenerId;
+    std::uint64_t jsonSpawnScheduledTaskId;
 
+    void Register2DAnimationExample();
+    void Setup2DSpawnScheduler();
     void SpawnCollisionTestObjects(int count);
+    void SpawnRandomJsonDemoObject();
+    void SpawnJsonDemoObjectFromPayload(const nlohmann::json &payload);
     void ClearJsonDemoObjects();
     void CreateJsonDemoObject();
     void SaveJsonDemoObjects();

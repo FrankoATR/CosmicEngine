@@ -12,7 +12,7 @@ set(PROGRAM_ICON "${CMAKE_SOURCE_DIR}/default/icon.ico")
 
 #Change betwen DEBUG and RELEASE
 
-set(GAME_MODE_CONFIGURATION GAME_3D_CONFIGURATION CACHE STRING "Selecciona el modo del juego: GAME_2D_CONFIGURATION o GAME_3D_CONFIGURATION")
+set(GAME_MODE_CONFIGURATION GAME_2D_CONFIGURATION CACHE STRING "Selecciona el modo del juego: GAME_2D_CONFIGURATION o GAME_3D_CONFIGURATION")
 
 set(GAME_INITIAL_SCREEN_WIDTH 1920 CACHE STRING "Default game window width")
 set(GAME_INITIAL_SCREEN_HEIGHT 1080 CACHE STRING "Default game window height")
@@ -63,6 +63,8 @@ set(ENGINE_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/object/object.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/body/body.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/timer/timer.cpp
+    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/animation/animation_clip.cpp
+    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/animation/animation_player.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/light/light.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/ui_element.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_button.cpp
@@ -76,8 +78,10 @@ set(ENGINE_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/event/event_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/input/input_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/audio/audio_manager.cpp
+    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/animation/animation_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/camera/camera_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/timer/timer_manager.cpp
+    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/schedule/schedule_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/ui/ui_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/storage/sql/sql_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/storage/json/json_manager.cpp

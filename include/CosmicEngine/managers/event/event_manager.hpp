@@ -3,6 +3,8 @@
 
 #include "../../interfaces/event.hpp"
 #include "../../interfaces/ievent.hpp"
+#include <cstdint>
+#include <functional>
 #include <unordered_map>
 #include <string>
 #include <iostream>
@@ -21,34 +23,60 @@ namespace CosmicEngine
         std::unordered_map<std::string, IEvent*> eventCallbacks;
 
     public:
+        using ListenerId = std::uint64_t;
+
         static EventManager &GetInstance();
         
         void init();
 
+        bool HasEvent(const std::string &eventName) const;
+
         template <typename... Args>
-        void RegisterEvent(const std::string &eventName, std::function<void(Args...)> callback)
+        ListenerId RegisterEventListener(const std::string &eventName, std::function<void(Args...)> callback)
         {
             IEvent* eventBase = nullptr;
             auto it = eventCallbacks.find(eventName);
             if (it == eventCallbacks.end())
             {
                 auto event = new Event<Args...>();
-                event->AddListener(callback);
+                ListenerId listenerId = event->AddListener(std::move(callback));
                 eventCallbacks[eventName] = event;
+                return listenerId;
             }
-            else
+
+            eventBase = it->second;
+            auto event = dynamic_cast<Event<Args...>*>(eventBase);
+            if (event)
             {
-                eventBase = it->second;
-                auto event = dynamic_cast<Event<Args...>*>(eventBase);
-                if (event)
-                {
-                    event->AddListener(callback);
-                }
-                else
-                {
-                    throw std::runtime_error("Tipos de parámetros del evento no coinciden al registrar.");
-                }
+                return event->AddListener(std::move(callback));
             }
+
+            throw std::runtime_error("Tipos de parámetros del evento no coinciden al registrar.");
+        }
+
+        template <typename... Args>
+        void RegisterEvent(const std::string &eventName, std::function<void(Args...)> callback)
+        {
+            RegisterEventListener<Args...>(eventName, std::move(callback));
+        }
+
+        template <typename... Args>
+        bool UnregisterListener(const std::string &eventName, ListenerId listenerId)
+        {
+            auto it = eventCallbacks.find(eventName);
+            if (it == eventCallbacks.end())
+            {
+                return false;
+            }
+
+            IEvent *eventBase = it->second;
+            auto event = dynamic_cast<Event<Args...>*>(eventBase);
+            if (!event)
+            {
+                throw std::runtime_error("Tipos de parámetros del evento no coinciden al desregistrar.");
+            }
+
+            return event->RemoveListener(listenerId);
         }
 
         template <typename... Args>

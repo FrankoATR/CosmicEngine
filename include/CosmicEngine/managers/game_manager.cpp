@@ -2,9 +2,11 @@
 #include "scene/scene_manager.hpp"
 #include "input/input_manager.hpp"
 #include "timer/timer_manager.hpp"
+#include "schedule/schedule_manager.hpp"
 #include "resource/resource_manager.hpp"
 #include "camera/camera_manager.hpp"
 #include "audio/audio_manager.hpp"
+#include "animation/animation_manager.hpp"
 #include "ui/ui_manager.hpp"
 #include "object/object_manager.hpp"
 #include "body/body_manager.hpp"
@@ -12,6 +14,7 @@
 #include "storage/json/json_manager.hpp"
 #include "light/light_manager.hpp"
 #include "network/network_manager.hpp"
+#include "event/event_manager.hpp"
 #include "../utils/logger.hpp"
 #include "../utils/log.hpp"
 
@@ -161,9 +164,12 @@ namespace CosmicEngine
 
 		InputManager::GetInstance().init(window);
 		UIManager::GetInstance().init();
+		EventManager::GetInstance().init();
 		TimerManager::GetInstance().init();
+		ScheduleManager::GetInstance().init();
 		SceneManager::GetInstance().init();
 		ResourceManager::GetInstance().init();
+		AnimationManager::GetInstance().init();
 		ObjectManager::GetInstance().init();
 		BodyManager::GetInstance().init();
 		SQLManager::GetInstance().init();
@@ -195,6 +201,8 @@ namespace CosmicEngine
 				InputManager::GetInstance().update(window);
 				AudioManager::GetInstance().update();
 				TimerManager::GetInstance().update(fixedDeltaTime * (gameticks / 20.0f));
+				ScheduleManager::GetInstance().update(fixedDeltaTime * (gameticks / 20.0f));
+				AnimationManager::GetInstance().update(fixedDeltaTime * (gameticks / 20.0f));
 				SceneManager::GetInstance().update(fixedDeltaTime * (gameticks / 20.0f));
 				accumulator -= fixedDeltaTime;
 			}

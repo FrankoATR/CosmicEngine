@@ -2,6 +2,7 @@
 #define JSON_DEMO_OBJECT_HPP
 
 #include <CosmicEngine/models/body/body.hpp>
+#include <CosmicEngine/models/animation/animation_player.hpp>
 #include <CosmicEngine/models/object/object.hpp>
 #include <CosmicEngine/models/timer/timer.hpp>
 #include <glm/glm.hpp>
@@ -19,12 +20,14 @@ private:
     float moveSpeed;
     int bodyId;
     CosmicEngine::Timer *directionChangeTimer;
+    CosmicEngine::AnimationPlayer *animationPlayer;
     glm::vec2 currentDirection;
 
     void CreateBody();
     void PickRandomDirection();
     void ResetDirectionTimer();
     void KeepInsideMovementArea();
+    void UpdateDirectionalAnimation();
     void OnBodyCollision(CosmicEngine::Object *other, CosmicEngine::BodyCollisionSide side);
 
     static glm::vec2 movementAreaPosition;
