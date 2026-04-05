@@ -164,6 +164,7 @@ namespace CosmicEngine
 
         void CameraManager::init(glm::vec2 baseSize)
         {
+            this->baseWindowSize = baseSize;
             
             reset();
 
@@ -294,6 +295,13 @@ namespace CosmicEngine
                 if (zoom > 45.0f)
                     zoom = 45.0f;
             }
+        }
+
+        void CameraManager::ResetMouseLookReference()
+        {
+            this->lastX = GameManager::GetInstance().getWindowSize().x / 2.0f;
+            this->lastY = GameManager::GetInstance().getWindowSize().y / 2.0f;
+            this->firstMouse = true;
         }
     
         void CameraManager::updateCameraVectors()

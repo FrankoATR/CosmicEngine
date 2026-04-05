@@ -134,6 +134,7 @@ namespace CosmicEngine
             void Classic3DProcessKeyboard(Camera_Movement direction, float deltaTime);
             void Classic3DProcessMouseMovement(float xoffset, float yoffset);
             void Classic3DProcessMouseScroll(float xoffset, float yoffset);
+            void ResetMouseLookReference();
 
             void SetActiveMouseInput();
             void SetInactiveMouseInput();

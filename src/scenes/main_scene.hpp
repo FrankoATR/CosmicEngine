@@ -9,6 +9,8 @@
 namespace CosmicEngine
 {
     class UIElement;
+    class UIText;
+    class UIButton;
 }
 
 class JsonDemoObject;
@@ -28,11 +30,22 @@ private:
     void SaveJsonDemoObjects();
     void LoadJsonDemoObjects();
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+    CosmicEngine::UIText *demo3DTitleText;
+    CosmicEngine::UIText *demo3DModeText;
+    CosmicEngine::UIText *demo3DControlsText;
+    CosmicEngine::UIButton *demo3DClearButton;
+    bool demo3DMouseCaptureEnabled;
+    bool demo3DKeepWorldCleared;
+
     void SpawnCollisionTestObjects3D(int count);
     void ClearCollisionDemoObjects3D();
     void Setup3DCameraControls();
+    void Set3DMouseCaptureEnabled(bool enabled);
     void Update3DCamera(double deltaTime);
 #endif
+
+    void Setup3DHUD();
+    void Update3DHUD();
 
     void ConfigureCollisionTestArea(CosmicEngine::CollisionType type);
 
