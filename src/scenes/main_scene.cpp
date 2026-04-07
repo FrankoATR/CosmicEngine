@@ -31,6 +31,7 @@
 #include UIMANAGER_HEADER
 
 #include <iostream>
+#include <memory>
 
 namespace
 {
@@ -58,9 +59,10 @@ MainScene::MainScene()
     : Scene("MainScene"),
       currentCollisionType(CosmicEngine::CollisionType::Grid),
       jsonSavePath("json_demo_save.json"),
-    demoButton(nullptr),
-    jsonSpawnEventListenerId(0),
-    jsonSpawnScheduledTaskId(0)
+            demoButton(nullptr),
+            jsonSpawnEventListenerId(0),
+            jsonSpawnScheduledTaskId(0),
+            demo2DCameraController(nullptr)
 {
 }
 
@@ -73,7 +75,8 @@ MainScene::MainScene()
       demo3DControlsText(nullptr),
       demo3DClearButton(nullptr),
       demo3DMouseCaptureEnabled(true),
-      demo3DKeepWorldCleared(false)
+    demo3DKeepWorldCleared(false),
+    demo3DCameraController(nullptr)
 {
 }
 
@@ -99,6 +102,7 @@ void MainScene::init()
     AUD_MN.Play("Music1", 0.1f, false);
 
     CAM_MN.SetFocusPosition(glm::vec2(0.0f));
+    demo2DCameraController = std::make_unique<CosmicEngine::Classic2DCameraController>();
 
     RS_MN.LoadTexture("test_texture", "assets/textures/test.png");
     RS_MN.LoadTexture("test_texture2", "assets/textures/test.png");
@@ -404,31 +408,22 @@ void MainScene::SpawnCollisionTestObjects3D(int count)
 void MainScene::Setup3DCameraControls()
 {
     CAM_MN.SetMovementSpeed(28.0f);
+    if (!demo3DCameraController)
+    {
+        demo3DCameraController = std::make_unique<CosmicEngine::Classic3DCameraController>();
+        demo3DCameraController->Attach(GM_MN);
+    }
+
     Set3DMouseCaptureEnabled(true);
-
-    GM_MN.setMousePositionCallback([](double xpos, double ypos)
-    {
-        CAM_MN.Classic3DProcessMouseMovement(static_cast<float>(xpos), static_cast<float>(ypos));
-    });
-
-    GM_MN.setMouseScrollCallback([](double xoffset, double yoffset)
-    {
-        CAM_MN.Classic3DProcessMouseScroll(static_cast<float>(xoffset), static_cast<float>(yoffset));
-    });
 }
 
 void MainScene::Set3DMouseCaptureEnabled(bool enabled)
 {
     demo3DMouseCaptureEnabled = enabled;
 
-    CAM_MN.SetInactiveMouseInput();
-
-    INP_MN.SetDisableMouse(enabled);
-
-    if (enabled)
+    if (demo3DCameraController)
     {
-        CAM_MN.ResetMouseLookReference();
-        CAM_MN.SetActiveMouseInput();
+        demo3DCameraController->SetMouseCaptureEnabled(enabled);
     }
 
     if (demo3DClearButton)
@@ -510,36 +505,9 @@ void MainScene::Update3DHUD()
 
 void MainScene::Update3DCamera(double deltaTime)
 {
-    float frameDelta = static_cast<float>(deltaTime);
-
-    if (INP_MN.IsKeyPressed(GLFW_KEY_W, CosmicEngine::KeyRelease))
+    if (demo3DCameraController)
     {
-        CAM_MN.Classic3DProcessKeyboard(CosmicEngine::FORWARD, frameDelta);
-    }
-
-    if (INP_MN.IsKeyPressed(GLFW_KEY_S, CosmicEngine::KeyRelease))
-    {
-        CAM_MN.Classic3DProcessKeyboard(CosmicEngine::BACKWARD, frameDelta);
-    }
-
-    if (INP_MN.IsKeyPressed(GLFW_KEY_A, CosmicEngine::KeyRelease))
-    {
-        CAM_MN.Classic3DProcessKeyboard(CosmicEngine::LEFT, frameDelta);
-    }
-
-    if (INP_MN.IsKeyPressed(GLFW_KEY_D, CosmicEngine::KeyRelease))
-    {
-        CAM_MN.Classic3DProcessKeyboard(CosmicEngine::RIGHT, frameDelta);
-    }
-
-    if (INP_MN.IsKeyPressed(GLFW_KEY_SPACE, CosmicEngine::KeyRelease))
-    {
-        CAM_MN.Classic3DProcessKeyboard(CosmicEngine::UP, frameDelta);
-    }
-
-    if (INP_MN.IsKeyPressed(GLFW_KEY_LEFT_SHIFT, CosmicEngine::KeyRelease))
-    {
-        CAM_MN.Classic3DProcessKeyboard(CosmicEngine::DOWN, frameDelta);
+        demo3DCameraController->Update(deltaTime);
     }
 }
 #endif
@@ -671,24 +639,9 @@ void MainScene::update(double deltaTime)
         OBJ_MN.Add(newObject);
     }
 
-    if (INP_MN.IsKeyPressed(GLFW_KEY_A, CosmicEngine::KeyRelease))
+    if (demo2DCameraController)
     {
-        CAM_MN.SetFocusPosition(CAM_MN.GetFocusPosition() + glm::vec2(-10.0f, 0.0f));
-    }
-
-    if (INP_MN.IsKeyPressed(GLFW_KEY_D, CosmicEngine::KeyRelease))
-    {
-        CAM_MN.SetFocusPosition(CAM_MN.GetFocusPosition() + glm::vec2(10.0f, 0.0f));
-    }
-
-    if (INP_MN.IsKeyPressed(GLFW_KEY_W, CosmicEngine::KeyRelease))
-    {
-        CAM_MN.SetFocusPosition(CAM_MN.GetFocusPosition() + glm::vec2(0.0f, -10.0f));
-    }
-
-    if (INP_MN.IsKeyPressed(GLFW_KEY_S, CosmicEngine::KeyRelease))
-    {
-        CAM_MN.SetFocusPosition(CAM_MN.GetFocusPosition() + glm::vec2(0.0f, 10.0f));
+        demo2DCameraController->Update(deltaTime);
     }
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
     if (!BOD_MN.HasCollisionArea())

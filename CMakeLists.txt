@@ -30,13 +30,21 @@ set(GAME_SOURCE_FILES
     ${GAME_FIRST_SCENE}
 )
 
+set(CONTROLLER_SOURCE_FILES)
+
 if(GAME_MODE_CONFIGURATION STREQUAL "GAME_2D_CONFIGURATION")
     list(APPEND GAME_SOURCE_FILES
         ${CMAKE_SOURCE_DIR}/src/entities/json_demo_object.cpp
     )
+    list(APPEND CONTROLLER_SOURCE_FILES
+        ${CMAKE_SOURCE_DIR}/include/CosmicEngine/controllers/camera/classic_2d_camera_controller.cpp
+    )
 elseif(GAME_MODE_CONFIGURATION STREQUAL "GAME_3D_CONFIGURATION")
     list(APPEND GAME_SOURCE_FILES
         ${CMAKE_SOURCE_DIR}/src/entities/collision_demo_object_3d.cpp
+    )
+    list(APPEND CONTROLLER_SOURCE_FILES
+        ${CMAKE_SOURCE_DIR}/include/CosmicEngine/controllers/camera/classic_3d_camera_controller.cpp
     )
 endif()
 
@@ -164,6 +172,7 @@ target_include_directories(sqlite3 PUBLIC
 add_executable(
         ${PROJECT_NAME} 
         ${ENGINE_SOURCE_FILES} 
+    ${CONTROLLER_SOURCE_FILES}
         ${GAME_SOURCE_FILES} 
         ${IMGUI_FILES} 
         ${ICON_FILE}

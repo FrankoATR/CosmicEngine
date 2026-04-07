@@ -28,7 +28,6 @@ namespace CosmicEngine
 
             glm::vec2 baseWindowSize;
 
-            bool activeMouseInput;
             glm::vec2 position2D;
             float zoom;
 
@@ -53,6 +52,10 @@ namespace CosmicEngine
             void SetFocusObject(Object *Obj, float xoffset = 0.0f, float yoffset = 0.0f);
             void SetFocusPosition(glm::vec2 NewPosition);
             glm::vec2 GetFocusPosition() const;
+            void MoveFocus(const glm::vec2 &offset);
+            float GetZoom() const;
+            void SetZoom(float newZoom);
+            void AdjustZoom(float zoomOffset);
             bool IsObjectInsideCameraArea(Object *Obj);
 
             void Classic2DProcessKeyboard(Camera_Movement direction, float deltaTime); // Maybe unnecesary???
@@ -88,8 +91,6 @@ namespace CosmicEngine
 
             glm::vec2 baseWindowSize;
             float baseAspectRatio;
-            bool activeMouseInput;
-
             glm::vec3 position;
             glm::vec3 front;
             glm::vec3 frontBody;
@@ -101,9 +102,6 @@ namespace CosmicEngine
             float movementSpeed;
             float mouseSensitivity;
             float zoom;
-            float lastX;
-            float lastY;
-            bool firstMouse;
 
             GLboolean constrainPitch;
 
@@ -124,9 +122,18 @@ namespace CosmicEngine
 
             float GetMovementSpeed() const;
             void SetMovementSpeed(float newMovementSpeed);
+            float GetMouseSensitivity() const;
+            void SetMouseSensitivity(float newMouseSensitivity);
+            float GetZoom() const;
+            void SetZoom(float newZoom);
+            void AdjustZoom(float zoomOffset);
             
             glm::vec3 GetPosition() const;
             glm::vec3 GetViewDirection() const;
+            glm::vec3 GetBodyDirection() const;
+            glm::vec3 GetRightDirection() const;
+            void Move(const glm::vec3 &offset);
+            void RotateBy(float yawOffset, float pitchOffset);
             
             void SetFocusObject(glm::vec3 from, Object *ObjToLook, float xoffset = 0.0f, float yoffset = 0.0f);
             void SetFocusPosition(glm::vec3 from, glm::vec3 lookingAt);

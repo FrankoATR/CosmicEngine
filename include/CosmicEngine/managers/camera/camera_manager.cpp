@@ -1,8 +1,15 @@
 #include "camera_manager.hpp"
 
 #include "../game_manager.hpp"
+#include "../input/input_manager.hpp"
 #include "../../models/object/object.hpp"
 #include "../body/body_manager.hpp"
+
+#if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+    #include "../../controllers/camera/classic_2d_camera_controller.hpp"
+#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+    #include "../../controllers/camera/classic_3d_camera_controller.hpp"
+#endif
 
 #include <glm/gtc/matrix_transform.hpp>
 #include "../../utils/log.hpp"
@@ -34,17 +41,17 @@ namespace CosmicEngine
 
     void CameraManager::SetActiveMouseInput() //TODO: on inputManager
     {
-        activeMouseInput = true;
+        InputManager::GetInstance().SetActiveMouseInput();
     }
 
     void CameraManager::SetInactiveMouseInput() //TODO: on inputManager
     {
-        activeMouseInput = false;
+        InputManager::GetInstance().SetInactiveMouseInput();
     }
 
     bool CameraManager::GetIsMouseInputActive() //TODO: on inputManager
     {
-        return activeMouseInput;
+        return InputManager::GetInstance().GetIsMouseInputActive();
     }
 
     glm::mat4 CameraManager::Get_UI_ProjectionMatrix() const
@@ -60,7 +67,6 @@ namespace CosmicEngine
 
         void CameraManager::init(glm::vec2 baseSize)
         {
-            this->activeMouseInput = true;
             this->position2D = glm::vec2(0.0f);
             this->baseWindowSize = baseSize;
             this->zoom = 1.0f;
@@ -141,6 +147,26 @@ namespace CosmicEngine
         {
             return glm::vec2(position2D.x , position2D.y );
         }
+
+        void CameraManager::MoveFocus(const glm::vec2 &offset)
+        {
+            position2D += offset;
+        }
+
+        float CameraManager::GetZoom() const
+        {
+            return zoom;
+        }
+
+        void CameraManager::SetZoom(float newZoom)
+        {
+            zoom = glm::clamp(newZoom, 0.25f, 6.0f);
+        }
+
+        void CameraManager::AdjustZoom(float zoomOffset)
+        {
+            SetZoom(zoom + zoomOffset);
+        }
     
         bool CameraManager::IsObjectInsideCameraArea(Object *Obj)
         {
@@ -158,6 +184,21 @@ namespace CosmicEngine
                     objPos.x < right &&
                     objPos.y + objSize.y > bottom &&
                     objPos.y < top);
+        }
+
+        void CameraManager::Classic2DProcessKeyboard(Camera_Movement direction, float deltaTime)
+        {
+            Classic2DCameraController::ProcessKeyboard(*this, direction, deltaTime);
+        }
+
+        void CameraManager::Classic2DProcessMouseMovement(float xoffset, float yoffset)
+        {
+            Classic2DCameraController::ProcessMouseMovement(*this, xoffset, yoffset);
+        }
+
+        void CameraManager::Classic2DProcessMouseScroll(float xoffset, float yoffset)
+        {
+            Classic2DCameraController::ProcessMouseScroll(*this, xoffset, yoffset);
         }
 
     #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
@@ -181,15 +222,10 @@ namespace CosmicEngine
             this->mouseSensitivity = 0.1f;
             this->zoom = 45.0f;
             this->frontBody = glm::vec3(0.0f, 0.0f, -1.0f);
-            this->activeMouseInput = true;
-            this->lastX = GameManager::GetInstance().getWindowSize().x / 2.0f;
-            this->lastY = GameManager::GetInstance().getWindowSize().y / 2.0f;
-            this->firstMouse = true;
             this->position = glm::vec3(0.0f, 0.0f, 0.0f);
             this->worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
             this->yaw = -90.0f;
             this->pitch = 0.0f;
-            this->firstMouse = true;
             this->constrainPitch = true;
 
             this->baseAspectRatio = baseWindowSize.x / baseWindowSize.y;        
@@ -205,6 +241,31 @@ namespace CosmicEngine
             this->movementSpeed = newMovementSpeed;
         }
 
+        float CameraManager::GetMouseSensitivity() const
+        {
+            return this->mouseSensitivity;
+        }
+
+        void CameraManager::SetMouseSensitivity(float newMouseSensitivity)
+        {
+            this->mouseSensitivity = newMouseSensitivity;
+        }
+
+        float CameraManager::GetZoom() const
+        {
+            return this->zoom;
+        }
+
+        void CameraManager::SetZoom(float newZoom)
+        {
+            this->zoom = glm::clamp(newZoom, 1.0f, 45.0f);
+        }
+
+        void CameraManager::AdjustZoom(float zoomOffset)
+        {
+            SetZoom(this->zoom + zoomOffset);
+        }
+
 
         glm::vec3 CameraManager::GetPosition() const
         {
@@ -214,6 +275,34 @@ namespace CosmicEngine
         glm::vec3 CameraManager::GetViewDirection() const
         {
             return this->front;
+        }
+
+        glm::vec3 CameraManager::GetBodyDirection() const
+        {
+            return this->frontBody;
+        }
+
+        glm::vec3 CameraManager::GetRightDirection() const
+        {
+            return this->right;
+        }
+
+        void CameraManager::Move(const glm::vec3 &offset)
+        {
+            position += offset;
+        }
+
+        void CameraManager::RotateBy(float yawOffset, float pitchOffset)
+        {
+            yaw += yawOffset;
+            pitch += pitchOffset;
+
+            if (constrainPitch)
+            {
+                pitch = glm::clamp(pitch, -89.0f, 89.0f);
+            }
+
+            updateCameraVectors();
         }
 
         glm::mat4 CameraManager::GetViewMatrix() const
@@ -228,80 +317,22 @@ namespace CosmicEngine
 
         void CameraManager::Classic3DProcessKeyboard(Camera_Movement direction, float deltaTime)
         {
-            float velocity = movementSpeed * deltaTime;
-            if (direction == FORWARD)
-                position += frontBody * velocity;
-            if (direction == BACKWARD)
-                position -= frontBody * velocity;
-            if (direction == LEFT)
-                position -= right * velocity;
-            if (direction == RIGHT)
-                position += right * velocity;
-            if (direction == UP)
-                position.y += velocity;
-            if (direction == DOWN)
-                position.y -= velocity;
+            Classic3DCameraController::ProcessKeyboard(*this, direction, deltaTime);
         }
     
         void CameraManager::Classic3DProcessMouseMovement(float xoffset, float yoffset)
         {
-            if(activeMouseInput)
-            {
-                float xpos = static_cast<float>(xoffset);
-                float ypos = static_cast<float>(yoffset);
-
-                if (firstMouse)
-                {
-                    lastX = xpos;
-                    lastY = ypos;
-                    firstMouse = false;
-                }
-        
-                float xoffset = xpos - lastX;
-                float yoffset = lastY - ypos;
-        
-                lastX = xpos;
-                lastY = ypos;
-        
-                xoffset *= mouseSensitivity;
-                yoffset *= mouseSensitivity;
-        
-                yaw += xoffset;
-                pitch += yoffset;
-        
-                if (constrainPitch)
-                {
-                    if (pitch > 89.0f)
-                        pitch = 89.0f;
-                    if (pitch < -89.0f)
-                        pitch = -89.0f;
-                }
-        
-                updateCameraVectors();
-            }
-
+            Classic3DCameraController::ProcessMouseMovement(*this, InputManager::GetInstance(), xoffset, yoffset);
         }
     
         void CameraManager::Classic3DProcessMouseScroll(float xoffset, float yoffset)
         {
-            if(activeMouseInput)
-            {
-                float xpos = static_cast<float>(xoffset);
-                float ypos = static_cast<float>(yoffset);
-
-                zoom -= (float)ypos;
-                if (zoom < 1.0f)
-                    zoom = 1.0f;
-                if (zoom > 45.0f)
-                    zoom = 45.0f;
-            }
+            Classic3DCameraController::ProcessMouseScroll(*this, InputManager::GetInstance(), xoffset, yoffset);
         }
 
         void CameraManager::ResetMouseLookReference()
         {
-            this->lastX = GameManager::GetInstance().getWindowSize().x / 2.0f;
-            this->lastY = GameManager::GetInstance().getWindowSize().y / 2.0f;
-            this->firstMouse = true;
+            InputManager::GetInstance().ResetMouseLookReference();
         }
     
         void CameraManager::updateCameraVectors()

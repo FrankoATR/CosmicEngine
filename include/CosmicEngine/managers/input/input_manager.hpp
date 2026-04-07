@@ -38,6 +38,10 @@ namespace CosmicEngine
         glm::vec2 MouseSpriteSize;
         glm::vec2 cachedNormalizedMousePosition;
         bool hasCachedNormalizedMousePosition;
+        bool activeMouseInput;
+        float lastMouseX;
+        float lastMouseY;
+        bool firstMouseInput;
 
         bool disableMouse;
 
@@ -56,6 +60,12 @@ namespace CosmicEngine
 
         glm::vec2 GetMousePosition() const;
         glm::vec2 GetMousePosition_UI() const;
+
+        void SetActiveMouseInput();
+        void SetInactiveMouseInput();
+        bool GetIsMouseInputActive() const;
+        void ResetMouseLookReference();
+        bool TryGetMouseLookDelta(float xpos, float ypos, float &xoffset, float &yoffset);
 
         void SetDisableMouse(bool value);
         bool GetIsDisableMouse();

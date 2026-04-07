@@ -2,11 +2,19 @@
 #define MAINSCENE_HPP
 
 #include <CosmicEngine/collisions/CollisionArea.hpp>
+#include <CosmicEngine/controllers/camera/camera_controller.hpp>
 #include <CosmicEngine/Models/Scene/scene.hpp>
 
 #include <cstdint>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
+
+#if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+    #include <CosmicEngine/controllers/camera/classic_2d_camera_controller.hpp>
+#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+    #include <CosmicEngine/controllers/camera/classic_3d_camera_controller.hpp>
+#endif
 
 namespace CosmicEngine
 {
@@ -27,6 +35,7 @@ private:
     CosmicEngine::UIElement *demoButton;
     std::uint64_t jsonSpawnEventListenerId;
     std::uint64_t jsonSpawnScheduledTaskId;
+    std::unique_ptr<CosmicEngine::ICameraController> demo2DCameraController;
 
     void Register2DAnimationExample();
     void Setup2DSpawnScheduler();
@@ -44,6 +53,7 @@ private:
     CosmicEngine::UIButton *demo3DClearButton;
     bool demo3DMouseCaptureEnabled;
     bool demo3DKeepWorldCleared;
+    std::unique_ptr<CosmicEngine::Classic3DCameraController> demo3DCameraController;
 
     void SpawnCollisionTestObjects3D(int count);
     void ClearCollisionDemoObjects3D();

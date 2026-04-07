@@ -75,7 +75,13 @@ namespace CosmicEngine
         MouseSpriteSize = glm::vec2(32.0f);
         cachedNormalizedMousePosition = glm::vec2(0.0f);
         hasCachedNormalizedMousePosition = false;
+        activeMouseInput = true;
+        lastMouseX = 0.0f;
+        lastMouseY = 0.0f;
+        firstMouseInput = true;
         disableMouse = false;
+
+        ResetMouseLookReference();
 
         RUNTIME_INFO("Input manager initialized");
     }
@@ -233,6 +239,55 @@ namespace CosmicEngine
 
         glm::vec2 baseSize = CameraManager::GetInstance().GetBaseWindowSize();
         return glm::vec2(normalizedX * baseSize.x, (1.0f - normalizedY) * baseSize.y);
+    }
+
+    void InputManager::SetActiveMouseInput()
+    {
+        activeMouseInput = true;
+    }
+
+    void InputManager::SetInactiveMouseInput()
+    {
+        activeMouseInput = false;
+    }
+
+    bool InputManager::GetIsMouseInputActive() const
+    {
+        return activeMouseInput;
+    }
+
+    void InputManager::ResetMouseLookReference()
+    {
+        glm::vec2 windowSize = GameManager::GetInstance().getWindowSize();
+        lastMouseX = windowSize.x * 0.5f;
+        lastMouseY = windowSize.y * 0.5f;
+        firstMouseInput = true;
+    }
+
+    bool InputManager::TryGetMouseLookDelta(float xpos, float ypos, float &xoffset, float &yoffset)
+    {
+        xoffset = 0.0f;
+        yoffset = 0.0f;
+
+        if (!activeMouseInput)
+        {
+            return false;
+        }
+
+        if (firstMouseInput)
+        {
+            lastMouseX = xpos;
+            lastMouseY = ypos;
+            firstMouseInput = false;
+            return false;
+        }
+
+        xoffset = xpos - lastMouseX;
+        yoffset = lastMouseY - ypos;
+
+        lastMouseX = xpos;
+        lastMouseY = ypos;
+        return true;
     }
 
     void InputManager::SetDisableMouse(bool value)
