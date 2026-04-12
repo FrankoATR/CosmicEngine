@@ -94,6 +94,11 @@ namespace CosmicEngine
 
     bool UIElement::MouseHover()
     {
+        if (!visible)
+        {
+            return false;
+        }
+
         glm::vec2 MousePosition = InputManager::GetInstance().GetMousePosition_UI();
         return MousePosition.x >= Position.x && MousePosition.x <= Position.x + Size.x && MousePosition.y >= Position.y && MousePosition.y <= Position.y + Size.y;
     }

@@ -1,5 +1,5 @@
 #include "network_manager.hpp"
-#include "../object/object_manager.hpp"
+#include <iostream>
 
 namespace CosmicEngine
 {
@@ -17,438 +17,132 @@ namespace CosmicEngine
 
     NetworkManager::~NetworkManager()
     {
+        shutdown();
         std::cout << "Network manager destroyed" << std::endl;
     }
 
-    bool NetworkManager::Init_server()
+    void NetworkManager::init()
     {
         if (enet_initialize() != 0)
         {
-            cout << "An error occurred while initializing ENet.\n";
-            return EXIT_FAILURE;
+            std::cerr << "[NetworkManager] Failed to initialize ENet." << std::endl;
+            return;
         }
-
-        atexit(enet_deinitialize);
-
-        address.host = ENET_HOST_ANY;
-        address.port = server_port;
-
-        server = enet_host_create(
-            &address,
-            MAX_CLIENTS,
-            1,
-            0,
-            0);
-
-        if (!server)
-        {
-            cout << "An error occurred while trying to create an ENet server host.\n";
-            return EXIT_FAILURE;
-        }
-
-        new_player_id = 0;
-
-        t = std::thread([this]()
-                        {
-            while (g_running.load()) {
-                this->update_server();
-            } });
-
         std::cout << "Network manager initialized" << std::endl;
-        return true;
     }
 
-    bool NetworkManager::Init_client()
+    void NetworkManager::shutdown()
     {
-
-        if (enet_initialize() != 0)
-        {
-            cout << "An error occurred while initializing ENet.\n";
-            return EXIT_FAILURE;
-        }
-
-        atexit(enet_deinitialize);
-
-        client = enet_host_create(
-            NULL,
-            1,
-            1,
-            0,
-            0);
-
-        if (!client)
-        {
-            cout << "An error occurred while trying to create an ENet client host.\n";
-            return EXIT_FAILURE;
-        }
-
-        enet_address_set_host(&address, server_ip);
-        address.port = server_port;
-
-        peer = enet_host_connect(client, &address, 1, 0);
-
-        if (!peer)
-        {
-            cout << "No available peers for initiating an ENet connection.\n";
-            return EXIT_FAILURE;
-        }
-
-        if (enet_host_service(client, &event, 5000) > 0 && event.type == ENET_EVENT_TYPE_CONNECT)
-        {
-            printf("Connection to %s:%d succeeded\n", server_ip, server_port);
-        }
-        else
-        {
-            enet_peer_reset(peer);
-            printf("Connection to %s:%d failed\n", server_ip, server_port);
-            return EXIT_SUCCESS;
-        }
-
-        CLIENT_ID = -1;
-
-        t = thread(&NetworkManager::_message_loop_, this, client);
-
-        char init_data[80];
-        snprintf(init_data, sizeof(init_data),
-                 "2|%s",
-                 "FRANKO");
-        SendPacket(peer, init_data);
-        return true;
+        Disconnect();
+        enet_deinitialize();
     }
 
-    bool NetworkManager::ReadConsoleLine(const char *prompt, char *buffer, size_t max)
-    {
-        if (prompt)
-            printf("%s", prompt);
+    // ──────────────────────────────────────────────
+    // Server
+    // ──────────────────────────────────────────────
 
-        if (!fgets(buffer, max, stdin))
+    bool NetworkManager::StartServer(int port)
+    {
+        if (role != NetworkRole::None)
         {
-            printf("Error al leer entrada.\n");
+            std::cerr << "[NetworkManager] Already running as " << (role == NetworkRole::Server ? "server" : "client") << "." << std::endl;
             return false;
         }
 
-        size_t len = strcspn(buffer, "\n");
-        if (len < max && buffer[len] == '\n')
-            buffer[len] = '\0';
-        else
+        ENetAddress address = {};
+        address.host = ENET_HOST_ANY;
+        address.port = static_cast<enet_uint16>(port);
+
+        host = enet_host_create(&address, kMaxClients, 2, 0, 0);
+        if (!host)
         {
-            int ch;
-            while ((ch = getchar()) != '\n' && ch != EOF)
-                ;
+            std::cerr << "[NetworkManager] Failed to create ENet server host on port " << port << "." << std::endl;
+            return false;
         }
 
-        if (strlen(buffer) == 0)
-        {
-            printf("No puedes dejar esto vacío.\n");
-            return false;
-        }
-        if (strlen(buffer) >= max - 1)
-        {
-            printf("Texto demasiado largo (máx %zu caracteres).\n", max - 1);
-            return false;
-        }
+        role = NetworkRole::Server;
+        localClientId = 0; // Server is always peer 0
+        running.store(true);
+
+        networkThread = std::thread(&NetworkManager::ServerLoop, this);
+
+        std::cout << "[NetworkManager] Server started on port " << port << "." << std::endl;
         return true;
     }
 
-    void NetworkManager::BroadcastPacket(ENetHost *server, const char *data)
-    {
-        ENetPacket *packet = enet_packet_create(data, strlen(data) + 1, ENET_PACKET_FLAG_RELIABLE);
-        enet_host_broadcast(server, 0, packet);
-    }
-
-    void NetworkManager::SendPacket(ENetPeer *peer, const char *data)
-    {
-        ENetPacket *packet = enet_packet_create(data, strlen(data) + 1, ENET_PACKET_FLAG_RELIABLE);
-        enet_peer_send(peer, 0, packet);
-    }
-
-    void NetworkManager::ClientParseData(const char *data)
-    {
-        // printf("Parse: %s\n", data);
-
-        int data_type;
-        int id;
-        sscanf(data, "%d|%d", &data_type, &id);
-
-        switch (data_type)
-        {
-        case 1:
-            if (!client_map.count(id))
-                break;
-
-            if (id != CLIENT_ID)
-            {
-                char msg[80];
-                sscanf(data, "%*d|%*d|%[^|]", &msg);
-                printf("%s: %s\n", client_map[id]->GetUsername().c_str(), msg);
-            }
-            break;
-
-        case 2:
-            if (id != CLIENT_ID)
-            {
-                char username[80];
-                sscanf(data, "%*d|%*d|%[^|]", username);
-                if (!client_map.count(id))
-                    client_map[id] = new ClientData(id);
-                client_map[id]->SetUsername(username);
-            }
-            break;
-
-        case 3:
-            CLIENT_ID = id;
-            break;
-
-        case 4:
-        {
-            if (!client_map.count(id))
-                break;
-            ClientData *tmp = client_map[id];
-            client_map.erase(id);
-            delete tmp;
-        }
-        case 5:
-        {
-            int id, x, y, z;
-            sscanf(data, "5|%d|%d|%d|%d", &id, &x, &y, &z);
-            if (id != CLIENT_ID)
-            {
-                //ObjectManager::GetInstance().Add(new Cube(glm::vec3(x, y, z), glm::vec3(1.0f)));
-            }
-            break;
-        }
-
-        case 6:
-        {
-            int id, x, y, z;
-            sscanf(data, "6|%d|%d|%d|%d", &id, &x, &y, &z);
-            if (id != CLIENT_ID)
-            {
-                /*
-                for (auto obj : ObjectManager::GetInstance().FindByPosition(glm::vec3(x, y, z)))
-                {
-                    obj->Destroy();
-                }
-                */
-            }
-            break;
-        }
-
-        default:
-            break;
-        }
-    }
-
-    void NetworkManager::ServerParseData(ENetHost *server, int id, const char *data)
-    {
-        // printf("Parse: %s\n", data);
-
-        const char *pipe_data_type = strchr(data, '|');
-        if (!pipe_data_type)
-            return;
-
-        int data_type = 0;
-        for (const char *p = data; p < pipe_data_type; ++p)
-        {
-            if (*p < '0' || *p > '9')
-                break;
-            data_type = data_type * 10 + (*p - '0');
-        }
-
-        // printf("value: %d\n", data_type);
-
-        switch (data_type)
-        {
-        case 1:
-        {
-
-            auto it = client_map.find(id);
-            if (it == client_map.end())
-                break;
-
-            char msg[80];
-            sscanf(data, "%*d|%[^\n]", msg);
-
-            printf("%s: %s\n",
-                   it->second->GetUsername().c_str(),
-                   msg);
-
-            char send_data[1024];
-            snprintf(send_data, sizeof(send_data),
-                     "1|%d|%s",
-                     id, msg);
-
-            BroadcastPacket(server, send_data);
-
-            break;
-        }
-
-        case 2:
-        {
-            char username[80];
-
-            sscanf(data, "2|%[^\n]", username);
-            // sscanf(data, "2|%79[^\n]", username);
-
-            char send_data[1024] = {'\0'};
-            sprintf(send_data, "2|%d|%s", id, username);
-            printf("Send: %s\n", send_data);
-
-            BroadcastPacket(server, send_data);
-            client_map[id]->SetUsername(username);
-
-            break;
-        }
-        case 5: // colocar bloque
-        {
-            int id, x, y, z;
-            sscanf(data, "5|%d|%d|%d|%d", &id, &x, &y, &z);
-            if (id != CLIENT_ID)
-            {
-                //ObjectManager::GetInstance().Add(new Cube(glm::vec3(x, y, z), glm::vec3(1.0f)));
-            }
-            printf("Jugador %d colocó bloque en (%d,%d,%d)\n", id, x, y, z);
-
-            // reenviar a todos los demás
-            char send_data[64];
-            snprintf(send_data, sizeof(send_data), "5|%d|%d|%d|%d", id, x, y, z);
-            BroadcastPacket(server, send_data);
-            break;
-        }
-        case 6:
-        {
-            int id, x, y, z;
-            sscanf(data, "6|%d|%d|%d|%d", &id, &x, &y, &z);
-            if (id != CLIENT_ID)
-            {
-                /*
-                for (auto obj : ObjectManager::GetInstance().FindByPosition(glm::vec3(x, y, z)))
-                {
-                    obj->Destroy();
-                }
-                */
-            }
-            printf("Jugador %d destruyó bloque en (%d,%d,%d)\n", id, x, y, z);
-
-            // reenviar a todos los demás
-            char send_data[64];
-            snprintf(send_data, sizeof(send_data), "6|%d|%d|%d|%d", id, x, y, z);
-            BroadcastPacket(server, send_data);
-        }
-
-        default:
-            return;
-            break;
-        }
-    }
-
-    void NetworkManager::update_server()
-    {
-        while (enet_host_service(server, &event, 1000) > 0)
-        {
-            switch (event.type)
-            {
-            case ENET_EVENT_TYPE_CONNECT:
-            {
-
-                printf("A new client connected from %x:%u\n",
-                       event.peer->address.host,
-                       event.peer->address.port);
-
-                for (auto const &x : client_map)
-                {
-                    char send_data[1024] = {'\0'};
-                    sprintf(send_data, "2|%d|%s", x.first, x.second->GetUsername().c_str());
-                    BroadcastPacket(server, send_data);
-                }
-
-                new_player_id++;
-
-                client_map[new_player_id] = new ClientData(new_player_id);
-                event.peer->data = client_map[new_player_id];
-
-                char data_to_send[126] = {'\0'};
-
-                sprintf(data_to_send, "3|%d", new_player_id);
-
-                SendPacket(event.peer, data_to_send);
-
-                break;
-            }
-
-            case ENET_EVENT_TYPE_RECEIVE:
-            {
-                /*
-                                printf("Packet [%s] (%u bytes) from %x:%u on channel %u\n",
-                                       event.packet->data,
-                                       event.packet->dataLength,
-                                       event.peer->address.host,
-                                       event.peer->address.port,
-                                       event.channelID);
-                */
-
-                ServerParseData(server, static_cast<ClientData *>(event.peer->data)->GetID(), reinterpret_cast<const char *>(event.packet->data));
-
-                enet_packet_destroy(event.packet);
-
-                break;
-            }
-
-            case ENET_EVENT_TYPE_DISCONNECT:
-            {
-                printf("%x:%u disconnected\n",
-                       event.peer->address.host,
-                       event.peer->address.port);
-
-                char disconnect_data[126] = {'\0'};
-                sprintf(disconnect_data, "4|%d", static_cast<ClientData *>(event.peer->data)->GetID());
-                BroadcastPacket(server, disconnect_data);
-
-                event.peer->data = nullptr;
-
-                break;
-            }
-
-            default:
-                break;
-            }
-        }
-    }
-
-    void NetworkManager::_message_loop_(ENetHost *client)
+    void NetworkManager::ServerLoop()
     {
         ENetEvent event = {};
 
-        while (g_running.load())
+        while (running.load())
         {
-            while (enet_host_service(client, &event, 0) > 0)
+            while (enet_host_service(host, &event, 10) > 0)
             {
+                if (!running.load())
+                    break;
+
                 switch (event.type)
                 {
+                case ENET_EVENT_TYPE_CONNECT:
+                {
+                    int peerId = session.AddPeer();
+                    peerIdMap[event.peer] = peerId;
+                    event.peer->data = reinterpret_cast<void *>(static_cast<intptr_t>(peerId));
+
+                    // Send the client their assigned ID
+                    NetworkMessage assignMsg(NetMessageType::AssignClientId, {{"clientId", peerId}});
+                    SendPacketTo(event.peer, assignMsg);
+
+                    // Notify all existing peers about the new connection
+                    NetworkMessage connectMsg(NetMessageType::ClientConnect, {{"clientId", peerId}});
+                    BroadcastToAll(connectMsg);
+
+                    // Send existing peer list to the new client
+                    for (const auto &existingPeer : session.GetAllPeers())
+                    {
+                        if (existingPeer.id != peerId)
+                        {
+                            NetworkMessage peerInfo(NetMessageType::ClientConnect, {
+                                {"clientId", existingPeer.id},
+                                {"username", existingPeer.username}
+                            });
+                            SendPacketTo(event.peer, peerInfo);
+                        }
+                    }
+
+                    // Push to game thread
+                    incomingQueue.Push({peerId, connectMsg});
+
+                    std::cout << "[NetworkManager] Client " << peerId << " connected." << std::endl;
+                    break;
+                }
+
                 case ENET_EVENT_TYPE_RECEIVE:
                 {
-                    /*
-                        string receivedMsg(reinterpret_cast<const char *>(event.packet->data), event.packet->dataLength);
+                    int peerId = static_cast<int>(reinterpret_cast<intptr_t>(event.peer->data));
+                    NetworkMessage msg = NetworkMessage::Deserialize(event.packet->data, event.packet->dataLength);
 
-                        char ipStr[128];
-                        enet_address_get_host_ip(&event.peer->address, ipStr, sizeof(ipStr));
-                        string receivedHost(ipStr);
-
-                        cout << "A packet of length " << event.packet->dataLength
-                                << " containing \"" << receivedMsg << "\" was received for "
-                                << receivedHost << ":" << event.peer->address.port
-                                << " on channel " << event.channelID << "\n";
-                    */
-
-                    ClientParseData(reinterpret_cast<const char *>(event.packet->data));
+                    HandleServerMessage(event.peer, peerId, msg);
 
                     enet_packet_destroy(event.packet);
                     break;
                 }
+
                 case ENET_EVENT_TYPE_DISCONNECT:
-                    printf("Desconectado del servidor.\n");
-                    g_running.store(false);
-                    return;
+                {
+                    int peerId = static_cast<int>(reinterpret_cast<intptr_t>(event.peer->data));
+
+                    NetworkMessage disconnectMsg(NetMessageType::ClientDisconnect, {{"clientId", peerId}});
+                    BroadcastToAll(disconnectMsg, event.peer);
+                    incomingQueue.Push({peerId, disconnectMsg});
+
+                    session.RemovePeer(peerId);
+                    peerIdMap.erase(event.peer);
+                    event.peer->data = nullptr;
+
+                    std::cout << "[NetworkManager] Client " << peerId << " disconnected." << std::endl;
+                    break;
+                }
 
                 default:
                     break;
@@ -457,23 +151,388 @@ namespace CosmicEngine
         }
     }
 
-    void NetworkManager::shutdown()
+    void NetworkManager::HandleServerMessage(ENetPeer *peer, int peerId, const NetworkMessage &msg)
     {
-        g_running.store(false);
-        if (t.joinable())
-            t.join();
+        switch (msg.type)
+        {
+        case NetMessageType::ChatMessage:
+        case NetMessageType::PlayerState:
+        case NetMessageType::SpawnObject:
+        case NetMessageType::DestroyObject:
+        case NetMessageType::ObjectState:
+        case NetMessageType::DamageEvent:
+        case NetMessageType::PlayerDeath:
+        {
+            // Stamp the sender ID and relay to all clients (including sender for confirmation)
+            nlohmann::json relayPayload = msg.payload;
+            relayPayload["senderId"] = peerId;
+            NetworkMessage relayMsg(msg.type, relayPayload);
+            BroadcastToAll(relayMsg);
+
+            // Also push to game thread for server-side logic
+            incomingQueue.Push({peerId, relayMsg});
+            break;
+        }
+
+        case NetMessageType::Ping:
+        {
+            NetworkMessage pong(NetMessageType::Pong, msg.payload);
+            SendPacketTo(peer, pong);
+            break;
+        }
+
+        default:
+        {
+            // Forward custom/unknown messages to game thread and relay
+            nlohmann::json relayPayload = msg.payload;
+            relayPayload["senderId"] = peerId;
+            NetworkMessage relayMsg(msg.type, relayPayload);
+            BroadcastToAll(relayMsg);
+            incomingQueue.Push({peerId, relayMsg});
+            break;
+        }
+        }
     }
 
-    void NetworkManager::StartServer()
+    // ──────────────────────────────────────────────
+    // Client
+    // ──────────────────────────────────────────────
+
+    bool NetworkManager::ConnectToServer(const std::string &ip, int port, const std::string &username)
     {
+        if (role != NetworkRole::None)
+        {
+            std::cerr << "[NetworkManager] Already running as " << (role == NetworkRole::Server ? "server" : "client") << "." << std::endl;
+            return false;
+        }
+
+        host = enet_host_create(nullptr, 1, 2, 0, 0);
+        if (!host)
+        {
+            std::cerr << "[NetworkManager] Failed to create ENet client host." << std::endl;
+            return false;
+        }
+
+        ENetAddress address = {};
+        enet_address_set_host(&address, ip.c_str());
+        address.port = static_cast<enet_uint16>(port);
+
+        serverPeer = enet_host_connect(host, &address, 2, 0);
+        if (!serverPeer)
+        {
+            std::cerr << "[NetworkManager] No available peers for connection." << std::endl;
+            enet_host_destroy(host);
+            host = nullptr;
+            return false;
+        }
+
+        // Wait for connection
+        ENetEvent event = {};
+        if (enet_host_service(host, &event, 5000) > 0 && event.type == ENET_EVENT_TYPE_CONNECT)
+        {
+            std::cout << "[NetworkManager] Connected to " << ip << ":" << port << "." << std::endl;
+        }
+        else
+        {
+            std::cerr << "[NetworkManager] Connection to " << ip << ":" << port << " failed." << std::endl;
+            enet_peer_reset(serverPeer);
+            enet_host_destroy(host);
+            host = nullptr;
+            serverPeer = nullptr;
+            return false;
+        }
+
+        localUsername = username;
+        role = NetworkRole::Client;
+        running.store(true);
+
+        networkThread = std::thread(&NetworkManager::ClientLoop, this);
+
+        // Send username to server
+        NetworkMessage greetMsg(NetMessageType::ChatMessage, {{"username", username}, {"type", "join"}});
+        SendToServer(greetMsg);
+
+        return true;
     }
 
-    void NetworkManager::doAccept()
+    void NetworkManager::ClientLoop()
     {
+        ENetEvent event = {};
+
+        while (running.load())
+        {
+            while (enet_host_service(host, &event, 10) > 0)
+            {
+                if (!running.load())
+                    break;
+
+                switch (event.type)
+                {
+                case ENET_EVENT_TYPE_RECEIVE:
+                {
+                    NetworkMessage msg = NetworkMessage::Deserialize(event.packet->data, event.packet->dataLength);
+                    HandleClientMessage(msg);
+                    enet_packet_destroy(event.packet);
+                    break;
+                }
+
+                case ENET_EVENT_TYPE_DISCONNECT:
+                {
+                    std::cout << "[NetworkManager] Disconnected from server." << std::endl;
+                    incomingQueue.Push({-1, NetworkMessage(NetMessageType::ClientDisconnect, {{"clientId", localClientId}})});
+                    running.store(false);
+                    return;
+                }
+
+                default:
+                    break;
+                }
+            }
+        }
     }
 
-    void NetworkManager::broadcast()
+    void NetworkManager::HandleClientMessage(const NetworkMessage &msg)
     {
+        switch (msg.type)
+        {
+        case NetMessageType::AssignClientId:
+        {
+            localClientId = msg.payload.value("clientId", -1);
+            std::cout << "[NetworkManager] Assigned client ID: " << localClientId << std::endl;
+            incomingQueue.Push({-1, msg});
+            break;
+        }
+
+        case NetMessageType::ClientConnect:
+        {
+            int peerId = msg.payload.value("clientId", -1);
+            std::string username = msg.payload.value("username", "");
+            if (peerId >= 0)
+            {
+                session.AddPeer(username);
+            }
+            incomingQueue.Push({peerId, msg});
+            break;
+        }
+
+        case NetMessageType::ClientDisconnect:
+        {
+            int peerId = msg.payload.value("clientId", -1);
+            session.RemovePeer(peerId);
+            incomingQueue.Push({peerId, msg});
+            break;
+        }
+
+        default:
+        {
+            int senderId = msg.payload.value("senderId", -1);
+            incomingQueue.Push({senderId, msg});
+            break;
+        }
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    // Disconnect
+    // ──────────────────────────────────────────────
+
+    void NetworkManager::Disconnect()
+    {
+        if (role == NetworkRole::None)
+            return;
+
+        running.store(false);
+
+        if (networkThread.joinable())
+            networkThread.join();
+
+        if (role == NetworkRole::Client && serverPeer)
+        {
+            enet_peer_disconnect(serverPeer, 0);
+            
+            // Allow some time for the disconnect to be sent
+            ENetEvent event = {};
+            while (enet_host_service(host, &event, 500) > 0)
+            {
+                if (event.type == ENET_EVENT_TYPE_RECEIVE)
+                    enet_packet_destroy(event.packet);
+                else if (event.type == ENET_EVENT_TYPE_DISCONNECT)
+                    break;
+            }
+            serverPeer = nullptr;
+        }
+
+        if (host)
+        {
+            enet_host_destroy(host);
+            host = nullptr;
+        }
+
+        session.Clear();
+        peerIdMap.clear();
+        incomingQueue.Clear();
+        outgoingQueue.Clear();
+
+        role = NetworkRole::None;
+        localClientId = -1;
+        localUsername.clear();
+
+        std::cout << "[NetworkManager] Disconnected." << std::endl;
+    }
+
+    // ──────────────────────────────────────────────
+    // Message processing (game thread)
+    // ──────────────────────────────────────────────
+
+    void NetworkManager::ProcessMessages()
+    {
+        IncomingMessage incoming;
+        while (incomingQueue.Pop(incoming))
+        {
+            auto it = handlers.find(incoming.message.type);
+            if (it != handlers.end())
+            {
+                for (const auto &handler : it->second)
+                {
+                    handler(incoming.senderId, incoming.message.payload);
+                }
+            }
+        }
+    }
+
+    void NetworkManager::RegisterHandler(NetMessageType type, MessageHandler handler)
+    {
+        handlers[type].push_back(std::move(handler));
+    }
+
+    void NetworkManager::ClearHandlers(NetMessageType type)
+    {
+        handlers.erase(type);
+    }
+
+    void NetworkManager::ClearAllHandlers()
+    {
+        handlers.clear();
+    }
+
+    // ──────────────────────────────────────────────
+    // Sending
+    // ──────────────────────────────────────────────
+
+    void NetworkManager::SendPacketTo(ENetPeer *peer, const NetworkMessage &msg, bool reliable)
+    {
+        auto data = msg.Serialize();
+        enet_uint32 flags = reliable ? ENET_PACKET_FLAG_RELIABLE : 0;
+        ENetPacket *packet = enet_packet_create(data.data(), data.size(), flags);
+        enet_peer_send(peer, 0, packet);
+    }
+
+    void NetworkManager::BroadcastToAll(const NetworkMessage &msg, ENetPeer *exclude, bool reliable)
+    {
+        auto data = msg.Serialize();
+        enet_uint32 flags = reliable ? ENET_PACKET_FLAG_RELIABLE : 0;
+
+        for (size_t i = 0; i < host->peerCount; ++i)
+        {
+            ENetPeer *peer = &host->peers[i];
+            if (peer->state == ENET_PEER_STATE_CONNECTED && peer != exclude)
+            {
+                ENetPacket *packet = enet_packet_create(data.data(), data.size(), flags);
+                enet_peer_send(peer, 0, packet);
+            }
+        }
+    }
+
+    void NetworkManager::SendToServer(const NetworkMessage &msg)
+    {
+        if (role != NetworkRole::Client || !serverPeer)
+        {
+            std::cerr << "[NetworkManager] Not connected as client." << std::endl;
+            return;
+        }
+        SendPacketTo(serverPeer, msg);
+    }
+
+    void NetworkManager::SendToClient(int peerId, const NetworkMessage &msg)
+    {
+        if (role != NetworkRole::Server)
+        {
+            std::cerr << "[NetworkManager] Not running as server." << std::endl;
+            return;
+        }
+
+        for (const auto &[peer, id] : peerIdMap)
+        {
+            if (id == peerId)
+            {
+                SendPacketTo(peer, msg);
+                return;
+            }
+        }
+        std::cerr << "[NetworkManager] Peer " << peerId << " not found." << std::endl;
+    }
+
+    void NetworkManager::Broadcast(const NetworkMessage &msg, int excludePeerId)
+    {
+        if (role != NetworkRole::Server)
+        {
+            std::cerr << "[NetworkManager] Not running as server." << std::endl;
+            return;
+        }
+
+        ENetPeer *excludePeer = nullptr;
+        if (excludePeerId >= 0)
+        {
+            for (const auto &[peer, id] : peerIdMap)
+            {
+                if (id == excludePeerId)
+                {
+                    excludePeer = peer;
+                    break;
+                }
+            }
+        }
+
+        BroadcastToAll(msg, excludePeer);
+    }
+
+    // ──────────────────────────────────────────────
+    // Queries
+    // ──────────────────────────────────────────────
+
+    NetworkRole NetworkManager::GetRole() const
+    {
+        return role;
+    }
+
+    bool NetworkManager::IsConnected() const
+    {
+        return role != NetworkRole::None;
+    }
+
+    bool NetworkManager::IsServer() const
+    {
+        return role == NetworkRole::Server;
+    }
+
+    bool NetworkManager::IsClient() const
+    {
+        return role == NetworkRole::Client;
+    }
+
+    int NetworkManager::GetLocalClientId() const
+    {
+        return localClientId;
+    }
+
+    const NetworkSession &NetworkManager::GetSession() const
+    {
+        return session;
+    }
+
+    size_t NetworkManager::GetPeerCount() const
+    {
+        return session.GetPeerCount();
     }
 
 }

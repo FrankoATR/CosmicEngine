@@ -4,6 +4,7 @@
 #include "../../models/ui/ui_element.hpp"
 #include "../../models/ui/derived/ui_button.hpp"
 #include "../../models/ui/derived/ui_text.hpp"
+#include "../../models/ui/derived/ui_text_field.hpp"
 #include <vector>
 
 namespace CosmicEngine

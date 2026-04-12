@@ -41,6 +41,11 @@ namespace CosmicEngine
         this->MouseHoverAny = false;
         for (auto &element : elements)
         {
+            if (!element || !element->IsVisible())
+            {
+                continue;
+            }
+
             element->update(deltaTime);
             if( element->GetType() != UIElementType::Label && element->MouseHover())
             {

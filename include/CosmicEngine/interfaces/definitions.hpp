@@ -46,6 +46,9 @@
 #define JSONMANAGER_HEADER <CosmicEngine/managers/storage/json/json_manager.hpp>
 #define JSON_MN CosmicEngine::JsonManager::GetInstance()
 
+#define NETWORKMANAGER_HEADER <CosmicEngine/managers/network/network_manager.hpp>
+#define NET_MN CosmicEngine::NetworkManager::GetInstance()
+
 #define GAMEGRIDCOLLISIONS_HEADER <CosmicEngine/collisions/GameGridCollisions.hpp>
 
 

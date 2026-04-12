@@ -12,7 +12,8 @@ namespace CosmicEngine
     {
         Button,
         Label,
-        Image
+        Image,
+        TextField
     };
 
     class UIElement

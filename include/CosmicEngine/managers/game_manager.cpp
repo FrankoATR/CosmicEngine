@@ -176,7 +176,7 @@ namespace CosmicEngine
 		JsonManager::GetInstance().init();
 		LightManager::GetInstance().init();
 		CameraManager::GetInstance().init(baseAspectSize);
-		NetworkManager::GetInstance().Init_server(); // UTILIZAR NETWORK SEPARADOS, ADEMAS DE USAR EL SERVER CON UN CLIENT PROPIO PARA AUMENTAR FIDELIDAD DE SINCRONIZACION
+		NetworkManager::GetInstance().init();
 
 	}
 

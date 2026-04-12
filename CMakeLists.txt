@@ -12,7 +12,7 @@ set(PROGRAM_ICON "${CMAKE_SOURCE_DIR}/default/icon.ico")
 
 #Change betwen DEBUG and RELEASE
 
-set(GAME_MODE_CONFIGURATION GAME_2D_CONFIGURATION CACHE STRING "Selecciona el modo del juego: GAME_2D_CONFIGURATION o GAME_3D_CONFIGURATION")
+set(GAME_MODE_CONFIGURATION GAME_3D_CONFIGURATION CACHE STRING "Selecciona el modo del juego: GAME_2D_CONFIGURATION o GAME_3D_CONFIGURATION")
 
 set(GAME_INITIAL_SCREEN_WIDTH 1920 CACHE STRING "Default game window width")
 set(GAME_INITIAL_SCREEN_HEIGHT 1080 CACHE STRING "Default game window height")
@@ -42,6 +42,9 @@ if(GAME_MODE_CONFIGURATION STREQUAL "GAME_2D_CONFIGURATION")
 elseif(GAME_MODE_CONFIGURATION STREQUAL "GAME_3D_CONFIGURATION")
     list(APPEND GAME_SOURCE_FILES
         ${CMAKE_SOURCE_DIR}/src/entities/collision_demo_object_3d.cpp
+        ${CMAKE_SOURCE_DIR}/src/entities/network_demo_player.cpp
+        ${CMAKE_SOURCE_DIR}/src/entities/network_demo_projectile.cpp
+        ${CMAKE_SOURCE_DIR}/src/scenes/network_demo_scene.cpp
     )
     list(APPEND CONTROLLER_SOURCE_FILES
         ${CMAKE_SOURCE_DIR}/include/CosmicEngine/controllers/camera/classic_3d_camera_controller.cpp
@@ -77,6 +80,7 @@ set(ENGINE_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/ui_element.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_button.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_text.cpp
+    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_text_field.cpp
 
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/game_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/resource/resource_manager.cpp
@@ -161,6 +165,20 @@ file(WRITE ${ICON_FILE} "IDI_ICON1 ICON \"${PROGRAM_ICON}\"\n")
 
 set(SQLITE3_DIR "${CMAKE_SOURCE_DIR}/include/sqlite")
 
+get_filename_component(MINGW_RUNTIME_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
+
+set(RUNTIME_DEPENDENCY_DLLS)
+
+if (MINGW)
+    list(APPEND RUNTIME_DEPENDENCY_DLLS
+        "${MINGW_RUNTIME_DIR}/libgcc_s_seh-1.dll"
+        "${MINGW_RUNTIME_DIR}/libstdc++-6.dll"
+        "${MINGW_RUNTIME_DIR}/libwinpthread-1.dll"
+    )
+endif()
+
+file(GLOB PROJECT_RUNTIME_DLLS "${CMAKE_SOURCE_DIR}/dll/*.dll")
+
 add_library(sqlite3 STATIC
     ${SQLITE3_DIR}/sqlite3.c
 )
@@ -216,6 +234,16 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${RUNTIME_OUTPUT_DIR}"
     OUTPUT_NAME ${PROGRAM_NAME}
 )
+
+foreach(RUNTIME_DLL ${RUNTIME_DEPENDENCY_DLLS} ${PROJECT_RUNTIME_DLLS})
+    if (EXISTS "${RUNTIME_DLL}")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${RUNTIME_DLL}"
+                "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+        )
+    endif()
+endforeach()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
     set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)

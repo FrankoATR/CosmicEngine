@@ -292,6 +292,33 @@ namespace CosmicEngine
             position += offset;
         }
 
+        void CameraManager::SetFocusObject(glm::vec3 from, Object *ObjToLook, float xoffset, float yoffset)
+        {
+            if (!ObjToLook)
+            {
+                return;
+            }
+
+            glm::vec3 target = ObjToLook->GetPosition() + ObjToLook->GetSize() * 0.5f + glm::vec3(xoffset, yoffset, 0.0f);
+            SetFocusPosition(from, target);
+        }
+
+        void CameraManager::SetFocusPosition(glm::vec3 from, glm::vec3 lookingAt)
+        {
+            position = from;
+
+            glm::vec3 direction = glm::normalize(lookingAt - from);
+            yaw = glm::degrees(std::atan2(direction.z, direction.x));
+            pitch = glm::degrees(std::asin(direction.y));
+
+            if (constrainPitch)
+            {
+                pitch = glm::clamp(pitch, -89.0f, 89.0f);
+            }
+
+            updateCameraVectors();
+        }
+
         void CameraManager::RotateBy(float yawOffset, float pitchOffset)
         {
             yaw += yawOffset;

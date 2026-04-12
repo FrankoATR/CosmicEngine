@@ -3,6 +3,10 @@
 #include <CosmicEngine/utils/logger.hpp>
 #include "scenes/main_scene.hpp"
 
+#if GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+#include "scenes/network_demo_scene.hpp"
+#endif
+
 using namespace CosmicEngine;
 
 int main()
@@ -24,7 +28,11 @@ int main()
 			GAME_BASE_RENDER_SCREEN_HEIGHT};
 
 		GameManager::GetInstance().init(params);
+		#if GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+		GameManager::GetInstance().setFirstScene(new NetworkDemoScene);
+		#else
 		GameManager::GetInstance().setFirstScene(new MainScene);
+		#endif
 		GameManager::GetInstance().update();
 		GameManager::GetInstance().shutdown();
 

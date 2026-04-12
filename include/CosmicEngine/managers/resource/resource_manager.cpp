@@ -884,15 +884,15 @@ namespace CosmicEngine
             (void)filled;
 
             auto dynamic_temp = Get_Dynamic_VAO_VBO("COSMIC_Rectangle");
-            std::vector<glm::vec2> vertices = {
-                point_1,
-                glm::vec2(point_2.x, point_1.y),
-                point_2,
-                glm::vec2(point_1.x, point_2.y)
+            std::vector<glm::vec3> vertices = {
+                glm::vec3(point_1, 0.0f),
+                glm::vec3(point_2.x, point_1.y, 0.0f),
+                glm::vec3(point_2, 0.0f),
+                glm::vec3(point_1.x, point_2.y, 0.0f)
             };
 
             glBindBuffer(GL_ARRAY_BUFFER, dynamic_temp.second);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(glm::vec2), vertices.data());
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(glm::vec3), vertices.data());
             glBindBuffer(GL_ARRAY_BUFFER, 0);
 
             Shader *shapeShader = GetShader("COSMIC_Shape_2D");
