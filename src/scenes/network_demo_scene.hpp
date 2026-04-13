@@ -121,6 +121,7 @@ private:
     void CheckProjectileCollisions();
     void ConfigureFixedCamera();
     bool TryGetMouseArenaPosition(glm::vec3 &worldPosition) const;
+    bool TryGetControllerArenaPosition(glm::vec3 &worldPosition) const;
     void ClearGameplayObjects();
     void EndMatch(const std::string &message);
     void BroadcastMatchEnded(const std::string &reason, int winnerId = -1, int loserId = -1, int disconnectedId = -1);

@@ -173,25 +173,42 @@ void NetworkDemoPlayer::update(float deltaTime)
 
     auto &input = INP_MN;
     glm::vec3 velocity = GetVelocity();
-    glm::vec3 horizontalVelocity(0.0f);
+    glm::vec3 movementInput(0.0f);
 
     if (input.IsKeyPressed(GLFW_KEY_W, CosmicEngine::KeyRelease))
-        horizontalVelocity.z -= 1.0f;
+        movementInput.z -= 1.0f;
     if (input.IsKeyPressed(GLFW_KEY_S, CosmicEngine::KeyRelease))
-        horizontalVelocity.z += 1.0f;
+        movementInput.z += 1.0f;
     if (input.IsKeyPressed(GLFW_KEY_A, CosmicEngine::KeyRelease))
-        horizontalVelocity.x -= 1.0f;
+        movementInput.x -= 1.0f;
     if (input.IsKeyPressed(GLFW_KEY_D, CosmicEngine::KeyRelease))
-        horizontalVelocity.x += 1.0f;
+        movementInput.x += 1.0f;
 
-    if (glm::length(horizontalVelocity) > 0.001f)
+    movementInput.x += input.GetJoystickAxis(GLFW_GAMEPAD_AXIS_LEFT_X);
+    movementInput.z += input.GetJoystickAxis(GLFW_GAMEPAD_AXIS_LEFT_Y);
+
+    if (input.IsJoystickButtonPressed(GLFW_GAMEPAD_BUTTON_DPAD_UP, CosmicEngine::KeyRelease))
+        movementInput.z -= 1.0f;
+    if (input.IsJoystickButtonPressed(GLFW_GAMEPAD_BUTTON_DPAD_DOWN, CosmicEngine::KeyRelease))
+        movementInput.z += 1.0f;
+    if (input.IsJoystickButtonPressed(GLFW_GAMEPAD_BUTTON_DPAD_LEFT, CosmicEngine::KeyRelease))
+        movementInput.x -= 1.0f;
+    if (input.IsJoystickButtonPressed(GLFW_GAMEPAD_BUTTON_DPAD_RIGHT, CosmicEngine::KeyRelease))
+        movementInput.x += 1.0f;
+
+    float movementMagnitude = glm::length(movementInput);
+    if (movementMagnitude > 1.0f)
     {
-        horizontalVelocity = glm::normalize(horizontalVelocity) * moveSpeed;
+        movementInput /= movementMagnitude;
     }
-    velocity.x = horizontalVelocity.x;
-    velocity.z = horizontalVelocity.z;
 
-    if (grounded && input.IsKeyPressed(GLFW_KEY_SPACE, CosmicEngine::KeyDown))
+    velocity.x = movementInput.x * moveSpeed;
+    velocity.z = movementInput.z * moveSpeed;
+
+    bool jumpPressed = input.IsKeyPressed(GLFW_KEY_SPACE, CosmicEngine::KeyDown) ||
+                       input.IsJoystickButtonPressed(GLFW_GAMEPAD_BUTTON_A, CosmicEngine::KeyDown);
+
+    if (grounded && jumpPressed)
     {
         velocity.y = kPlayerJumpVelocity;
         grounded = false;

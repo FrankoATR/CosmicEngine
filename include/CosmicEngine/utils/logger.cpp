@@ -1,4 +1,4 @@
-#include "Logger.hpp"
+#include "logger.hpp"
 #include <stdexcept>
 #include <ctime>
 #include <iomanip>

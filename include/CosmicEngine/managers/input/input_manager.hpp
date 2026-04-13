@@ -4,6 +4,7 @@
 #define GLFW_INCLUDE_NONE 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <deque>
 #include <map>
 #include <functional>
 
@@ -31,7 +32,13 @@ namespace CosmicEngine
         std::map<int, bool> mouseButtonDownState;
         std::map<int, bool> mouseButtonUpState;
         std::map<int, bool> mouseButtonHeldState;
+        std::map<int, bool> joystickButtonDownState;
+        std::map<int, bool> joystickButtonUpState;
         std::map<int, bool> joystickButtonState;
+        std::map<int, float> joystickAxisState;
+        std::deque<unsigned int> queuedCharacterInput;
+        int activeGamepadId;
+        bool activeJoystickUsesGamepadApi;
 
         unsigned int *MouseSprite;
         glm::vec2 MouseSpriteOffSet;
@@ -57,6 +64,11 @@ namespace CosmicEngine
         bool IsKeyPressed(int keycode, KeyEventType eventType) const;
         bool IsMouseButtonPressed(int button, KeyEventType eventType) const;
         bool IsJoystickButtonPressed(int button) const;
+        bool IsJoystickButtonPressed(int button, KeyEventType eventType) const;
+        float GetJoystickAxis(int axis) const;
+        bool HasGamepad() const;
+        bool PollCharacterInput(unsigned int &character);
+        void ClearCharacterInput();
 
         glm::vec2 GetMousePosition() const;
         glm::vec2 GetMousePosition_UI() const;

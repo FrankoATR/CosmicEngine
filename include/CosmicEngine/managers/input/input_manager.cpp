@@ -4,6 +4,7 @@
 #include "../camera/camera_manager.hpp"
 #include "../../utils/log.hpp"
 
+#include <cmath>
 #include <iostream>
 
 namespace
@@ -80,6 +81,13 @@ namespace CosmicEngine
         lastMouseY = 0.0f;
         firstMouseInput = true;
         disableMouse = false;
+        activeGamepadId = -1;
+        activeJoystickUsesGamepadApi = false;
+
+        glfwSetCharCallback(window, [](GLFWwindow *, unsigned int codepoint)
+        {
+            InputManager::GetInstance().queuedCharacterInput.push_back(codepoint);
+        });
 
         ResetMouseLookReference();
 
@@ -101,6 +109,10 @@ namespace CosmicEngine
         for (auto &[button, state] : mouseButtonDownState)
             state = false;
         for (auto &[button, state] : mouseButtonUpState)
+            state = false;
+        for (auto &[button, state] : joystickButtonDownState)
+            state = false;
+        for (auto &[button, state] : joystickButtonUpState)
             state = false;
 
         for (int key = GLFW_KEY_SPACE; key <= GLFW_KEY_LAST; ++key)
@@ -135,6 +147,126 @@ namespace CosmicEngine
                 mouseButtonUpState[button] = true;
                 mouseButtonHeldState[button] = false;
             }
+        }
+
+        activeGamepadId = -1;
+        activeJoystickUsesGamepadApi = false;
+        for (int joystickId = GLFW_JOYSTICK_1; joystickId <= GLFW_JOYSTICK_LAST; ++joystickId)
+        {
+            if (glfwJoystickPresent(joystickId) != GLFW_TRUE)
+            {
+                continue;
+            }
+
+            activeGamepadId = joystickId;
+            activeJoystickUsesGamepadApi = glfwJoystickIsGamepad(joystickId) == GLFW_TRUE;
+            if (activeJoystickUsesGamepadApi)
+            {
+                break;
+            }
+
+            if (activeGamepadId != -1)
+            {
+                break;
+            }
+        }
+
+        if (activeGamepadId != -1)
+        {
+            if (activeJoystickUsesGamepadApi)
+            {
+                GLFWgamepadstate gamepadState;
+                if (glfwGetGamepadState(activeGamepadId, &gamepadState) == GLFW_TRUE)
+                {
+                    for (int button = 0; button <= GLFW_GAMEPAD_BUTTON_LAST; ++button)
+                    {
+                        bool isPressed = gamepadState.buttons[button] == GLFW_PRESS;
+                        if (isPressed)
+                        {
+                            if (!joystickButtonState[button])
+                            {
+                                joystickButtonDownState[button] = true;
+                                joystickButtonState[button] = true;
+                            }
+                        }
+                        else if (joystickButtonState[button])
+                        {
+                            joystickButtonUpState[button] = true;
+                            joystickButtonState[button] = false;
+                        }
+                    }
+
+                    for (int axis = 0; axis <= GLFW_GAMEPAD_AXIS_LAST; ++axis)
+                    {
+                        float axisValue = gamepadState.axes[axis];
+                        if (std::abs(axisValue) < 0.15f)
+                        {
+                            axisValue = 0.0f;
+                        }
+                        joystickAxisState[axis] = axisValue;
+                    }
+                }
+                else
+                {
+                    activeGamepadId = -1;
+                    activeJoystickUsesGamepadApi = false;
+                }
+            }
+            else
+            {
+                int axisCount = 0;
+                const float *axes = glfwGetJoystickAxes(activeGamepadId, &axisCount);
+                int buttonCount = 0;
+                const unsigned char *buttons = glfwGetJoystickButtons(activeGamepadId, &buttonCount);
+
+                for (auto &[axis, value] : joystickAxisState)
+                {
+                    value = 0.0f;
+                }
+
+                for (int button = 0; button <= GLFW_GAMEPAD_BUTTON_LAST; ++button)
+                {
+                    bool isPressed = buttons && button < buttonCount && buttons[button] == GLFW_PRESS;
+                    if (isPressed)
+                    {
+                        if (!joystickButtonState[button])
+                        {
+                            joystickButtonDownState[button] = true;
+                            joystickButtonState[button] = true;
+                        }
+                    }
+                    else if (joystickButtonState[button])
+                    {
+                        joystickButtonUpState[button] = true;
+                        joystickButtonState[button] = false;
+                    }
+                }
+
+                auto setAxisFromRaw = [this, axes, axisCount](int mappedAxis, int rawAxis)
+                {
+                    float axisValue = (axes && rawAxis < axisCount) ? axes[rawAxis] : 0.0f;
+                    if (std::abs(axisValue) < 0.15f)
+                    {
+                        axisValue = 0.0f;
+                    }
+                    joystickAxisState[mappedAxis] = axisValue;
+                };
+
+                setAxisFromRaw(GLFW_GAMEPAD_AXIS_LEFT_X, 0);
+                setAxisFromRaw(GLFW_GAMEPAD_AXIS_LEFT_Y, 1);
+                setAxisFromRaw(GLFW_GAMEPAD_AXIS_RIGHT_X, 2);
+                setAxisFromRaw(GLFW_GAMEPAD_AXIS_RIGHT_Y, 3);
+                setAxisFromRaw(GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, 4);
+                setAxisFromRaw(GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, 5);
+            }
+        }
+
+        if (activeGamepadId == -1)
+        {
+            for (auto &[button, state] : joystickButtonState)
+                state = false;
+            for (auto &[axis, value] : joystickAxisState)
+                value = 0.0f;
         }
 
         UpdateNormalizedMousePosition(window);
@@ -190,6 +322,55 @@ namespace CosmicEngine
     bool InputManager::IsJoystickButtonPressed(int button) const
     {
         return joystickButtonState.count(button) && joystickButtonState.at(button);
+    }
+
+    bool InputManager::IsJoystickButtonPressed(int button, KeyEventType eventType) const
+    {
+        switch (eventType)
+        {
+        case KeyEventType::KeyDown:
+            return joystickButtonDownState.count(button) && joystickButtonDownState.at(button);
+        case KeyEventType::KeyUp:
+            return joystickButtonUpState.count(button) && joystickButtonUpState.at(button);
+        case KeyEventType::KeyRelease:
+            return joystickButtonState.count(button) && joystickButtonState.at(button);
+        default:
+            return false;
+        }
+    }
+
+    float InputManager::GetJoystickAxis(int axis) const
+    {
+        auto it = joystickAxisState.find(axis);
+        if (it == joystickAxisState.end())
+        {
+            return 0.0f;
+        }
+
+        return it->second;
+    }
+
+    bool InputManager::HasGamepad() const
+    {
+        return activeGamepadId != -1;
+    }
+
+    bool InputManager::PollCharacterInput(unsigned int &character)
+    {
+        if (queuedCharacterInput.empty())
+        {
+            character = 0;
+            return false;
+        }
+
+        character = queuedCharacterInput.front();
+        queuedCharacterInput.pop_front();
+        return true;
+    }
+
+    void InputManager::ClearCharacterInput()
+    {
+        queuedCharacterInput.clear();
     }
 
 

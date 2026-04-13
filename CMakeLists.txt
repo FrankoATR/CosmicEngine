@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+project(Cosmic_Engine LANGUAGES C CXX)
 
 
 #**************************************BEGIN USER VARIABLES**************************************#
-project(Cosmic_Engine)
-
-set(PROGRAM_NAME "COSMIC ENGINE")
+set(PROGRAM_NAME_BASE "COSMIC ENGINE")
 
 set(PROGRAM_ICON "${CMAKE_SOURCE_DIR}/default/icon.ico")
 
@@ -117,7 +116,7 @@ set(IMGUI_FILES
     ${CMAKE_SOURCE_DIR}/include/imgui/imgui_impl_opengl3.cpp
 )
 
-set(LINK_LIBRARIES
+set(WINDOWS_LINK_LIBRARIES
     ${CMAKE_SOURCE_DIR}/lib/libglfw3.a
     ${CMAKE_SOURCE_DIR}/lib/libfreetype.a
     ${CMAKE_SOURCE_DIR}/lib/libglm.a
@@ -131,53 +130,59 @@ set(LINK_LIBRARIES
 
 
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(PROGRAM_NAME "${PROGRAM_NAME} DEBUG")
-    set(PROGRAM_ICON "${CMAKE_SOURCE_DIR}/default/icon.ico")
-    #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-    set(RUNTIME_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/bin/Debug")
-
-elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
-    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -static -static-libgcc -static-libstdc++ -pthread")
-    set(RUNTIME_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/bin/Release")
-
-elseif (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
-    set(RUNTIME_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/bin/MinSizeRel")
-
-elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    set(PROGRAM_NAME "${PROGRAM_NAME} DEBUG")
-    set(PROGRAM_ICON "${CMAKE_SOURCE_DIR}/default/icon.ico")
-    set(RUNTIME_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/bin/RelWithDebInfo")
-    
+if (WIN32)
+    set(PLATFORM_OUTPUT_SUBDIR "windows")
 else()
-    message(WARNING "Unknown build type: ${CMAKE_BUILD_TYPE}, defaulting to Debug")
-    set(PROGRAM_NAME "${PROGRAM_NAME} DEBUG")
-    set(PROGRAM_ICON "${CMAKE_SOURCE_DIR}/default/icon.ico")
-    #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-    set(RUNTIME_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/bin/Debug")
+    set(PLATFORM_OUTPUT_SUBDIR "linux")
 endif()
 
+set(RUNTIME_OUTPUT_BASE_DIR "${CMAKE_SOURCE_DIR}/bin/${PLATFORM_OUTPUT_SUBDIR}")
+set(RUNTIME_OUTPUT_DIR_DEBUG "${RUNTIME_OUTPUT_BASE_DIR}/Debug")
+set(RUNTIME_OUTPUT_DIR_RELEASE "${RUNTIME_OUTPUT_BASE_DIR}/Release")
+set(RUNTIME_OUTPUT_DIR_MINSIZEREL "${RUNTIME_OUTPUT_BASE_DIR}/MinSizeRel")
+set(RUNTIME_OUTPUT_DIR_RELWITHDEBINFO "${RUNTIME_OUTPUT_BASE_DIR}/RelWithDebInfo")
 
-
-set(ICON_FILE "${CMAKE_CURRENT_BINARY_DIR}/icon.rc")
-file(WRITE ${ICON_FILE} "IDI_ICON1 ICON \"${PROGRAM_ICON}\"\n")
 
 
 set(SQLITE3_DIR "${CMAKE_SOURCE_DIR}/include/sqlite")
 
-get_filename_component(MINGW_RUNTIME_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
-
+set(PLATFORM_SOURCE_FILES)
 set(RUNTIME_DEPENDENCY_DLLS)
+set(PROJECT_RUNTIME_DLLS)
 
-if (MINGW)
-    list(APPEND RUNTIME_DEPENDENCY_DLLS
-        "${MINGW_RUNTIME_DIR}/libgcc_s_seh-1.dll"
-        "${MINGW_RUNTIME_DIR}/libstdc++-6.dll"
-        "${MINGW_RUNTIME_DIR}/libwinpthread-1.dll"
+if (WIN32)
+    set(ICON_FILE "${CMAKE_CURRENT_BINARY_DIR}/icon.rc")
+    file(WRITE ${ICON_FILE} "IDI_ICON1 ICON \"${PROGRAM_ICON}\"\n")
+    list(APPEND PLATFORM_SOURCE_FILES ${ICON_FILE})
+
+    get_filename_component(MINGW_RUNTIME_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
+
+    if (MINGW)
+        list(APPEND RUNTIME_DEPENDENCY_DLLS
+            "${MINGW_RUNTIME_DIR}/libgcc_s_seh-1.dll"
+            "${MINGW_RUNTIME_DIR}/libstdc++-6.dll"
+            "${MINGW_RUNTIME_DIR}/libwinpthread-1.dll"
+        )
+    endif()
+
+    file(GLOB PROJECT_RUNTIME_DLLS "${CMAKE_SOURCE_DIR}/dll/*.dll")
+else()
+    find_package(OpenGL REQUIRED)
+    find_package(Freetype REQUIRED)
+    find_package(Threads REQUIRED)
+    find_package(ZLIB REQUIRED)
+    find_package(PkgConfig REQUIRED)
+    find_package(assimp REQUIRED)
+
+    pkg_check_modules(GLFW3 REQUIRED glfw3)
+
+    list(APPEND PLATFORM_SOURCE_FILES
+        ${CMAKE_SOURCE_DIR}/src/enet_impl.c
     )
 endif()
 
-file(GLOB PROJECT_RUNTIME_DLLS "${CMAKE_SOURCE_DIR}/dll/*.dll")
+set(BUNDLE_LINUX_SCRIPT "${CMAKE_SOURCE_DIR}/cmake/BundleLinuxDeps.cmake")
+set(WRITE_LINUX_LAUNCHER_SCRIPT "${CMAKE_SOURCE_DIR}/cmake/WriteLinuxLauncher.cmake")
 
 add_library(sqlite3 STATIC
     ${SQLITE3_DIR}/sqlite3.c
@@ -193,16 +198,35 @@ add_executable(
     ${CONTROLLER_SOURCE_FILES}
         ${GAME_SOURCE_FILES} 
         ${IMGUI_FILES} 
-        ${ICON_FILE}
+        ${PLATFORM_SOURCE_FILES}
     )
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+if (NOT WIN32)
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        ${GLFW3_INCLUDE_DIRS}
+    )
+
+    if (ASSIMP_INCLUDE_DIRS)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${ASSIMP_INCLUDE_DIRS})
+    endif()
+
+    target_link_directories(${PROJECT_NAME} PRIVATE
+        ${GLFW3_LIBRARY_DIRS}
+    )
+endif()
 
 
 # Define constantes numéricas para comparar en C++
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-    _WIN32_WINNT=0x0A00
     GAME_2D_CONFIGURATION=0
     GAME_3D_CONFIGURATION=1
 )
+
+if (WIN32)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE _WIN32_WINNT=0x0A00)
+endif()
 
 # Validación del modo seleccionado (2D o 3D)
 if(GAME_MODE_CONFIGURATION STREQUAL "GAME_3D_CONFIGURATION")
@@ -225,46 +249,85 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 
 
 if (WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${LINK_LIBRARIES} ws2_32 mswsock winmm)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${WINDOWS_LINK_LIBRARIES} sqlite3 ws2_32 mswsock winmm)
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        sqlite3
+        OpenGL::GL
+        Freetype::Freetype
+        ZLIB::ZLIB
+        Threads::Threads
+        ${GLFW3_LIBRARIES}
+    )
+
+    if (TARGET assimp::assimp)
+        target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp)
+    else()
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${ASSIMP_LIBRARIES})
+    endif()
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE dl m)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE sqlite3)
-
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${RUNTIME_OUTPUT_DIR}"
-    OUTPUT_NAME ${PROGRAM_NAME}
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${RUNTIME_OUTPUT_DIR_DEBUG}"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${RUNTIME_OUTPUT_DIR_RELEASE}"
+    RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${RUNTIME_OUTPUT_DIR_MINSIZEREL}"
+    RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${RUNTIME_OUTPUT_DIR_RELWITHDEBINFO}"
+    OUTPUT_NAME_DEBUG "${PROGRAM_NAME_BASE} DEBUG"
+    OUTPUT_NAME_RELEASE "${PROGRAM_NAME_BASE}"
+    OUTPUT_NAME_MINSIZEREL "${PROGRAM_NAME_BASE}"
+    OUTPUT_NAME_RELWITHDEBINFO "${PROGRAM_NAME_BASE} DEBUG"
 )
 
-foreach(RUNTIME_DLL ${RUNTIME_DEPENDENCY_DLLS} ${PROJECT_RUNTIME_DLLS})
-    if (EXISTS "${RUNTIME_DLL}")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${RUNTIME_DLL}"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-        )
-    endif()
-endforeach()
+if (NOT WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        BUILD_RPATH "\$ORIGIN/lib"
+        INSTALL_RPATH "\$ORIGIN/lib"
+    )
+endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
-    set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
-endif ()
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/imgui.ini" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/imgui.ini"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/json_demo_save.json" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/json_demo_save.json"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/logs"
+)
+
+if (WIN32)
+    foreach(RUNTIME_DLL ${RUNTIME_DEPENDENCY_DLLS} ${PROJECT_RUNTIME_DLLS})
+        if (EXISTS "${RUNTIME_DLL}")
+            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${RUNTIME_DLL}"
+                    "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            )
+        endif()
+    endforeach()
+
+    if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+        set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
+    endif ()
+else()
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
+        COMMAND ${CMAKE_COMMAND}
+            -DTARGET_FILE=$<TARGET_FILE:${PROJECT_NAME}>
+            -DTARGET_DIR=$<TARGET_FILE_DIR:${PROJECT_NAME}>
+            -P "${BUNDLE_LINUX_SCRIPT}"
+        COMMAND ${CMAKE_COMMAND}
+            -DTARGET_FILE_NAME=$<TARGET_FILE_NAME:${PROJECT_NAME}>
+            -DTARGET_DIR=$<TARGET_FILE_DIR:${PROJECT_NAME}>
+            -P "${WRITE_LINUX_LAUNCHER_SCRIPT}"
+    )
+endif()
 
 
 add_custom_target(run
-    COMMAND "${RUNTIME_OUTPUT_DIR}/${PROGRAM_NAME}.exe"
+    COMMAND "$<TARGET_FILE:${PROJECT_NAME}>"
     DEPENDS ${PROJECT_NAME}
-    WORKING_DIRECTORY "${RUNTIME_OUTPUT_DIR}"
+    WORKING_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
     COMMENT "Running the executable"
 )
 
-
-file(GLOB_RECURSE ASSET_FILES "${CMAKE_SOURCE_DIR}/assets/engine/*")
-
-# Objetivo para copiar assets
-add_custom_target(copy_assets ALL
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${RUNTIME_OUTPUT_DIR}/assets"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets" "${RUNTIME_OUTPUT_DIR}/assets"
-    DEPENDS ${ASSET_FILES}
-)
-
-add_dependencies(${PROJECT_NAME} copy_assets)

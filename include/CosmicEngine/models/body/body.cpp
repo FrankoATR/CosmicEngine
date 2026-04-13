@@ -1,4 +1,4 @@
-#include "Body.hpp"
+#include "body.hpp"
 
 #include "../../managers/resource/resource_manager.hpp"
 #include "../object/object.hpp"

@@ -206,13 +206,30 @@ void NetworkDemoScene::update(double deltaTime)
 
     case GameState::Playing:
     {
-        if (INP_MN.IsKeyPressed(GLFW_KEY_ESCAPE, CosmicEngine::KeyDown))
+        bool exitRequested = INP_MN.IsKeyPressed(GLFW_KEY_ESCAPE, CosmicEngine::KeyDown) ||
+                             INP_MN.IsJoystickButtonPressed(GLFW_GAMEPAD_BUTTON_B, CosmicEngine::KeyDown) ||
+                             INP_MN.IsJoystickButtonPressed(GLFW_GAMEPAD_BUTTON_START, CosmicEngine::KeyDown);
+
+        if (exitRequested)
         {
             GM_MN.endprogram();
             break;
         }
 
-        hasPreviewSpawn = TryGetMouseArenaPosition(previewSpawnPosition);
+        hasPreviewSpawn = false;
+
+        glm::vec3 candidatePreviewPosition(0.0f);
+        if (TryGetMouseArenaPosition(candidatePreviewPosition))
+        {
+            previewSpawnPosition = candidatePreviewPosition;
+            hasPreviewSpawn = true;
+        }
+
+        if (TryGetControllerArenaPosition(candidatePreviewPosition))
+        {
+            previewSpawnPosition = candidatePreviewPosition;
+            hasPreviewSpawn = true;
+        }
 
         pendingSpawnTimer -= dt;
         if (hasPendingSpawn && pendingSpawnTimer <= 0.0f)
@@ -223,10 +240,13 @@ void NetworkDemoScene::update(double deltaTime)
             spawnCooldown = kSpawnCooldownTime;
         }
 
-        // Spawn projectile with 'E' key
         spawnCooldown -= dt;
+        bool spawnRequested = INP_MN.IsMouseButtonPressed(0, CosmicEngine::KeyDown) ||
+                              INP_MN.IsJoystickButtonPressed(GLFW_GAMEPAD_BUTTON_X, CosmicEngine::KeyDown) ||
+                              INP_MN.IsJoystickButtonPressed(GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER, CosmicEngine::KeyDown);
+
         if (spawnCooldown <= 0.0f && !hasPendingSpawn && hasPreviewSpawn &&
-            INP_MN.IsMouseButtonPressed(0, CosmicEngine::KeyDown) && !UI_MN.IsMouseHoverAny())
+            spawnRequested && !UI_MN.IsMouseHoverAny())
         {
             hasPendingSpawn = true;
             pendingSpawnTimer = 0.5f;
@@ -392,7 +412,7 @@ void NetworkDemoScene::SetupInGameHUD()
     UI_MN.AddElement(txtHudInfo);
 
     txtHudControls = new CosmicEngine::UIText(
-        "WASD Move | Space Jump | E Spawn Hazard At Mouse",
+        "WASD/Left Stick Move | Space/A Jump | Mouse/Right Stick Aim | Click/X/R1 Spawn | Esc/B Exit",
         "demo_font",
         glm::vec2(20.0f, 1040.0f),
         glm::vec2(900.0f, 36.0f),
@@ -1050,6 +1070,42 @@ bool NetworkDemoScene::TryGetMouseArenaPosition(glm::vec3 &worldPosition) const
     worldPosition.x = std::clamp(hitPoint.x, kArenaPosition.x, maxPosition.x);
     worldPosition.y = kGroundY;
     worldPosition.z = std::clamp(hitPoint.z, kArenaPosition.z, maxPosition.z);
+    return true;
+}
+
+bool NetworkDemoScene::TryGetControllerArenaPosition(glm::vec3 &worldPosition) const
+{
+    if (!INP_MN.HasGamepad())
+    {
+        return false;
+    }
+
+    NetworkDemoPlayer *localPlayer = const_cast<NetworkDemoScene *>(this)->GetLocalPlayer();
+    if (!localPlayer)
+    {
+        return false;
+    }
+
+    const float aimX = INP_MN.GetJoystickAxis(GLFW_GAMEPAD_AXIS_RIGHT_X);
+    const float aimY = INP_MN.GetJoystickAxis(GLFW_GAMEPAD_AXIS_RIGHT_Y);
+    glm::vec2 aimVector(aimX, aimY);
+
+    if (glm::length(aimVector) < 0.2f)
+    {
+        return false;
+    }
+
+    aimVector = glm::normalize(aimVector);
+
+    const float aimDistance = 10.0f;
+    const glm::vec3 projectileSize(1.2f);
+    const glm::vec3 maxPosition = kArenaPosition + kArenaSize - projectileSize;
+    const glm::vec3 playerCenter = localPlayer->GetPosition() + localPlayer->GetSize() * 0.5f;
+    const glm::vec3 targetPosition = playerCenter + glm::vec3(aimVector.x * aimDistance, 0.0f, aimVector.y * aimDistance);
+
+    worldPosition.x = std::clamp(targetPosition.x, kArenaPosition.x, maxPosition.x);
+    worldPosition.y = kGroundY;
+    worldPosition.z = std::clamp(targetPosition.z, kArenaPosition.z, maxPosition.z);
     return true;
 }
 

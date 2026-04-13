@@ -3,7 +3,7 @@
 
 #include <CosmicEngine/collisions/CollisionArea.hpp>
 #include <CosmicEngine/controllers/camera/camera_controller.hpp>
-#include <CosmicEngine/Models/Scene/scene.hpp>
+#include <CosmicEngine/models/scene/scene.hpp>
 
 #include <cstdint>
 #include <memory>

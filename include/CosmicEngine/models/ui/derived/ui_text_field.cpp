@@ -37,16 +37,22 @@ namespace CosmicEngine
         // Handle focus by click
         if (InputManager::GetInstance().IsMouseButtonPressed(0, KeyEventType::KeyDown))
         {
+            bool wasFocused = focused;
             focused = MouseHover();
             if (focused)
             {
-                cursorIndex = text.size();
+                if (!wasFocused)
+                {
+                    InputManager::GetInstance().ClearCharacterInput();
+                }
+
                 ResetCursorBlink();
             }
             else
             {
                 backspaceHoldTimer = 0.0f;
                 backspaceRepeatTimer = 0.0f;
+                InputManager::GetInstance().ClearCharacterInput();
             }
         }
 
@@ -128,61 +134,23 @@ namespace CosmicEngine
             focused = false;
             backspaceHoldTimer = 0.0f;
             backspaceRepeatTimer = 0.0f;
+            input.ClearCharacterInput();
             return;
         }
 
-        // Character input: check printable ASCII keys
-        if (static_cast<int>(text.size()) >= maxLength)
-            return;
-
-        // Number keys 0-9
-        for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; ++key)
+        unsigned int codepoint = 0;
+        while (input.PollCharacterInput(codepoint))
         {
-            if (input.IsKeyPressed(key, KeyEventType::KeyDown))
+            if (static_cast<int>(text.size()) >= maxLength)
             {
-                char c = '0' + (key - GLFW_KEY_0);
-                InsertCharacter(c);
+                break;
+            }
+
+            if (codepoint >= 32 && codepoint <= 126)
+            {
+                InsertCharacter(static_cast<char>(codepoint));
             }
         }
-
-        // Letter keys A-Z
-        bool shift = input.IsKeyPressed(GLFW_KEY_LEFT_SHIFT, KeyEventType::KeyRelease) ||
-                     input.IsKeyPressed(GLFW_KEY_RIGHT_SHIFT, KeyEventType::KeyRelease);
-        for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; ++key)
-        {
-            if (input.IsKeyPressed(key, KeyEventType::KeyDown))
-            {
-                char c = shift ? ('A' + (key - GLFW_KEY_A)) : ('a' + (key - GLFW_KEY_A));
-                InsertCharacter(c);
-            }
-        }
-
-        // Period (for IP addresses)
-        if (input.IsKeyPressed(GLFW_KEY_PERIOD, KeyEventType::KeyDown))
-        {
-            InsertCharacter('.');
-        }
-
-        // Colon (shift + semicolon) for port notation
-        if (input.IsKeyPressed(GLFW_KEY_SEMICOLON, KeyEventType::KeyDown) && shift)
-        {
-            InsertCharacter(':');
-        }
-
-        // Space
-        if (input.IsKeyPressed(GLFW_KEY_SPACE, KeyEventType::KeyDown))
-        {
-            InsertCharacter(' ');
-        }
-
-        // Minus/hyphen
-        if (input.IsKeyPressed(GLFW_KEY_MINUS, KeyEventType::KeyDown))
-        {
-            InsertCharacter(shift ? '_' : '-');
-        }
-
-        // Underscore (shift + minus)
-        // Already handled by minus + shift combination above
     }
 
     void UITextField::ResetCursorBlink()
