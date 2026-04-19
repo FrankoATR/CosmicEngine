@@ -1,3 +1,8 @@
+/**
+ * @file GameQuadTreeCollisions.cpp
+ * @brief Implements the quadtree or octree collision accelerator used by the engine.
+ */
+
 #include "GameQuadTreeCollisions.hpp"
 
 #include "../managers/resource/resource_manager.hpp"
@@ -169,6 +174,7 @@ namespace CosmicEngine
             return;
         }
 
+        // Compare local bodies first, then against ancestors so parent-child overlaps are not missed.
         CompareBodies(node->objects, node->objects, true);
         CompareBodies(node->objects, ancestorObjects, false);
 

@@ -1,6 +1,11 @@
 #ifndef COSMIC_MASTERSHADERS_HPP
 #define COSMIC_MASTERSHADERS_HPP
 
+/**
+ * @file master_shaders.hpp
+ * @brief Provides built-in shader source strings used by the resource manager.
+ */
+
 
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
     const char *sprite_vs = 

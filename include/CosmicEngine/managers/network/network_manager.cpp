@@ -1,3 +1,8 @@
+/**
+ * @file network_manager.cpp
+ * @brief Implements the ENet-based client/server networking manager.
+ */
+
 #include "network_manager.hpp"
 #include <iostream>
 
@@ -74,6 +79,7 @@ namespace CosmicEngine
     {
         ENetEvent event = {};
 
+		// Network I/O stays on a dedicated thread and forwards decoded messages to the game thread through thread-safe queues.
         while (running.load())
         {
             while (enet_host_service(host, &event, 10) > 0)
@@ -386,6 +392,7 @@ namespace CosmicEngine
 
     void NetworkManager::ProcessMessages()
     {
+		// Handlers always run on the game thread so scene code can safely mutate engine state.
         IncomingMessage incoming;
         while (incomingQueue.Pop(incoming))
         {

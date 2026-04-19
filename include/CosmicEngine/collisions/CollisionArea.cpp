@@ -1,3 +1,8 @@
+/**
+ * @file CollisionArea.cpp
+ * @brief Implements shared helpers for collision acceleration structures.
+ */
+
 #include "CollisionArea.hpp"
 
 #include "../models/body/body.hpp"

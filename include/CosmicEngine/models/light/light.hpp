@@ -1,13 +1,6 @@
 /**
  * @file light.hpp
- * @brief Contains Code for Lights
- *
- * This file include all 2D and 3D configurations for Lights
- *
- * @author Francisco Rosa
- * @date 2025-04-21
- * @version 1.0
- * @copyright MIT License
+ * @brief Declares the base light type used by the engine lighting system.
  */
 
 #ifndef COSMIC_LIGHT_HPP
@@ -22,8 +15,24 @@ namespace CosmicEngine
     class LightManager;
 
     /**
-     * @class Light
-     * @brief Class with the methods needed to implement entities.
+     * @brief Represents a light source managed by the engine lighting system.
+     *
+     * Light stores position, attenuation parameters (constant, linear, quadratic),
+     * and Phong shading terms (ambient, diffuse, specular, shininess).  Lights are
+     * registered with the LightManager and their uniforms are propagated to shaders
+     * each frame.
+     *
+     * @par Example — creating a point light (3D mode)
+     * @code
+     * auto* light = new CosmicEngine::Light(
+     *     glm::vec3(0, 10, 0),    // position
+     *     glm::vec3(0.2f),        // ambient
+     *     glm::vec3(0.8f),        // diffuse
+     *     glm::vec3(1.0f),        // specular
+     *     1.0f, 0.09f, 0.032f,    // constant, linear, quadratic
+     *     32.0f);                  // shininess
+     * LightManager::GetInstance().Add(light);
+     * @endcode
      */
     class Light
     {
@@ -55,50 +64,58 @@ namespace CosmicEngine
         #endif
 
     public:
-        /**
-         * @brief draw the Light on window.
-         */
+        /** @brief Draws the light for debug or helper visualization. */
         void draw() const;
 
-        /**
-         * @brief Initial configurations for the Light.
-         */
+        /** @brief Performs light-specific initialization logic. */
         void init();
 
         /**
-         * @brief Logic for the Light.
-         * @param deltaTime Value to maintain consistency in movement calculations within the logic.
+         * @brief Updates light-specific runtime logic.
+         * @param deltaTime Fixed update time step.
          */
         void update(float deltaTime);
 
         /**
-         * @brief Set the unique ID for the Light.
-         * @param newID Changes the current ID of the Light to this one.
+         * @brief Sets the unique identifier assigned by the light manager.
+         * @param newID New light identifier.
          */
         void SetID(int newID);
 
         /**
-         * @brief Gets the current ID value of the Light.
-         * @return Current ID of the Light.
+         * @brief Returns the current light identifier.
+         * @return Light identifier.
          */
         int GetID() const;
 
         /**
-         * @brief Sets the visibility value of the Light.
-         * @param visible Must be true or false.
-         * @example obj->SetVisible(true);
+         * @brief Sets whether the light is active for rendering or lighting use.
+         * @param visible New visibility state.
          */
         void SetVisible(bool visible);
 
         /**
-         * @brief Gets whether the Light is currently visible.
-         * @return Current visible value of the Light.
+         * @brief Returns whether the light is visible.
+         * @return True when the light is marked as visible.
          */
         bool GetVisible() const;
 
+        /** @brief Marks the light for removal from the runtime. */
         void Destroy();
 
         #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+            /**
+             * @brief Creates a 2D light.
+             * @param position Light position.
+             * @param ambientLight Ambient light contribution.
+             * @param diffuseLight Diffuse light contribution.
+             * @param specularLight Specular light contribution.
+             * @param constantLight Constant attenuation factor.
+             * @param linearLight Linear attenuation factor.
+             * @param quadraticLight Quadratic attenuation factor.
+             * @param shininess Specular shininess factor.
+             * @param visible Initial visibility state.
+             */
             Light(
                 glm::vec2 position,
                 glm::vec2 ambientLight = glm::vec2(1.0f),
@@ -110,10 +127,24 @@ namespace CosmicEngine
                 float shininess = 64.0f,
                 bool visible = true);
 
+            /** @brief Sets the 2D position of the light. */
             void SetPosition(glm::vec2 newPosition);
+            /** @brief Returns the 2D position of the light. */
             glm::vec2 GetPosition() const;
 
         #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+            /**
+             * @brief Creates a 3D light.
+             * @param position Light position.
+             * @param ambientLight Ambient light contribution.
+             * @param diffuseLight Diffuse light contribution.
+             * @param specularLight Specular light contribution.
+             * @param constantLight Constant attenuation factor.
+             * @param linearLight Linear attenuation factor.
+             * @param quadraticLight Quadratic attenuation factor.
+             * @param shininess Specular shininess factor.
+             * @param visible Initial visibility state.
+             */
             Light(
                 glm::vec3 position,
                 glm::vec3 ambientLight = glm::vec3(0.05f, 0.05f, 0.05f),
@@ -125,28 +156,44 @@ namespace CosmicEngine
                 float shininess = 64.0f,
                 bool visible = true);
 
+            /** @brief Sets the 3D position of the light. */
             void SetPosition(glm::vec3 newPosition);
+            /** @brief Returns the 3D position of the light. */
             glm::vec3 GetPosition() const;
 
+            /** @brief Sets the ambient light contribution. */
             void SetAmbientLight(glm::vec3 newAmbientLight);
+            /** @brief Returns the ambient light contribution. */
             glm::vec3 GetAmbientLight() const;
 
+            /** @brief Sets the diffuse light contribution. */
             void SetDiffuseLight(glm::vec3 newDiffuseLight);
+            /** @brief Returns the diffuse light contribution. */
             glm::vec3 GetDiffuseLight() const;
 
+            /** @brief Sets the specular light contribution. */
             void SetSpecularLight(glm::vec3 newSpecularLight);
+            /** @brief Returns the specular light contribution. */
             glm::vec3 GetSpecularLight() const;
 
+            /** @brief Sets the constant attenuation factor. */
             void SetConstantLight(float newConstantLight);
+            /** @brief Returns the constant attenuation factor. */
             float GetConstantLight() const;
 
+            /** @brief Sets the linear attenuation factor. */
             void SetLinearLight(float newLinearLight);
+            /** @brief Returns the linear attenuation factor. */
             float GetLinearLight() const;
 
+            /** @brief Sets the quadratic attenuation factor. */
             void SetQuadraticLight(float newQuadraticLight);
+            /** @brief Returns the quadratic attenuation factor. */
             float GetQuadraticLight() const;
 
+            /** @brief Sets the specular shininess factor. */
             void SetShininess(float newShininess);
+            /** @brief Returns the specular shininess factor. */
             float GetShininess() const;
 
         #else

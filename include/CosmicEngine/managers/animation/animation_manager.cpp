@@ -1,3 +1,8 @@
+/**
+ * @file animation_manager.cpp
+ * @brief Implements the runtime animation manager used by the engine.
+ */
+
 #include "animation_manager.hpp"
 
 #include <algorithm>

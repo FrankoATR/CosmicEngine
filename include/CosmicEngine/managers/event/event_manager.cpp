@@ -1,3 +1,8 @@
+/**
+ * @file event_manager.cpp
+ * @brief Implements the generic event bus used by the engine.
+ */
+
 #include "event_manager.hpp"
 
 #include <iostream>

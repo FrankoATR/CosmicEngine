@@ -1,3 +1,8 @@
+/**
+ * @file schedule_manager.cpp
+ * @brief Implements the runtime scheduler used to trigger deferred and repeated events.
+ */
+
 #include "schedule_manager.hpp"
 
 #include "../event/event_manager.hpp"
@@ -75,6 +80,7 @@ namespace CosmicEngine
                 continue;
             }
 
+            // A task can execute multiple times in one update when the engine catches up after a pause.
             while (task.alive && !task.paused && currentTime >= task.executeAt)
             {
                 EventManager::GetInstance().TriggerEvent<const nlohmann::json &>(task.eventName, task.payload);

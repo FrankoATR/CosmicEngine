@@ -1,3 +1,8 @@
+/**
+ * @file light_manager.cpp
+ * @brief Implements the runtime light manager used by the engine renderer.
+ */
+
 #include "light_manager.hpp"
 #include "../../models/light/light.hpp"
 #include "../../models/shader/shader.hpp"
@@ -156,14 +161,29 @@ namespace CosmicEngine
 
     Light *LightManager::FindById(int ID)
     {
+        auto it = std::find_if(point_lights_resources.begin(), point_lights_resources.end(), [ID](Light *light)
+        {
+            return light && light->GetID() == ID;
+        });
+
+        if (it != point_lights_resources.end())
+        {
+            return *it;
+        }
+
+        return nullptr;
     }
 
     std::vector<Light *> LightManager::FindByPosition(glm::vec2 Position)
     {
+        std::vector<Light *> matches;
+        (void)Position;
+        return matches;
     }
 
     std::vector<Light *> LightManager::FindByMousePosition()
     {
+        return {};
     }
 
     std::vector<Light *> LightManager::GetAll()
@@ -173,6 +193,14 @@ namespace CosmicEngine
 
     void LightManager::Clear()
     {
+        for (auto *light : point_lights_resources)
+        {
+            delete light;
+        }
+        point_lights_resources.clear();
+        spot_lights.clear();
+        target_shader_resources.clear();
+        nextEntityId = 0;
     }
 
 }

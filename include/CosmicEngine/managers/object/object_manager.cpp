@@ -1,3 +1,8 @@
+/**
+ * @file object_manager.cpp
+ * @brief Implements the runtime object manager used by the engine.
+ */
+
 #include "object_manager.hpp"
 #include "../body/body_manager.hpp"
 #include "../input/input_manager.hpp"

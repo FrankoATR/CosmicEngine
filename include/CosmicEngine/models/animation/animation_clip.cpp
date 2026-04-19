@@ -1,3 +1,8 @@
+/**
+ * @file animation_clip.cpp
+ * @brief Implements sprite-sheet animation clip serialization and validation helpers.
+ */
+
 #include "animation_clip.hpp"
 
 namespace CosmicEngine

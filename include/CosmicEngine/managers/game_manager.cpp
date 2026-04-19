@@ -1,3 +1,8 @@
+/**
+ * @file game_manager.cpp
+ * @brief Implements the main engine lifetime manager and desktop runtime loop.
+ */
+
 #include "game_manager.hpp"
 #include "scene/scene_manager.hpp"
 #include "input/input_manager.hpp"
@@ -189,6 +194,7 @@ namespace CosmicEngine
 		double lastTime = glfwGetTime();
 		double lastRenderTimer = lastTime;
 
+		// The engine updates gameplay with a fixed step and renders independently at the configured presentation rate.
 		while (!glfwWindowShouldClose(window))
 		{
 			double currentTime = glfwGetTime();

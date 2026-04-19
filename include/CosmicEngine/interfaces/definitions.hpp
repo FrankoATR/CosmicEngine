@@ -1,6 +1,32 @@
 #ifndef COSMIC_DEFINITIONS_HPP
 #define COSMIC_DEFINITIONS_HPP
 
+/**
+ * @file definitions.hpp
+ * @brief Defines convenience include and singleton-access macros for the engine.
+ *
+ * Including this header gives you short-hand macros for every engine manager.
+ * Use the _HEADER macros with @c \#include to bring in the right header, and
+ * use the short macros (e.g. @c GM_MN, @c INP_MN) as direct singleton references.
+ *
+ * @par Example — using the convenience macros
+ * @code
+ * #include <CosmicEngine/interfaces/definitions.hpp>
+ * #include GAMEMANAGE_HEADER
+ * #include INPUTMANAGER_HEADER
+ * #include RESOURCEMANAGER_HEADER
+ * #include OBJECTMANAGER_HEADER
+ * #include BODYMANAGER_HEADER
+ *
+ * // Then in any scene or entity:
+ * GM_MN.endprogram();         // GameManager singleton
+ * INP_MN.IsKeyPressed(GLFW_KEY_W, CosmicEngine::KeyRelease);
+ * RS_MN.LoadTexture("key", "path.png");
+ * OBJ_MN.Add(new MyEntity(...));
+ * BOD_MN.Add(new CosmicEngine::Body(...));
+ * @endcode
+ */
+
 #define GAMEMANAGE_HEADER <CosmicEngine/managers/game_manager.hpp>
 #define GM_MN CosmicEngine::GameManager::GetInstance()
 

@@ -1,3 +1,8 @@
+/**
+ * @file texture_2d.cpp
+ * @brief Implements the OpenGL 2D texture wrapper used by the engine renderer.
+ */
+
 #include <iostream>
 
 #include "texture_2d.hpp"
@@ -24,7 +29,7 @@ namespace CosmicEngine
         this->Width = width;
         this->Height = height;
 
-        // Auto-detect format based on actual image channels
+        // Infer the texture upload format directly from the decoded image channel count.
         if (nrChannels == 4)
         {
             this->InternalFormat = GL_RGBA;

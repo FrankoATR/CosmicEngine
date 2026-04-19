@@ -1,3 +1,8 @@
+/**
+ * @file mesh.cpp
+ * @brief Implements the GPU-ready mesh used by the engine model renderer.
+ */
+
 #include "mesh.hpp"
 
 namespace CosmicEngine

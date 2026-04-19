@@ -1,6 +1,11 @@
 #ifndef COSMIC_NETWORK_SESSION_HPP
 #define COSMIC_NETWORK_SESSION_HPP
 
+/**
+ * @file network_session.hpp
+ * @brief Declares session state containers used by the network manager.
+ */
+
 #include <string>
 #include <cstdint>
 #include <map>
@@ -16,7 +21,9 @@ namespace CosmicEngine
      */
     struct NetworkPeer
     {
+        /** @brief Session identifier assigned to the peer. */
         int id = -1;
+        /** @brief Username associated with the peer. */
         std::string username;
 
         NetworkPeer() = default;
@@ -26,6 +33,18 @@ namespace CosmicEngine
     /**
      * @brief Manages the session state for all connected peers.
      * Thread-safe: all access to the peer map is protected by a mutex.
+     *
+     * NetworkSession is used internally by NetworkManager to track who is
+     * connected.  You do not normally interact with it directly.
+     *
+     * @par Example — querying peers (internal to NetworkManager)
+     * @code
+     * int id = session.AddPeer("Player1");
+     * NetworkPeer peer;
+     * if (session.GetPeer(id, peer))
+     *     std::cout << peer.username << std::endl;
+     * session.RemovePeer(id);
+     * @endcode
      */
     class NetworkSession
     {
@@ -39,7 +58,9 @@ namespace CosmicEngine
         ~NetworkSession() = default;
 
         /**
-         * @brief Registers a new peer and returns their assigned ID.
+         * @brief Registers a new peer and returns its assigned identifier.
+         * @param username Optional username associated with the peer.
+         * @return Assigned peer identifier.
          */
         int AddPeer(const std::string &username = "")
         {
@@ -50,7 +71,8 @@ namespace CosmicEngine
         }
 
         /**
-         * @brief Removes a peer by ID.
+         * @brief Removes a peer by identifier.
+         * @param id Peer identifier.
          */
         void RemovePeer(int id)
         {
@@ -59,7 +81,9 @@ namespace CosmicEngine
         }
 
         /**
-         * @brief Sets the username for a peer.
+         * @brief Sets the username associated with a peer.
+         * @param id Peer identifier.
+         * @param username New username.
          */
         void SetPeerUsername(int id, const std::string &username)
         {
@@ -72,7 +96,10 @@ namespace CosmicEngine
         }
 
         /**
-         * @brief Gets a copy of a peer by ID. Returns false if not found.
+         * @brief Gets a copy of a peer by identifier.
+         * @param id Peer identifier.
+         * @param outPeer Output peer copy when one is found.
+         * @return True when the peer exists.
          */
         bool GetPeer(int id, NetworkPeer &outPeer) const
         {
@@ -85,7 +112,9 @@ namespace CosmicEngine
         }
 
         /**
-         * @brief Returns true if a peer with the given ID exists.
+         * @brief Returns whether a peer with the provided identifier exists.
+         * @param id Peer identifier.
+         * @return True when the peer exists.
          */
         bool HasPeer(int id) const
         {
@@ -94,7 +123,8 @@ namespace CosmicEngine
         }
 
         /**
-         * @brief Returns a snapshot of all current peers.
+         * @brief Returns a snapshot of all connected peers.
+         * @return Copy of the peer list.
          */
         std::vector<NetworkPeer> GetAllPeers() const
         {
@@ -110,6 +140,7 @@ namespace CosmicEngine
 
         /**
          * @brief Returns the number of connected peers.
+         * @return Peer count.
          */
         size_t GetPeerCount() const
         {
@@ -117,9 +148,7 @@ namespace CosmicEngine
             return peers.size();
         }
 
-        /**
-         * @brief Removes all peers.
-         */
+        /** @brief Removes all peers and resets the next peer identifier. */
         void Clear()
         {
             std::lock_guard<std::mutex> lock(peersMutex);

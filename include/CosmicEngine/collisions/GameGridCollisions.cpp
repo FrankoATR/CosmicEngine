@@ -1,3 +1,8 @@
+/**
+ * @file GameGridCollisions.cpp
+ * @brief Implements the uniform-grid collision accelerator used by the engine.
+ */
+
 #include "GameGridCollisions.hpp"
 
 #include "../managers/resource/resource_manager.hpp"
@@ -126,6 +131,7 @@ namespace CosmicEngine
 
     void GameGridCollisions::CheckCellsCollisions(Cell *cell1, Cell *cell2)
     {
+        // Neighbor-cell comparison limits checks to nearby partitions without a full N^2 scan.
         for (Body *body1 : cell1->objects)
         {
             for (Body *body2 : cell2->objects)

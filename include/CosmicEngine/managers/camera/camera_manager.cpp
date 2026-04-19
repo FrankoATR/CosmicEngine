@@ -1,3 +1,8 @@
+/**
+ * @file camera_manager.cpp
+ * @brief Implements the 2D and 3D camera manager used by the engine.
+ */
+
 #include "camera_manager.hpp"
 
 #include "../game_manager.hpp"
@@ -88,6 +93,7 @@ namespace CosmicEngine
     
         glm::vec2 CameraManager::GetCameraOrthoArea() const
         {
+			// Preserve the base virtual aspect by expanding the orthographic area on the dominant axis.
             float baseAspectRatio = baseWindowSize.x / baseWindowSize.y;
     
             glm::vec2 screenSize = GameManager::GetInstance().getWindowSize();

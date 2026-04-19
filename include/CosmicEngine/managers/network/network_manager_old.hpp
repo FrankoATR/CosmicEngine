@@ -1,6 +1,11 @@
 #ifndef COSMIC_NETWORKMANAGER_HPP
 #define COSMIC_NETWORKMANAGER_HPP
 
+/**
+ * @file network_manager_old.hpp
+ * @brief Declares the legacy ENet network manager retained for backward reference.
+ */
+
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -23,6 +28,12 @@ using namespace std;
 namespace CosmicEngine
 {
 
+    /**
+     * @brief Legacy ENet-based network manager implementation.
+     *
+     * This header is kept for backward compatibility and historical reference.
+     * The current networking API is defined in network_manager.hpp.
+     */
     class NetworkManager
     {
     private:

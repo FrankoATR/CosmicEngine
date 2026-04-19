@@ -1,3 +1,8 @@
+/**
+ * @file shader.cpp
+ * @brief Implements the OpenGL shader wrapper used by the engine renderer.
+ */
+
 #include "shader.hpp"
 
 #include "../../managers/camera/camera_manager.hpp"

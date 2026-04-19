@@ -1,3 +1,8 @@
+/**
+ * @file resource_manager.cpp
+ * @brief Implements loading, ownership, and rendering helpers for engine resources.
+ */
+
 #include "resource_manager.hpp"
 #include "master_shaders.hpp"
 
@@ -37,6 +42,7 @@ namespace CosmicEngine
     
     bool ResourceManager::Load_Static_VAO(const std::string &key, const std::vector<std::vector<float>> &vertices, const std::vector<int> &attributeSizes)
     {
+		// Static VAOs flatten row-oriented authoring data into a single GPU buffer while preserving attribute layout.
         if (static_vao_resources.find(key) != static_vao_resources.end())
             return false;
     
@@ -344,6 +350,7 @@ namespace CosmicEngine
 
     void ResourceManager::init()
     {
+		// Register engine-owned built-in geometry and shaders before scenes start requesting resources.
         //DefaultVAOTexture
         std::vector<std::vector<float>> vertices = { 
             {0.0f, 1.0f, 0.0f, 1.0f},

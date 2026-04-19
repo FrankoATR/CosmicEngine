@@ -331,3 +331,13 @@ add_custom_target(run
     COMMENT "Running the executable"
 )
 
+# ── Doxygen documentation target ──────────────────────────────────────
+find_program(DOXYGEN_EXECUTABLE doxygen)
+if(DOXYGEN_EXECUTABLE)
+    add_custom_target(docs
+        COMMAND ${DOXYGEN_EXECUTABLE} "${CMAKE_SOURCE_DIR}/Doxyfile"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        COMMENT "Generating Doxygen documentation"
+    )
+endif()
+

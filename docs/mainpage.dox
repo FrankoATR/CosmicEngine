@@ -1,0 +1,118 @@
+/**
+ * @mainpage CosmicEngine – Referencia de la API
+ *
+ * @section intro_sec Introducción
+ *
+ * **CosmicEngine** es un motor de videojuegos 2D/3D escrito en C++ sobre
+ * OpenGL, diseñado como plantilla educativa para proyectos de grado.
+ * Proporciona gestión de escenas, objetos, cuerpos físicos, animaciones,
+ * interfaz gráfica (UI), audio, red (ENet), almacenamiento JSON/SQL y más.
+ *
+ * @section arch_sec Arquitectura general
+ *
+ * El motor sigue un patrón basado en **managers singleton** accesibles
+ * mediante macros globales (por ejemplo @c GM, @c OBJ_MN, @c BOD_MN).
+ *
+ * | Macro       | Clase                    | Responsabilidad                        |
+ * |-------------|--------------------------|----------------------------------------|
+ * | `GM`        | GameManager              | Bucle principal, ciclo de vida          |
+ * | `OBJ_MN`   | ObjectManager            | Registro y búsqueda de objetos         |
+ * | `BOD_MN`   | BodyManager              | Cuerpos físicos y áreas de colisión    |
+ * | `INP_MN`   | InputManager             | Teclado, ratón y gamepad               |
+ * | `CAM_MN`   | CameraManager            | Cámaras 2D y 3D                        |
+ * | `EVT_MN`   | EventManager             | Eventos tipados (Event\<Args...\>)     |
+ * | `SCH_MN`   | ScheduleManager          | Tareas programadas / intervalos         |
+ * | `RS_MN`    | ResourceManager          | Fuentes, texturas, shaders, modelos    |
+ * | `UI_MN`    | UIManager                | Botones, texto, campos de entrada      |
+ * | `ANIM_MN`  | AnimationManager         | Clips y reproductores de animación     |
+ * | `AUD_MN`   | AudioManager             | Música y efectos de sonido (miniaudio) |
+ * | `JSON_MN`  | JsonManager              | Serialización/deserialización JSON     |
+ * | `SQL_MN`   | SQLManager               | Base de datos SQLite embebida          |
+ * | `NET_MN`   | NetworkManager           | Servidor/cliente ENet                  |
+ * | `SCN_MN`   | SceneManager             | Navegación entre escenas               |
+ * | `TMR_MN`   | TimerManager             | Temporizadores con nombre              |
+ * | `LGT_MN`   | LightManager             | Luces puntuales y direccionales        |
+ *
+ * @section quick_sec Inicio rápido
+ *
+ * @code
+ * #include <CosmicEngine/managers/game_manager.hpp>
+ *
+ * int main() {
+ *     // Inicializa con título, tamaño y modo (GameMode2D o GameMode3D)
+ *     GM.Init("Mi Juego", 1280, 720, CosmicEngine::GameMode2D);
+ *     GM.SetScene(new MiEscena());   // escena inicial
+ *     GM.Run();                       // inicia el bucle principal
+ *     GM.Shutdown();
+ *     return 0;
+ * }
+ * @endcode
+ *
+ * @section scene_sec Crear una escena
+ *
+ * Herede de @c Scene y sobrescriba los métodos del ciclo de vida:
+ *
+ * @code
+ * class MiEscena : public CosmicEngine::Scene {
+ * public:
+ *     void Init() override {
+ *         // Registrar objetos, cargar recursos, configurar cámara…
+ *     }
+ *     void Update() override {
+ *         // Lógica por cuadro
+ *     }
+ *     void Destroy() override {
+ *         // Liberar recursos propios
+ *     }
+ * };
+ * @endcode
+ *
+ * @section obj_sec Crear un objeto con cuerpo físico
+ *
+ * @code
+ * class Jugador : public CosmicEngine::Object {
+ * public:
+ *     void Init() override {
+ *         body = BOD_MN.Add(new CosmicEngine::Body(this, {0,0}, {32,32}));
+ *         body->SetOnCollisionCallback(
+ *             [this](CosmicEngine::Body*, CosmicEngine::BodyCollisionSide) {
+ *                 // Reaccionar a colisión
+ *             });
+ *     }
+ *     void Update() override {
+ *         if (INP_MN.IsKeyPressed(GLFW_KEY_RIGHT))
+ *             body->velocity.x = 200.0f;
+ *     }
+ * private:
+ *     CosmicEngine::Body* body = nullptr;
+ * };
+ * @endcode
+ *
+ * @section modules_sec Módulos principales
+ *
+ * - @ref CosmicEngine::GameManager   "GameManager"   – Ciclo de vida del motor
+ * - @ref CosmicEngine::Scene         "Scene"         – Escena base
+ * - @ref CosmicEngine::Object        "Object"        – Objeto base del juego
+ * - @ref CosmicEngine::Body          "Body"          – Cuerpo físico con velocidad y colisiones
+ * - @ref CosmicEngine::UIManager     "UIManager"     – Sistema de interfaz de usuario
+ * - @ref CosmicEngine::AnimationManager "AnimationManager" – Animaciones por sprite-sheet
+ * - @ref CosmicEngine::EventManager  "EventManager"  – Bus de eventos tipados
+ * - @ref CosmicEngine::NetworkManager "NetworkManager" – Multijugador ENet (servidor / cliente)
+ *
+ * @section build_sec Compilación
+ *
+ * @code{.sh}
+ * # Desde la raíz del proyecto
+ * cmake -B build -DCMAKE_BUILD_TYPE=Release
+ * cmake --build build --target Cosmic_Engine
+ * @endcode
+ *
+ * Para regenerar esta documentación:
+ * @code{.sh}
+ * doxygen Doxyfile
+ * @endcode
+ *
+ * @section license_sec Licencia
+ *
+ * Consulte el archivo @c LICENSE en la raíz del repositorio.
+ */

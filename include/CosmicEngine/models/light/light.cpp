@@ -1,3 +1,8 @@
+/**
+ * @file light.cpp
+ * @brief Implements the base light type used by the engine lighting system.
+ */
+
 #include "light.hpp"
 
 namespace CosmicEngine
@@ -19,12 +24,12 @@ namespace CosmicEngine
 
     void Light::SetID(int newID)
     {
-
+        this->ID = newID;
     }
 
     int Light::GetID() const
     {
-
+        return this->ID;
     }
 
     void Light::SetVisible(bool visible)
@@ -39,7 +44,7 @@ namespace CosmicEngine
 
     void Light::Destroy()
     {
-
+        this->visible = false;
     }
 
 
@@ -56,17 +61,25 @@ namespace CosmicEngine
             bool visible
         )
         {
-
+            this->position = position;
+            this->ambientLight = ambientLight;
+            this->diffuseLight = diffuseLight;
+            this->specularLight = specularLight;
+            this->constantLight = constantLight;
+            this->linearLight = linearLight;
+            this->quadraticLight = quadraticLight;
+            this->shininess = shininess;
+            this->visible = visible;
         }
 
         void Light::SetPosition(glm::vec2 newPosition)
         {
-
+            this->position = newPosition;
         }
 
         glm::vec2 Light::GetPosition() const
         {
-
+            return this->position;
         }
 
 

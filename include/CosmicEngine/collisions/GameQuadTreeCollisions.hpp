@@ -1,6 +1,11 @@
 #ifndef COSMIC_GAMEQUADTREECOLLISIONS_HPP
 #define COSMIC_GAMEQUADTREECOLLISIONS_HPP
 
+/**
+ * @file GameQuadTreeCollisions.hpp
+ * @brief Declares the quadtree or octree collision area used by the engine.
+ */
+
 #include "CollisionArea.hpp"
 
 #include <array>
@@ -11,6 +16,20 @@ namespace CosmicEngine
 {
     class Body;
 
+        /**
+         * @brief Hierarchical collision accelerator used for spatial partitioning.
+         *
+         * In 2D mode this is a classic quadtree; in 3D mode it behaves as an octree.
+         * Bodies are inserted into nodes that best fit their bounding volume, and
+         * collision pairs are detected by walking the tree.  Created automatically by
+         * BodyManager::CreateCollisionArea(CollisionType::QuadTree, ...).
+         *
+         * @par Example (automatic creation via BodyManager)
+         * @code
+         * BOD_MN.CreateCollisionArea(CosmicEngine::CollisionType::QuadTree,
+         *     glm::vec2(-500, -300), glm::vec2(1000, 600), 80, 6, 4);
+         * @endcode
+         */
     class GameQuadTreeCollisions : public CollisionArea
     {
     private:
@@ -35,7 +54,9 @@ namespace CosmicEngine
 #endif
 
             int depth;
+                        /** @brief Bodies currently stored in the node. */
             std::vector<Body *> objects;
+                        /** @brief Returns whether the node has no children. */
             bool IsLeaf() const;
         };
 

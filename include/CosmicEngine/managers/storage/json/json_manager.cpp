@@ -1,3 +1,8 @@
+/**
+ * @file json_manager.cpp
+ * @brief Implements the JSON persistence manager used by the engine.
+ */
+
 #include "json_manager.hpp"
 
 #include "../../object/object_manager.hpp"
@@ -47,6 +52,7 @@ namespace CosmicEngine
 
     void JsonManager::EnsureDocumentShape()
     {
+        // Keep the document schema stable so save/load code can assume the same top-level shape.
         if (!doc.is_object())
             doc = nlohmann::json::object();
 

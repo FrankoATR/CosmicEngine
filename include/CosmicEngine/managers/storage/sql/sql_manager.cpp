@@ -1,3 +1,8 @@
+/**
+ * @file sql_manager.cpp
+ * @brief Implements the SQLite persistence manager used by the engine.
+ */
+
 #include "sql_manager.hpp"
 #include "../../object/object_manager.hpp"
 #include "../../../models/object/object.hpp"
@@ -101,6 +106,7 @@ namespace CosmicEngine
         int attempts = 5;
         while (attempts--)
         {
+            // Retry transient SQLITE_BUSY states because object saves can happen in bursty sequences.
             int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
             if (rc == SQLITE_OK)
                 return true;

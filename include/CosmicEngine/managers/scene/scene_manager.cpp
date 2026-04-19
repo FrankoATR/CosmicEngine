@@ -1,3 +1,8 @@
+/**
+ * @file scene_manager.cpp
+ * @brief Implements the scene stack manager used by the engine runtime.
+ */
+
 #include "scene_manager.hpp"
 
 #include "../../models/scene/scene.hpp"
@@ -68,6 +73,7 @@ namespace CosmicEngine
 
     void SceneManager::update(double deltaTime)
     {
+        // Deferred replacement avoids deleting the active scene mid-update.
         if (NextScene)
         {
             PopScene();

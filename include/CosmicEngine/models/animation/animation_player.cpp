@@ -1,3 +1,8 @@
+/**
+ * @file animation_player.cpp
+ * @brief Implements the runtime animation player used by the engine.
+ */
+
 #include "animation_player.hpp"
 
 #include <algorithm>
@@ -88,6 +93,7 @@ namespace CosmicEngine
 
         elapsedInCurrentFrame += std::max(0.0, deltaTime) * std::max(0.0f, speedMultiplier);
 
+        // Consume as many frame durations as necessary so playback remains stable after long frames.
         while (alive && playing && !finished)
         {
             const AnimationFrame *frame = GetCurrentFrame();

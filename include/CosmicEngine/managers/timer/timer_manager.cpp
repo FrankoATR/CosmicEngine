@@ -1,3 +1,8 @@
+/**
+ * @file timer_manager.cpp
+ * @brief Implements the runtime timer manager used by the engine.
+ */
+
 #include "timer_manager.hpp"
 #include <iostream>
 

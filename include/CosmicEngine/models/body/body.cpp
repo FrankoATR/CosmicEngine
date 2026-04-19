@@ -1,3 +1,8 @@
+/**
+ * @file body.cpp
+ * @brief Implements the collision body component used by the engine.
+ */
+
 #include "body.hpp"
 
 #include "../../managers/resource/resource_manager.hpp"

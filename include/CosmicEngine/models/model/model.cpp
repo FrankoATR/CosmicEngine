@@ -1,3 +1,8 @@
+/**
+ * @file model.cpp
+ * @brief Implements the Assimp-based 3D model loader used by the engine.
+ */
+
 #include "model.hpp"
 
 namespace CosmicEngine

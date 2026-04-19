@@ -1,3 +1,8 @@
+/**
+ * @file input_manager.cpp
+ * @brief Implements the input manager used to poll keyboard, mouse, text, and controller state.
+ */
+
 #include "input_manager.hpp"
 
 #include "../game_manager.hpp"
@@ -9,6 +14,9 @@
 
 namespace
 {
+    /**
+     * @brief Converts the GLFW cursor position into normalized viewport coordinates.
+     */
     bool GetNormalizedCursorInViewport(GLFWwindow *window, float &normalizedX, float &normalizedY)
     {
         if (!window)

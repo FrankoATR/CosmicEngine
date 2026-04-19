@@ -1,6 +1,11 @@
 #ifndef COSMIC_COLLISIONAREA2D_HPP
 #define COSMIC_COLLISIONAREA2D_HPP
 
+/**
+ * @file CollisionArea2D.hpp
+ * @brief Declares the legacy 2D-only collision area base type.
+ */
+
 #include <glm/glm.hpp>
 
 namespace CosmicEngine
@@ -14,6 +19,16 @@ namespace CosmicEngine
         QuadTree
     };
 
+    /**
+     * @brief Legacy 2D collision area abstraction retained for compatibility.
+     *
+     * CollisionArea2D serves as a minimal 2D-only base class from earlier
+     * engine versions.  Modern code should prefer **CollisionArea** which
+     * supports both 2D and 3D modes.  Bodies are added/removed automatically
+     * by BodyManager when a collision area exists.
+     *
+     * @see CollisionArea, GameGridCollisions, GameQuadTreeCollisions
+     */
     class CollisionArea2D
     {
     protected:
@@ -29,16 +44,25 @@ namespace CosmicEngine
     public:
         virtual ~CollisionArea2D() = default;
 
+        /** @brief Returns the collision area type. */
         CollisionType GetType() const;
 
+        /** @brief Returns the origin of the collision area. */
         virtual glm::vec2 GetPosition() const;
+        /** @brief Sets the origin of the collision area. */
         virtual void SetPosition(glm::vec2 newPosition) = 0;
+        /** @brief Returns the size of the collision area. */
         virtual glm::vec2 GetSize() const;
 
+        /** @brief Draws debug visualization for the collision area. */
         virtual void DrawDebug() = 0;
+        /** @brief Adds a body to the collision area. */
         virtual void AddObject(Body *body) = 0;
+        /** @brief Removes a body from the collision area. */
         virtual void RemoveObject(Body *body) = 0;
+        /** @brief Finds and dispatches collisions for the currently stored bodies. */
         virtual void FindCollisions() = 0;
+        /** @brief Clears all bodies and internal state from the collision area. */
         virtual void Clear() = 0;
     };
 }

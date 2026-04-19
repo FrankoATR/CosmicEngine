@@ -1,3 +1,8 @@
+/**
+ * @file ui_element.cpp
+ * @brief Implements the base retained UI element used by the engine.
+ */
+
 #include "ui_element.hpp"
 #include "../../managers/game_manager.hpp"
 #include "../../managers/camera/camera_manager.hpp"

@@ -1,3 +1,8 @@
+/**
+ * @file ui_manager.cpp
+ * @brief Implements the retained UI manager used by the engine.
+ */
+
 #include "ui_manager.hpp"
 #include <algorithm>
 #include <iostream>

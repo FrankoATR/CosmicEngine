@@ -1,6 +1,11 @@
 #ifndef COSMIC_NETWORKMANAGER_HPP
 #define COSMIC_NETWORKMANAGER_HPP
 
+/**
+ * @file network_manager.hpp
+ * @brief Declares the ENet-based network manager and supporting types.
+ */
+
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -37,7 +42,8 @@ namespace CosmicEngine
     };
 
     /**
-     * @brief Thread-safe queue for passing messages between network and game threads.
+     * @brief Thread-safe queue for passing data between the network thread and the game thread.
+     * @tparam T Stored value type.
      */
     template <typename T>
     class ThreadSafeQueue
@@ -47,12 +53,21 @@ namespace CosmicEngine
         mutable std::mutex mutex;
 
     public:
+        /**
+         * @brief Pushes a new item into the queue.
+         * @param item Item to enqueue.
+         */
         void Push(T item)
         {
             std::lock_guard<std::mutex> lock(mutex);
             queue.push(std::move(item));
         }
 
+        /**
+         * @brief Pops the next item from the queue.
+         * @param outItem Output item when one is available.
+         * @return True when an item was removed from the queue.
+         */
         bool Pop(T &outItem)
         {
             std::lock_guard<std::mutex> lock(mutex);
@@ -63,18 +78,27 @@ namespace CosmicEngine
             return true;
         }
 
+        /**
+         * @brief Returns whether the queue is empty.
+         * @return True when no items are stored.
+         */
         bool Empty() const
         {
             std::lock_guard<std::mutex> lock(mutex);
             return queue.empty();
         }
 
+        /**
+         * @brief Returns the number of items currently stored.
+         * @return Queue size.
+         */
         size_t Size() const
         {
             std::lock_guard<std::mutex> lock(mutex);
             return queue.size();
         }
 
+        /** @brief Removes every queued item. */
         void Clear()
         {
             std::lock_guard<std::mutex> lock(mutex);
@@ -88,7 +112,9 @@ namespace CosmicEngine
      */
     struct IncomingMessage
     {
+        /** @brief Session identifier of the message sender. */
         int senderId;
+        /** @brief Message payload decoded from ENet transport. */
         NetworkMessage message;
     };
 
@@ -257,27 +283,32 @@ namespace CosmicEngine
         void Broadcast(const NetworkMessage &msg, int excludePeerId = -1);
 
         /**
-         * @brief Get the current network role.
+         * @brief Returns the current local network role.
+         * @return Current network role.
          */
         NetworkRole GetRole() const;
 
         /**
-         * @brief Check if currently connected (as server or client).
+         * @brief Returns whether the local instance is currently connected.
+         * @return True when a server or client session is active.
          */
         bool IsConnected() const;
 
         /**
-         * @brief Check if running as server.
+         * @brief Returns whether the local instance is acting as a server.
+         * @return True when the current role is server.
          */
         bool IsServer() const;
 
         /**
-         * @brief Check if running as client.
+         * @brief Returns whether the local instance is acting as a client.
+         * @return True when the current role is client.
          */
         bool IsClient() const;
 
         /**
-         * @brief Get the local client ID (assigned by server).
+         * @brief Returns the local client identifier assigned by the server.
+         * @return Local client identifier, or -1 when unavailable.
          */
         int GetLocalClientId() const;
 
@@ -287,7 +318,8 @@ namespace CosmicEngine
         const NetworkSession &GetSession() const;
 
         /**
-         * @brief Get the number of connected peers.
+         * @brief Returns the number of connected peers in the current session.
+         * @return Connected peer count.
          */
         size_t GetPeerCount() const;
     };

@@ -1,6 +1,11 @@
 #ifndef COSMIC_NETWORK_MESSAGE_HPP
 #define COSMIC_NETWORK_MESSAGE_HPP
 
+/**
+ * @file network_message.hpp
+ * @brief Declares the serialized message format used by the network subsystem.
+ */
+
 #include <nlohmann/json.hpp>
 #include <string>
 #include <cstdint>
@@ -46,15 +51,35 @@ namespace CosmicEngine
     /**
      * @brief A network message that uses JSON for payload serialization.
      * 
-     * Wire format: [2 bytes type][JSON payload as UTF-8 string]
+     * Wire format: [2 bytes type][JSON payload as UTF-8 string].
      * All messages are sent as ENet reliable packets by default.
+     *
+     * @par Example — creating and sending a network message
+     * @code
+     * CosmicEngine::NetworkMessage msg(
+     *     CosmicEngine::NetMessageType::SpawnObject,
+     *     {{"objectId", 42}, {"x", 10.0f}, {"y", 5.0f}, {"z", 3.0f}});
+     *
+     * if (NET_MN.IsServer())
+     *     NET_MN.Broadcast(msg);
+     * else
+     *     NET_MN.SendToServer(msg);
+     * @endcode
      */
     struct NetworkMessage
     {
+        /** @brief Logical message type. */
         NetMessageType type;
+        /** @brief JSON payload associated with the message. */
         nlohmann::json payload;
 
+        /** @brief Creates a default custom message. */
         NetworkMessage() : type(NetMessageType::Custom) {}
+        /**
+         * @brief Creates a message with the provided type and payload.
+         * @param type Logical message type.
+         * @param payload JSON payload.
+         */
         NetworkMessage(NetMessageType type, nlohmann::json payload = {})
             : type(type), payload(std::move(payload)) {}
 

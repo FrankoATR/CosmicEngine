@@ -1,3 +1,8 @@
+/**
+ * @file object.cpp
+ * @brief Implements the base runtime object used by the engine entity system.
+ */
+
 #include "object.hpp"
 #include "../timer/timer.hpp"
 

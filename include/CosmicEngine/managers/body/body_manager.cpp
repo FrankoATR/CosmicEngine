@@ -1,3 +1,8 @@
+/**
+ * @file body_manager.cpp
+ * @brief Implements the runtime collision body manager used by the engine.
+ */
+
 #include "body_manager.hpp"
 
 #include "../../collisions/CollisionArea.hpp"
@@ -62,6 +67,7 @@ namespace CosmicEngine
 
     void BodyManager::update()
     {
+		// Bodies are first synchronized from their parents, then inserted into the active collision area for broad-phase checks.
         for (int id : toDelete)
         {
             Remove(id);

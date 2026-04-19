@@ -1,6 +1,11 @@
 #ifndef COSMIC_GAMEGRIDCOLLISIONS_HPP
 #define COSMIC_GAMEGRIDCOLLISIONS_HPP
 
+/**
+ * @file GameGridCollisions.hpp
+ * @brief Declares the uniform-grid collision area used by the engine.
+ */
+
 #include "CollisionArea.hpp"
 
 #include <glm/glm.hpp>
@@ -11,6 +16,7 @@ namespace CosmicEngine
     class Body;
 
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+    /** @brief Stores bodies assigned to a 2D grid cell. */
     struct Cell
     {
         glm::vec2 Position;
@@ -20,6 +26,20 @@ namespace CosmicEngine
         explicit Cell(glm::vec2 position) : Position(position) {}
     };
 
+    /**
+     * @brief Uniform-grid collision accelerator for 2D runtime mode.
+     *
+     * Partitions space into equal-sized cells.  Each frame, every Body is inserted
+     * into the cell(s) it overlaps, then neighbor-cell pairs are tested for actual
+     * overlap and collision callbacks are fired.  Created automatically by
+     * BodyManager::CreateCollisionArea(CollisionType::Grid, ...).
+     *
+     * @par Example (automatic creation via BodyManager)
+     * @code
+     * BOD_MN.CreateCollisionArea(CosmicEngine::CollisionType::Grid,
+     *     glm::vec2(-500, -300), glm::vec2(1000, 600), 80, 6, 4);
+     * @endcode
+     */
     class GameGridCollisions : public CollisionArea
     {
     public:
@@ -52,6 +72,7 @@ namespace CosmicEngine
     };
 
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+    /** @brief Stores bodies assigned to a 3D grid cell. */
     struct Cell
     {
         glm::vec3 Position;
@@ -61,6 +82,18 @@ namespace CosmicEngine
         explicit Cell(glm::vec3 position) : Position(position) {}
     };
 
+    /**
+     * @brief Uniform-grid collision accelerator for 3D runtime mode.
+     *
+     * Same principle as the 2D grid but partitions a 3D volume into rows,
+     * columns, and layers.  Created automatically by BodyManager.
+     *
+     * @par Example (automatic creation via BodyManager)
+     * @code
+     * BOD_MN.CreateCollisionArea(CosmicEngine::CollisionType::Grid,
+     *     glm::vec3(-50, 0, -50), glm::vec3(100, 20, 100), 10, 5, 4);
+     * @endcode
+     */
     class GameGridCollisions : public CollisionArea
     {
     public:
