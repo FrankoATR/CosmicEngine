@@ -20,18 +20,18 @@ namespace CosmicEngine
 
     ObjectManager::ObjectManager()
     {
-        RUNTIME_INFO("Object manager created");
+		RUNTIME_LIFECYCLE("Object manager", "created");
     }
 
     ObjectManager::~ObjectManager()
     {
-        RUNTIME_INFO("Object manager destroyed");
+		RUNTIME_LIFECYCLE("Object manager", "destroyed");
     }
 
     void ObjectManager::init()
     {
         this->nextEntityId = 0;
-        RUNTIME_INFO("Object manager initialized");
+		RUNTIME_LIFECYCLE("Object manager", "initialized");
     }
 
     void ObjectManager::update(float deltaTime)
@@ -151,7 +151,7 @@ namespace CosmicEngine
 
         nextEntityId = 0;
         
-        RUNTIME_INFO("Object manager cleared");
+        RUNTIME_LIFECYCLE("Object manager", "cleared");
     }
 
 

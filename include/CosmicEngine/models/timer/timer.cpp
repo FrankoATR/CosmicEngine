@@ -1,7 +1,8 @@
 #include "timer.hpp"
 
+#include "../../utils/log.hpp"
+
 #include <algorithm>
-#include <iostream>
 
 namespace CosmicEngine
 {
@@ -14,6 +15,7 @@ namespace CosmicEngine
           Alive(true),
           Finished(false)
     {
+		RUNTIME_LIFECYCLE("Timer", "created");
     }
 
     void Timer::update(double deltaTime)
@@ -159,6 +161,7 @@ namespace CosmicEngine
     void Timer::Destroy()
     {
         this->Alive = false;
+		RUNTIME_LIFECYCLE("Timer", "destroyed");
     }
 
     bool Timer::IsAlive()

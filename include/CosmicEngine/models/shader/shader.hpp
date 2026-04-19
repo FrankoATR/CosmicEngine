@@ -55,6 +55,7 @@ namespace CosmicEngine
          * @param vertexSource Vertex shader source code.
          * @param fragmentSource Fragment shader source code.
          * @param geometrySource Optional geometry shader source code.
+         * @throws std::runtime_error When shader compilation or program linking fails.
          */
         Shader(const char* vertexSource, const char* fragmentSource, const char* geometrySource = nullptr);
         /** @brief Releases the shader program and owned shader objects. */

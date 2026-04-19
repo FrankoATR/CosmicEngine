@@ -193,6 +193,7 @@ namespace CosmicEngine
 
         // ENet peer -> session ID mapping (server only)
         std::map<ENetPeer *, int> peerIdMap;
+        bool enetInitialized = false;
 
         // Network thread loops
         void ServerLoop();
@@ -211,8 +212,10 @@ namespace CosmicEngine
 
         /**
          * @brief Initialize the network subsystem. Called by GameManager.
+         * @return True when ENet was initialized successfully.
+         * A false result indicates the runtime cannot safely use networking features and startup should abort when networking is required.
          */
-        void init();
+        bool init();
 
         /**
          * @brief Shut down networking, disconnect all peers, and join threads.

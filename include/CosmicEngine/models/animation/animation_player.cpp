@@ -5,6 +5,8 @@
 
 #include "animation_player.hpp"
 
+#include "../../utils/log.hpp"
+
 #include <algorithm>
 
 namespace CosmicEngine
@@ -25,6 +27,7 @@ namespace CosmicEngine
           finished(false),
           alive(true)
     {
+		RUNTIME_LIFECYCLE("Animation player", "created");
     }
 
     void AnimationPlayer::SetId(std::uint64_t newId)
@@ -169,6 +172,7 @@ namespace CosmicEngine
     void AnimationPlayer::Destroy()
     {
         alive = false;
+		RUNTIME_LIFECYCLE("Animation player", "destroyed");
     }
 
     bool AnimationPlayer::IsPlaying() const

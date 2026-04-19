@@ -8,11 +8,11 @@
 
 #include "../../interfaces/event.hpp"
 #include "../../interfaces/ievent.hpp"
+#include "../../utils/log.hpp"
 #include <cstdint>
 #include <functional>
 #include <unordered_map>
 #include <string>
-#include <iostream>
 
 namespace CosmicEngine
 {
@@ -92,7 +92,7 @@ namespace CosmicEngine
                 return event->AddListener(std::move(callback));
             }
 
-            throw std::runtime_error("Tipos de parámetros del evento no coinciden al registrar.");
+            throw std::runtime_error("Event parameter types do not match during registration.");
         }
 
         /**
@@ -127,7 +127,7 @@ namespace CosmicEngine
             auto event = dynamic_cast<Event<Args...>*>(eventBase);
             if (!event)
             {
-                throw std::runtime_error("Tipos de parámetros del evento no coinciden al desregistrar.");
+                throw std::runtime_error("Event parameter types do not match during unregistration.");
             }
 
             return event->RemoveListener(listenerId);
@@ -153,12 +153,12 @@ namespace CosmicEngine
                 }
                 else
                 {
-                    throw std::runtime_error("Tipos de parámetros del evento no coinciden al disparar.");
+                    throw std::runtime_error("Event parameter types do not match during dispatch.");
                 }
             }
             else
             {
-                std::cerr << "Evento no encontrado: " << eventName << std::endl;
+				RUNTIME_WARNING("Event not found: " << eventName);
             }
         }
 

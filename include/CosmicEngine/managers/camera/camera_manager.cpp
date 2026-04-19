@@ -31,12 +31,12 @@ namespace CosmicEngine
 
     CameraManager::CameraManager()
     {
-        RUNTIME_INFO("Camera manager created");
+		RUNTIME_LIFECYCLE("Camera manager", "created");
     }
 
     CameraManager::~CameraManager()
     {
-        RUNTIME_INFO("Camera manager destroyed");
+		RUNTIME_LIFECYCLE("Camera manager", "destroyed");
     }
 
     glm::vec2 CameraManager::GetBaseWindowSize() const
@@ -78,7 +78,7 @@ namespace CosmicEngine
 
             reset();
 
-            RUNTIME_INFO("Camera manager initialized");
+            RUNTIME_LIFECYCLE("Camera manager", "initialized");
         }
 
         glm::vec2 CameraManager::GetPosition() const
@@ -217,7 +217,7 @@ namespace CosmicEngine
 
             updateCameraVectors();
             
-            RUNTIME_INFO("Camera manager initialized");
+            RUNTIME_LIFECYCLE("Camera manager", "initialized");
         }
 
         

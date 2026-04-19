@@ -123,8 +123,11 @@ namespace CosmicEngine
         /** @brief Returns the singleton instance of the resource manager. */
         static ResourceManager &GetInstance();
 
-        /** @brief Initializes built-in resource state required by the renderer. */
-        void init();
+        /** @brief Initializes built-in resource state required by the renderer.
+         *  @return True when all mandatory built-in resources were created successfully.
+         *  GameManager treats a false result as a fatal startup error because rendering cannot continue safely without these assets.
+         */
+        bool init();
 
         /**
          * @brief Renders a textured 2D sprite using a previously loaded texture.

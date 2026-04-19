@@ -7,6 +7,7 @@
 #include <CosmicEngine/models/ui/derived/ui_button.hpp>
 #include <CosmicEngine/models/ui/derived/ui_text.hpp>
 #include <CosmicEngine/models/ui/derived/ui_text_field.hpp>
+#include <CosmicEngine/utils/log.hpp>
 
 #include "../entities/network_demo_player.hpp"
 #include "../entities/network_demo_projectile.hpp"
@@ -18,7 +19,6 @@
 #include BODYMANAGER_HEADER
 #include UIMANAGER_HEADER
 
-#include <iostream>
 #include <random>
 #include <glm/gtc/matrix_inverse.hpp>
 
@@ -571,7 +571,7 @@ void NetworkDemoScene::StartAsServer()
         players[0] = localPlayer;
 
         SwitchToPlaying();
-        std::cout << "[NetworkDemoScene] Started as server." << std::endl;
+		RUNTIME_INFO("[NetworkDemoScene] Started as server.");
     }
     else
     {
@@ -611,7 +611,7 @@ void NetworkDemoScene::StartAsClient()
     {
         // Local player will be created when we receive AssignClientId
         SwitchToPlaying();
-        std::cout << "[NetworkDemoScene] Connected to " << ip << ":" << port << std::endl;
+		RUNTIME_INFO("[NetworkDemoScene] Connected to " << ip << ":" << port);
     }
     else
     {
@@ -673,7 +673,7 @@ void NetworkDemoScene::OnAssignClientId(int senderId, const nlohmann::json &payl
     if (clientId < 0)
         return;
 
-    std::cout << "[NetworkDemoScene] Assigned client ID: " << clientId << std::endl;
+	RUNTIME_INFO("[NetworkDemoScene] Assigned client ID: " << clientId);
 
     // Create local player
     if (players.find(clientId) == players.end())
@@ -698,7 +698,7 @@ void NetworkDemoScene::OnClientConnect(int senderId, const nlohmann::json &paylo
 
     (void)senderId;
 
-    std::cout << "[NetworkDemoScene] Player " << clientId << " connected." << std::endl;
+    RUNTIME_INFO("[NetworkDemoScene] Player " << clientId << " connected.");
     GetOrCreatePlayer(clientId);
 }
 
@@ -724,7 +724,7 @@ void NetworkDemoScene::OnClientDisconnect(int senderId, const nlohmann::json &pa
     {
         OBJ_MN.Remove(it->second->GetID());
         players.erase(it);
-        std::cout << "[NetworkDemoScene] Player " << clientId << " disconnected." << std::endl;
+		RUNTIME_INFO("[NetworkDemoScene] Player " << clientId << " disconnected.");
     }
 }
 

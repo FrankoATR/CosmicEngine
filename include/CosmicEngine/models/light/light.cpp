@@ -4,9 +4,15 @@
  */
 
 #include "light.hpp"
+#include "../../utils/log.hpp"
 
 namespace CosmicEngine
 {
+    Light::~Light()
+    {
+        RUNTIME_LIFECYCLE("Light", "destroyed");
+    }
+
     void Light::draw() const
     {
 
@@ -14,7 +20,7 @@ namespace CosmicEngine
 
     void Light::init()
     {
-
+		RUNTIME_LIFECYCLE("Light", "initialized");
     }
 
     void Light::update(float deltaTime)
@@ -45,6 +51,7 @@ namespace CosmicEngine
     void Light::Destroy()
     {
         this->visible = false;
+		RUNTIME_LIFECYCLE("Light", "destroyed");
     }
 
 
@@ -70,6 +77,7 @@ namespace CosmicEngine
             this->quadraticLight = quadraticLight;
             this->shininess = shininess;
             this->visible = visible;
+			RUNTIME_LIFECYCLE("Light", "created");
         }
 
         void Light::SetPosition(glm::vec2 newPosition)
@@ -105,6 +113,7 @@ namespace CosmicEngine
             this->quadraticLight = quadraticLight;
             this->shininess = shininess;
             this->visible = visible;
+			RUNTIME_LIFECYCLE("Light", "created");
         }
         
         void Light::SetPosition(glm::vec3 newPosition)

@@ -13,12 +13,12 @@ namespace CosmicEngine
 
     LightManager::LightManager()
     {
-        RUNTIME_INFO("Light manager created");
+		RUNTIME_LIFECYCLE("Light manager", "created");
     }
 
     LightManager::~LightManager()
     {
-        RUNTIME_INFO("Light manager destroyed");
+		RUNTIME_LIFECYCLE("Light manager", "destroyed");
     }
     
     void LightManager::init()
@@ -27,7 +27,7 @@ namespace CosmicEngine
         this->globalAmbientLightColor = glm::vec3(0.05f, 0.05f, 0.05f);
         this->globalAmbientLightDiffuse = glm::vec3(0.4f, 0.4f, 0.4f);
         this->globalAmbientLightSpecular = glm::vec3(0.5f, 0.5f, 0.5f);
-        RUNTIME_INFO("Light manager initialized");
+        RUNTIME_LIFECYCLE("Light manager", "initialized");
     }
 
     #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
@@ -201,6 +201,7 @@ namespace CosmicEngine
         spot_lights.clear();
         target_shader_resources.clear();
         nextEntityId = 0;
+		RUNTIME_LIFECYCLE("Light manager", "cleared");
     }
 
 }

@@ -69,12 +69,12 @@ namespace CosmicEngine
 
     InputManager::InputManager()
     {
-        RUNTIME_INFO("Input manager created");
+		RUNTIME_LIFECYCLE("Input manager", "created");
     }
 
     InputManager::~InputManager()
     {
-        RUNTIME_INFO("Input manager destroyed");
+		RUNTIME_LIFECYCLE("Input manager", "destroyed");
     }
 
     void InputManager::init(GLFWwindow *window)
@@ -99,13 +99,14 @@ namespace CosmicEngine
 
         ResetMouseLookReference();
 
-        RUNTIME_INFO("Input manager initialized");
+        RUNTIME_LIFECYCLE("Input manager", "initialized");
     }
 
     
     void InputManager::shutdown()
     {
         ResetMouseSettings();
+		RUNTIME_LIFECYCLE("Input manager", "shutdown");
     }
 
     void InputManager::update(GLFWwindow *window)
@@ -508,7 +509,7 @@ namespace CosmicEngine
         this->MouseSpriteOffSet = glm::vec2(0, 0);
         this->MouseSpriteSize = glm::vec2(32, 32);
 
-        std::cout << "Input manager settings reseted" << std::endl;
+        RUNTIME_INFO("[InputManager] Mouse settings reset.");
     }
 
     void InputManager::SetMouseSprite(unsigned int *NewMouseSprite)

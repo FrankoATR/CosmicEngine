@@ -27,7 +27,7 @@ namespace CosmicEngine
     BodyManager::BodyManager()
         : nextEntityId(0), collisionArea(nullptr)
     {
-        RUNTIME_INFO("Body manager created");
+		RUNTIME_LIFECYCLE("Body manager", "created");
     }
 
     BodyManager::~BodyManager()
@@ -38,7 +38,7 @@ namespace CosmicEngine
             collisionArea = nullptr;
         }
 
-        RUNTIME_INFO("Body manager destroyed");
+        RUNTIME_LIFECYCLE("Body manager", "destroyed");
     }
 
     void BodyManager::init()
@@ -46,7 +46,7 @@ namespace CosmicEngine
         collisionArea = nullptr;
         nextEntityId = 0;
         toDelete.clear();
-        RUNTIME_INFO("Body manager initialized");
+        RUNTIME_LIFECYCLE("Body manager", "initialized");
     }
 
     void BodyManager::draw()
@@ -117,7 +117,7 @@ namespace CosmicEngine
         }
 
         delete body;
-        std::cerr << "Body needs to have a parent" << std::endl;
+		RUNTIME_WARNING("[BodyManager] Body needs to have a parent.");
     }
 
     std::vector<Body *> BodyManager::FindAllByParent(Object *parent)
@@ -300,6 +300,6 @@ namespace CosmicEngine
         toDelete.clear();
         nextEntityId = 0;
 
-        RUNTIME_INFO("Body manager cleared");
+        RUNTIME_LIFECYCLE("Body manager", "cleared");
     }
 }

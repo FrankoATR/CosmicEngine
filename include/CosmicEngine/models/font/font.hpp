@@ -60,6 +60,7 @@ namespace CosmicEngine
          * @brief Loads a font and prepares glyph resources for rendering.
          * @param fontPath Source font file path.
          * @param fontSize Requested glyph size.
+         * @throws std::runtime_error When FreeType initialization or font loading fails.
          */
         Font(const std::string &fontPath, unsigned int fontSize);
         /** @brief Releases glyph textures and rendering buffers. */

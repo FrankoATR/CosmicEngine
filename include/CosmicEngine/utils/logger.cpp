@@ -8,11 +8,28 @@
 namespace CosmicEngine
 {
 
+    bool Logger::isRuntimeLoggingAvailable()
+    {
+    #ifdef NDEBUG
+        return false;
+    #else
+        return true;
+    #endif
+    }
+
     void Logger::init(bool enableConsole, bool enableFile)
     {
-        consoleEnabled = enableConsole;
+        std::lock_guard<std::mutex> lock(logMutex);
 
-        if (enableFile)
+        consoleEnabled = enableConsole && isRuntimeLoggingAvailable();
+        loggingEnabled = isRuntimeLoggingAvailable();
+
+        if (file.is_open())
+        {
+            file.close();
+        }
+
+        if (enableFile && loggingEnabled)
         {
             ensureLogDirectory();
             std::string filename = generateLogFilename();
@@ -26,30 +43,33 @@ namespace CosmicEngine
 
     void Logger::shutdown()
     {
+        std::lock_guard<std::mutex> lock(logMutex);
+
         if (file.is_open())
+        {
+            file.flush();
             file.close();
+        }
     }
 
     void Logger::setEnabled(bool enabled)
     {
-        loggingEnabled = enabled;
+        loggingEnabled = enabled && isRuntimeLoggingAvailable();
     }
 
     bool Logger::isEnabled()
     {
-        return loggingEnabled;
+        return loggingEnabled && isRuntimeLoggingAvailable();
     }
 
     void Logger::log(LogLevel level, const std::string &msg)
     {
-        if (!loggingEnabled)
+        const bool shouldEmit = isEnabled();
+
+        if (!shouldEmit && level != LogLevel::Error)
             return;
 
         std::lock_guard<std::mutex> lock(logMutex);
-
-        std::time_t t = std::time(nullptr);
-        char timeBuf[20];
-        std::strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", std::localtime(&t));
 
         std::string prefix;
         switch (level)
@@ -65,9 +85,9 @@ namespace CosmicEngine
             break;
         }
 
-        std::string finalMsg = std::string("[") + timeBuf + "] " + prefix + msg;
+        std::string finalMsg = std::string("[") + getCurrentTimestamp() + "] " + prefix + msg;
 
-        if (consoleEnabled)
+        if (shouldEmit && consoleEnabled)
         {
             if (level == LogLevel::Warning)
                 std::cerr << finalMsg << std::endl;
@@ -75,9 +95,10 @@ namespace CosmicEngine
                 std::cout << finalMsg << std::endl;
         }
 
-        if (file.is_open())
+        if (shouldEmit && file.is_open())
         {
             file << finalMsg << std::endl;
+            file.flush();
         }
 
         if (level == LogLevel::Error)
@@ -89,6 +110,23 @@ namespace CosmicEngine
     void Logger::info(const std::string &msg) { log(LogLevel::Info, msg); }
     void Logger::warning(const std::string &msg) { log(LogLevel::Warning, msg); }
     void Logger::error(const std::string &msg) { log(LogLevel::Error, msg); }
+    void Logger::lifecycle(const std::string &component, const std::string &action) { info("[" + component + "] " + action); }
+
+    std::string Logger::getCurrentTimestamp()
+    {
+        std::time_t t = std::time(nullptr);
+        std::tm tm{};
+
+    #ifdef _WIN32
+        localtime_s(&tm, &t);
+    #else
+        localtime_r(&t, &tm);
+    #endif
+
+        std::ostringstream oss;
+        oss << std::put_time(&tm, "%H:%M:%S");
+        return oss.str();
+    }
 
     std::string Logger::generateLogFilename()
     {

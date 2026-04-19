@@ -22,8 +22,9 @@ enum class LogLevel { Info, Warning, Error };
  * @brief Provides thread-safe console and file logging helpers.
  *
  * Logger is a static utility that writes timestamped log entries to the console
- * and/or a file inside the @c logs/ directory.  Initialize it early in main()
- * and shut it down before exiting.
+ * and/or a file inside the @c logs/ directory. In @c Release builds informational
+ * and warning logs are suppressed, while fatal errors still surface as exceptions.
+ * Initialize it early in main() and shut it down before exiting.
  *
  * @par Example — typical usage in main.cpp
  * @code
@@ -56,10 +57,15 @@ public:
 
     /** @brief Writes an informational log entry. */
     static void info(const std::string& msg);
+
+    /** @brief Writes a standardized lifecycle message for a runtime component. */
+    static void lifecycle(const std::string& component, const std::string& action);
     /** @brief Writes a warning log entry. */
     static void warning(const std::string& msg);
     /** @brief Writes an error log entry. */
     static void error(const std::string& msg);
+    /** @brief Returns whether the current build emits runtime logs. */
+    static bool isRuntimeLoggingAvailable();
 
     /**
      * @brief Enables or disables logging globally.
@@ -75,6 +81,7 @@ private:
     static inline bool loggingEnabled = true;
     static inline std::mutex logMutex;
 
+    static std::string getCurrentTimestamp();
     static std::string generateLogFilename();
     static void ensureLogDirectory();
 };

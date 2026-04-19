@@ -5,6 +5,7 @@
 #include <CosmicEngine/interfaces/definitions.hpp>
 #include <CosmicEngine/models/animation/animation_clip.hpp>
 #include <CosmicEngine/managers/resource/resource_manager.hpp>
+#include <CosmicEngine/utils/log.hpp>
 
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
     #include "../entities/json_demo_object.hpp"
@@ -30,7 +31,6 @@
 #include AUDIOMANAGER_HEADER
 #include UIMANAGER_HEADER
 
-#include <iostream>
 #include <memory>
 
 namespace
@@ -115,7 +115,7 @@ void MainScene::init()
 
     if (!JSON_MN.OpenFile(jsonSavePath))
     {
-        std::cerr << "No se pudo abrir el archivo JSON: " << jsonSavePath << std::endl;
+		RUNTIME_WARNING("[MainScene] Failed to open JSON file: " << jsonSavePath);
     }
 
     ConfigureCollisionTestArea(currentCollisionType);
@@ -336,11 +336,11 @@ void MainScene::SaveJsonDemoObjects()
 
     if (JSON_MN.SaveFile(true))
     {
-        std::cout << "Datos guardados en " << jsonSavePath << std::endl;
+		RUNTIME_INFO("[MainScene] Data saved to " << jsonSavePath);
     }
     else
     {
-        std::cerr << "No se pudieron guardar los datos JSON" << std::endl;
+		RUNTIME_WARNING("[MainScene] Failed to save JSON data.");
     }
 }
 
@@ -351,11 +351,11 @@ void MainScene::LoadJsonDemoObjects()
 
     if (!OBJ_MN.FindByClassName(JsonDemoObject::StaticClassName()).empty())
     {
-        std::cout << "Datos cargados desde " << jsonSavePath << std::endl;
+		RUNTIME_INFO("[MainScene] Data loaded from " << jsonSavePath);
     }
     else
     {
-        std::cout << "No había objetos guardados para cargar" << std::endl;
+		RUNTIME_INFO("[MainScene] No saved objects were found to load.");
     }
 }
 

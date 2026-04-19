@@ -8,6 +8,7 @@
 
 #include <glm/glm.hpp>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace CosmicEngine
@@ -48,6 +49,8 @@ namespace CosmicEngine
 
         UIElement *parent;
         std::vector<UIElement*> children;
+
+        static std::string_view GetTypeName(UIElementType type);
 
     public:
         /**

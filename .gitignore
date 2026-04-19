@@ -12,8 +12,8 @@ _deps/
 
 # ---- Build folders ----
 build/
+build-wsl/
 bin/
-lib/
 out/
 Debug/
 Release/
@@ -68,3 +68,22 @@ Desktop.ini
 # ---- Misc ----
 # Ignore engine-generated assets (opcional)
 assets/generated/
+
+# ---- Documentation ----
+# Keep source docs tracked, but ignore generated Doxygen output.
+docs/doxygen/
+
+# ---- Vendored dependencies required by CMake ----
+# This project links directly against these vendored files, so they must remain trackable.
+!lib/
+lib/*
+!lib/glad/
+lib/glad/*
+!lib/glad/src/
+!lib/glad/src/glad.c
+!lib/libglfw3.a
+!lib/libfreetype.a
+!lib/libglm.a
+!lib/libassimp.a
+!lib/libzlibstatic.a
+!lib/libenet.a

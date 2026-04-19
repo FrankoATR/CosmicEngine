@@ -24,6 +24,7 @@
 #include "../utils/log.hpp"
 
 #include <iostream>
+#include <stdexcept>
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -39,7 +40,13 @@ namespace CosmicEngine
 
 	void GameManager::init(const GameManagerInitParams& params)
 	{
-		RUNTIME_INFO("Game manager created.");
+		RUNTIME_LIFECYCLE("Game manager", "created");
+
+		if (initialized)
+		{
+			RUNTIME_WARNING("[GameManager] init() was called more than once; the second call was ignored.");
+			return;
+		}
 
         int screenWidth  = params.screenWidth;
         int screenHeight  = params.screenHeight;
@@ -54,116 +61,124 @@ namespace CosmicEngine
         fpsTimer = 0.0;
         frameCount = 0;
         currentFPS = 0;
+		imguiInitialized = false;
 
-		setBaseAspectSize(baseScreenWidth, baseScreenHeight);
-
-		glfwInit();
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		// glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-
-		const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-
-		window = glfwCreateWindow(screenWidth, screenHeight, "CosmicEngine", nullptr, nullptr);
-
-		if (window == nullptr)
+		try
 		{
-			glfwTerminate();
-			Logger::error("FAILED TO CREATE GLFW WINDOW");
-		}
-		glfwMakeContextCurrent(window);
+			setBaseAspectSize(baseScreenWidth, baseScreenHeight);
 
-		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+			if (glfwInit() != GLFW_TRUE)
+			{
+				Logger::error("Failed to initialize GLFW.");
+			}
+
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+			// glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+			window = glfwCreateWindow(screenWidth, screenHeight, "CosmicEngine", nullptr, nullptr);
+
+			if (window == nullptr)
+			{
+				Logger::error("Failed to create the GLFW window.");
+			}
+			glfwMakeContextCurrent(window);
+
+			if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+			{
+				Logger::error("Failed to initialize GLAD.");
+			}
+			glfwSwapInterval(0);
+
+
+			#if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+
+			#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+				glEnable(GL_DEPTH_TEST);
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			#endif
+
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+			glViewport(0, 0, screenWidth, screenHeight);
+
+			glfwSetWindowUserPointer(window, this);
+
+			setFrameBufferSizeCallback([&](int width, int height){
+				float currentAspect = (float)width / (float)height;
+				int newWidth = width;
+				int newHeight = height;
+	
+				glm::vec2 baseAspect = getBaseAspectSize();
+	
+				if (currentAspect > (baseAspect.x / baseAspect.y))
+				{
+					newWidth = (int)(height * (baseAspect.x / baseAspect.y));
+				}
+				else
+				{
+					newHeight = (int)(width / (baseAspect.x / baseAspect.y));
+				}
+	
+				int offsetX = (width - newWidth) / 2;
+				int offsetY = (height - newHeight) / 2;
+				glfwSetWindowAspectRatio(window, baseAspect.x, baseAspect.y);
+	
+				glViewport(offsetX, offsetY, newWidth, newHeight);
+			});
+
+			{
+				int framebufferWidth = 0;
+				int framebufferHeight = 0;
+				glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
+				if (framebufferSizeCallback)
+				{
+					framebufferSizeCallback(framebufferWidth, framebufferHeight);
+				}
+			}
+
+			setDropCallback([&](int count, const char** paths){
+				for (int i = 0; i < count; i++)
+				{
+					pushDroppedFile(paths[i]);
+				}
+			});
+
+			initManagers();
+
+			IMGUI_CHECKVERSION();
+			ImGui::CreateContext();
+			ImGuiIO &io = ImGui::GetIO();
+			(void)io;
+			ImGui::StyleColorsDark();
+			if (!ImGui_ImplGlfw_InitForOpenGL(window, true))
+			{
+				Logger::error("Failed to initialize ImGui GLFW backend.");
+			}
+			if (!ImGui_ImplOpenGL3_Init("#version 330"))
+			{
+				Logger::error("Failed to initialize ImGui OpenGL backend.");
+			}
+
+			imguiInitialized = true;
+			initialized = true;
+			RUNTIME_LIFECYCLE("Game manager", "initialized");
+		}
+		catch (...)
 		{
-			Logger::error("FAILED TO INITIALIZE GLAD");
+			shutdown();
+			throw;
 		}
-		glfwSwapInterval(0);
-
-
-		#if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
-
-		#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
-			glEnable(GL_DEPTH_TEST);
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		#endif
-
-		
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		glViewport(0, 0, screenWidth, screenHeight);
-
-		glfwSetWindowUserPointer(window, this);
-
-		
-		setFrameBufferSizeCallback([&](int width, int height){
-			float currentAspect = (float)width / (float)height;
-			int newWidth = width;
-			int newHeight = height;
-	
-			glm::vec2 baseAspect = getBaseAspectSize();
-	
-			if (currentAspect > (baseAspect.x / baseAspect.y))
-			{
-				newWidth = (int)(height * (baseAspect.x / baseAspect.y));
-			}
-			else
-			{
-				newHeight = (int)(width / (baseAspect.x / baseAspect.y));
-			}
-	
-			int offsetX = (width - newWidth) / 2;
-			int offsetY = (height - newHeight) / 2;
-			glfwSetWindowAspectRatio(window, baseAspect.x, baseAspect.y);
-	
-			glViewport(offsetX, offsetY, newWidth, newHeight);
-		});
-
-		{
-			int framebufferWidth = 0;
-			int framebufferHeight = 0;
-			glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
-			if (framebufferSizeCallback)
-			{
-				framebufferSizeCallback(framebufferWidth, framebufferHeight);
-			}
-		}
-
-		
-		setDropCallback([&](int count, const char** paths){
-			for (int i = 0; i < count; i++)
-			{
-				pushDroppedFile(paths[i]);
-			}
-		});
-
-
-
-
-		initManagers();
-
-
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO &io = ImGui::GetIO();
-		(void)io;
-		ImGui::StyleColorsDark();
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init("#version 330");
-
-		Logger::info("Game manager initialized");
 	}
 
 
 	void GameManager::initManagers() const
 	{
-		
 		if (!AudioManager::GetInstance().init())
 		{
-			Logger::error("FAILED TO INITIALIZE AUDIOMANAGER");
+			Logger::error("Failed to initialize AudioManager.");
 		}
 
 
@@ -173,15 +188,24 @@ namespace CosmicEngine
 		TimerManager::GetInstance().init();
 		ScheduleManager::GetInstance().init();
 		SceneManager::GetInstance().init();
-		ResourceManager::GetInstance().init();
+		if (!ResourceManager::GetInstance().init())
+		{
+			Logger::error("Failed to initialize ResourceManager built-in assets.");
+		}
 		AnimationManager::GetInstance().init();
 		ObjectManager::GetInstance().init();
 		BodyManager::GetInstance().init();
-		SQLManager::GetInstance().init();
+		if (!SQLManager::GetInstance().init())
+		{
+			Logger::error("Failed to initialize SQLManager.");
+		}
 		JsonManager::GetInstance().init();
 		LightManager::GetInstance().init();
 		CameraManager::GetInstance().init(baseAspectSize);
-		NetworkManager::GetInstance().init();
+		if (!NetworkManager::GetInstance().init())
+		{
+			Logger::error("Failed to initialize NetworkManager.");
+		}
 
 	}
 
@@ -450,23 +474,57 @@ namespace CosmicEngine
 
 	void GameManager::shutdown()
 	{
+		auto safeShutdown = [](const char *name, auto &&callable)
+		{
+			try
+			{
+				callable();
+			}
+			catch (const std::exception &e)
+			{
+				RUNTIME_WARNING("[GameManager] Shutdown failure in " << name << ": " << e.what());
+			}
+			catch (...)
+			{
+				RUNTIME_WARNING("[GameManager] Unknown shutdown failure in " << name << '.');
+			}
+		};
+
+		safeShutdown("AnimationManager", [] { AnimationManager::GetInstance().shutdown(); });
+		safeShutdown("BodyManager", [] { BodyManager::GetInstance().Clear(); });
+		safeShutdown("ObjectManager", [] { ObjectManager::GetInstance().Clear(); });
+		safeShutdown("LightManager", [] { LightManager::GetInstance().Clear(); });
+		safeShutdown("ResourceManager", [] { ResourceManager::GetInstance().Clear(); });
+		safeShutdown("ScheduleManager", [] { ScheduleManager::GetInstance().shutdown(); });
+		safeShutdown("NetworkManager", [] { NetworkManager::GetInstance().shutdown(); });
+		safeShutdown("JsonManager", [] { JsonManager::GetInstance().shutdown(); });
+		safeShutdown("SQLManager", [] { SQLManager::GetInstance().shutdown(); });
+		safeShutdown("SceneManager", [] { SceneManager::GetInstance().shutdown(); });
+		safeShutdown("UIManager", [] { UIManager::GetInstance().shutdown(); });
+		safeShutdown("InputManager", [] { InputManager::GetInstance().shutdown(); });
+		safeShutdown("AudioManager", [] { AudioManager::GetInstance().shutdown(); });
+		safeShutdown("TimerManager", [] { TimerManager::GetInstance().shutdown(); });
+
+		if (imguiInitialized)
+		{
+			ImGui_ImplOpenGL3_Shutdown();
+			ImGui_ImplGlfw_Shutdown();
+			ImGui::DestroyContext();
+			imguiInitialized = false;
+		}
+
+		if (window)
+		{
+			glfwDestroyWindow(window);
+			window = nullptr;
+		}
 
 		glfwTerminate();
-		
-		AudioManager::GetInstance().shutdown();
-		InputManager::GetInstance().shutdown();
-		UIManager::GetInstance().shutdown();
-		TimerManager::GetInstance().shutdown();
-		SceneManager::GetInstance().shutdown();
-		SQLManager::GetInstance().shutdown();
-		JsonManager::GetInstance().shutdown();
-		NetworkManager::GetInstance().shutdown();
+		initialized = false;
+		fullScreenMode = false;
+		vsyncEnabled = false;
 
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
-		ImGui::DestroyContext();
-
-		std::cout << "Game manager shutdown" << std::endl;
+		RUNTIME_LIFECYCLE("Game manager", "shutdown");
 
 	}
 

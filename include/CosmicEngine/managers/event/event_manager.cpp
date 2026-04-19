@@ -5,8 +5,6 @@
 
 #include "event_manager.hpp"
 
-#include <iostream>
-
 namespace CosmicEngine
 {
     EventManager &EventManager::GetInstance()
@@ -17,7 +15,7 @@ namespace CosmicEngine
 
     void EventManager::init()
     {
-        std::cout << "Event manager created" << std::endl;
+        RUNTIME_LIFECYCLE("Event manager", "initialized");
     }
 
     bool EventManager::HasEvent(const std::string &eventName) const
@@ -42,17 +40,13 @@ namespace CosmicEngine
             delete pair.second;
         }
         eventCallbacks.clear();
-        
-        #ifndef NDEBUG
-            std::cout << "Event manager cleared" << std::endl;
-		#endif
+
+                RUNTIME_LIFECYCLE("Event manager", "cleared");
     }
 
     EventManager::~EventManager()
     {
-        #ifndef NDEBUG
-            std::cout << "Event manager destroyed" << std::endl;
-		#endif
+                RUNTIME_LIFECYCLE("Event manager", "destroyed");
     }
 
 }

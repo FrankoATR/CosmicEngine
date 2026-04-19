@@ -66,9 +66,12 @@ namespace CosmicEngine
         /** @brief Returns the singleton instance of the SQL manager. */
         static SQLManager &GetInstance();
 
-        /** @brief Initializes the SQL manager state. */
-        void init();
-        /** @brief Shuts the SQL manager down and closes the active database. */
+        /** @brief Initializes the SQL manager state.
+         *  @return True when SQLite global initialization succeeds.
+         *  A false result signals that persistent storage is unavailable and callers should stop startup before saving/loading data.
+         */
+        bool init();
+        /** @brief Shuts the SQL manager down and closes the active database before releasing SQLite global state. */
         void shutdown();
 
         /** @brief Opens a SQLite database file. */

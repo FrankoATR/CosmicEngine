@@ -14,8 +14,8 @@
 
 #include <sstream>
 #include <fstream>
-#include <iostream>
 #include <functional>
+#include <memory>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -30,12 +30,12 @@ namespace CosmicEngine
 
     ResourceManager::ResourceManager()
     {
-        std::cout << "Resource manager created" << std::endl;
+        RUNTIME_LIFECYCLE("Resource manager", "created");
     }
 
     ResourceManager::~ResourceManager()
     {
-        std::cout << "Resource manager destroyed" << std::endl;
+        RUNTIME_LIFECYCLE("Resource manager", "destroyed");
     }
 
 
@@ -48,7 +48,7 @@ namespace CosmicEngine
     
         if (vertices.empty() || attributeSizes.empty())
         {
-            std::cerr << "Error: empty VAO data or attribute sizes" << std::endl;
+            RUNTIME_WARNING("[ResourceManager] Empty VAO data or attribute sizes.");
             return false;
         }
     
@@ -61,7 +61,7 @@ namespace CosmicEngine
         {
             if (current_size.size() != vertexStride)
             {
-                std::cerr << "Error: VAO Data size and attribute sizes do not match" << std::endl;
+                RUNTIME_WARNING("[ResourceManager] VAO data size and attribute sizes do not match.");
                 return false;
             }
         }
@@ -121,6 +121,11 @@ namespace CosmicEngine
         {
             std::ifstream vertexShaderFile(vs_path);
             std::ifstream fragmentShaderFile(fs_path);
+            if (!vertexShaderFile.is_open() || !fragmentShaderFile.is_open())
+            {
+                RUNTIME_WARNING("[ResourceManager] Failed to open shader files: " << vs_path << " or " << fs_path);
+                return false;
+            }
             std::stringstream vShaderStream, fShaderStream;
 
             vShaderStream << vertexShaderFile.rdbuf();
@@ -135,26 +140,37 @@ namespace CosmicEngine
             if (!gs_path.empty())
             {
                 std::ifstream geometryShaderFile(gs_path);
+                if (!geometryShaderFile.is_open())
+                {
+                    RUNTIME_WARNING("[ResourceManager] Failed to open geometry shader file: " << gs_path);
+                    return false;
+                }
                 std::stringstream gShaderStream;
                 gShaderStream << geometryShaderFile.rdbuf();
                 geometryShaderFile.close();
                 geometryCode = gShaderStream.str();
             }
         }
-        catch (std::exception e)
+        catch (const std::exception &e)
         {
-            std::cout << "ERROR::SHADER: Failed to read shader files" << std::endl;
+            RUNTIME_WARNING("[ResourceManager] Failed to read shader files: " << e.what());
+            return false;
         }
 
-        const char *vShaderCode = vertexCode.c_str();
-        const char *fShaderCode = fragmentCode.c_str();
-        const char *gShaderCode = geometryCode.c_str();
-
-        Shader *shader = new Shader(vShaderCode, fShaderCode, !geometryCode.empty() ? gShaderCode : nullptr);
-
-        shader_resources[key] = shader;
-
-        return true;
+        try
+		{
+			const char *vShaderCode = vertexCode.c_str();
+			const char *fShaderCode = fragmentCode.c_str();
+			const char *gShaderCode = geometryCode.c_str();
+			std::unique_ptr<Shader> shader = std::make_unique<Shader>(vShaderCode, fShaderCode, !geometryCode.empty() ? gShaderCode : nullptr);
+			shader_resources[key] = shader.release();
+			return true;
+		}
+		catch (const std::exception &e)
+		{
+			RUNTIME_WARNING("[ResourceManager] Failed to create shader '" << key << "': " << e.what());
+			return false;
+		}
     }
 
     bool ResourceManager::LoadShaderFromCode(const std::string &key, const char* vertexSource, const char* fragmentSource, const char* geometrySource)
@@ -164,18 +180,24 @@ namespace CosmicEngine
             return false;
         }
 
-        Shader *shader = new Shader(vertexSource, fragmentSource, geometrySource);
-
-        shader_resources[key] = shader;
-
-        return true;
+        try
+        {
+            std::unique_ptr<Shader> shader = std::make_unique<Shader>(vertexSource, fragmentSource, geometrySource);
+            shader_resources[key] = shader.release();
+            return true;
+        }
+        catch (const std::exception &e)
+        {
+            RUNTIME_WARNING("[ResourceManager] Failed to create shader '" << key << "': " << e.what());
+            return false;
+        }
     }
 
     bool ResourceManager::LoadTexture(const std::string &key, const std::string &path)
     {
         if (texture_resources.find(key) != texture_resources.end())
         {
-            std::cout << "[LoadTexture] Texture already exists: " << key << std::endl;
+            RUNTIME_WARNING("[ResourceManager] Texture already exists: " << key);
             return false;
         }
 
@@ -183,13 +205,13 @@ namespace CosmicEngine
 
         if (texture->GetWidth() == 0 || texture->GetHeight() == 0)
         {
-            std::cerr << "[LoadTexture] Failed to load texture: " << key << " from path: " << path << std::endl;
+            RUNTIME_WARNING("[ResourceManager] Failed to load texture: " << key << " from path: " << path);
             delete texture;
             return false;
         }
 
         texture_resources[key] = texture;
-        std::cout << "[LoadTexture] Successfully loaded: " << key << " (" << texture->GetWidth() << "x" << texture->GetHeight() << ")" << std::endl;
+        RUNTIME_INFO("[ResourceManager] Loaded texture: " << key << " (" << texture->GetWidth() << "x" << texture->GetHeight() << ")");
         return true;
     }
 
@@ -200,11 +222,15 @@ namespace CosmicEngine
             return false;
         }
 
-        Texture2D *texture = new Texture2D(path.c_str());
+        std::unique_ptr<Texture2D> texture = std::make_unique<Texture2D>(path.c_str());
 
-        Texture_Sheet *textures_sheet = new Texture_Sheet(texture, rows, columns, padding);
+        if (texture->GetWidth() == 0 || texture->GetHeight() == 0)
+        {
+            RUNTIME_WARNING("[ResourceManager] Failed to load texture sheet: " << key << " from path: " << path);
+            return false;
+        }
 
-        textures_sheet_resources[key] = textures_sheet;
+        textures_sheet_resources[key] = new Texture_Sheet(texture.release(), rows, columns, padding);
         return true;
     }
 
@@ -215,11 +241,17 @@ namespace CosmicEngine
             return false;
         }
 
-        Font *text = new Font(path, fontSize);
-
-        text_font_resources[key] = text;
-
-        return true;
+        try
+        {
+            std::unique_ptr<Font> text = std::make_unique<Font>(path, fontSize);
+            text_font_resources[key] = text.release();
+            return true;
+        }
+        catch (const std::exception &e)
+        {
+            RUNTIME_WARNING("[ResourceManager] Failed to load font '" << key << "': " << e.what());
+            return false;
+        }
     }
 
 
@@ -343,13 +375,24 @@ namespace CosmicEngine
         });
 
 
-        std::cout << "Resource manager cleared" << std::endl;
+        RUNTIME_LIFECYCLE("Resource manager", "cleared");
     }
 
 
 
-    void ResourceManager::init()
+    bool ResourceManager::init()
     {
+        Clear();
+
+        auto require = [](bool result, const std::string &message)
+        {
+            if (!result)
+            {
+                RUNTIME_WARNING(message);
+            }
+            return result;
+        };
+
 		// Register engine-owned built-in geometry and shaders before scenes start requesting resources.
         //DefaultVAOTexture
         std::vector<std::vector<float>> vertices = { 
@@ -365,17 +408,26 @@ namespace CosmicEngine
 
         //Load_Static_VAO("COSMIC_Sprite", vertices, {2, 2});  ??
         
-        Load_Static_VAO("COSMIC_Sprite", vertices, {4});
+        if (!require(Load_Static_VAO("COSMIC_Sprite", vertices, {4}), "[ResourceManager] Failed to create built-in VAO COSMIC_Sprite."))
+            return false;
 
-        Load_Dynamic_VAO_VBO("COSMIC_Point", 1);
-        Load_Dynamic_VAO_VBO("COSMIC_Line", 2);
-        Load_Dynamic_VAO_VBO("COSMIC_Triangle", 3);
-        Load_Dynamic_VAO_VBO("COSMIC_Rectangle", 4);
+        if (!require(Load_Dynamic_VAO_VBO("COSMIC_Point", 1), "[ResourceManager] Failed to create built-in VAO/VBO COSMIC_Point."))
+            return false;
+        if (!require(Load_Dynamic_VAO_VBO("COSMIC_Line", 2), "[ResourceManager] Failed to create built-in VAO/VBO COSMIC_Line."))
+            return false;
+        if (!require(Load_Dynamic_VAO_VBO("COSMIC_Triangle", 3), "[ResourceManager] Failed to create built-in VAO/VBO COSMIC_Triangle."))
+            return false;
+        if (!require(Load_Dynamic_VAO_VBO("COSMIC_Rectangle", 4), "[ResourceManager] Failed to create built-in VAO/VBO COSMIC_Rectangle."))
+            return false;
 
-        LoadShaderFromCode("COSMIC_Shape_2D", shape_2D_vs, shape_2D_fs);
-        LoadShaderFromCode("COSMIC_Sprite", sprite_vs, sprite_fs);
-        LoadShaderFromCode("COSMIC_SpriteSheet", spriteSheet_vs, spriteSheet_fs);
-        LoadShaderFromCode("COSMIC_Text", text_vs, text_fs);
+        if (!require(LoadShaderFromCode("COSMIC_Shape_2D", shape_2D_vs, shape_2D_fs), "[ResourceManager] Failed to create built-in shader COSMIC_Shape_2D."))
+            return false;
+        if (!require(LoadShaderFromCode("COSMIC_Sprite", sprite_vs, sprite_fs), "[ResourceManager] Failed to create built-in shader COSMIC_Sprite."))
+            return false;
+        if (!require(LoadShaderFromCode("COSMIC_SpriteSheet", spriteSheet_vs, spriteSheet_fs), "[ResourceManager] Failed to create built-in shader COSMIC_SpriteSheet."))
+            return false;
+        if (!require(LoadShaderFromCode("COSMIC_Text", text_vs, text_fs), "[ResourceManager] Failed to create built-in shader COSMIC_Text."))
+            return false;
 
         #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
         
@@ -444,17 +496,31 @@ namespace CosmicEngine
             };
         
 
-            LoadShaderFromCode("COSMIC_Shape_3D", shape_3D_vs, shape_3D_fs);
-            Load_Static_VAO("COSMIC_Parallelepiped_Lines", ParallelepipedLinesVertices, {3});
-            Load_Static_VAO("COSMIC_Parallelepiped", Parallelepiped_texture_normal_vertices, {3,3,2});
-            LoadShaderFromCode("COSMIC_3DModel", model_3d_vs, model_3d_fs);
-            LightManager::GetInstance().RegisterShader(GetShader("COSMIC_3DModel")); // MOVE TO ...?
+            if (!require(LoadShaderFromCode("COSMIC_Shape_3D", shape_3D_vs, shape_3D_fs), "[ResourceManager] Failed to create built-in shader COSMIC_Shape_3D."))
+                return false;
+            if (!require(Load_Static_VAO("COSMIC_Parallelepiped_Lines", ParallelepipedLinesVertices, {3}), "[ResourceManager] Failed to create built-in VAO COSMIC_Parallelepiped_Lines."))
+                return false;
+            if (!require(Load_Static_VAO("COSMIC_Parallelepiped", Parallelepiped_texture_normal_vertices, {3,3,2}), "[ResourceManager] Failed to create built-in VAO COSMIC_Parallelepiped."))
+                return false;
+            if (!require(LoadShaderFromCode("COSMIC_3DModel", model_3d_vs, model_3d_fs), "[ResourceManager] Failed to create built-in shader COSMIC_3DModel."))
+                return false;
+
+            if (Shader *modelShader = GetShader("COSMIC_3DModel"))
+            {
+                LightManager::GetInstance().RegisterShader(modelShader); // MOVE TO ...?
+            }
+            else
+            {
+                RUNTIME_WARNING("[ResourceManager] Built-in shader COSMIC_3DModel is missing after initialization.");
+                return false;
+            }
 
         #else
             #error "[ObjectManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
         #endif
     
-        std::cout << "Resource manager initialized" << std::endl;
+        RUNTIME_LIFECYCLE("Resource manager", "initialized");
+		return true;
     }
 
 
@@ -473,14 +539,14 @@ namespace CosmicEngine
 
         if (!texture)
         {
-            std::cerr << "[Render2DSprite] Texture not found: " << textureKey << std::endl;
+            RUNTIME_WARNING("[ResourceManager] Texture not found: " << textureKey);
             return;
         }
 
         if (texture->GetWidth() == 0 || texture->GetHeight() == 0)
         {
-            std::cerr << "[Render2DSprite] Texture has invalid dimensions: " << textureKey 
-                      << " (" << texture->GetWidth() << "x" << texture->GetHeight() << ")" << std::endl;
+            RUNTIME_WARNING("[ResourceManager] Texture has invalid dimensions: " << textureKey
+                      << " (" << texture->GetWidth() << "x" << texture->GetHeight() << ")");
             return;
         }
 
@@ -488,14 +554,14 @@ namespace CosmicEngine
 
         if (!spriteShader)
         {
-            std::cerr << "[Render2DSprite] Shader not found: COSMIC_Sprite" << std::endl;
+            RUNTIME_WARNING("[ResourceManager] Shader not found: COSMIC_Sprite");
             return;
         }
 
         unsigned int vao = Get_Static_VAO("COSMIC_Sprite");
         if (vao == 0)
         {
-            std::cerr << "[Render2DSprite] VAO not found: COSMIC_Sprite" << std::endl;
+            RUNTIME_WARNING("[ResourceManager] VAO not found: COSMIC_Sprite");
             return;
         }
 
@@ -857,7 +923,7 @@ namespace CosmicEngine
 
         if (vertexCount <= 0)
         {
-            std::cerr << "Vertex must be greater than 0" << std::endl;
+			RUNTIME_WARNING("[ResourceManager] Vertex count must be greater than 0.");
             return false;
         }
 
@@ -1141,7 +1207,7 @@ namespace CosmicEngine
 
         if (vertexCount <= 0)
         {
-            std::cerr << "Vertex must be greater than 0" << std::endl;
+			RUNTIME_WARNING("[ResourceManager] Vertex count must be greater than 0.");
             return false;
         }
 

@@ -5,8 +5,9 @@
 
 #include "animation_manager.hpp"
 
+#include "../../utils/log.hpp"
+
 #include <algorithm>
-#include <iostream>
 
 namespace CosmicEngine
 {
@@ -19,13 +20,13 @@ namespace CosmicEngine
     AnimationManager::AnimationManager()
         : nextPlayerId(1)
     {
-        std::cout << "Animation manager created" << std::endl;
+        RUNTIME_LIFECYCLE("Animation manager", "created");
     }
 
     AnimationManager::~AnimationManager()
     {
         shutdown();
-        std::cout << "Animation manager destroyed" << std::endl;
+        RUNTIME_LIFECYCLE("Animation manager", "destroyed");
     }
 
     void AnimationManager::init()
@@ -33,11 +34,12 @@ namespace CosmicEngine
         clips.clear();
         players.clear();
         nextPlayerId = 1;
-        std::cout << "Animation manager initialized" << std::endl;
+        RUNTIME_LIFECYCLE("Animation manager", "initialized");
     }
 
     void AnimationManager::shutdown()
     {
+        RUNTIME_LIFECYCLE("Animation manager", "shutdown");
     }
 
     void AnimationManager::update(double deltaTime)
@@ -186,6 +188,6 @@ namespace CosmicEngine
 
         clips.clear();
         nextPlayerId = 1;
-        std::cout << "Animation manager cleared" << std::endl;
+        RUNTIME_LIFECYCLE("Animation manager", "cleared");
     }
 }

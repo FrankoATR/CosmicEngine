@@ -9,12 +9,17 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <stdexcept>
+
+#include "../../utils/log.hpp"
 
 namespace CosmicEngine
 {
 
     Font::Font(const std::string &fontPath, unsigned int fontSize)
     {
+        this->VAO = 0;
+        this->VBO = 0;
         glGenVertexArrays(1, &this->VAO);
         glGenBuffers(1, &this->VBO);
         glBindVertexArray(this->VAO);
@@ -27,15 +32,36 @@ namespace CosmicEngine
 
         characters_resources.clear();
         FT_Library ft;
+        FT_Face face = nullptr;
         if (FT_Init_FreeType(&ft))
         {
-            std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+            if (this->VBO != 0)
+            {
+                glDeleteBuffers(1, &this->VBO);
+                this->VBO = 0;
+            }
+            if (this->VAO != 0)
+            {
+                glDeleteVertexArrays(1, &this->VAO);
+                this->VAO = 0;
+            }
+            throw std::runtime_error("[Font] Could not initialize FreeType library.");
         }
 
-        FT_Face face;
         if (FT_New_Face(ft, fontPath.c_str(), 0, &face))
         {
-            std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+            FT_Done_FreeType(ft);
+            if (this->VBO != 0)
+            {
+                glDeleteBuffers(1, &this->VBO);
+                this->VBO = 0;
+            }
+            if (this->VAO != 0)
+            {
+                glDeleteVertexArrays(1, &this->VAO);
+                this->VAO = 0;
+            }
+            throw std::runtime_error(std::string("[Font] Failed to load font: ") + fontPath);
         }
 
         FT_Set_Pixel_Sizes(face, 0, fontSize);
@@ -45,7 +71,7 @@ namespace CosmicEngine
         {
             if (FT_Load_Char(face, c, FT_LOAD_RENDER))
             {
-                std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+				RUNTIME_WARNING("[Font] Failed to load glyph: " << static_cast<int>(c));
                 continue;
             }
             unsigned int texture;
@@ -95,6 +121,18 @@ namespace CosmicEngine
         }
     
         characters_resources.clear();
+
+            if (VBO != 0)
+            {
+                glDeleteBuffers(1, &VBO);
+                VBO = 0;
+            }
+
+            if (VAO != 0)
+            {
+                glDeleteVertexArrays(1, &VAO);
+                VAO = 0;
+            }
     }
 
     const std::map<char, TextCharacter>& Font::GetCharacters() const

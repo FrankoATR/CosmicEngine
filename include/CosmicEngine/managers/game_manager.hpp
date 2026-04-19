@@ -109,6 +109,8 @@ namespace CosmicEngine
         std::function<void(int, const char **)> dropCallback;
         std::function<void(double, double)> mousePositionCallback;
         std::function<void(double, double)> mouseScrollCallback;
+        bool initialized = false;
+        bool imguiInitialized = false;
 
     public:
         /** @brief Returns the singleton instance of the game manager. */
@@ -117,16 +119,20 @@ namespace CosmicEngine
         /**
          * @brief Initializes the engine runtime and desktop window.
          * @param params Startup parameters for the window and base virtual resolution.
+         * @throws std::runtime_error When a critical subsystem cannot be initialized.
          */
         void init(const GameManagerInitParams &params);
         /** @brief Runs the main update and render loop until the application is terminated. */
         void update();
-        /** @brief Shuts down the runtime and releases global resources. */
+        /** @brief Shuts down the runtime and releases global resources with best-effort cleanup across managers. */
         void shutdown();
 
         /** @brief Requests the application to terminate. */
         void endprogram();
-        /** @brief Initializes manager singletons after the window and graphics context are ready. */
+        /** @brief Initializes manager singletons after the window and graphics context are ready.
+         *  Critical manager failures are treated as fatal startup errors so the engine never continues with a partial runtime.
+         *  @throws std::runtime_error When a critical manager fails to initialize.
+         */
         void initManagers() const;
 
         /**

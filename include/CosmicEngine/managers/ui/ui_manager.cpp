@@ -4,8 +4,8 @@
  */
 
 #include "ui_manager.hpp"
+#include "../../utils/log.hpp"
 #include <algorithm>
-#include <iostream>
 
 namespace CosmicEngine
 {
@@ -18,26 +18,26 @@ namespace CosmicEngine
 
     UIManager::UIManager()
     {
-        std::cout << "UI manager created" << std::endl;
+        RUNTIME_LIFECYCLE("UI manager", "created");
     }
 
     UIManager::~UIManager()
     {
         shutdown();
-        std::cout << "UI manager destroyed" << std::endl;
+        RUNTIME_LIFECYCLE("UI manager", "destroyed");
     }
 
 
     void UIManager::init()
     {
         this->MouseHoverAny = false;
-        std::cout << "UI manager initialized" << std::endl;
+        RUNTIME_LIFECYCLE("UI manager", "initialized");
     }
 
     
     void UIManager::shutdown()
     {
-        
+        RUNTIME_LIFECYCLE("UI manager", "shutdown");
     }
     
 
@@ -91,7 +91,7 @@ namespace CosmicEngine
             elements.pop_back();
         }
 
-        std::cout << "UI manager cleared" << std::endl;
+        RUNTIME_LIFECYCLE("UI manager", "cleared");
         
     }
 

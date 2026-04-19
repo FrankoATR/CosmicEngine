@@ -12,13 +12,19 @@
 #include <glad/glad.h>
 #include <fstream>
 #include <sstream>
-#include <iostream>
+#include <stdexcept>
+
+#include "../../utils/log.hpp"
 
 namespace CosmicEngine
 {
 
     Shader::Shader(const char* vertexSource, const char* fragmentSource, const char* geometrySource)
     {
+        ID = 0;
+        sVertex = 0;
+        sFragment = 0;
+        gShader = 0;
         Compile(vertexSource, fragmentSource, geometrySource);
     }
 
@@ -45,34 +51,66 @@ namespace CosmicEngine
     {
         sVertex = 0, sFragment = 0, gShader = 0;
 
-        sVertex = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(sVertex, 1, &vertexSource, nullptr);
-        glCompileShader(sVertex);
-        CheckCompileErrors(sVertex, "VERTEX");
-
-        sFragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(sFragment, 1, &fragmentSource, nullptr);
-        glCompileShader(sFragment);
-        CheckCompileErrors(sFragment, "FRAGMENT");
-
-        if (geometrySource != nullptr )
+        auto cleanupPartialResources = [this]()
         {
-            std::cout << "GEO" << std::endl;
-            gShader = glCreateShader(GL_GEOMETRY_SHADER);
-            glShaderSource(gShader, 1, &geometrySource, nullptr);
-            glCompileShader(gShader);
-            CheckCompileErrors(gShader, "GEOMETRY");
+            if (ID != 0)
+            {
+                glDeleteProgram(ID);
+                ID = 0;
+            }
+            if (gShader != 0)
+            {
+                glDeleteShader(gShader);
+                gShader = 0;
+            }
+            if (sFragment != 0)
+            {
+                glDeleteShader(sFragment);
+                sFragment = 0;
+            }
+            if (sVertex != 0)
+            {
+                glDeleteShader(sVertex);
+                sVertex = 0;
+            }
+        };
+
+        try
+        {
+            sVertex = glCreateShader(GL_VERTEX_SHADER);
+            glShaderSource(sVertex, 1, &vertexSource, nullptr);
+            glCompileShader(sVertex);
+            CheckCompileErrors(sVertex, "VERTEX");
+
+            sFragment = glCreateShader(GL_FRAGMENT_SHADER);
+            glShaderSource(sFragment, 1, &fragmentSource, nullptr);
+            glCompileShader(sFragment);
+            CheckCompileErrors(sFragment, "FRAGMENT");
+
+            if (geometrySource != nullptr )
+            {
+                RUNTIME_INFO("[Shader] Compiling geometry shader stage.");
+                gShader = glCreateShader(GL_GEOMETRY_SHADER);
+                glShaderSource(gShader, 1, &geometrySource, nullptr);
+                glCompileShader(gShader);
+                CheckCompileErrors(gShader, "GEOMETRY");
+            }
+
+            this->ID = glCreateProgram();
+            glAttachShader(this->ID, sVertex);
+            glAttachShader(this->ID, sFragment);
+            if (geometrySource != nullptr )
+                glAttachShader(this->ID, gShader);
+            glLinkProgram(this->ID);
+            CheckCompileErrors(this->ID, "PROGRAM");
+
+            RUNTIME_INFO("[Shader] Shader program " << ID << " created.");
         }
-
-        this->ID = glCreateProgram();
-        glAttachShader(this->ID, sVertex);
-        glAttachShader(this->ID, sFragment);
-        if (geometrySource != nullptr )
-            glAttachShader(this->ID, gShader);
-        glLinkProgram(this->ID);
-        CheckCompileErrors(this->ID, "PROGRAM");
-
-        std::cout << "Shader " << ID << " created" << std::endl;
+        catch (...)
+        {
+            cleanupPartialResources();
+            throw;
+        }
 
     }
 
@@ -201,8 +239,7 @@ namespace CosmicEngine
             if (!success)
             {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n"
-                          << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+				throw std::runtime_error(std::string("[Shader] Compilation error for ") + type + ":\n" + infoLog);
             }
         }
         else
@@ -211,8 +248,7 @@ namespace CosmicEngine
             if (!success)
             {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n"
-                          << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+				throw std::runtime_error(std::string("[Shader] Program linking error for ") + type + ":\n" + infoLog);
             }
         }
     }

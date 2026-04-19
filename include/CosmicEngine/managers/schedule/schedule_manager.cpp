@@ -6,9 +6,9 @@
 #include "schedule_manager.hpp"
 
 #include "../event/event_manager.hpp"
+#include "../../utils/log.hpp"
 
 #include <algorithm>
-#include <iostream>
 
 namespace CosmicEngine
 {
@@ -48,13 +48,13 @@ namespace CosmicEngine
         : currentTime(0.0),
           nextTaskId(1)
     {
-        std::cout << "Schedule manager created" << std::endl;
+        RUNTIME_LIFECYCLE("Schedule manager", "created");
     }
 
     ScheduleManager::~ScheduleManager()
     {
         shutdown();
-        std::cout << "Schedule manager destroyed" << std::endl;
+        RUNTIME_LIFECYCLE("Schedule manager", "destroyed");
     }
 
     void ScheduleManager::init()
@@ -62,11 +62,12 @@ namespace CosmicEngine
         currentTime = 0.0;
         nextTaskId = 1;
         tasks.clear();
-        std::cout << "Schedule manager initialized" << std::endl;
+        RUNTIME_LIFECYCLE("Schedule manager", "initialized");
     }
 
     void ScheduleManager::shutdown()
     {
+        RUNTIME_LIFECYCLE("Schedule manager", "shutdown");
     }
 
     void ScheduleManager::update(double deltaTime)
@@ -246,6 +247,6 @@ namespace CosmicEngine
         tasks.clear();
         currentTime = 0.0;
         nextTaskId = 1;
-        std::cout << "Schedule manager cleared" << std::endl;
+        RUNTIME_LIFECYCLE("Schedule manager", "cleared");
     }
 }

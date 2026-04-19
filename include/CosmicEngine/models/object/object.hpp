@@ -35,7 +35,7 @@ namespace CosmicEngine
      * {
      * public:
      *     JsonDemoObject(glm::vec2 position, glm::vec2 size)
-     *         : Object("JsonDemoObject", position, size, 0.0f, /*layerId=*/1)
+    *         : Object("JsonDemoObject", position, size, 0.0f, 1)
      *     {}
      *
      *     void update(float deltaTime) override

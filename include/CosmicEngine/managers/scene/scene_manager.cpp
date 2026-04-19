@@ -6,7 +6,7 @@
 #include "scene_manager.hpp"
 
 #include "../../models/scene/scene.hpp"
-#include <iostream>
+#include "../../utils/log.hpp"
 
 namespace CosmicEngine
 {
@@ -19,13 +19,13 @@ namespace CosmicEngine
 
     SceneManager::SceneManager()
     {
-        std::cout << "Scene manager created" << std::endl;
+        RUNTIME_LIFECYCLE("Scene manager", "created");
     }
 
     SceneManager::~SceneManager()
     {
         shutdown();
-        std::cout << "Scene manager destroyed" << std::endl;
+        RUNTIME_LIFECYCLE("Scene manager", "destroyed");
     }
 
     void SceneManager::init()
@@ -34,12 +34,13 @@ namespace CosmicEngine
         this->isRunning = true;
         this->NextScene = nullptr;
 
-        std::cout << "Scene manager initialized" << std::endl;
+        RUNTIME_LIFECYCLE("Scene manager", "initialized");
     }
 
     void SceneManager::shutdown()
     {
         Clear();
+        RUNTIME_LIFECYCLE("Scene manager", "shutdown");
     }
 
 
@@ -146,7 +147,7 @@ namespace CosmicEngine
 
         isRunning = false;
 
-        std::cout << "Scene manager cleared" << std::endl;
+        RUNTIME_LIFECYCLE("Scene manager", "cleared");
     }
 
 

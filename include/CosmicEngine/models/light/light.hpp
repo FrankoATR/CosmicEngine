@@ -64,6 +64,8 @@ namespace CosmicEngine
         #endif
 
     public:
+        ~Light();
+
         /** @brief Draws the light for debug or helper visualization. */
         void draw() const;
 

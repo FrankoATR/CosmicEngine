@@ -1,19 +1,20 @@
 #include "audio_manager.hpp"
 
-#include <iostream>
+#include "../../utils/log.hpp"
+
 #include <algorithm>
 
 namespace CosmicEngine
 {
     AudioManager::AudioManager()
     {
-        std::cout << "Audio manager created" << std::endl;
+        RUNTIME_LIFECYCLE("Audio manager", "created");
     }
 
     AudioManager::~AudioManager()
     {
         shutdown();
-        std::cout << "Audio manager destroyed" << std::endl;
+        RUNTIME_LIFECYCLE("Audio manager", "destroyed");
     }
 
     bool AudioManager::init()
@@ -24,7 +25,7 @@ namespace CosmicEngine
         ma_result result = ma_engine_init(nullptr, &engine);
         if (result != MA_SUCCESS)
         {
-            std::cout << "Failed to initialize audio manager (ma_engine_init). res=" << result << std::endl;
+            RUNTIME_WARNING("[AudioManager] Failed to initialize miniaudio engine. res=" << result);
             engineInitialized = false;
             return false;
         }
@@ -41,7 +42,7 @@ namespace CosmicEngine
 
         ma_engine_listener_set_position(&engine, 0, listenerPos.x, listenerPos.y, listenerPos.z);
 
-        std::cout << "Audio manager initialized" << std::endl;
+        RUNTIME_LIFECYCLE("Audio manager", "initialized");
         return true;
     }
 
@@ -193,7 +194,7 @@ namespace CosmicEngine
     {
         if (!engineInitialized)
         {
-            std::cout << "[AudioManager] Load failed: engine not initialized. Call init() first.\n";
+            RUNTIME_WARNING("[AudioManager] Load failed: engine not initialized. Call init() first.");
             return false;
         }
 
@@ -224,7 +225,7 @@ namespace CosmicEngine
 
         if (res != MA_SUCCESS)
         {
-            std::cout << "[AudioManager] Load failed for key='" << key << "' file='" << filename << "' res=" << res << "\n";
+            RUNTIME_WARNING("[AudioManager] Load failed for key='" << key << "' file='" << filename << "' res=" << res);
             sounds.erase(it);
             return false;
         }
@@ -445,6 +446,7 @@ namespace CosmicEngine
             UninitSoundData(data);
 
         sounds.clear();
+        RUNTIME_LIFECYCLE("Audio manager", "cleared");
     }
 
     void AudioManager::shutdown()
@@ -456,6 +458,6 @@ namespace CosmicEngine
         ma_engine_uninit(&engine);
         engineInitialized = false;
 
-        std::cout << "Audio manager shutdown" << std::endl;
+        RUNTIME_LIFECYCLE("Audio manager", "shutdown");
     }
 }

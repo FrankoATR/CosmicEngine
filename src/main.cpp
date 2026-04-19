@@ -42,7 +42,7 @@ int main()
 	}
 	catch (const std::exception &e)
 	{
-		std::cerr << "[Fatal] " << e.what() << std::endl;
+		RUNTIME_WARNING("[Fatal] " << e.what());
 		Logger::shutdown();
 		return 1;
 	}

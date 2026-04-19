@@ -5,6 +5,8 @@
 
 #include "model.hpp"
 
+#include "../../utils/log.hpp"
+
 namespace CosmicEngine
 {
 
@@ -25,7 +27,7 @@ namespace CosmicEngine
         const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
         {
-            cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << endl;
+			RUNTIME_WARNING("[Model] Assimp error: " << importer.GetErrorString());
             return;
         }
         directory = path.substr(0, path.find_last_of('/'));
@@ -173,7 +175,7 @@ namespace CosmicEngine
         }
         else
         {
-            std::cout << "Texture failed to load at path: " << path << std::endl;
+			RUNTIME_WARNING("[Model] Texture failed to load at path: " << path);
             stbi_image_free(data);
         }
 

@@ -4,7 +4,7 @@
  */
 
 #include "timer_manager.hpp"
-#include <iostream>
+#include "../../utils/log.hpp"
 
 namespace CosmicEngine
 {
@@ -17,25 +17,25 @@ namespace CosmicEngine
 
     TimerManager::TimerManager()
     {
-        std::cout << "Timer manager created" << std::endl;
+        RUNTIME_LIFECYCLE("Timer manager", "created");
     }
 
 
     TimerManager::~TimerManager()
     {
         shutdown();
-        std::cout << "Timer manager destroyed" << std::endl;
+        RUNTIME_LIFECYCLE("Timer manager", "destroyed");
     }
 
     void TimerManager::init()
     {
-        std::cout << "Timer manager initialized" << std::endl;
+        RUNTIME_LIFECYCLE("Timer manager", "initialized");
     }
 
     
     void TimerManager::shutdown()
     {
-        
+        RUNTIME_LIFECYCLE("Timer manager", "shutdown");
     }
     
 
@@ -71,7 +71,7 @@ namespace CosmicEngine
             Timers.pop_back();
         }
 
-        std::cout << "Timer manager cleared" << std::endl;
+        RUNTIME_LIFECYCLE("Timer manager", "cleared");
     }
 
 

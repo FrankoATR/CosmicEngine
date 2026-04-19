@@ -12,9 +12,17 @@
 namespace CosmicEngine
 {
 
+	Body::~Body()
+	{
+		RUNTIME_LIFECYCLE("Body", "destroyed");
+	}
+
 	void Body::update()
 	{
-		position = parent->GetPosition() + offSetParentPosition;
+		if (parent)
+		{
+			position = parent->GetPosition() + offSetParentPosition;
+		}
 	}
 	
     void Body::OnCollision(Body *other, BodyCollisionSide side)
@@ -59,6 +67,7 @@ namespace CosmicEngine
     void Body::Destroy()
     {
         this->aliveInGameManager = false;
+		RUNTIME_LIFECYCLE("Body", "destroyed");
     }
 
 	bool Body::IsAlive() const
@@ -80,7 +89,8 @@ namespace CosmicEngine
 				RUNTIME_WARNING("OnCollisionEvent NOT FOUND for this Body");
 			}
 
-			position = parent->GetPosition() + offSetParentPosition;
+			position = parent ? parent->GetPosition() + offSetParentPosition : glm::vec2(0.0f);
+			RUNTIME_LIFECYCLE("Body", "created");
 
 		}
 
@@ -135,7 +145,8 @@ namespace CosmicEngine
 				RUNTIME_WARNING("OnCollisionEvent NOT FOUND for this Body");
 			}
 
-			position = parent->GetPosition() + offSetParentPosition;
+			position = parent ? parent->GetPosition() + offSetParentPosition : glm::vec3(0.0f);
+			RUNTIME_LIFECYCLE("Body", "created");
 
 		}
 

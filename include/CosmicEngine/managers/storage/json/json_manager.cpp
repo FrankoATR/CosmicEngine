@@ -7,8 +7,8 @@
 
 #include "../../object/object_manager.hpp"
 #include "../../../models/object/object.hpp"
+#include "../../../utils/log.hpp"
 
-#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -23,20 +23,20 @@ namespace CosmicEngine
 
     JsonManager::JsonManager()
     {
-        std::cout << "Json manager created" << std::endl;
+        RUNTIME_LIFECYCLE("Json manager", "created");
     }
 
     JsonManager::~JsonManager()
     {
         shutdown();
-        std::cout << "Json manager destroyed" << std::endl;
+        RUNTIME_LIFECYCLE("Json manager", "destroyed");
     }
 
     void JsonManager::init()
     {
         initialized = true;
         ClearDocument();
-        std::cout << "Json manager initialized" << std::endl;
+        RUNTIME_LIFECYCLE("Json manager", "initialized");
     }
 
     void JsonManager::shutdown()
@@ -44,10 +44,14 @@ namespace CosmicEngine
         if (!initialized)
             return;
 
-        // Intentar guardar cambios pendientes
-        SaveFile(false);
+        // Flush pending changes before shutdown so the caller can see persistence failures in logs.
+        if (!SaveFile(false))
+        {
+            RUNTIME_WARNING("[JsonManager] Pending changes could not be flushed during shutdown.");
+        }
 
         initialized = false;
+        RUNTIME_LIFECYCLE("Json manager", "shutdown");
     }
 
     void JsonManager::EnsureDocumentShape()
@@ -116,7 +120,7 @@ namespace CosmicEngine
     {
         if (!initialized)
         {
-            std::cerr << "[JsonManager] OpenFile failed: call init() first.\n";
+            RUNTIME_WARNING("[JsonManager] OpenFile failed: call init() first.");
             return false;
         }
 
@@ -133,7 +137,7 @@ namespace CosmicEngine
         std::ifstream in(filePath, std::ios::binary);
         if (!in.is_open())
         {
-            std::cerr << "[JsonManager] Failed to open file: " << filePath << "\n";
+            RUNTIME_WARNING("[JsonManager] Failed to open file: " << filePath);
             return false;
         }
 
@@ -147,7 +151,7 @@ namespace CosmicEngine
         }
         catch (const std::exception& e)
         {
-            std::cerr << "[JsonManager] JSON parse error: " << e.what() << "\n";
+            RUNTIME_WARNING("[JsonManager] JSON parse error: " << e.what());
             // No abortamos el juego: creamos uno nuevo para no romper el flujo.
             ClearDocument();
             dirty = true;
@@ -166,7 +170,7 @@ namespace CosmicEngine
 
         if (filePath.empty())
         {
-            std::cerr << "[JsonManager] SaveFile failed: filePath is empty. Call OpenFile(path).\n";
+            RUNTIME_WARNING("[JsonManager] SaveFile failed: filePath is empty. Call OpenFile(path).");
             return false;
         }
 
@@ -180,7 +184,7 @@ namespace CosmicEngine
 
         if (!WriteFileAtomic(filePath, content))
         {
-            std::cerr << "[JsonManager] Failed to write file: " << filePath << "\n";
+            RUNTIME_WARNING("[JsonManager] Failed to write file: " << filePath);
             return false;
         }
 
@@ -220,7 +224,7 @@ namespace CosmicEngine
         auto itReg = serialization_resources.find(className);
         if (itReg == serialization_resources.end())
         {
-            std::cerr << "[JsonManager] SaveObjectsData: class not registered: " << className << "\n";
+            RUNTIME_WARNING("[JsonManager] SaveObjectsData: class not registered: " << className);
             return;
         }
 
@@ -255,7 +259,7 @@ namespace CosmicEngine
         auto itReg = serialization_resources.find(className);
         if (itReg == serialization_resources.end())
         {
-            std::cerr << "[JsonManager] LoadObjectsData: class not registered: " << className << "\n";
+            RUNTIME_WARNING("[JsonManager] LoadObjectsData: class not registered: " << className);
             return;
         }
 
@@ -278,7 +282,7 @@ namespace CosmicEngine
             }
             catch (const std::exception& e)
             {
-                std::cerr << "[JsonManager] LoadObjectsData error (" << className << "): " << e.what() << "\n";
+                RUNTIME_WARNING("[JsonManager] LoadObjectsData error (" << className << "): " << e.what());
             }
         }
     }

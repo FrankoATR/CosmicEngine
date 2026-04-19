@@ -7,22 +7,39 @@
 #include "../../managers/game_manager.hpp"
 #include "../../managers/camera/camera_manager.hpp"
 #include "../../managers/input/input_manager.hpp"
+#include "../../utils/log.hpp"
 
 #include <algorithm>
-#include <iostream>
 
 namespace CosmicEngine
 {
+    std::string_view UIElement::GetTypeName(UIElementType type)
+    {
+        switch (type)
+        {
+        case UIElementType::Button:
+            return "UIButton";
+        case UIElementType::Label:
+            return "UILabel";
+        case UIElementType::Image:
+            return "UIImage";
+        case UIElementType::TextField:
+            return "UITextField";
+        default:
+            return "UIElement";
+        }
+    }
 
     UIElement::UIElement(glm::vec2 Position, glm::vec2 Size, bool visible, UIElement* parent, UIElementType ElementType) : Position(Position), 
         Size(Size), visible(visible), parent(parent), ElementType(ElementType)
     {
-        
+        RUNTIME_LIFECYCLE(GetTypeName(this->ElementType), "created");
     }
 
     UIElement::~UIElement()
     {
         ClearChildren();
+		RUNTIME_LIFECYCLE(GetTypeName(this->ElementType), "destroyed");
     }
 
     void UIElement::update(float deltaTime)

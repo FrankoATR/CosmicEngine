@@ -28,7 +28,7 @@ namespace CosmicEngine
      * animationPlayer->Play();
      *
      * // Switch clips at runtime (e.g. change direction):
-     * animationPlayer->SetClip(ANM_MN.GetClip("walk_left"), /*restart=*/true);
+    * animationPlayer->SetClip(ANM_MN.GetClip("walk_left"), true);
      * animationPlayer->Play();
      *
      * // Draw the current frame inside your draw() method:

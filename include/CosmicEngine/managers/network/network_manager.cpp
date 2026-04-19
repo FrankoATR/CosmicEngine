@@ -4,7 +4,7 @@
  */
 
 #include "network_manager.hpp"
-#include <iostream>
+#include "../../utils/log.hpp"
 
 namespace CosmicEngine
 {
@@ -17,29 +17,41 @@ namespace CosmicEngine
 
     NetworkManager::NetworkManager()
     {
-        std::cout << "Network manager created" << std::endl;
+        RUNTIME_LIFECYCLE("Network manager", "created");
     }
 
     NetworkManager::~NetworkManager()
     {
         shutdown();
-        std::cout << "Network manager destroyed" << std::endl;
+        RUNTIME_LIFECYCLE("Network manager", "destroyed");
     }
 
-    void NetworkManager::init()
+    bool NetworkManager::init()
     {
+        if (enetInitialized)
+        {
+            return true;
+        }
+
         if (enet_initialize() != 0)
         {
-            std::cerr << "[NetworkManager] Failed to initialize ENet." << std::endl;
-            return;
+            RUNTIME_WARNING("[NetworkManager] Failed to initialize ENet.");
+            return false;
         }
-        std::cout << "Network manager initialized" << std::endl;
+        enetInitialized = true;
+        RUNTIME_LIFECYCLE("Network manager", "initialized");
+        return true;
     }
 
     void NetworkManager::shutdown()
     {
         Disconnect();
-        enet_deinitialize();
+        if (enetInitialized)
+        {
+            enet_deinitialize();
+            enetInitialized = false;
+        }
+        RUNTIME_LIFECYCLE("Network manager", "shutdown");
     }
 
     // ──────────────────────────────────────────────
@@ -48,9 +60,14 @@ namespace CosmicEngine
 
     bool NetworkManager::StartServer(int port)
     {
+        if (!enetInitialized && !init())
+        {
+            return false;
+        }
+
         if (role != NetworkRole::None)
         {
-            std::cerr << "[NetworkManager] Already running as " << (role == NetworkRole::Server ? "server" : "client") << "." << std::endl;
+            RUNTIME_WARNING("[NetworkManager] Already running as " << (role == NetworkRole::Server ? "server" : "client") << ".");
             return false;
         }
 
@@ -61,7 +78,7 @@ namespace CosmicEngine
         host = enet_host_create(&address, kMaxClients, 2, 0, 0);
         if (!host)
         {
-            std::cerr << "[NetworkManager] Failed to create ENet server host on port " << port << "." << std::endl;
+            RUNTIME_WARNING("[NetworkManager] Failed to create ENet server host on port " << port << ".");
             return false;
         }
 
@@ -71,7 +88,7 @@ namespace CosmicEngine
 
         networkThread = std::thread(&NetworkManager::ServerLoop, this);
 
-        std::cout << "[NetworkManager] Server started on port " << port << "." << std::endl;
+        RUNTIME_INFO("[NetworkManager] Server started on port " << port << ".");
         return true;
     }
 
@@ -119,7 +136,7 @@ namespace CosmicEngine
                     // Push to game thread
                     incomingQueue.Push({peerId, connectMsg});
 
-                    std::cout << "[NetworkManager] Client " << peerId << " connected." << std::endl;
+                    RUNTIME_INFO("[NetworkManager] Client " << peerId << " connected.");
                     break;
                 }
 
@@ -146,7 +163,7 @@ namespace CosmicEngine
                     peerIdMap.erase(event.peer);
                     event.peer->data = nullptr;
 
-                    std::cout << "[NetworkManager] Client " << peerId << " disconnected." << std::endl;
+                    RUNTIME_INFO("[NetworkManager] Client " << peerId << " disconnected.");
                     break;
                 }
 
@@ -206,16 +223,21 @@ namespace CosmicEngine
 
     bool NetworkManager::ConnectToServer(const std::string &ip, int port, const std::string &username)
     {
+        if (!enetInitialized && !init())
+        {
+            return false;
+        }
+
         if (role != NetworkRole::None)
         {
-            std::cerr << "[NetworkManager] Already running as " << (role == NetworkRole::Server ? "server" : "client") << "." << std::endl;
+            RUNTIME_WARNING("[NetworkManager] Already running as " << (role == NetworkRole::Server ? "server" : "client") << ".");
             return false;
         }
 
         host = enet_host_create(nullptr, 1, 2, 0, 0);
         if (!host)
         {
-            std::cerr << "[NetworkManager] Failed to create ENet client host." << std::endl;
+            RUNTIME_WARNING("[NetworkManager] Failed to create ENet client host.");
             return false;
         }
 
@@ -226,7 +248,7 @@ namespace CosmicEngine
         serverPeer = enet_host_connect(host, &address, 2, 0);
         if (!serverPeer)
         {
-            std::cerr << "[NetworkManager] No available peers for connection." << std::endl;
+            RUNTIME_WARNING("[NetworkManager] No available peers for connection.");
             enet_host_destroy(host);
             host = nullptr;
             return false;
@@ -236,11 +258,11 @@ namespace CosmicEngine
         ENetEvent event = {};
         if (enet_host_service(host, &event, 5000) > 0 && event.type == ENET_EVENT_TYPE_CONNECT)
         {
-            std::cout << "[NetworkManager] Connected to " << ip << ":" << port << "." << std::endl;
+            RUNTIME_INFO("[NetworkManager] Connected to " << ip << ":" << port << ".");
         }
         else
         {
-            std::cerr << "[NetworkManager] Connection to " << ip << ":" << port << " failed." << std::endl;
+            RUNTIME_WARNING("[NetworkManager] Connection to " << ip << ":" << port << " failed.");
             enet_peer_reset(serverPeer);
             enet_host_destroy(host);
             host = nullptr;
@@ -284,7 +306,7 @@ namespace CosmicEngine
 
                 case ENET_EVENT_TYPE_DISCONNECT:
                 {
-                    std::cout << "[NetworkManager] Disconnected from server." << std::endl;
+                    RUNTIME_INFO("[NetworkManager] Disconnected from server.");
                     incomingQueue.Push({-1, NetworkMessage(NetMessageType::ClientDisconnect, {{"clientId", localClientId}})});
                     running.store(false);
                     return;
@@ -304,7 +326,7 @@ namespace CosmicEngine
         case NetMessageType::AssignClientId:
         {
             localClientId = msg.payload.value("clientId", -1);
-            std::cout << "[NetworkManager] Assigned client ID: " << localClientId << std::endl;
+            RUNTIME_INFO("[NetworkManager] Assigned client ID: " << localClientId);
             incomingQueue.Push({-1, msg});
             break;
         }
@@ -383,7 +405,7 @@ namespace CosmicEngine
         localClientId = -1;
         localUsername.clear();
 
-        std::cout << "[NetworkManager] Disconnected." << std::endl;
+        RUNTIME_INFO("[NetworkManager] Disconnected.");
     }
 
     // ──────────────────────────────────────────────
@@ -454,7 +476,7 @@ namespace CosmicEngine
     {
         if (role != NetworkRole::Client || !serverPeer)
         {
-            std::cerr << "[NetworkManager] Not connected as client." << std::endl;
+            RUNTIME_WARNING("[NetworkManager] Not connected as client.");
             return;
         }
         SendPacketTo(serverPeer, msg);
@@ -464,7 +486,7 @@ namespace CosmicEngine
     {
         if (role != NetworkRole::Server)
         {
-            std::cerr << "[NetworkManager] Not running as server." << std::endl;
+            RUNTIME_WARNING("[NetworkManager] Not running as server.");
             return;
         }
 
@@ -476,14 +498,14 @@ namespace CosmicEngine
                 return;
             }
         }
-        std::cerr << "[NetworkManager] Peer " << peerId << " not found." << std::endl;
+        RUNTIME_WARNING("[NetworkManager] Peer " << peerId << " not found.");
     }
 
     void NetworkManager::Broadcast(const NetworkMessage &msg, int excludePeerId)
     {
         if (role != NetworkRole::Server)
         {
-            std::cerr << "[NetworkManager] Not running as server." << std::endl;
+            RUNTIME_WARNING("[NetworkManager] Not running as server.");
             return;
         }
 

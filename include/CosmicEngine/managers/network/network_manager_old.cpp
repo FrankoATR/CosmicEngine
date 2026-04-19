@@ -1,5 +1,6 @@
 #include "network_manager.hpp"
 #include "../object/object_manager.hpp"
+#include "../../utils/log.hpp"
 
 namespace CosmicEngine
 {
@@ -12,19 +13,19 @@ namespace CosmicEngine
 
     NetworkManager::NetworkManager()
     {
-        std::cout << "Network manager created" << std::endl;
+		RUNTIME_LIFECYCLE("Legacy network manager", "created");
     }
 
     NetworkManager::~NetworkManager()
     {
-        std::cout << "Network manager destroyed" << std::endl;
+		RUNTIME_LIFECYCLE("Legacy network manager", "destroyed");
     }
 
     bool NetworkManager::Init_server()
     {
         if (enet_initialize() != 0)
         {
-            cout << "An error occurred while initializing ENet.\n";
+			RUNTIME_WARNING("[LegacyNetworkManager] An error occurred while initializing ENet.");
             return EXIT_FAILURE;
         }
 
@@ -42,7 +43,7 @@ namespace CosmicEngine
 
         if (!server)
         {
-            cout << "An error occurred while trying to create an ENet server host.\n";
+			RUNTIME_WARNING("[LegacyNetworkManager] Failed to create an ENet server host.");
             return EXIT_FAILURE;
         }
 
@@ -54,7 +55,7 @@ namespace CosmicEngine
                 this->update_server();
             } });
 
-        std::cout << "Network manager initialized" << std::endl;
+        RUNTIME_LIFECYCLE("Legacy network manager", "initialized");
         return true;
     }
 
@@ -63,7 +64,7 @@ namespace CosmicEngine
 
         if (enet_initialize() != 0)
         {
-            cout << "An error occurred while initializing ENet.\n";
+			RUNTIME_WARNING("[LegacyNetworkManager] An error occurred while initializing ENet.");
             return EXIT_FAILURE;
         }
 
@@ -78,7 +79,7 @@ namespace CosmicEngine
 
         if (!client)
         {
-            cout << "An error occurred while trying to create an ENet client host.\n";
+			RUNTIME_WARNING("[LegacyNetworkManager] Failed to create an ENet client host.");
             return EXIT_FAILURE;
         }
 
@@ -89,18 +90,18 @@ namespace CosmicEngine
 
         if (!peer)
         {
-            cout << "No available peers for initiating an ENet connection.\n";
+			RUNTIME_WARNING("[LegacyNetworkManager] No available peers for initiating an ENet connection.");
             return EXIT_FAILURE;
         }
 
         if (enet_host_service(client, &event, 5000) > 0 && event.type == ENET_EVENT_TYPE_CONNECT)
         {
-            printf("Connection to %s:%d succeeded\n", server_ip, server_port);
+			RUNTIME_INFO("[LegacyNetworkManager] Connection to " << server_ip << ":" << server_port << " succeeded.");
         }
         else
         {
             enet_peer_reset(peer);
-            printf("Connection to %s:%d failed\n", server_ip, server_port);
+			RUNTIME_WARNING("[LegacyNetworkManager] Connection to " << server_ip << ":" << server_port << " failed.");
             return EXIT_SUCCESS;
         }
 
@@ -123,7 +124,7 @@ namespace CosmicEngine
 
         if (!fgets(buffer, max, stdin))
         {
-            printf("Error al leer entrada.\n");
+            printf("Failed to read input.\n");
             return false;
         }
 
@@ -139,12 +140,12 @@ namespace CosmicEngine
 
         if (strlen(buffer) == 0)
         {
-            printf("No puedes dejar esto vacío.\n");
+            printf("This value cannot be empty.\n");
             return false;
         }
         if (strlen(buffer) >= max - 1)
         {
-            printf("Texto demasiado largo (máx %zu caracteres).\n", max - 1);
+            printf("Text is too long (max %zu characters).\n", max - 1);
             return false;
         }
         return true;
@@ -299,7 +300,7 @@ namespace CosmicEngine
 
             break;
         }
-        case 5: // colocar bloque
+        case 5: // place block
         {
             int id, x, y, z;
             sscanf(data, "5|%d|%d|%d|%d", &id, &x, &y, &z);
@@ -307,9 +308,9 @@ namespace CosmicEngine
             {
                 //ObjectManager::GetInstance().Add(new Cube(glm::vec3(x, y, z), glm::vec3(1.0f)));
             }
-            printf("Jugador %d colocó bloque en (%d,%d,%d)\n", id, x, y, z);
+            printf("Player %d placed a block at (%d,%d,%d)\n", id, x, y, z);
 
-            // reenviar a todos los demás
+            // forward to every other peer
             char send_data[64];
             snprintf(send_data, sizeof(send_data), "5|%d|%d|%d|%d", id, x, y, z);
             BroadcastPacket(server, send_data);
@@ -328,9 +329,9 @@ namespace CosmicEngine
                 }
                 */
             }
-            printf("Jugador %d destruyó bloque en (%d,%d,%d)\n", id, x, y, z);
+            printf("Player %d destroyed a block at (%d,%d,%d)\n", id, x, y, z);
 
-            // reenviar a todos los demás
+            // forward to every other peer
             char send_data[64];
             snprintf(send_data, sizeof(send_data), "6|%d|%d|%d|%d", id, x, y, z);
             BroadcastPacket(server, send_data);

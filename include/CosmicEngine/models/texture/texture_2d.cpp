@@ -3,10 +3,10 @@
  * @brief Implements the OpenGL 2D texture wrapper used by the engine renderer.
  */
 
-#include <iostream>
-
 #include "texture_2d.hpp"
 #include "stb_image.h"
+
+#include "../../utils/log.hpp"
 
 namespace CosmicEngine
 {
@@ -21,8 +21,8 @@ namespace CosmicEngine
         
         if (data == nullptr)
         {
-            std::cerr << "[Texture2D] Failed to load image: " << imagePath << std::endl;
-            std::cerr << "[Texture2D] stbi_load error: " << stbi_failure_reason() << std::endl;
+			RUNTIME_WARNING("[Texture2D] Failed to load image: " << imagePath);
+			RUNTIME_WARNING("[Texture2D] stbi_load error: " << stbi_failure_reason());
             return;
         }
 
@@ -82,8 +82,8 @@ namespace CosmicEngine
         
         if (data == nullptr)
         {
-            std::cerr << "[Texture2D::SetNewImage] Failed to load image: " << imagePath << std::endl;
-            std::cerr << "[Texture2D::SetNewImage] stbi_load error: " << stbi_failure_reason() << std::endl;
+			RUNTIME_WARNING("[Texture2D::SetNewImage] Failed to load image: " << imagePath);
+			RUNTIME_WARNING("[Texture2D::SetNewImage] stbi_load error: " << stbi_failure_reason());
             return;
         }
 

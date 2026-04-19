@@ -6,6 +6,7 @@
 #include "sql_manager.hpp"
 #include "../../object/object_manager.hpp"
 #include "../../../models/object/object.hpp"
+#include "../../../utils/log.hpp"
 #include <thread>
 #include <chrono>
 #include <vector>
@@ -22,23 +23,30 @@ namespace CosmicEngine
 
     SQLManager::SQLManager()
     {
-        std::cout << "DataBase manager created" << std::endl;
+        RUNTIME_LIFECYCLE("Database manager", "created");
     }
 
     SQLManager::~SQLManager()
     {
-        std::cout << "DataBase manager destroyed" << std::endl;
+        RUNTIME_LIFECYCLE("Database manager", "destroyed");
     }
 
-    void SQLManager::init()
+    bool SQLManager::init()
     {
-        sqlite3_initialize();
-        std::cout << "DataBase manager initialized" << std::endl;
+        if (sqlite3_initialize() != SQLITE_OK)
+        {
+            RUNTIME_WARNING("[SQLManager] Failed to initialize SQLite.");
+            return false;
+        }
+        RUNTIME_LIFECYCLE("Database manager", "initialized");
+        return true;
     }
 
     void SQLManager::shutdown()
     {
+        CloseDatabase();
         sqlite3_shutdown();
+        RUNTIME_LIFECYCLE("Database manager", "shutdown");
     }
 
 
@@ -47,16 +55,16 @@ namespace CosmicEngine
         if (db)
         {
             sqlite3_close(db);
-            std::cout << "Cerrando base de datos actual: " << dbName << std::endl;
+            RUNTIME_INFO("[SQLManager] Closing current database: " << dbName);
             db = nullptr;
         }
         dbName = newDbName;
         if (sqlite3_open(dbName.c_str(), &db) != SQLITE_OK)
         {
-            std::cerr << "Error al abrir la base de datos: " << sqlite3_errmsg(db) << std::endl;
+            RUNTIME_WARNING("[SQLManager] Failed to open database: " << sqlite3_errmsg(db));
             return false;
         }
-        std::cout << "Base de datos abierta para guardar: " << dbName << std::endl;
+        RUNTIME_INFO("[SQLManager] Database opened for saving: " << dbName);
         ExecuteSQL("PRAGMA busy_timeout = 5000;");
         // ClearDatabase();
 
@@ -71,10 +79,10 @@ namespace CosmicEngine
     {
         if (!db)
         {
-            std::cerr << "Error: No hay base de datos abierta para borrar tablas." << std::endl;
+            RUNTIME_WARNING("[SQLManager] No open database is available for dropping tables.");
             return;
         }
-        std::cout << "Eliminando todas las tablas existentes..." << std::endl;
+        RUNTIME_INFO("[SQLManager] Dropping all existing tables...");
         ExecuteSQL("PRAGMA foreign_keys = OFF;");
         ExecuteSQL("PRAGMA wal_checkpoint(TRUNCATE);");
 
@@ -89,7 +97,7 @@ namespace CosmicEngine
         ExecuteQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';", callback, &tableNames);
         for (const auto &table : tableNames)
         {
-            std::cout << "Borrando tabla: " << table << std::endl;
+            RUNTIME_INFO("[SQLManager] Dropping table: " << table);
             ExecuteSQL("DROP TABLE IF EXISTS " + table + ";");
         }
         ExecuteSQL("PRAGMA foreign_keys = ON;");
@@ -99,7 +107,7 @@ namespace CosmicEngine
     {
         if (!db)
         {
-            std::cerr << "Error: No hay base de datos abierta." << std::endl;
+            RUNTIME_WARNING("[SQLManager] No open database is available.");
             return false;
         }
         char *errMsg = nullptr;
@@ -112,19 +120,19 @@ namespace CosmicEngine
                 return true;
             else if (rc == SQLITE_BUSY)
             {
-                std::cerr << "Base de datos bloqueada, reintentando..." << std::endl;
+                RUNTIME_WARNING("[SQLManager] Database is locked, retrying...");
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
             }
             else
             {
-                std::cerr << "Error en SQL: " << errMsg << std::endl;
+                RUNTIME_WARNING("[SQLManager] SQL error: " << errMsg);
                 sqlite3_exec(db, "ROLLBACK;", nullptr, nullptr, nullptr);
                 sqlite3_free(errMsg);
                 return false;
             }
         }
-        std::cerr << "Error: No se pudo ejecutar la consulta SQL tras múltiples intentos." << std::endl;
+        RUNTIME_WARNING("[SQLManager] Failed to execute the SQL statement after multiple attempts.");
         return false;
     }
 
@@ -132,14 +140,14 @@ namespace CosmicEngine
     {
         if (!db)
         {
-            std::cerr << "Error: No hay base de datos abierta." << std::endl;
+            RUNTIME_WARNING("[SQLManager] No open database is available.");
             return;
         }
         char *errMsg = nullptr;
         int rc = sqlite3_exec(db, sql.c_str(), callback, data, &errMsg);
         if (rc != SQLITE_OK)
         {
-            std::cerr << "Error en consulta SQL: " << errMsg << std::endl;
+            RUNTIME_WARNING("[SQLManager] SQL query error: " << errMsg);
             sqlite3_exec(db, "ROLLBACK;", nullptr, nullptr, nullptr);
             sqlite3_free(errMsg);
         }
@@ -148,14 +156,14 @@ namespace CosmicEngine
     void SQLManager::CreateTable(const std::string &tableName, const std::string &columns)
     {
         std::string sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" + columns + ");";
-        std::cout << sql << std::endl;
+        RUNTIME_INFO("[SQLManager] " << sql);
         ExecuteSQL(sql);
     }
 
     void SQLManager::ConsultTable(const std::string &tableName, const std::string &columns, int (*callback)(void *, int, char **, char **), void *data)
     {
         std::string sql = "SELECT " + columns + " FROM " + tableName + ";";
-        std::cout << sql << std::endl;
+        RUNTIME_INFO("[SQLManager] " << sql);
         ExecuteQuery(sql, callback, data);
     }
 
@@ -238,7 +246,7 @@ namespace CosmicEngine
     void SQLManager::InsertData(const std::string &table, const std::string &columns, const std::string &values)
     {
         std::string sql = "INSERT INTO " + table + " (" + columns + ") VALUES (" + values + ");";
-        std::cout << sql << std::endl;
+        RUNTIME_INFO("[SQLManager] " << sql);
         ExecuteSQL(sql);
     }
 
@@ -259,9 +267,9 @@ namespace CosmicEngine
             ExecuteSQL("PRAGMA optimize;");
             int result = sqlite3_close(db);
             if (result != SQLITE_OK)
-                std::cerr << "Error al cerrar la base de datos: " << sqlite3_errmsg(db) << std::endl;
+                RUNTIME_WARNING("[SQLManager] Failed to close database: " << sqlite3_errmsg(db));
             else
-                std::cout << "Base de datos cerrada: " << dbName << std::endl;
+                RUNTIME_INFO("[SQLManager] Database closed: " << dbName);
             db = nullptr;
         }
     }

@@ -25,11 +25,11 @@ namespace CosmicEngine
      * {
      * public:
      *     MainScene() : Scene("MainScene") {}
-     *     void init() override        { /* create objects, UI, etc. */ }
-     *     void reset() override        { /* restore state for replays */ }
-     *     void draw() override         { /* custom draw calls */ }
-     *     void update(double dt) override { /* per-frame logic */ }
-     *     void loadResources() override { /* load fonts, textures */ }
+    *     void init() override        { CreateSceneContent(); }
+    *     void reset() override       { RestoreSceneState(); }
+    *     void draw() override        { DrawSceneContent(); }
+    *     void update(double dt) override { UpdateSceneLogic(dt); }
+    *     void loadResources() override { LoadSceneTextures(); }
      * };
      *
      * // In main.cpp:

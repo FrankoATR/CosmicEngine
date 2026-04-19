@@ -12,8 +12,7 @@
 #include "../../managers/animation/animation_manager.hpp"
 #include "../../managers/light/light_manager.hpp"
 #include "../../managers/ui/ui_manager.hpp"
-
-#include <iostream>
+#include "../../utils/log.hpp"
 
 namespace CosmicEngine
 {
@@ -22,6 +21,7 @@ namespace CosmicEngine
         this->ShowBodys = false;
         this->ShowGrid = false;
         this->ShowCamera = false;
+		RUNTIME_LIFECYCLE("Scene " + this->Name, "created");
     }
 
     void Scene::reset()
@@ -189,17 +189,13 @@ namespace CosmicEngine
         }
         */
 
-        #ifndef NDEBUG
-            std::cout << "SCENE **" << GetName() << "** CLEARED" << std::endl;
-		#endif
+        RUNTIME_LIFECYCLE("Scene " + GetName(), "cleared");
     }
 
 
     Scene::~Scene()
     {
-        #ifndef NDEBUG
-            std::cout << "SCENE **" << GetName() << "** DESTROYED" << std::endl;
-		#endif
+        RUNTIME_LIFECYCLE("Scene " + GetName(), "destroyed");
     }
 
 }

@@ -141,6 +141,7 @@ namespace CosmicEngine
     void Object::Destroy()
     {
         this->aliveInGameManager = false;
+		RUNTIME_LIFECYCLE(className, "destroyed");
     }
 
     bool Object::IsAlive() const
@@ -175,7 +176,7 @@ namespace CosmicEngine
 
     Object::~Object()
     {
-
+		RUNTIME_LIFECYCLE(className, "destroyed");
     }
 
 
@@ -200,7 +201,7 @@ namespace CosmicEngine
             lastPosition(position), 
             layerId(layerId)
         {
-
+			RUNTIME_LIFECYCLE(className, "created");
         }
 
 
@@ -330,7 +331,7 @@ namespace CosmicEngine
             acceleration(glm::vec3(0.0f)),
             lastPosition(position)
         {
-
+			RUNTIME_LIFECYCLE(className, "created");
         }
 
 

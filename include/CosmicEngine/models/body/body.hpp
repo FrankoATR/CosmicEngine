@@ -111,7 +111,7 @@ namespace CosmicEngine
 			glm::vec2 offSetParentPosition;
 			glm::vec2 position;
 			glm::vec2 size;
-			float rotation; //Adaptar para las nuevas colisiones y OFFSET X,Y ?
+			float rotation; // Adjust this for the newer collision system and X/Y offsets if needed.
 		
 		#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
 			glm::vec3 offSetParentPosition;
@@ -127,7 +127,7 @@ namespace CosmicEngine
 
 	public:
 		Body() = delete;
-		~Body() = default;
+		~Body();
 		
         /**
          * @brief Executes the registered collision callback.
