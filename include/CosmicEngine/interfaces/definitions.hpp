@@ -113,7 +113,7 @@
 #define NET_MN CosmicEngine::NetworkManager::GetInstance()
 
 /** @brief Header path for GameGridCollisions. */
-#define GAMEGRIDCOLLISIONS_HEADER <CosmicEngine/collisions/GameGridCollisions.hpp>
+#define GAMEGRIDCOLLISIONS_HEADER <CosmicEngine/collisions/game_grid_collisions.hpp>
 
 
 

@@ -1,7 +1,7 @@
 #include "network_demo_scene.hpp"
 
 #include <CosmicEngine/interfaces/definitions.hpp>
-#include <CosmicEngine/collisions/CollisionArea.hpp>
+#include <CosmicEngine/collisions/collision_area.hpp>
 #include <CosmicEngine/managers/resource/resource_manager.hpp>
 #include <CosmicEngine/managers/network/network_manager.hpp>
 #include <CosmicEngine/models/ui/derived/ui_button.hpp>

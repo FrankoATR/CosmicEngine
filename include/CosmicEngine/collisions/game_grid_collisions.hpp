@@ -2,11 +2,11 @@
 #define COSMIC_GAMEGRIDCOLLISIONS_HPP
 
 /**
- * @file GameGridCollisions.hpp
+ * @file game_grid_collisions.hpp
  * @brief Declares the uniform-grid collision area used by the engine.
  */
 
-#include "CollisionArea.hpp"
+#include "collision_area.hpp"
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -83,7 +83,7 @@ namespace CosmicEngine
         void CheckCellsCollisions(Cell *cell1, Cell *cell2);
         /** @brief Iterates every cell pair and dispatches @ref CheckCellsCollisions. */
         void FindCollisionGrid();
-        /** @brief Runs a full collision pass over the grid (called by CollisionManager). */
+        /** @brief Runs a full collision pass over the grid during BodyManager::update(). */
         void FindCollisions() override;
 
         /**
@@ -166,7 +166,7 @@ namespace CosmicEngine
         void CheckCellsCollisions(Cell *cell1, Cell *cell2);
         /** @brief Iterates every cell pair and dispatches @ref CheckCellsCollisions. */
         void FindCollisionGrid();
-        /** @brief Runs a full collision pass over the grid (called by CollisionManager). */
+        /** @brief Runs a full collision pass over the grid during BodyManager::update(). */
         void FindCollisions() override;
 
         /**

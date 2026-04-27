@@ -101,9 +101,9 @@ set(ENGINE_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/light/light_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/network/network_manager.cpp
 
-    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/collisions/GameGridCollisions.cpp
-    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/collisions/CollisionArea.cpp
-    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/collisions/GameQuadTreeCollisions.cpp
+        ${CMAKE_SOURCE_DIR}/include/CosmicEngine/collisions/game_grid_collisions.cpp
+        ${CMAKE_SOURCE_DIR}/include/CosmicEngine/collisions/collision_area.cpp
+        ${CMAKE_SOURCE_DIR}/include/CosmicEngine/collisions/game_quad_tree_collisions.cpp
     
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/utils/logger.cpp
 

@@ -1,7 +1,7 @@
 #ifndef MAINSCENE_HPP
 #define MAINSCENE_HPP
 
-#include <CosmicEngine/collisions/CollisionArea.hpp>
+#include <CosmicEngine/collisions/collision_area.hpp>
 #include <CosmicEngine/controllers/camera/camera_controller.hpp>
 #include <CosmicEngine/models/scene/scene.hpp>
 

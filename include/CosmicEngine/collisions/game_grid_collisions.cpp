@@ -1,9 +1,9 @@
 /**
- * @file GameGridCollisions.cpp
+ * @file game_grid_collisions.cpp
  * @brief Implements the uniform-grid collision accelerator used by the engine.
  */
 
-#include "GameGridCollisions.hpp"
+#include "game_grid_collisions.hpp"
 
 #include "../managers/resource/resource_manager.hpp"
 #include "../models/body/body.hpp"

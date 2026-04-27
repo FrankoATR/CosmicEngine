@@ -2,7 +2,7 @@
 #define COSMIC_COLLISIONAREA_HPP
 
 /**
- * @file CollisionArea.hpp
+ * @file collision_area.hpp
  * @brief Declares the abstract collision area used by the engine collision system.
  */
 

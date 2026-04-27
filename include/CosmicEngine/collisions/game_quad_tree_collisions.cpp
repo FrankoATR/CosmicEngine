@@ -1,9 +1,9 @@
 /**
- * @file GameQuadTreeCollisions.cpp
+ * @file game_quad_tree_collisions.cpp
  * @brief Implements the quadtree or octree collision accelerator used by the engine.
  */
 
-#include "GameQuadTreeCollisions.hpp"
+#include "game_quad_tree_collisions.hpp"
 
 #include "../managers/resource/resource_manager.hpp"
 #include "../models/body/body.hpp"

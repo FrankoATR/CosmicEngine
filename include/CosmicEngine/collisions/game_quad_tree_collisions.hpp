@@ -2,11 +2,11 @@
 #define COSMIC_GAMEQUADTREECOLLISIONS_HPP
 
 /**
- * @file GameQuadTreeCollisions.hpp
+ * @file game_quad_tree_collisions.hpp
  * @brief Declares the quadtree or octree collision area used by the engine.
  */
 
-#include "CollisionArea.hpp"
+#include "collision_area.hpp"
 
 #include <array>
 #include <memory>

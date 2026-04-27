@@ -5,9 +5,9 @@
 
 #include "body_manager.hpp"
 
-#include "../../collisions/CollisionArea.hpp"
-#include "../../collisions/GameGridCollisions.hpp"
-#include "../../collisions/GameQuadTreeCollisions.hpp"
+#include "../../collisions/collision_area.hpp"
+#include "../../collisions/game_grid_collisions.hpp"
+#include "../../collisions/game_quad_tree_collisions.hpp"
 #include "../../models/body/body.hpp"
 #include "../../models/object/object.hpp"
 #include "../../utils/log.hpp"
