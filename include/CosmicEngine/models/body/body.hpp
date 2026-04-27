@@ -73,7 +73,7 @@ namespace CosmicEngine
 	 * Bodies are managed by the BodyManager and automatically updated from their
 	 * parent Object's transform every frame.
 	 *
-	 * @par Example â€” attaching a 2D collision body to an object
+	 * @par Example - attaching a 2D collision body to an object
 	 * @code
 	 * void MyEntity::CreateBody()
 	 * {
@@ -95,7 +95,7 @@ namespace CosmicEngine
 	 * }
 	 * @endcode
 	 *
-	 * @par Example â€” cleaning up the body in the destructor
+	 * @par Example - cleaning up the body in the destructor
 	 * @code
 	 * MyEntity::~MyEntity()
 	 * {

@@ -22,7 +22,7 @@ namespace CosmicEngine
      * assigns it a unique ID and brings it into the update/draw cycle.  Objects
      * marked as destroyed are cleaned up automatically on the next update pass.
      *
-     * @par Example â€” adding, searching, and removing objects
+    * @par Example - adding, searching, and removing objects
      * @code
      * // Add a new object to the runtime:
      * auto* obj = new JsonDemoObject({100,200}, {96,96}, "NPC", 100, 1);

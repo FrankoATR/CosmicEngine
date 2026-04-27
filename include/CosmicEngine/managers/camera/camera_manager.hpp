@@ -33,7 +33,7 @@ namespace CosmicEngine
          * Use SetFocusPosition() to center the view and AdjustZoom() to scale it.
          * For keyboard/mouse control, pair it with a Classic2DCameraController.
          *
-         * @par Example â€” basic 2D camera setup
+         * @par Example - basic 2D camera setup
          * @code
          * CAM_MN.SetFocusPosition(glm::vec2(0.0f));
          *
@@ -182,7 +182,7 @@ namespace CosmicEngine
          * \e pos toward \e lookTarget.  Pair it with a Classic3DCameraController for
          * first-person keyboard/mouse control.
          *
-         * @par Example â€” fixed 3D camera overlooking an arena
+         * @par Example - fixed 3D camera overlooking an arena
          * @code
          * glm::vec3 arenaCenter = kArenaPosition + kArenaSize * 0.5f;
          * glm::vec3 cameraPos   = arenaCenter + glm::vec3(0, 50, 50);

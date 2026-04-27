@@ -29,7 +29,7 @@ namespace CosmicEngine
          * (grid, quadtree) extend.  You do not instantiate it directly; instead,
          * call BodyManager::CreateCollisionArea() which selects the correct subclass.
          *
-         * @par Example â€” creating a collision area through the BodyManager
+         * @par Example - creating a collision area through the BodyManager
          * @code
          * BOD_MN.CreateCollisionArea(
          *     CosmicEngine::CollisionType::Grid,

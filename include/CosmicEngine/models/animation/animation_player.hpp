@@ -21,7 +21,7 @@ namespace CosmicEngine
      * and whether playback is paused, finished, or looping.  Query GetCurrentRow()
      * and GetCurrentColumn() each frame to render the correct tile from the sheet.
      *
-     * @par Example â€” creating and using an animation player
+    * @par Example - creating and using an animation player
      * @code
      * // Create a player bound to a registered clip and this object ID
      * animationPlayer = ANM_MN.CreatePlayer("walk_right", GetID());
@@ -40,7 +40,7 @@ namespace CosmicEngine
      *     GetColor(), 1.0f, CosmicEngine::ViewType::Ortho);
      * @endcode
      *
-     * @par Example â€” cleaning up
+    * @par Example - cleaning up
      * @code
      * if (animationPlayer) { animationPlayer->Destroy(); animationPlayer = nullptr; }
      * @endcode

@@ -54,7 +54,7 @@ namespace CosmicEngine
      * named event with a JSON payload when due.  Use ScheduleOnce() for one-shot
      * timers and ScheduleInterval() for repeating tasks.
      *
-     * @par Example â€” spawning objects every 2 seconds
+    * @par Example - spawning objects every 2 seconds
      * @code
      * nlohmann::json payload = {
      *     {"randomPosition", true},

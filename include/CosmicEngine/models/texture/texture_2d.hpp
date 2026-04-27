@@ -19,7 +19,7 @@ namespace CosmicEngine
      * call RS_MN.LoadTexture(); you typically reference them by key rather than
      * using this class directly.
      *
-     * @par Example â€” loading a texture through ResourceManager
+    * @par Example - loading a texture through ResourceManager
      * @code
      * RS_MN.LoadTexture("test_texture", "assets/textures/test.png");
      * RS_MN.Render2DSprite("test_texture", position, size);

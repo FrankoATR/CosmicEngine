@@ -25,21 +25,21 @@ namespace CosmicEngine
      * TrueType fonts, and 3D models into GPU-ready state, and provides a full set
      * of rendering helpers for 2D sprites, text, lines, rectangles, and 3D shapes.
      *
-     * @par Example â€” loading resources in a scene
+    * @par Example - loading resources in a scene
      * @code
      * RS_MN.LoadFont("test_font", "assets/fonts/ThaleahFat.ttf", 32);
      * RS_MN.LoadTexture("test_texture", "assets/textures/test.png");
      * RS_MN.LoadTextureSheet("player_sheet", "assets/textures/player2.png", 4, 4, 0);
      * @endcode
      *
-     * @par Example â€” rendering a 2D sprite and text
+    * @par Example - rendering a 2D sprite and text
      * @code
      * RS_MN.Render2DSprite("test_texture", position, size);
      * RS_MN.RenderText("Hello!", "test_font",
      *     {100.0f, 200.0f, 0.0f}, {0.55f, 0.55f, 1.0f});
      * @endcode
      *
-     * @par Example â€” rendering from a texture sheet (sprite animation)
+    * @par Example - rendering from a texture sheet (sprite animation)
      * @code
      * RS_MN.Render2DSpriteFromTextureSheet(
      *     "player_sheet", row, col,
@@ -182,7 +182,7 @@ namespace CosmicEngine
             float rotation = 0.0f,
             glm::vec3 color = glm::vec3(1.0f),
             float alpha = 1.0f,
-            ViewType viewType = ViewType::Ortho // NOT NECESSARY Â¿? Verify for each
+            ViewType viewType = ViewType::Ortho // Verify whether this default is needed for each caller.
         );
 
         /**

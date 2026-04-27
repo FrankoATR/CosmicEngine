@@ -32,7 +32,7 @@ namespace CosmicEngine
      * and mouse-hover detection.  Concrete elements (UIButton, UIText, UITextField)
      * derive from this class and are registered with the UIManager.
      *
-     * @par Example â€” checking mouse hover on any element
+    * @par Example - checking mouse hover on any element
      * @code
      * if (myElement->IsVisible() && myElement->MouseHover())
      *     std::cout << "Mouse is over the element" << std::endl;

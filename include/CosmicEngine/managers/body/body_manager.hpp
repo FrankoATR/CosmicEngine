@@ -26,7 +26,7 @@ namespace CosmicEngine
      * the selected spatial acceleration structure (grid or quadtree) each frame.
      * You must call CreateCollisionArea() before bodies can detect collisions.
      *
-     * @par Example â€” setting up a collision area and adding bodies
+    * @par Example - setting up a collision area and adding bodies
      * @code
      * // Create a 2D grid collision area (position, size, cellSize, maxDepth, maxObjects)
      * BOD_MN.CreateCollisionArea(

@@ -34,7 +34,7 @@ namespace CosmicEngine
      * each class with RegisterSerialization(), then call SaveObjectsData()
      * and LoadObjectsData() to round-trip objects to/from a SQLite database.
      *
-     * @par Example â€” basic SQL persistence workflow
+    * @par Example - basic SQL persistence workflow
      * @code
      * SQL_MN.OpenDatabase("saves/world.db");
      *

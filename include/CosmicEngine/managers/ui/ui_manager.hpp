@@ -22,7 +22,7 @@ namespace CosmicEngine
      * calls each frame.  Use AddElement() to register new buttons, text labels,
      * or text fields, and RemoveElement() to unregister them.
      *
-     * @par Example â€” registering UI elements
+    * @par Example - registering UI elements
      * @code
      * auto* btn = new CosmicEngine::UIButton("Play", "font", "tex",
      *     {200, 0}, {150, 50}, false, true);

@@ -22,7 +22,7 @@ namespace CosmicEngine
      * Buttons can fire on press (default) or on release via the ReleaseMode flag.
      * Register each button with the UIManager so that it receives update and draw calls.
      *
-     * @par Example â€” creating a button with click handler
+    * @par Example - creating a button with click handler
      * @code
      * auto* btn = new CosmicEngine::UIButton(
      *     "Start Game",       // label text

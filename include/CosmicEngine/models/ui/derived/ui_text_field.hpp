@@ -21,7 +21,7 @@ namespace CosmicEngine
      * focus management, cursor navigation, and change/submit callbacks.  Useful for
      * chat boxes, IP address entries, or any user-typed input.
      *
-     * @par Example â€” creating input fields for IP and port
+    * @par Example - creating input fields for IP and port
      * @code
      * auto* txtFieldIp = new CosmicEngine::UITextField(
      *     "127.0.0.1",       // initial text

@@ -46,7 +46,7 @@ namespace CosmicEngine
      * Object, override draw()/update(), and register each instance with the
      * ObjectManager via OBJ_MN.Add().
      *
-     * @par Example â€” creating a 2D game entity (GAME_2D_CONFIGURATION)
+    * @par Example - creating a 2D game entity (GAME_2D_CONFIGURATION)
      * @code
      * class JsonDemoObject : public CosmicEngine::Object
      * {
@@ -73,7 +73,7 @@ namespace CosmicEngine
      * OBJ_MN.Add(obj);
      * @endcode
      *
-     * @par Example â€” creating a 3D game entity (GAME_3D_CONFIGURATION)
+    * @par Example - creating a 3D game entity (GAME_3D_CONFIGURATION)
      * @code
      * class CollisionDemoObject3D : public CosmicEngine::Object
      * {

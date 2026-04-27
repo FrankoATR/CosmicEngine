@@ -39,7 +39,7 @@ namespace CosmicEngine
      * and indicates whether the animation should loop.  Clips are registered
      * with the AnimationManager and then assigned to AnimationPlayer instances.
      *
-     * @par Example â€” registering a looping 4-frame walk animation
+    * @par Example - registering a looping 4-frame walk animation
      * @code
      * std::vector<CosmicEngine::AnimationFrame> frames = {
      *     {0, 0, 0.14},   // row 0, column 0, 0.14 s

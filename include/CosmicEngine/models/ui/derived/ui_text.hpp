@@ -22,7 +22,7 @@ namespace CosmicEngine
      * HUD counters, or any static/dynamic text overlay.  Text color and content
      * can be changed at runtime with SetText() and SetTextColor().
      *
-     * @par Example â€” creating and updating a HUD label
+    * @par Example - creating and updating a HUD label
      * @code
      * auto* title = new CosmicEngine::UIText(
      *     "Score: 0",        // initial text

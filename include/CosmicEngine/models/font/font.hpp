@@ -35,7 +35,7 @@ namespace CosmicEngine
      * ResourceManager and referenced by key when creating UI elements or calling
      * RS_MN.RenderText().
      *
-     * @par Example â€” loading and using a font
+    * @par Example - loading and using a font
      * @code
      * // Load once in Scene::loadResources():
      * RS_MN.LoadFont("test_font", "assets/fonts/ThaleahFat.ttf", 32);

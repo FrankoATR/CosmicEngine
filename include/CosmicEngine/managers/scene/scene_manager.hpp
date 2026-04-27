@@ -22,7 +22,7 @@ namespace CosmicEngine
      * SceneManager internally; usually you only call setFirstScene() on
      * GameManager and let it handle the rest.
      *
-     * @par Example â€” pushing/replacing scenes (advanced)
+    * @par Example - pushing/replacing scenes (advanced)
      * @code
      * // Push a sub-scene on top (pauses the current one):
      * SCN_MN.PushScene(new PauseMenuScene);

@@ -25,7 +25,7 @@ namespace CosmicEngine
      * once (usually in Scene::loadResources), then call CreatePlayer() to create
      * a player that you can attach to an object for runtime playback.
      *
-     * @par Example â€” registering clips and creating a player
+    * @par Example - registering clips and creating a player
      * @code
      * // Inside Scene::loadResources():
      * RS_MN.LoadTextureSheet("player_sheet", "assets/textures/player2.png", 4, 4, 0);

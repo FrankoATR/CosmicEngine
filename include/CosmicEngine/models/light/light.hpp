@@ -22,7 +22,7 @@ namespace CosmicEngine
      * registered with the LightManager and their uniforms are propagated to shaders
      * each frame.
      *
-     * @par Example â€” creating a point light (3D mode)
+    * @par Example - creating a point light (3D mode)
      * @code
      * auto* light = new CosmicEngine::Light(
      *     glm::vec3(0, 10, 0),    // position

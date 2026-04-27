@@ -29,7 +29,7 @@ enum class LogLevel { Info, Warning, Error };
  * surface as exceptions. Initialize it early in main() and shut it down before
  * exiting.
  *
- * @par Example â€” typical usage in main.cpp
+ * @par Example - typical usage in main.cpp
  * @code
  * CosmicEngine::Logger::init(true, true);   // console + file
  * CosmicEngine::Logger::info("***** [PROGRAM START] *****");

@@ -41,7 +41,7 @@ namespace CosmicEngine
      * ObjectManager for every matching object and serializes them into the
      * in-memory JSON document, which is then flushed to disk with SaveFile().
      *
-     * @par Example â€” full save/load workflow
+    * @par Example - full save/load workflow
      * @code
      * // 1) Register serialization for your class (once)
      * JSON_MN.RegisterSerialization(

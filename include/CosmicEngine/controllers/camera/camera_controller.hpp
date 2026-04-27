@@ -15,7 +15,7 @@ namespace CosmicEngine
      * The engine provides Classic2DCameraController and Classic3DCameraController
      * as built-in implementations.
      *
-     * @par Example â€” using a camera controller
+    * @par Example - using a camera controller
      * @code
      * std::unique_ptr<CosmicEngine::ICameraController> camCtrl;
      * camCtrl = std::make_unique<CosmicEngine::Classic2DCameraController>();

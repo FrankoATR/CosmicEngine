@@ -30,7 +30,7 @@ namespace CosmicEngine
      * enum with SetProjection() to select between orthographic, perspective, and
      * UI projections.
      *
-     * @par Example â€” Shader lifecycle (internal to ResourceManager)
+    * @par Example - Shader lifecycle (internal to ResourceManager)
      * @code
      * // Shaders are loaded internally from master_shaders.hpp source strings:
      * auto* shader = new CosmicEngine::Shader(vertexSrc, fragmentSrc);

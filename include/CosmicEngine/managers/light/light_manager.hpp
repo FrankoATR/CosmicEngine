@@ -23,7 +23,7 @@ namespace CosmicEngine
      * registered shader each frame.  It also exposes a global ambient light that
      * applies to the entire scene independently of point/spot lights.
      *
-     * @par Example â€” setting global ambient light
+    * @par Example - setting global ambient light
      * @code
      * auto& lm = CosmicEngine::LightManager::GetInstance();
      * lm.SetGlobalAmbientLightColor(glm::vec3(0.15f));

@@ -17,7 +17,7 @@ namespace CosmicEngine
      * with TMR_MN.Add(), and poll IsTrigger() in your update loop to react when the
      * target duration has elapsed.
      *
-     * @par Example â€” creating and checking a timer
+    * @par Example - creating and checking a timer
      * @code
      * // Create a 2-second non-looping timer that starts running immediately
      * directionChangeTimer = new CosmicEngine::Timer(2.0, false, false);
@@ -36,7 +36,7 @@ namespace CosmicEngine
      * }
      * @endcode
      *
-     * @par Example â€” destroying a timer
+    * @par Example - destroying a timer
      * @code
      * if (directionChangeTimer)
      * {
