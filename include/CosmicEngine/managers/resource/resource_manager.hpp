@@ -1,4 +1,4 @@
-#ifndef COSMIC_RESOURCEMANAGER_HPP
+﻿#ifndef COSMIC_RESOURCEMANAGER_HPP
 #define COSMIC_RESOURCEMANAGER_HPP
 
 /**
@@ -25,21 +25,21 @@ namespace CosmicEngine
      * TrueType fonts, and 3D models into GPU-ready state, and provides a full set
      * of rendering helpers for 2D sprites, text, lines, rectangles, and 3D shapes.
      *
-     * @par Example — loading resources in a scene
+     * @par Example â€” loading resources in a scene
      * @code
      * RS_MN.LoadFont("test_font", "assets/fonts/ThaleahFat.ttf", 32);
      * RS_MN.LoadTexture("test_texture", "assets/textures/test.png");
      * RS_MN.LoadTextureSheet("player_sheet", "assets/textures/player2.png", 4, 4, 0);
      * @endcode
      *
-     * @par Example — rendering a 2D sprite and text
+     * @par Example â€” rendering a 2D sprite and text
      * @code
      * RS_MN.Render2DSprite("test_texture", position, size);
      * RS_MN.RenderText("Hello!", "test_font",
      *     {100.0f, 200.0f, 0.0f}, {0.55f, 0.55f, 1.0f});
      * @endcode
      *
-     * @par Example — rendering from a texture sheet (sprite animation)
+     * @par Example â€” rendering from a texture sheet (sprite animation)
      * @code
      * RS_MN.Render2DSpriteFromTextureSheet(
      *     "player_sheet", row, col,
@@ -86,12 +86,28 @@ namespace CosmicEngine
 
 
 
+        /**
+         * @brief Wraps a Texture2D with sprite-sheet metadata.
+         *
+         * Used by the resource manager to keep ownership of texture sheets and the
+         * subdivision parameters (rows, columns, padding between cells) needed to
+         * compute UV rectangles for individual frames.
+         */
         struct Texture_Sheet
         {
+            /**
+             * @brief Builds a sheet descriptor with the given grid layout.
+             * @param texture Owned texture instance.
+             * @param rows Number of frame rows in the sheet.
+             * @param columns Number of frame columns in the sheet.
+             * @param padding Pixel padding between frames.
+             */
             Texture_Sheet(Texture2D *texture, int rows, int columns, int padding)
                 : texture(texture), rows(rows), columns(columns), padding(padding) {}
-            Texture2D *texture;
-            int rows, columns, padding;
+            Texture2D *texture; ///< Owned texture data uploaded to the GPU.
+            int rows;           ///< Frame rows in the sheet.
+            int columns;        ///< Frame columns in the sheet.
+            int padding;        ///< Pixel padding between adjacent frames.
         };
 
         std::map<std::string, unsigned int> static_vao_resources;
@@ -166,7 +182,7 @@ namespace CosmicEngine
             float rotation = 0.0f,
             glm::vec3 color = glm::vec3(1.0f),
             float alpha = 1.0f,
-            ViewType viewType = ViewType::Ortho // NOT NECESSARY ¿? Verify for each
+            ViewType viewType = ViewType::Ortho // NOT NECESSARY Â¿? Verify for each
         );
 
         /**
@@ -426,6 +442,16 @@ namespace CosmicEngine
                 ViewType viewType = ViewType::Ortho
             );
 
+            /**
+             * @brief Loads a 3D model from disk and registers it under @p key.
+             *
+             * Supported formats are those handled by Assimp (.obj, .fbx, .gltf, ...).
+             * The created Model is owned by the manager and released on shutdown.
+             *
+             * @param key Lookup identifier for later retrieval through GetModel().
+             * @param path Filesystem path to the model file.
+             * @return True when the model was loaded and registered successfully.
+             */
             bool Load3DModel(const std::string &key, const std::string &path);
 
         #else
@@ -453,10 +479,6 @@ namespace CosmicEngine
         /** @brief Releases every resource currently managed by the resource manager. */
         void Clear();
     };
-
-
-    /** @brief Returns a convenient pointer to the singleton resource manager instance. */
-    inline ResourceManager* RS_MNX() { return &ResourceManager::GetInstance(); }
 
 }
 

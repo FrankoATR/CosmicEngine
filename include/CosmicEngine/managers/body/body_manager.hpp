@@ -1,4 +1,4 @@
-#ifndef COSMIC_BODYMANAGER_HPP
+﻿#ifndef COSMIC_BODYMANAGER_HPP
 #define COSMIC_BODYMANAGER_HPP
 
 /**
@@ -26,7 +26,7 @@ namespace CosmicEngine
      * the selected spatial acceleration structure (grid or quadtree) each frame.
      * You must call CreateCollisionArea() before bodies can detect collisions.
      *
-     * @par Example — setting up a collision area and adding bodies
+     * @par Example â€” setting up a collision area and adding bodies
      * @code
      * // Create a 2D grid collision area (position, size, cellSize, maxDepth, maxObjects)
      * BOD_MN.CreateCollisionArea(
@@ -72,7 +72,10 @@ namespace CosmicEngine
         void update();
         /** @brief Adds a collision body to the runtime and assigns it an identifier. */
         void Add(Body *body);
-        /** @brief Removes and deletes a collision body by identifier. */
+        /**
+         * @brief Removes and deletes a collision body by identifier.
+         * @param entityId Value provided by the caller.
+         */
         void Remove(int entityId);
         /** @brief Deletes and removes every managed collision body. */
         void Clear();
@@ -86,15 +89,24 @@ namespace CosmicEngine
         void SetNewGridArea(GameGridCollisions *newGridArea);
         /** @brief Sets a quadtree collision area as the active collision area. */
         void SetNewQuadTreeArea(GameQuadTreeCollisions *newQuadTreeArea);
-        /** @brief Returns the current collision area type. */
+        /**
+         * @brief Returns the current collision area type.
+         * @return The current collision area type.
+         */
         CollisionType GetCollisionAreaType() const;
-        /** @brief Returns whether a collision area is currently configured. */
+        /**
+         * @brief Returns whether a collision area is currently configured.
+         * @return The whether a collision area is currently configured.
+         */
         bool HasCollisionArea() const;
 
         #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
             /** @brief Creates a 2D collision area with the provided configuration. */
             void CreateCollisionArea(CollisionType type, glm::vec2 position, glm::vec2 size, int subdivisionSize = 64, int maxDepth = 5, int maxObjectsPerNode = 4);
-            /** @brief Sets the origin of the active 2D collision grid or area. */
+            /**
+             * @brief Sets the origin of the active 2D collision grid or area.
+             * @param newPosition Value provided by the caller.
+             */
             void SetGridPosition(glm::vec2 newPosition);
             /** @brief Returns the origin of the active 2D collision grid or area. */
             glm::vec2 GetGridPosition();
@@ -102,7 +114,10 @@ namespace CosmicEngine
         #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
             /** @brief Creates a 3D collision area with the provided configuration. */
             void CreateCollisionArea(CollisionType type, glm::vec3 position, glm::vec3 size, int subdivisionSize = 64, int maxDepth = 5, int maxObjectsPerNode = 4);
-            /** @brief Sets the origin of the active 3D collision grid or area. */
+            /**
+             * @brief Sets the origin of the active 3D collision grid or area.
+             * @param newPosition Value provided by the caller.
+             */
             void SetGridPosition(glm::vec3 newPosition);
             /** @brief Returns the origin of the active 3D collision grid or area. */
             glm::vec3 GetGridPosition();

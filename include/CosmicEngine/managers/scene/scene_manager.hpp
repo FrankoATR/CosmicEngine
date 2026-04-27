@@ -1,4 +1,4 @@
-#ifndef COSMIC_SCENEMANAGER_HPP
+﻿#ifndef COSMIC_SCENEMANAGER_HPP
 #define COSMIC_SCENEMANAGER_HPP
 
 /**
@@ -22,7 +22,7 @@ namespace CosmicEngine
      * SceneManager internally; usually you only call setFirstScene() on
      * GameManager and let it handle the rest.
      *
-     * @par Example — pushing/replacing scenes (advanced)
+     * @par Example â€” pushing/replacing scenes (advanced)
      * @code
      * // Push a sub-scene on top (pauses the current one):
      * SCN_MN.PushScene(new PauseMenuScene);
@@ -68,17 +68,29 @@ namespace CosmicEngine
         void PopScene();
 
 
-        /** @brief Returns whether the scene stack is empty. */
+        /**
+         * @brief Returns whether the scene stack is empty.
+         * @return The whether the scene stack is empty.
+         */
         bool empty() const;
         /** @brief Clears and deletes every managed scene. */
         void Clear();
 
-        /** @brief Returns whether the current scene is fully loaded. */
+        /**
+         * @brief Returns whether the current scene is fully loaded.
+         * @return The whether the current scene is fully loaded.
+         */
         bool IsSceneLoaded() const;
-        /** @brief Returns whether the scene manager is currently running. */
+        /**
+         * @brief Returns whether the scene manager is currently running.
+         * @return The whether the scene manager is currently running.
+         */
         bool Running() const;
 
-        /** @brief Sets the background color used by the renderer. */
+        /**
+         * @brief Sets the background color used by the renderer.
+         * @param color Value provided by the caller.
+         */
         void SetBackgroundColor(glm::vec3 color);
         /** @brief Returns the background color used by the renderer. */
         glm::vec3 GetBackgroundColor();

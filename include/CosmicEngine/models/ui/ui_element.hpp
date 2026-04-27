@@ -1,4 +1,4 @@
-#ifndef COSMIC_UIELEMENT_HPP
+﻿#ifndef COSMIC_UIELEMENT_HPP
 #define COSMIC_UIELEMENT_HPP
 
 /**
@@ -32,7 +32,7 @@ namespace CosmicEngine
      * and mouse-hover detection.  Concrete elements (UIButton, UIText, UITextField)
      * derive from this class and are registered with the UIManager.
      *
-     * @par Example — checking mouse hover on any element
+     * @par Example â€” checking mouse hover on any element
      * @code
      * if (myElement->IsVisible() && myElement->MouseHover())
      *     std::cout << "Mouse is over the element" << std::endl;
@@ -45,7 +45,7 @@ namespace CosmicEngine
 
         glm::vec2 Position;
         glm::vec2 Size;
-        bool visible;
+        bool visible;                       ///< Whether the element is rendered and receives events.
 
         UIElement *parent;
         std::vector<UIElement*> children;
@@ -73,18 +73,36 @@ namespace CosmicEngine
         /** @brief Draws the UI element. */
         virtual void draw();
 
-        /** @brief Sets the element position in UI space. */
+        /**
+         * @brief Sets the element position in UI space.
+         * @param NewPosition Value provided by the caller.
+         */
         void SetPosition(glm::vec2 NewPosition);
-        /** @brief Sets the element size. */
+        /**
+         * @brief Sets the element size.
+         * @param NewSize Value provided by the caller.
+         */
         void SetSize(glm::vec2 NewSize);
-        /** @brief Sets the visibility state of the element. */
+        /**
+         * @brief Sets the visibility state of the element.
+         * @param visible Value provided by the caller.
+         */
         void SetVisible(bool visible);
-        /** @brief Returns whether the element is currently visible. */
+        /**
+         * @brief Returns whether the element is currently visible.
+         * @return The whether the element is currently visible.
+         */
         bool IsVisible() const;
 
-        /** @brief Adds a child to the current UI element. */
+        /**
+         * @brief Adds a child to the current UI element.
+         * @param child Value provided by the caller.
+         */
         void AddChild(UIElement* child);
-        /** @brief Removes a child from the current UI element. */
+        /**
+         * @brief Removes a child from the current UI element.
+         * @param child Value provided by the caller.
+         */
         void RemoveChild(UIElement* child);
         /** @brief Removes all child elements from the current UI element. */
         void ClearChildren();
@@ -100,11 +118,20 @@ namespace CosmicEngine
          */
         bool MouseHover();
         
-        /** @brief Returns the element position in UI space. */
+        /**
+         * @brief Returns the element position in UI space.
+         * @return The element position in UI space.
+         */
         glm::vec2 GetPosition() const;
-        /** @brief Returns the element size. */
+        /**
+         * @brief Returns the element size.
+         * @return The element size.
+         */
         glm::vec2 GetSize() const;
-        /** @brief Returns the concrete UI element type. */
+        /**
+         * @brief Returns the concrete UI element type.
+         * @return The concrete UI element type.
+         */
         UIElementType GetType() const;
     };
 

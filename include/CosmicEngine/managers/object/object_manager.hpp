@@ -1,4 +1,4 @@
-#ifndef COSMIC_OBJECTMANAGER_HPP
+﻿#ifndef COSMIC_OBJECTMANAGER_HPP
 #define COSMIC_OBJECTMANAGER_HPP
 
 /**
@@ -22,7 +22,7 @@ namespace CosmicEngine
      * assigns it a unique ID and brings it into the update/draw cycle.  Objects
      * marked as destroyed are cleaned up automatically on the next update pass.
      *
-     * @par Example — adding, searching, and removing objects
+     * @par Example â€” adding, searching, and removing objects
      * @code
      * // Add a new object to the runtime:
      * auto* obj = new JsonDemoObject({100,200}, {96,96}, "NPC", 100, 1);
@@ -67,7 +67,10 @@ namespace CosmicEngine
         
         /** @brief Adds a new object to the runtime and assigns it an identifier. */
         void Add(Object *obj);
-        /** @brief Removes and deletes an object by identifier. */
+        /**
+         * @brief Removes and deletes an object by identifier.
+         * @param entityId Value provided by the caller.
+         */
         void Remove(int entityId);
 
         /** @brief Finds an object by its unique identifier. */

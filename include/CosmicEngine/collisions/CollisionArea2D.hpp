@@ -1,4 +1,4 @@
-#ifndef COSMIC_COLLISIONAREA2D_HPP
+﻿#ifndef COSMIC_COLLISIONAREA2D_HPP
 #define COSMIC_COLLISIONAREA2D_HPP
 
 /**
@@ -13,10 +13,13 @@ namespace CosmicEngine
     class Body;
     enum class BodyCollisionSide : int;
 
+    /**
+     * @brief Spatial partitioning strategy used by a CollisionArea.
+     */
     enum class CollisionType
     {
-        Grid,
-        QuadTree
+        Grid,     ///< Uniform-grid broad phase (GameGridCollisions / GameGridCollisions3D).
+        QuadTree  ///< Quadtree (2D) or octree (3D) broad phase.
     };
 
     /**
@@ -44,14 +47,23 @@ namespace CosmicEngine
     public:
         virtual ~CollisionArea2D() = default;
 
-        /** @brief Returns the collision area type. */
+        /**
+         * @brief Returns the collision area type.
+         * @return The collision area type.
+         */
         CollisionType GetType() const;
 
-        /** @brief Returns the origin of the collision area. */
+        /**
+         * @brief Returns the origin of the collision area.
+         * @return The origin of the collision area.
+         */
         virtual glm::vec2 GetPosition() const;
         /** @brief Sets the origin of the collision area. */
         virtual void SetPosition(glm::vec2 newPosition) = 0;
-        /** @brief Returns the size of the collision area. */
+        /**
+         * @brief Returns the size of the collision area.
+         * @return The size of the collision area.
+         */
         virtual glm::vec2 GetSize() const;
 
         /** @brief Draws debug visualization for the collision area. */

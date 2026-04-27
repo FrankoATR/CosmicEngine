@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file light.hpp
  * @brief Declares the base light type used by the engine lighting system.
  */
@@ -22,7 +22,7 @@ namespace CosmicEngine
      * registered with the LightManager and their uniforms are propagated to shaders
      * each frame.
      *
-     * @par Example — creating a point light (3D mode)
+     * @par Example â€” creating a point light (3D mode)
      * @code
      * auto* light = new CosmicEngine::Light(
      *     glm::vec3(0, 10, 0),    // position
@@ -64,6 +64,7 @@ namespace CosmicEngine
         #endif
 
     public:
+        /** @brief Detaches the light from the LightManager registry and releases internal state. */
         ~Light();
 
         /** @brief Draws the light for debug or helper visualization. */
@@ -129,9 +130,15 @@ namespace CosmicEngine
                 float shininess = 64.0f,
                 bool visible = true);
 
-            /** @brief Sets the 2D position of the light. */
+            /**
+             * @brief Sets the 2D position of the light.
+             * @param newPosition Value provided by the caller.
+             */
             void SetPosition(glm::vec2 newPosition);
-            /** @brief Returns the 2D position of the light. */
+            /**
+             * @brief Returns the 2D position of the light.
+             * @return The 2D position of the light.
+             */
             glm::vec2 GetPosition() const;
 
         #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
@@ -158,44 +165,92 @@ namespace CosmicEngine
                 float shininess = 64.0f,
                 bool visible = true);
 
-            /** @brief Sets the 3D position of the light. */
+            /**
+             * @brief Sets the 3D position of the light.
+             * @param newPosition Value provided by the caller.
+             */
             void SetPosition(glm::vec3 newPosition);
-            /** @brief Returns the 3D position of the light. */
+            /**
+             * @brief Returns the 3D position of the light.
+             * @return The 3D position of the light.
+             */
             glm::vec3 GetPosition() const;
 
-            /** @brief Sets the ambient light contribution. */
+            /**
+             * @brief Sets the ambient light contribution.
+             * @param newAmbientLight Value provided by the caller.
+             */
             void SetAmbientLight(glm::vec3 newAmbientLight);
-            /** @brief Returns the ambient light contribution. */
+            /**
+             * @brief Returns the ambient light contribution.
+             * @return The ambient light contribution.
+             */
             glm::vec3 GetAmbientLight() const;
 
-            /** @brief Sets the diffuse light contribution. */
+            /**
+             * @brief Sets the diffuse light contribution.
+             * @param newDiffuseLight Value provided by the caller.
+             */
             void SetDiffuseLight(glm::vec3 newDiffuseLight);
-            /** @brief Returns the diffuse light contribution. */
+            /**
+             * @brief Returns the diffuse light contribution.
+             * @return The diffuse light contribution.
+             */
             glm::vec3 GetDiffuseLight() const;
 
-            /** @brief Sets the specular light contribution. */
+            /**
+             * @brief Sets the specular light contribution.
+             * @param newSpecularLight Value provided by the caller.
+             */
             void SetSpecularLight(glm::vec3 newSpecularLight);
-            /** @brief Returns the specular light contribution. */
+            /**
+             * @brief Returns the specular light contribution.
+             * @return The specular light contribution.
+             */
             glm::vec3 GetSpecularLight() const;
 
-            /** @brief Sets the constant attenuation factor. */
+            /**
+             * @brief Sets the constant attenuation factor.
+             * @param newConstantLight Value provided by the caller.
+             */
             void SetConstantLight(float newConstantLight);
-            /** @brief Returns the constant attenuation factor. */
+            /**
+             * @brief Returns the constant attenuation factor.
+             * @return The constant attenuation factor.
+             */
             float GetConstantLight() const;
 
-            /** @brief Sets the linear attenuation factor. */
+            /**
+             * @brief Sets the linear attenuation factor.
+             * @param newLinearLight Value provided by the caller.
+             */
             void SetLinearLight(float newLinearLight);
-            /** @brief Returns the linear attenuation factor. */
+            /**
+             * @brief Returns the linear attenuation factor.
+             * @return The linear attenuation factor.
+             */
             float GetLinearLight() const;
 
-            /** @brief Sets the quadratic attenuation factor. */
+            /**
+             * @brief Sets the quadratic attenuation factor.
+             * @param newQuadraticLight Value provided by the caller.
+             */
             void SetQuadraticLight(float newQuadraticLight);
-            /** @brief Returns the quadratic attenuation factor. */
+            /**
+             * @brief Returns the quadratic attenuation factor.
+             * @return The quadratic attenuation factor.
+             */
             float GetQuadraticLight() const;
 
-            /** @brief Sets the specular shininess factor. */
+            /**
+             * @brief Sets the specular shininess factor.
+             * @param newShininess Value provided by the caller.
+             */
             void SetShininess(float newShininess);
-            /** @brief Returns the specular shininess factor. */
+            /**
+             * @brief Returns the specular shininess factor.
+             * @return The specular shininess factor.
+             */
             float GetShininess() const;
 
         #else

@@ -1,4 +1,4 @@
-#ifndef COSMIC_FONT_HPP
+﻿#ifndef COSMIC_FONT_HPP
 #define COSMIC_FONT_HPP
 
 /**
@@ -35,7 +35,7 @@ namespace CosmicEngine
      * ResourceManager and referenced by key when creating UI elements or calling
      * RS_MN.RenderText().
      *
-     * @par Example — loading and using a font
+     * @par Example â€” loading and using a font
      * @code
      * // Load once in Scene::loadResources():
      * RS_MN.LoadFont("test_font", "assets/fonts/ThaleahFat.ttf", 32);
@@ -66,11 +66,20 @@ namespace CosmicEngine
         /** @brief Releases glyph textures and rendering buffers. */
         ~Font();
         
-        /** @brief Returns the loaded glyph map. */
+        /**
+         * @brief Returns the loaded glyph map.
+         * @return The loaded glyph map.
+         */
         const std::map<char, TextCharacter>& GetCharacters() const;
-        /** @brief Returns the VAO used for text rendering. */
+        /**
+         * @brief Returns the VAO used for text rendering.
+         * @return The VAO used for text rendering.
+         */
         unsigned int GetVAO() const;
-        /** @brief Returns the VBO used for text rendering. */
+        /**
+         * @brief Returns the VBO used for text rendering.
+         * @return The VBO used for text rendering.
+         */
         unsigned int GetVBO() const;
     };
 

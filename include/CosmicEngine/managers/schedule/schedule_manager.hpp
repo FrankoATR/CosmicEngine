@@ -1,4 +1,4 @@
-
+﻿
 #ifndef COSMIC_SCHEDULEMANAGER_HPP
 #define COSMIC_SCHEDULEMANAGER_HPP
 
@@ -54,7 +54,7 @@ namespace CosmicEngine
      * named event with a JSON payload when due.  Use ScheduleOnce() for one-shot
      * timers and ScheduleInterval() for repeating tasks.
      *
-     * @par Example — spawning objects every 2 seconds
+     * @par Example â€” spawning objects every 2 seconds
      * @code
      * nlohmann::json payload = {
      *     {"randomPosition", true},
@@ -126,7 +126,10 @@ namespace CosmicEngine
         /** @brief Returns whether a task with the provided identifier exists. */
         bool HasTask(std::uint64_t taskId) const;
 
-        /** @brief Returns the current scheduler time in seconds. */
+        /**
+         * @brief Returns the current scheduler time in seconds.
+         * @return The current scheduler time in seconds.
+         */
         double GetCurrentTime() const;
         /** @brief Serializes all scheduled tasks to JSON. */
         nlohmann::json ExportTasks() const;

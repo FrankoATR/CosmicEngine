@@ -1,4 +1,4 @@
-#ifndef COSMIC_CLASSIC_2D_CAMERA_CONTROLLER_HPP
+﻿#ifndef COSMIC_CLASSIC_2D_CAMERA_CONTROLLER_HPP
 #define COSMIC_CLASSIC_2D_CAMERA_CONTROLLER_HPP
 
 /**
@@ -36,9 +36,15 @@ namespace CosmicEngine
             CameraManager &camera = CameraManager::GetInstance(),
             InputManager &input = InputManager::GetInstance());
 
-        /** @brief Sets keyboard movement speed. */
+        /**
+         * @brief Sets keyboard movement speed.
+         * @param newKeyboardMoveSpeed Value provided by the caller.
+         */
         void SetKeyboardMoveSpeed(float newKeyboardMoveSpeed);
-        /** @brief Returns keyboard movement speed. */
+        /**
+         * @brief Returns keyboard movement speed.
+         * @return The keyboard movement speed.
+         */
         float GetKeyboardMoveSpeed() const;
 
         /** @brief Updates keyboard-driven camera movement. */

@@ -8,6 +8,7 @@
 
 
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+    /** @brief Default 2D sprite vertex shader source (textured quad with model/projection). */
     const char *sprite_vs = 
     "#version 330 core\n"
     "layout (location = 0) in vec4 vertex;\n"
@@ -20,6 +21,7 @@
     "gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);\n"
     "}\0";
 
+    /** @brief Default 2D sprite fragment shader source (samples a texture and tints by spriteColor). */
     const char *sprite_fs = 
     "#version 330 core\n"
     "in vec2 TexCoords;\n"
@@ -31,6 +33,7 @@
     "color = vec4(spriteColor, 1.0) * texture(image, TexCoords);\n"
     "}\0";
 
+    /** @brief Sprite-sheet vertex shader source (remaps UVs through uvMin / uvMax). */
     const char *spriteSheet_vs = 
     "#version 330 core\n"
     "layout (location = 0) in vec4 vertex;\n"
@@ -45,6 +48,7 @@
     "gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);\n"
     "}\0";
 
+    /** @brief Sprite-sheet fragment shader source (samples the active frame and tints by spriteColor). */
     const char *spriteSheet_fs = 
     "#version 330 core\n"
     "in vec2 TexCoords;\n"
@@ -56,6 +60,7 @@
     "color = vec4(spriteColor, 1.0) * texture(image, TexCoords);\n"
     "}\0";
 
+    /** @brief 2D primitive vertex shader source used by the PrimitiveManager. */
     const char *shape_2D_vs = 
     "#version 330 core\n"
     "layout(location = 0) in vec3 aPos;\n"
@@ -66,6 +71,7 @@
     "gl_Position = projection * model * vec4(aPos, 1.0);\n"
     "}\0";
 
+    /** @brief 2D primitive fragment shader source (solid LineColor). */
     const char *shape_2D_fs = 
     "#version 330 core\n"
     "uniform vec4 LineColor;\n"
@@ -75,6 +81,7 @@
     "FragColor = LineColor;\n"
     "}\0";
 
+    /** @brief Bitmap-font vertex shader source used by FontManager. */
     const char *text_vs =
     "#version 330 core\n"
     "layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>\n"
@@ -86,6 +93,7 @@
     "TexCoords = vertex.zw;\n"
     "}\0";
 
+    /** @brief Bitmap-font fragment shader source (alpha sampled from glyph atlas, tinted by textColor). */
     const char *text_fs =
     "#version 330 core\n"
     "in vec2 TexCoords;\n"
@@ -100,6 +108,7 @@
 
 
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+/** @brief Default 2D-billboard sprite vertex shader source for 3D mode (orthographic overlay). */
 const char *sprite_vs = 
 "#version 330 core\n"
 "layout (location = 0) in vec4 vertex;\n"
@@ -112,6 +121,7 @@ const char *sprite_vs =
 "gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);\n"
 "}\0";
 
+/** @brief Default 2D-billboard sprite fragment shader source for 3D mode. */
 const char *sprite_fs = 
 "#version 330 core\n"
 "in vec2 TexCoords;\n"
@@ -123,6 +133,7 @@ const char *sprite_fs =
 "color = vec4(spriteColor, 1.0) * texture(image, TexCoords);\n"
 "}\0";
 
+/** @brief Sprite-sheet vertex shader source for 3D mode (animated frames in HUD layer). */
 const char *spriteSheet_vs = 
 "#version 330 core\n"
 "layout (location = 0) in vec4 vertex;\n"
@@ -137,6 +148,7 @@ const char *spriteSheet_vs =
 "gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);\n"
 "}\0";
 
+/** @brief Sprite-sheet fragment shader source for 3D mode. */
 const char *spriteSheet_fs = 
 "#version 330 core\n"
 "in vec2 TexCoords;\n"
@@ -149,6 +161,7 @@ const char *spriteSheet_fs =
 "}\0";
 
 
+/** @brief 2D primitive vertex shader source used inside the 3D HUD pass. */
 const char *shape_2D_vs = 
 "#version 330 core\n"
 "layout(location = 0) in vec3 aPos;\n"
@@ -160,6 +173,7 @@ const char *shape_2D_vs =
 "gl_Position = projection * model * vec4(aPos, 1.0);\n"
 "}\0";
 
+/** @brief 2D primitive fragment shader source used inside the 3D HUD pass. */
 const char *shape_2D_fs = 
 "#version 330 core\n"
 "uniform vec4 LineColor;\n"
@@ -170,6 +184,7 @@ const char *shape_2D_fs =
 "}\0";
 
 
+/** @brief 3D primitive vertex shader source used by PrimitiveManager (model/view/projection). */
 const char *shape_3D_vs = 
 "#version 330 core\n"
 "layout(location = 0) in vec3 aPos;\n"
@@ -181,6 +196,7 @@ const char *shape_3D_vs =
 "gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
 "}\0";
 
+/** @brief 3D primitive fragment shader source (solid LineColor). */
 const char *shape_3D_fs = 
 "#version 330 core\n"
 "uniform vec4 LineColor;\n"
@@ -190,6 +206,7 @@ const char *shape_3D_fs =
 "FragColor = LineColor;\n"
 "}\0";
 
+/** @brief Bitmap-font vertex shader source used by FontManager in 3D mode. */
 const char *text_vs =
 "#version 330 core\n"
 "layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>\n"
@@ -201,6 +218,7 @@ const char *text_vs =
 "TexCoords = vertex.zw;\n"
 "}\0";
 
+/** @brief Bitmap-font fragment shader source used by FontManager in 3D mode. */
 const char *text_fs =
 "#version 330 core\n"
 "in vec2 TexCoords;\n"
@@ -216,6 +234,7 @@ const char *text_fs =
 
 
 
+/** @brief 3D model vertex shader source (Phong-style lighting prep). */
 const char *model_3d_vs = R"glsl(
     #version 330 core
     layout (location = 0) in vec3 aPos;
@@ -241,6 +260,7 @@ const char *model_3d_vs = R"glsl(
 )glsl";
 
 
+/** @brief 3D model fragment shader source (Material + DirLight/PointLight/SpotLight). */
 const char *model_3d_fs = R"glsl(
     #version 330 core
     out vec4 FragColor;

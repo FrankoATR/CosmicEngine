@@ -1,4 +1,4 @@
-#ifndef COSMIC_ANIMATION_PLAYER_HPP
+﻿#ifndef COSMIC_ANIMATION_PLAYER_HPP
 #define COSMIC_ANIMATION_PLAYER_HPP
 
 /**
@@ -21,7 +21,7 @@ namespace CosmicEngine
      * and whether playback is paused, finished, or looping.  Query GetCurrentRow()
      * and GetCurrentColumn() each frame to render the correct tile from the sheet.
      *
-     * @par Example — creating and using an animation player
+     * @par Example â€” creating and using an animation player
      * @code
      * // Create a player bound to a registered clip and this object ID
      * animationPlayer = ANM_MN.CreatePlayer("walk_right", GetID());
@@ -40,7 +40,7 @@ namespace CosmicEngine
      *     GetColor(), 1.0f, CosmicEngine::ViewType::Ortho);
      * @endcode
      *
-     * @par Example — cleaning up
+     * @par Example â€” cleaning up
      * @code
      * if (animationPlayer) { animationPlayer->Destroy(); animationPlayer = nullptr; }
      * @endcode
@@ -66,17 +66,33 @@ namespace CosmicEngine
         explicit AnimationPlayer(std::int64_t ownerObjectId = -1);
         ~AnimationPlayer() = default;
 
-        /** @brief Sets the unique player identifier assigned by the animation manager. */
+        /**
+         * @brief Sets the unique player identifier assigned by the animation manager.
+         * @param newId Value provided by the caller.
+         */
         void SetId(std::uint64_t newId);
-        /** @brief Returns the unique player identifier. */
+        /**
+         * @brief Returns the unique player identifier.
+         * @return The unique player identifier.
+         */
         std::uint64_t GetId() const;
 
-        /** @brief Sets the identifier of the object that owns the player. */
+        /**
+         * @brief Sets the identifier of the object that owns the player.
+         * @param newOwnerObjectId Value provided by the caller.
+         */
         void SetOwnerObjectId(std::int64_t newOwnerObjectId);
-        /** @brief Returns the identifier of the object that owns the player. */
+        /**
+         * @brief Returns the identifier of the object that owns the player.
+         * @return The identifier of the object that owns the player.
+         */
         std::int64_t GetOwnerObjectId() const;
 
-        /** @brief Sets the clip played by the player. */
+        /**
+         * @brief Sets the clip played by the player.
+         * @param newClip Animation clip to play (must outlive the player).
+         * @param restart When true the playback time is reset to the start of the clip.
+         */
         void SetClip(const AnimationClip *newClip, bool restart = true);
         /** @brief Returns the clip currently assigned to the player. */
         const AnimationClip *GetClip() const;
@@ -99,21 +115,42 @@ namespace CosmicEngine
         /** @brief Marks the player for removal from the runtime. */
         void Destroy();
 
-        /** @brief Returns whether the player is currently playing. */
+        /**
+         * @brief Returns whether the player is currently playing.
+         * @return The whether the player is currently playing.
+         */
         bool IsPlaying() const;
-        /** @brief Returns whether the current clip reached its end. */
+        /**
+         * @brief Returns whether the current clip reached its end.
+         * @return The whether the current clip reached its end.
+         */
         bool IsFinished() const;
-        /** @brief Returns whether the player is still alive in the runtime. */
+        /**
+         * @brief Returns whether the player is still alive in the runtime.
+         * @return The whether the player is still alive in the runtime.
+         */
         bool IsAlive() const;
 
-        /** @brief Sets the playback speed multiplier. */
+        /**
+         * @brief Sets the playback speed multiplier.
+         * @param newSpeedMultiplier Value provided by the caller.
+         */
         void SetSpeedMultiplier(float newSpeedMultiplier);
-        /** @brief Returns the playback speed multiplier. */
+        /**
+         * @brief Returns the playback speed multiplier.
+         * @return The playback speed multiplier.
+         */
         float GetSpeedMultiplier() const;
 
-        /** @brief Returns the sprite-sheet row of the current frame. */
+        /**
+         * @brief Returns the sprite-sheet row of the current frame.
+         * @return The sprite-sheet row of the current frame.
+         */
         int GetCurrentRow() const;
-        /** @brief Returns the sprite-sheet column of the current frame. */
+        /**
+         * @brief Returns the sprite-sheet column of the current frame.
+         * @return The sprite-sheet column of the current frame.
+         */
         int GetCurrentColumn() const;
         /** @brief Returns the current frame, or null when no clip is active. */
         const AnimationFrame *GetCurrentFrame() const;

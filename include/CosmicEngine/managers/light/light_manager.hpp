@@ -1,4 +1,4 @@
-#ifndef COSMIC_LIGHTMANAGER_HPP
+﻿#ifndef COSMIC_LIGHTMANAGER_HPP
 #define COSMIC_LIGHTMANAGER_HPP
 
 /**
@@ -23,7 +23,7 @@ namespace CosmicEngine
      * registered shader each frame.  It also exposes a global ambient light that
      * applies to the entire scene independently of point/spot lights.
      *
-     * @par Example — setting global ambient light
+     * @par Example â€” setting global ambient light
      * @code
      * auto& lm = CosmicEngine::LightManager::GetInstance();
      * lm.SetGlobalAmbientLightColor(glm::vec3(0.15f));
@@ -70,27 +70,54 @@ namespace CosmicEngine
         void Add(Light *light);
         /** @brief Registers a shader that should receive lighting uniforms. */
         void RegisterShader(Shader *shader);
-        /** @brief Removes and deletes a light by identifier. */
+        /**
+         * @brief Removes and deletes a light by identifier.
+         * @param ID Value provided by the caller.
+         */
         void Remove(int ID);
 
-        /** @brief Sets the global ambient light color. */
+        /**
+         * @brief Sets the global ambient light color.
+         * @param newGlobalAmbientLightColor Value provided by the caller.
+         */
         void SetGlobalAmbientLightColor(glm::vec3 newGlobalAmbientLightColor);
-        /** @brief Returns the global ambient light color. */
+        /**
+         * @brief Returns the global ambient light color.
+         * @return The global ambient light color.
+         */
         glm::vec3 GetGlobalAmbientLightColor() const;
 
-        /** @brief Sets the global ambient light direction. */
+        /**
+         * @brief Sets the global ambient light direction.
+         * @param newGlobalAmbientLightDirection Value provided by the caller.
+         */
         void SetGlobalAmbientLightDirection(glm::vec3 newGlobalAmbientLightDirection);
-        /** @brief Returns the global ambient light direction. */
+        /**
+         * @brief Returns the global ambient light direction.
+         * @return The global ambient light direction.
+         */
         glm::vec3 GetGlobalAmbientLightDirection() const;
 
-        /** @brief Sets the global ambient diffuse term. */
+        /**
+         * @brief Sets the global ambient diffuse term.
+         * @param newGlobalAmbientLightDiffuse Value provided by the caller.
+         */
         void SetGlobalAmbientLightDiffuse(glm::vec3 newGlobalAmbientLightDiffuse);
-        /** @brief Returns the global ambient diffuse term. */
+        /**
+         * @brief Returns the global ambient diffuse term.
+         * @return The global ambient diffuse term.
+         */
         glm::vec3 GetGlobalAmbientLightDiffuse() const;
 
-        /** @brief Sets the global ambient specular term. */
+        /**
+         * @brief Sets the global ambient specular term.
+         * @param newGlobalAmbientLightSpecular Value provided by the caller.
+         */
         void SetGlobalAmbientLightSpecular(glm::vec3 newGlobalAmbientLightSpecular);
-        /** @brief Returns the global ambient specular term. */
+        /**
+         * @brief Returns the global ambient specular term.
+         * @return The global ambient specular term.
+         */
         glm::vec3 GetGlobalAmbientLightSpecular() const;
 
         /** @brief Finds a light by identifier. */

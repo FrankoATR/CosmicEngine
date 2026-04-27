@@ -73,6 +73,9 @@ assets/generated/
 # Keep source docs tracked, but ignore generated Doxygen output.
 docs/doxygen/
 
+# ---- Local audit / validation helpers ----
+utilities/
+
 # ---- Vendored dependencies required by CMake ----
 # This project links directly against these vendored files, so they must remain trackable.
 !lib/

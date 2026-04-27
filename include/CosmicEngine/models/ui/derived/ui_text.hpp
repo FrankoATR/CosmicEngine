@@ -1,4 +1,4 @@
-#ifndef COSMIC_UITEXT_HPP
+﻿#ifndef COSMIC_UITEXT_HPP
 #define COSMIC_UITEXT_HPP
 
 /**
@@ -22,7 +22,7 @@ namespace CosmicEngine
      * HUD counters, or any static/dynamic text overlay.  Text color and content
      * can be changed at runtime with SetText() and SetTextColor().
      *
-     * @par Example — creating and updating a HUD label
+     * @par Example â€” creating and updating a HUD label
      * @code
      * auto* title = new CosmicEngine::UIText(
      *     "Score: 0",        // initial text
@@ -74,7 +74,10 @@ namespace CosmicEngine
         /** @brief Sets the font resource key used by the label. */
         void SetFont(const std::string &font);
 
-        /** @brief Sets the text color. */
+        /**
+         * @brief Sets the text color.
+         * @param color Value provided by the caller.
+         */
         void SetTextColor(glm::vec3 color);
     };
 

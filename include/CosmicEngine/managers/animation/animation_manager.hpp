@@ -1,4 +1,4 @@
-#ifndef COSMIC_ANIMATION_MANAGER_HPP
+﻿#ifndef COSMIC_ANIMATION_MANAGER_HPP
 #define COSMIC_ANIMATION_MANAGER_HPP
 
 /**
@@ -25,7 +25,7 @@ namespace CosmicEngine
      * once (usually in Scene::loadResources), then call CreatePlayer() to create
      * a player that you can attach to an object for runtime playback.
      *
-     * @par Example — registering clips and creating a player
+     * @par Example â€” registering clips and creating a player
      * @code
      * // Inside Scene::loadResources():
      * RS_MN.LoadTextureSheet("player_sheet", "assets/textures/player2.png", 4, 4, 0);
@@ -76,7 +76,10 @@ namespace CosmicEngine
         AnimationPlayer *CreatePlayer(const std::string &clipName = std::string(), std::int64_t ownerObjectId = -1);
         /** @brief Adds an externally created animation player to the runtime. */
         void AddPlayer(AnimationPlayer *player);
-        /** @brief Removes and deletes an animation player by identifier. */
+        /**
+         * @brief Removes and deletes an animation player by identifier.
+         * @param playerId Value provided by the caller.
+         */
         void RemovePlayer(std::uint64_t playerId);
         /** @brief Returns an animation player by identifier. */
         AnimationPlayer *GetPlayer(std::uint64_t playerId) const;

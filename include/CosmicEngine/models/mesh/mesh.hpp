@@ -17,6 +17,7 @@
 #include <vector>
 using namespace std;
 
+/** @brief Maximum number of bones that can influence a single vertex (skinning weight slots). */
 #define MAX_BONE_INFLUENCE 4
 
 namespace CosmicEngine

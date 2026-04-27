@@ -1,4 +1,4 @@
-#ifndef COSMIC_LOGGER_HPP
+﻿#ifndef COSMIC_LOGGER_HPP
 #define COSMIC_LOGGER_HPP
 
 /**
@@ -22,11 +22,14 @@ enum class LogLevel { Info, Warning, Error };
  * @brief Provides thread-safe console and file logging helpers.
  *
  * Logger is a static utility that writes timestamped log entries to the console
- * and/or a file inside the @c logs/ directory. In @c Release builds informational
- * and warning logs are suppressed, while fatal errors still surface as exceptions.
- * Initialize it early in main() and shut it down before exiting.
+ * and/or a file inside the @c logs/ directory. The directory is created lazily
+ * on first file-log initialization through @c std::filesystem::create_directories,
+ * so the build system does not need to pre-create it. In @c Release builds
+ * informational and warning logs are suppressed, while fatal errors still
+ * surface as exceptions. Initialize it early in main() and shut it down before
+ * exiting.
  *
- * @par Example — typical usage in main.cpp
+ * @par Example â€” typical usage in main.cpp
  * @code
  * CosmicEngine::Logger::init(true, true);   // console + file
  * CosmicEngine::Logger::info("***** [PROGRAM START] *****");

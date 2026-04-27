@@ -1,4 +1,4 @@
-#ifndef COSMIC_CLASSIC_3D_CAMERA_CONTROLLER_HPP
+﻿#ifndef COSMIC_CLASSIC_3D_CAMERA_CONTROLLER_HPP
 #define COSMIC_CLASSIC_3D_CAMERA_CONTROLLER_HPP
 
 /**
@@ -54,7 +54,10 @@ namespace CosmicEngine
         void Detach(GameManager &gameManager);
         /** @brief Enables or disables mouse capture mode. */
         void SetMouseCaptureEnabled(bool enabled);
-        /** @brief Returns whether mouse capture mode is enabled. */
+        /**
+         * @brief Returns whether mouse capture mode is enabled.
+         * @return The whether mouse capture mode is enabled.
+         */
         bool IsMouseCaptureEnabled() const;
 
         /** @brief Applies a keyboard movement step to a 3D camera. */

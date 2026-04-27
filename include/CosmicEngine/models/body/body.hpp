@@ -1,4 +1,4 @@
-#ifndef COSMIC_BODY_HPP
+﻿#ifndef COSMIC_BODY_HPP
 #define COSMIC_BODY_HPP
 
 /**
@@ -6,6 +6,19 @@
  * @brief Declares collision body types and the base body component used by the engine.
  */
 
+/**
+ * @brief Helper macro that builds a lambda forwarding a collision event to a member method.
+ *
+ * Use it when registering a collision callback on a Body to bind a method of
+ * the owning Object instance:
+ *
+ * @code
+ * body->SetOnCollision(CALLBACK_COLLISION_EVENT(OnHit));
+ * @endcode
+ *
+ * @param Method Member method of the enclosing class with signature
+ *               <tt>void(Object* other, BodyCollisionSide side)</tt>.
+ */
 #define CALLBACK_COLLISION_EVENT(Method) \
     [this](CosmicEngine::Object* other, CosmicEngine::BodyCollisionSide side) \
     { \
@@ -60,7 +73,7 @@ namespace CosmicEngine
 	 * Bodies are managed by the BodyManager and automatically updated from their
 	 * parent Object's transform every frame.
 	 *
-	 * @par Example — attaching a 2D collision body to an object
+	 * @par Example â€” attaching a 2D collision body to an object
 	 * @code
 	 * void MyEntity::CreateBody()
 	 * {
@@ -82,7 +95,7 @@ namespace CosmicEngine
 	 * }
 	 * @endcode
 	 *
-	 * @par Example — cleaning up the body in the destructor
+	 * @par Example â€” cleaning up the body in the destructor
 	 * @code
 	 * MyEntity::~MyEntity()
 	 * {
@@ -97,27 +110,27 @@ namespace CosmicEngine
 	class Body
 	{
 	protected:
-		int ID;
-		bool active;
-		BodyCollisionSide bodyType;
+		int ID;                                       ///< Numeric identifier assigned by BodyManager.
+		bool active;                                  ///< When true the body participates in collision detection.
+		BodyCollisionSide bodyType;                   ///< Last reported collision side (see BodyCollisionSide).
 
-		Object *parent;
-        bool aliveInGameManager;
+		Object *parent;                               ///< Object that owns this body (non-owning pointer).
+        bool aliveInGameManager;                      ///< Tracks whether BodyManager still references this body.
 
-		std::function<void(Object*, BodyCollisionSide)> onCollisionEvent;
+		std::function<void(Object*, BodyCollisionSide)> onCollisionEvent; ///< Callback invoked on collision.
 
 
 		#if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
-			glm::vec2 offSetParentPosition;
-			glm::vec2 position;
-			glm::vec2 size;
-			float rotation; // Adjust this for the newer collision system and X/Y offsets if needed.
+			glm::vec2 offSetParentPosition;           ///< Offset relative to the parent object's origin (2D).
+			glm::vec2 position;                       ///< World-space position of the body (2D).
+			glm::vec2 size;                           ///< Width / height of the body (2D).
+			float rotation;                           ///< Rotation in degrees around Z (2D).
 		
 		#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
-			glm::vec3 offSetParentPosition;
-			glm::vec3 position;
-			glm::vec3 size;
-			glm::vec3 rotation;
+			glm::vec3 offSetParentPosition;           ///< Offset relative to the parent object's origin (3D).
+			glm::vec3 position;                       ///< World-space position of the body (3D).
+			glm::vec3 size;                           ///< Extents of the body along each axis (3D).
+			glm::vec3 rotation;                       ///< Euler angles in degrees (3D).
         
         #else
             #error "[Body] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
@@ -126,7 +139,9 @@ namespace CosmicEngine
 
 
 	public:
+		/** @brief Bodies must be created through Object-owned factories; default construction is disabled. */
 		Body() = delete;
+		/** @brief Detaches the body from its owner and releases internal references. */
 		~Body();
 		
         /**
@@ -141,9 +156,15 @@ namespace CosmicEngine
 		/** @brief Updates the collision body transform from its parent object. */
 		void update();
 
-		/** @brief Sets the unique body identifier assigned by the body manager. */
+		/**
+		 * @brief Sets the unique body identifier assigned by the body manager.
+		 * @param newBodyId Value provided by the caller.
+		 */
 		void SetID(int newBodyId);
-		/** @brief Returns the unique body identifier. */
+		/**
+		 * @brief Returns the unique body identifier.
+		 * @return The unique body identifier.
+		 */
 		int GetID() const;
 
 		/** @brief Sets the object that owns this collision body. */
@@ -161,7 +182,10 @@ namespace CosmicEngine
 
 		/** @brief Marks the body for removal from the runtime. */
 		void Destroy();
-        /** @brief Returns whether the body is still alive in the runtime. */
+        /**
+         * @brief Returns whether the body is still alive in the runtime.
+         * @return The whether the body is still alive in the runtime.
+         */
         bool IsAlive() const;
 
 
@@ -178,12 +202,18 @@ namespace CosmicEngine
 			/** @brief Returns the current world position of the 2D body. */
 			glm::vec2 GetPosition();
 
-			/** @brief Sets the parent-relative offset of the 2D body. */
+			/**
+			 * @brief Sets the parent-relative offset of the 2D body.
+			 * @param newOffSetParentPosition Value provided by the caller.
+			 */
 			void SetOffSetParentPosition(glm::vec2 newOffSetParentPosition);
 			/** @brief Returns the parent-relative offset of the 2D body. */
 			glm::vec2 GetOffSetParentPosition();
 
-			/** @brief Sets the 2D body size. */
+			/**
+			 * @brief Sets the 2D body size.
+			 * @param NewSize Value provided by the caller.
+			 */
 			void SetSize(glm::vec2 NewSize);
 			/** @brief Returns the 2D body size. */
 			glm::vec2 GetSize();
@@ -201,12 +231,18 @@ namespace CosmicEngine
 			/** @brief Returns the current world position of the 3D body. */
 			glm::vec3 GetPosition();
 
-			/** @brief Sets the parent-relative offset of the 3D body. */
+			/**
+			 * @brief Sets the parent-relative offset of the 3D body.
+			 * @param newOffSetParentPosition Value provided by the caller.
+			 */
 			void SetOffSetParentPosition(glm::vec3 newOffSetParentPosition);
 			/** @brief Returns the parent-relative offset of the 3D body. */
 			glm::vec3 GetOffSetParentPosition();
 
-			/** @brief Sets the 3D body size. */
+			/**
+			 * @brief Sets the 3D body size.
+			 * @param NewSize Value provided by the caller.
+			 */
 			void SetSize(glm::vec3 NewSize);
 			/** @brief Returns the 3D body size. */
 			glm::vec3 GetSize();

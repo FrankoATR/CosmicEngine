@@ -1,4 +1,4 @@
-#ifndef COSMIC_UIMANAGER_HPP
+﻿#ifndef COSMIC_UIMANAGER_HPP
 #define COSMIC_UIMANAGER_HPP
 
 /**
@@ -22,7 +22,7 @@ namespace CosmicEngine
      * calls each frame.  Use AddElement() to register new buttons, text labels,
      * or text fields, and RemoveElement() to unregister them.
      *
-     * @par Example — registering UI elements
+     * @par Example â€” registering UI elements
      * @code
      * auto* btn = new CosmicEngine::UIButton("Play", "font", "tex",
      *     {200, 0}, {150, 50}, false, true);
@@ -70,7 +70,10 @@ namespace CosmicEngine
          */
         bool IsMouseHoverAny();
 
-        /** @brief Registers a UI element with the manager. */
+        /**
+         * @brief Registers a UI element with the manager.
+         * @param element Value provided by the caller.
+         */
         void AddElement(UIElement* element);
         /** @brief Unregisters a UI element from the manager. */
         void RemoveElement(UIElement* element);

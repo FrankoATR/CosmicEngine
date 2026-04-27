@@ -1,4 +1,4 @@
-#ifndef COSMIC_NETWORKMANAGER_HPP
+﻿#ifndef COSMIC_NETWORKMANAGER_HPP
 #define COSMIC_NETWORKMANAGER_HPP
 
 /**
@@ -18,9 +18,13 @@
 #include <functional>
 #include <vector>
 
+// Avoid clashes with the Windows min/max macros and the global ::byte typedef
+// from <cstddef> when including <enet/enet.h> on Windows.
 #ifndef NOMINMAX
+/** @brief Disables the legacy <tt>min</tt>/<tt>max</tt> macros from &lt;windows.h&gt; before including ENet. */
 #define NOMINMAX
 #endif
+/** @brief Temporary alias used while including ENet so its @c byte symbol does not collide with @c std::byte. */
 #define byte WindowsByte
 #include <enet/enet.h>
 #undef byte
@@ -208,6 +212,7 @@ namespace CosmicEngine
         void BroadcastToAll(const NetworkMessage &msg, ENetPeer *exclude = nullptr, bool reliable = true);
 
     public:
+        /** @brief Returns the singleton instance of the network manager. */
         static NetworkManager &GetInstance();
 
         /**

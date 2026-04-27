@@ -32,6 +32,7 @@ set(GAME_SOURCE_FILES
 set(CONTROLLER_SOURCE_FILES)
 
 if(GAME_MODE_CONFIGURATION STREQUAL "GAME_2D_CONFIGURATION")
+    set(GAME_MODE_OUTPUT_SUBDIR "2d")
     list(APPEND GAME_SOURCE_FILES
         ${CMAKE_SOURCE_DIR}/src/entities/json_demo_object.cpp
     )
@@ -39,6 +40,7 @@ if(GAME_MODE_CONFIGURATION STREQUAL "GAME_2D_CONFIGURATION")
         ${CMAKE_SOURCE_DIR}/include/CosmicEngine/controllers/camera/classic_2d_camera_controller.cpp
     )
 elseif(GAME_MODE_CONFIGURATION STREQUAL "GAME_3D_CONFIGURATION")
+    set(GAME_MODE_OUTPUT_SUBDIR "3d")
     list(APPEND GAME_SOURCE_FILES
         ${CMAKE_SOURCE_DIR}/src/entities/collision_demo_object_3d.cpp
         ${CMAKE_SOURCE_DIR}/src/entities/network_demo_player.cpp
@@ -136,7 +138,7 @@ else()
     set(PLATFORM_OUTPUT_SUBDIR "linux")
 endif()
 
-set(RUNTIME_OUTPUT_BASE_DIR "${CMAKE_SOURCE_DIR}/bin/${PLATFORM_OUTPUT_SUBDIR}")
+set(RUNTIME_OUTPUT_BASE_DIR "${CMAKE_SOURCE_DIR}/bin/${PLATFORM_OUTPUT_SUBDIR}/${GAME_MODE_OUTPUT_SUBDIR}")
 set(RUNTIME_OUTPUT_DIR_DEBUG "${RUNTIME_OUTPUT_BASE_DIR}/Debug")
 set(RUNTIME_OUTPUT_DIR_RELEASE "${RUNTIME_OUTPUT_BASE_DIR}/Release")
 set(RUNTIME_OUTPUT_DIR_MINSIZEREL "${RUNTIME_OUTPUT_BASE_DIR}/MinSizeRel")
@@ -177,7 +179,7 @@ else()
     pkg_check_modules(GLFW3 REQUIRED glfw3)
 
     list(APPEND PLATFORM_SOURCE_FILES
-        ${CMAKE_SOURCE_DIR}/src/enet_impl.c
+        ${CMAKE_SOURCE_DIR}/include/enet/enet_impl.c
     )
 endif()
 
@@ -290,9 +292,6 @@ endif()
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/imgui.ini" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/imgui.ini"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/json_demo_save.json" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/json_demo_save.json"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/logs"
 )
 
 if (WIN32)

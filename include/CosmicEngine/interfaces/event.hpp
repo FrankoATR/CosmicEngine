@@ -35,7 +35,9 @@
 template<typename... Args>
 class Event : public IEvent {
 public:
+    /** @brief Callable signature accepted by listeners of this event. */
     using CallbackType = std::function<void(Args...)>;
+    /** @brief Opaque identifier returned by AddListener and used to remove a listener. */
     using ListenerId = std::uint64_t;
 
     /**
@@ -75,13 +77,14 @@ public:
     }
 
 private:
+    /** @brief Internal record pairing a listener identifier with its callback. */
     struct ListenerEntry {
-        ListenerId id;
-        CallbackType fn;
+        ListenerId id;     ///< Unique listener identifier within this event.
+        CallbackType fn;   ///< Stored callable invoked on @ref Invoke.
     };
 
-    std::vector<ListenerEntry> callbacks;
-    ListenerId nextListenerId = 1;
+    std::vector<ListenerEntry> callbacks;   ///< Registered listeners in insertion order.
+    ListenerId nextListenerId = 1;          ///< Counter used to assign unique listener IDs.
 };
 
 #endif // COSMIC_EVENT_HPP

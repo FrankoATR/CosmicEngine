@@ -1,4 +1,4 @@
-#ifndef COSMIC_CAMERAMANAGER_HPP
+﻿#ifndef COSMIC_CAMERAMANAGER_HPP
 #define COSMIC_CAMERAMANAGER_HPP
 
 /**
@@ -33,7 +33,7 @@ namespace CosmicEngine
          * Use SetFocusPosition() to center the view and AdjustZoom() to scale it.
          * For keyboard/mouse control, pair it with a Classic2DCameraController.
          *
-         * @par Example — basic 2D camera setup
+         * @par Example â€” basic 2D camera setup
          * @code
          * CAM_MN.SetFocusPosition(glm::vec2(0.0f));
          *
@@ -70,17 +70,32 @@ namespace CosmicEngine
              */
             void init(glm::vec2 baseSize);
 
-            /** @brief Returns the configured base window size. */
+            /**
+             * @brief Returns the configured base window size.
+             * @return The configured base window size.
+             */
             glm::vec2 GetBaseWindowSize() const;
 
-            /** @brief Returns the current 2D view matrix. */
+            /**
+             * @brief Returns the current 2D view matrix.
+             * @return The current 2D view matrix.
+             */
             glm::mat4 GetViewMatrix() const;
-            /** @brief Returns the current 2D projection matrix. */
+            /**
+             * @brief Returns the current 2D projection matrix.
+             * @return The current 2D projection matrix.
+             */
             glm::mat4 GetProjectionMatrix() const;
-            /** @brief Returns the projection matrix used for UI rendering. */
+            /**
+             * @brief Returns the projection matrix used for UI rendering.
+             * @return The projection matrix used for UI rendering.
+             */
             glm::mat4 Get_UI_ProjectionMatrix() const;
 
-            /** @brief Returns the current camera position. */
+            /**
+             * @brief Returns the current camera position.
+             * @return The current camera position.
+             */
             glm::vec2 GetPosition() const;
             /**
              * @brief Focuses the camera on the provided object.
@@ -94,14 +109,20 @@ namespace CosmicEngine
              * @param NewPosition Target focus position.
              */
             void SetFocusPosition(glm::vec2 NewPosition);
-            /** @brief Returns the current camera focus position. */
+            /**
+             * @brief Returns the current camera focus position.
+             * @return The current camera focus position.
+             */
             glm::vec2 GetFocusPosition() const;
             /**
              * @brief Moves the current focus point by an offset.
              * @param offset Offset to apply.
              */
             void MoveFocus(const glm::vec2 &offset);
-            /** @brief Returns the current orthographic zoom value. */
+            /**
+             * @brief Returns the current orthographic zoom value.
+             * @return The current orthographic zoom value.
+             */
             float GetZoom() const;
             /**
              * @brief Sets the orthographic zoom value.
@@ -161,7 +182,7 @@ namespace CosmicEngine
          * \e pos toward \e lookTarget.  Pair it with a Classic3DCameraController for
          * first-person keyboard/mouse control.
          *
-         * @par Example — fixed 3D camera overlooking an arena
+         * @par Example â€” fixed 3D camera overlooking an arena
          * @code
          * glm::vec3 arenaCenter = kArenaPosition + kArenaSize * 0.5f;
          * glm::vec3 cameraPos   = arenaCenter + glm::vec3(0, 50, 50);
@@ -211,38 +232,80 @@ namespace CosmicEngine
              */
             void init(glm::vec2 baseSize);
 
-            /** @brief Returns the configured base window size. */
+            /**
+             * @brief Returns the configured base window size.
+             * @return The configured base window size.
+             */
             glm::vec2 GetBaseWindowSize() const;
 
-            /** @brief Returns the current 3D view matrix. */
+            /**
+             * @brief Returns the current 3D view matrix.
+             * @return The current 3D view matrix.
+             */
             glm::mat4 GetViewMatrix() const;
-            /** @brief Returns the current 3D projection matrix. */
+            /**
+             * @brief Returns the current 3D projection matrix.
+             * @return The current 3D projection matrix.
+             */
             glm::mat4 GetProjectionMatrix() const;
-            /** @brief Returns the projection matrix used for UI rendering in 3D mode. */
+            /**
+             * @brief Returns the projection matrix used for UI rendering in 3D mode.
+             * @return The projection matrix used for UI rendering in 3D mode.
+             */
             glm::mat4 Get_UI_ProjectionMatrix() const;
 
-            /** @brief Returns the current camera movement speed. */
+            /**
+             * @brief Returns the current camera movement speed.
+             * @return The current camera movement speed.
+             */
             float GetMovementSpeed() const;
-            /** @brief Sets the camera movement speed. */
+            /**
+             * @brief Sets the camera movement speed.
+             * @param newMovementSpeed Value provided by the caller.
+             */
             void SetMovementSpeed(float newMovementSpeed);
-            /** @brief Returns the current camera mouse sensitivity. */
+            /**
+             * @brief Returns the current camera mouse sensitivity.
+             * @return The current camera mouse sensitivity.
+             */
             float GetMouseSensitivity() const;
-            /** @brief Sets the camera mouse sensitivity. */
+            /**
+             * @brief Sets the camera mouse sensitivity.
+             * @param newMouseSensitivity Value provided by the caller.
+             */
             void SetMouseSensitivity(float newMouseSensitivity);
-            /** @brief Returns the current perspective zoom or field-of-view value. */
+            /**
+             * @brief Returns the current perspective zoom or field-of-view value.
+             * @return The current perspective zoom or field-of-view value.
+             */
             float GetZoom() const;
-            /** @brief Sets the current perspective zoom or field-of-view value. */
+            /**
+             * @brief Sets the current perspective zoom or field-of-view value.
+             * @param newZoom Value provided by the caller.
+             */
             void SetZoom(float newZoom);
             /** @brief Adjusts the current zoom by an incremental offset. */
             void AdjustZoom(float zoomOffset);
             
-            /** @brief Returns the current camera position. */
+            /**
+             * @brief Returns the current camera position.
+             * @return The current camera position.
+             */
             glm::vec3 GetPosition() const;
-            /** @brief Returns the camera forward direction. */
+            /**
+             * @brief Returns the camera forward direction.
+             * @return The camera forward direction.
+             */
             glm::vec3 GetViewDirection() const;
-            /** @brief Returns the horizontal-facing body direction. */
+            /**
+             * @brief Returns the horizontal-facing body direction.
+             * @return The horizontal-facing body direction.
+             */
             glm::vec3 GetBodyDirection() const;
-            /** @brief Returns the camera right direction. */
+            /**
+             * @brief Returns the camera right direction.
+             * @return The camera right direction.
+             */
             glm::vec3 GetRightDirection() const;
             /**
              * @brief Moves the camera by a world-space offset.

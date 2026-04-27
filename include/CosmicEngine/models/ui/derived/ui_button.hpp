@@ -1,4 +1,4 @@
-#ifndef COSMIC_UIBUTTON_HPP
+﻿#ifndef COSMIC_UIBUTTON_HPP
 #define COSMIC_UIBUTTON_HPP
 
 /**
@@ -22,7 +22,7 @@ namespace CosmicEngine
      * Buttons can fire on press (default) or on release via the ReleaseMode flag.
      * Register each button with the UIManager so that it receives update and draw calls.
      *
-     * @par Example — creating a button with click handler
+     * @par Example â€” creating a button with click handler
      * @code
      * auto* btn = new CosmicEngine::UIButton(
      *     "Start Game",       // label text
@@ -91,7 +91,10 @@ namespace CosmicEngine
         /** @brief Sets the font resource key used by the button label. */
         void SetFont(const std::string &text);
 
-        /** @brief Sets the text color of the button label. */
+        /**
+         * @brief Sets the text color of the button label.
+         * @param color Value provided by the caller.
+         */
         void SetTextColor(glm::vec3 color);
     };
 

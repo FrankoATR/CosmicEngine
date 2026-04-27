@@ -12,7 +12,7 @@
  * @section arch_sec General Architecture
  *
  * The engine follows a **singleton manager** pattern exposed through global
- * macros such as @c GM, @c OBJ_MN, and @c BOD_MN.
+ * macros such as @c GM_MN, @c OBJ_MN, and @c BOD_MN.
  *
  * | Macro      | Class                    | Responsibility                         |
  * |------------|--------------------------|----------------------------------------|
@@ -25,7 +25,7 @@
  * | `SCH_MN`   | ScheduleManager          | Deferred tasks and repeating intervals |
  * | `RS_MN`    | ResourceManager          | Fonts, textures, shaders, and models   |
  * | `UI_MN`    | UIManager                | Buttons, labels, and text fields       |
- * | `ANIM_MN`  | AnimationManager         | Animation clips and players            |
+ * | `ANM_MN`   | AnimationManager         | Animation clips and players            |
  * | `AUD_MN`   | AudioManager             | Music and sound effects (miniaudio)    |
  * | `JSON_MN`  | JsonManager              | JSON serialization and loading         |
  * | `SQL_MN`   | SQLManager               | Embedded SQLite database persistence   |
@@ -109,10 +109,12 @@
  * CosmicEngine uses a centralized logger through @c CosmicEngine::Logger and the
  * runtime macros declared in @c log.hpp.
  *
- * - In @c Debug builds, lifecycle, informational, and warning messages are emitted
- *   to the console and optionally to files under @c logs/.
+ * - In @c Debug and @c RelWithDebInfo builds, lifecycle, informational, and warning
+ *   messages can be emitted to the console and optionally to files under @c logs/.
  * - In @c Release builds, informational and warning logs are suppressed to avoid
  *   noisy output, while fatal errors still propagate as exceptions.
+ * - The @c logs/ directory is created lazily by @c CosmicEngine::Logger only when
+ *   file logging is enabled at runtime; the build system no longer pre-creates it.
  * - Fatal initialization failures in critical subsystems such as GLFW, GLAD,
  *   built-in renderer resources, SQLite, ENet, and ImGui are treated as startup
  *   errors and abort engine initialization through @c std::runtime_error.
@@ -145,11 +147,80 @@
  *
  * @section build_sec Building
  *
+ * The project now uses **CMake presets** so every platform / game-mode / build-type
+ * combination has its own dedicated build tree and runtime output directory. This
+ * avoids the need to delete @c CMakeCache.txt when switching between 2D and 3D,
+ * Windows and Linux, or @c Debug and @c Release.
+ *
+ * @subsection build_presets_sec Configure Presets
+ *
+ * Typical preset names:
+ * - @c windows-2d-debug
+ * - @c windows-2d-release
+ * - @c windows-3d-debug
+ * - @c windows-3d-release
+ * - @c linux-2d-debug
+ * - @c linux-2d-release
+ * - @c linux-3d-debug
+ * - @c linux-3d-release
+ *
+ * @subsection build_cli_sec Command-Line Usage
+ *
  * @code{.sh}
- * # From the project root
- * cmake -B build -DCMAKE_BUILD_TYPE=Release
- * cmake --build build --target Cosmic_Engine
+ * # Configure and build Windows 3D Release
+ * cmake --preset windows-3d-release
+ * cmake --build --preset build-windows-3d-release
  * @endcode
+ *
+ * Linux and WSL builds use the equivalent @c linux-* presets and generate into
+ * their own independent build directories.
+ *
+ * @subsection build_vscode_sec Visual Studio Code
+ *
+ * When using the CMake Tools extension, prefer the preset workflow:
+ * - Run @c CMake:SelectConfigurePreset and choose the desired preset.
+ * - Run @c CMake:Configure.
+ * - Run @c CMake:Build.
+ *
+ * The Doxygen generation task is still exposed separately through VS Code tasks,
+ * but the engine build itself is expected to go through CMake presets.
+ *
+ * @subsection build_layout_sec Build And Runtime Layout
+ *
+ * Each preset writes its CMake cache and intermediate files into a dedicated
+ * directory under @c build/:
+ *
+ * @code{.txt}
+ * build/
+ *   windows-2d-debug/
+ *   windows-2d-release/
+ *   windows-3d-debug/
+ *   windows-3d-release/
+ *   linux-2d-debug/
+ *   linux-2d-release/
+ *   linux-3d-debug/
+ *   linux-3d-release/
+ * @endcode
+ *
+ * Final executables and copied runtime assets are emitted under @c bin/ using the
+ * platform, game mode, and build configuration as path components:
+ *
+ * @code{.txt}
+ * bin/
+ *   windows/
+ *     2d/Debug/
+ *     2d/Release/
+ *     3d/Debug/
+ *     3d/Release/
+ *   linux/
+ *     2d/Debug/
+ *     2d/Release/
+ *     3d/Debug/
+ *     3d/Release/
+ * @endcode
+ *
+ * At post-build time, the build system copies only the @c assets/ directory into
+ * the runtime output directory.
  *
  * To regenerate this documentation:
  * @code{.sh}

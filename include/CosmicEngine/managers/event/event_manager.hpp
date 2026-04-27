@@ -1,4 +1,4 @@
-#ifndef COSMIC_EVENTMANAGER_HPP
+﻿#ifndef COSMIC_EVENTMANAGER_HPP
 #define COSMIC_EVENTMANAGER_HPP
 
 /**
@@ -25,7 +25,7 @@ namespace CosmicEngine
      * with RegisterEventListener() which returns a ListenerId for later removal.
      * The ScheduleManager fires events by name, so the two systems work together.
      *
-     * @par Example — register a listener and trigger it
+     * @par Example â€” register a listener and trigger it
      * @code
      * // Register a listener that receives a JSON payload:
      * auto listenerId = EVT_MN.RegisterEventListener<const nlohmann::json&>(

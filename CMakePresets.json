@@ -1,0 +1,146 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 23,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "windows-base",
+      "hidden": true,
+      "inherits": ["base"],
+      "generator": "MinGW Makefiles",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "linux-base",
+      "hidden": true,
+      "inherits": ["base"],
+      "generator": "Unix Makefiles",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "windows-2d-debug",
+      "inherits": ["windows-base"],
+      "displayName": "Windows 2D Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "GAME_MODE_CONFIGURATION": "GAME_2D_CONFIGURATION"
+      }
+    },
+    {
+      "name": "windows-2d-release",
+      "inherits": ["windows-base"],
+      "displayName": "Windows 2D Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "GAME_MODE_CONFIGURATION": "GAME_2D_CONFIGURATION"
+      }
+    },
+    {
+      "name": "windows-3d-debug",
+      "inherits": ["windows-base"],
+      "displayName": "Windows 3D Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "GAME_MODE_CONFIGURATION": "GAME_3D_CONFIGURATION"
+      }
+    },
+    {
+      "name": "windows-3d-release",
+      "inherits": ["windows-base"],
+      "displayName": "Windows 3D Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "GAME_MODE_CONFIGURATION": "GAME_3D_CONFIGURATION"
+      }
+    },
+    {
+      "name": "linux-2d-debug",
+      "inherits": ["linux-base"],
+      "displayName": "Linux 2D Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "GAME_MODE_CONFIGURATION": "GAME_2D_CONFIGURATION"
+      }
+    },
+    {
+      "name": "linux-2d-release",
+      "inherits": ["linux-base"],
+      "displayName": "Linux 2D Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "GAME_MODE_CONFIGURATION": "GAME_2D_CONFIGURATION"
+      }
+    },
+    {
+      "name": "linux-3d-debug",
+      "inherits": ["linux-base"],
+      "displayName": "Linux 3D Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "GAME_MODE_CONFIGURATION": "GAME_3D_CONFIGURATION"
+      }
+    },
+    {
+      "name": "linux-3d-release",
+      "inherits": ["linux-base"],
+      "displayName": "Linux 3D Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "GAME_MODE_CONFIGURATION": "GAME_3D_CONFIGURATION"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build-windows-2d-debug",
+      "configurePreset": "windows-2d-debug"
+    },
+    {
+      "name": "build-windows-2d-release",
+      "configurePreset": "windows-2d-release"
+    },
+    {
+      "name": "build-windows-3d-debug",
+      "configurePreset": "windows-3d-debug"
+    },
+    {
+      "name": "build-windows-3d-release",
+      "configurePreset": "windows-3d-release"
+    },
+    {
+      "name": "build-linux-2d-debug",
+      "configurePreset": "linux-2d-debug"
+    },
+    {
+      "name": "build-linux-2d-release",
+      "configurePreset": "linux-2d-release"
+    },
+    {
+      "name": "build-linux-3d-debug",
+      "configurePreset": "linux-3d-debug"
+    },
+    {
+      "name": "build-linux-3d-release",
+      "configurePreset": "linux-3d-release"
+    }
+  ]
+}

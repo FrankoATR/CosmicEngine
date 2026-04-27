@@ -1,4 +1,4 @@
-#ifndef COSMIC_COLLISIONAREA_HPP
+﻿#ifndef COSMIC_COLLISIONAREA_HPP
 #define COSMIC_COLLISIONAREA_HPP
 
 /**
@@ -29,7 +29,7 @@ namespace CosmicEngine
          * (grid, quadtree) extend.  You do not instantiate it directly; instead,
          * call BodyManager::CreateCollisionArea() which selects the correct subclass.
          *
-         * @par Example — creating a collision area through the BodyManager
+         * @par Example â€” creating a collision area through the BodyManager
          * @code
          * BOD_MN.CreateCollisionArea(
          *     CosmicEngine::CollisionType::Grid,
@@ -70,23 +70,38 @@ namespace CosmicEngine
     public:
         virtual ~CollisionArea() = default;
 
-                /** @brief Returns the collision area type. */
+                /**
+                 * @brief Returns the collision area type.
+                 * @return The collision area type.
+                 */
         CollisionType GetType() const;
 
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
-        /** @brief Returns the origin of the collision area. */
+        /**
+         * @brief Returns the origin of the collision area.
+         * @return The origin of the collision area.
+         */
         virtual glm::vec2 GetPosition() const;
         /** @brief Sets the origin of the collision area. */
         virtual void SetPosition(glm::vec2 newPosition) = 0;
-        /** @brief Returns the size of the collision area. */
+        /**
+         * @brief Returns the size of the collision area.
+         * @return The size of the collision area.
+         */
         virtual glm::vec2 GetSize() const;
 
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
-        /** @brief Returns the origin of the collision area. */
+        /**
+         * @brief Returns the origin of the collision area.
+         * @return The origin of the collision area.
+         */
         virtual glm::vec3 GetPosition() const;
         /** @brief Sets the origin of the collision area. */
         virtual void SetPosition(glm::vec3 newPosition) = 0;
-        /** @brief Returns the size of the collision area. */
+        /**
+         * @brief Returns the size of the collision area.
+         * @return The size of the collision area.
+         */
         virtual glm::vec3 GetSize() const;
 
 #else

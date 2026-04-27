@@ -1,4 +1,4 @@
-
+﻿
 #ifndef COSMIC_TEXTURE2D_HPP
 #define COSMIC_TEXTURE2D_HPP
 
@@ -19,7 +19,7 @@ namespace CosmicEngine
      * call RS_MN.LoadTexture(); you typically reference them by key rather than
      * using this class directly.
      *
-     * @par Example — loading a texture through ResourceManager
+     * @par Example â€” loading a texture through ResourceManager
      * @code
      * RS_MN.LoadTexture("test_texture", "assets/textures/test.png");
      * RS_MN.Render2DSprite("test_texture", position, size);
@@ -60,12 +60,18 @@ namespace CosmicEngine
          */
         void SetNewImage(const char* imagePath);
 
-        /** @brief Sets the OpenGL internal texture format. */
+        /**
+         * @brief Sets the OpenGL internal texture format.
+         * @param internalFormat Value provided by the caller.
+         */
         void SetInternalFormat(unsigned int internalFormat);
         /** @brief Returns the OpenGL internal texture format. */
         unsigned int GetInternalFormat();
 
-        /** @brief Sets the source image format used for uploads. */
+        /**
+         * @brief Sets the source image format used for uploads.
+         * @param imageFormat Value provided by the caller.
+         */
         void SetImageFormat(unsigned int imageFormat);
         /** @brief Returns the source image format used for uploads. */
         unsigned int GetImageFormat();

@@ -1,4 +1,4 @@
-#ifndef COSMIC_ANIMATION_CLIP_HPP
+﻿#ifndef COSMIC_ANIMATION_CLIP_HPP
 #define COSMIC_ANIMATION_CLIP_HPP
 
 /**
@@ -39,7 +39,7 @@ namespace CosmicEngine
      * and indicates whether the animation should loop.  Clips are registered
      * with the AnimationManager and then assigned to AnimationPlayer instances.
      *
-     * @par Example — registering a looping 4-frame walk animation
+     * @par Example â€” registering a looping 4-frame walk animation
      * @code
      * std::vector<CosmicEngine::AnimationFrame> frames = {
      *     {0, 0, 0.14},   // row 0, column 0, 0.14 s
@@ -77,9 +77,15 @@ namespace CosmicEngine
         const std::string &GetTextureSheetKey() const;
         /** @brief Returns the ordered clip frames. */
         const std::vector<AnimationFrame> &GetFrames() const;
-        /** @brief Returns whether the clip loops. */
+        /**
+         * @brief Returns whether the clip loops.
+         * @return The whether the clip loops.
+         */
         bool IsLoop() const;
-        /** @brief Returns whether the clip contains enough data to be played. */
+        /**
+         * @brief Returns whether the clip contains enough data to be played.
+         * @return The whether the clip contains enough data to be played.
+         */
         bool IsValid() const;
         /** @brief Returns a frame by index or null when the index is invalid. */
         const AnimationFrame *GetFrame(std::size_t index) const;
