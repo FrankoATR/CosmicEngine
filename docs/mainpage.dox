@@ -9,6 +9,13 @@
  * animation, user interface (UI), audio, networking (ENet), JSON/SQL persistence,
  * and additional runtime systems.
  *
+ * The current repository layout is **project-driven**. The engine core lives
+ * under @c include/CosmicEngine, while each runnable application is declared as
+ * an autonomous project under @c projects/[project-name]. Every project provides its own
+ * @c project.cmake, source files, startup scene, runtime asset directory, and
+ * window configuration. The root build then selects one of those projects and
+ * generates the bootstrap code required to launch it.
+ *
  * @section arch_sec General Architecture
  *
  * The engine follows a **singleton manager** pattern exposed through global
@@ -34,20 +41,75 @@
  * | `TMR_MN`   | TimerManager             | Named timers                           |
  * | `LGT_MN`   | LightManager             | Point and directional lighting         |
  *
+ * @section layout_sec Repository Layout
+ *
+ * The relevant repository structure is now:
+ *
+ * @code{.txt}
+ * CMakeLists.txt
+ * CMakePresets.json
+ * main.cpp
+ * cmake/
+ *   cosmic_project_config.hpp.in
+ *   cosmic_project_entry.hpp.in
+ * include/
+ *   CosmicEngine/
+ * projects/
+ *   BasicDemo_2D/
+ *     project.cmake
+ *   BasicDemo_3D/
+ *     project.cmake
+ *   NetworkDemo/
+ *     project.cmake
+ *   sandbox_3D/
+ *     project.cmake
+ * build/
+ *   Windows/
+ *   Linux/
+ * bin/
+ *   [project-name]/[platform]/[configuration]/
+ * docs/
+ *   mainpage.dox
+ * @endcode
+ *
+ * Older explanations based on a shared @c src/ tree are no longer valid for the
+ * active build flow. Project entry points, project scenes, and project assets are
+ * resolved from the selected project folder, not from a central demo directory.
+ *
+ * @section bootstrap_sec Bootstrap Flow
+ *
+ * The executable bootstrap is now shared and generated in two stages:
+ *
+ * - The root @c main.cpp is generic and does not include a hardcoded scene.
+ * - CMake reads the selected @c projects/[project-name]/project.cmake.
+ * - CMake generates @c cosmic_project_config.hpp with window, render, fullscreen,
+ *   VSync, and project identity constants.
+ * - CMake generates @c cosmic_project_entry.hpp with a factory function that
+ *   instantiates the configured first scene.
+ * - The generic bootstrap builds @c GameManagerInitParams from those generated
+ *   constants and launches the selected project.
+ *
+ * This means the runtime entry is no longer edited per demo or per scene. The
+ * selected project becomes a build-time decision made through CMake.
+ *
  * @section quick_sec Quick Start
  *
  * @code
- * #include <CosmicEngine/managers/game_manager.hpp>
- *
- * int main() {
- *     // Initialize the engine with a title, window size, and mode.
- *     GM.Init("My Game", 1280, 720, CosmicEngine::GameMode2D);
- *     GM.SetScene(new MainScene());
- *     GM.Run();
- *     GM.Shutdown();
- *     return 0;
- * }
+ * # projects/MyGame/project.cmake
+ * set(COSMIC_PROJECT_NAME "MyGame")
+ * set(COSMIC_PROJECT_MODE GAME_3D_CONFIGURATION)
+ * set(COSMIC_PROJECT_FIRST_SCENE_HEADER "scenes/main_scene.hpp")
+ * set(COSMIC_PROJECT_FIRST_SCENE_CLASS "MainScene")
+ * set(COSMIC_PROJECT_EXECUTABLE_NAME "MyGame")
+ * set(COSMIC_PROJECT_WINDOW_TITLE "My Game")
+ * set(COSMIC_PROJECT_ASSET_DIR "assets")
+ * set(COSMIC_PROJECT_SOURCE_FILES
+ *     scenes/main_scene.cpp
+ * )
  * @endcode
+ *
+ * A project scene can then derive from @c Scene and implement the usual engine
+ * lifecycle.
  *
  * @section scene_sec Creating a Scene
  *
@@ -56,17 +118,21 @@
  * @code
  * class MainScene : public CosmicEngine::Scene {
  * public:
- *     void Init() override {
+ *     void init() override {
  *         // Register objects, load resources, and configure the camera.
  *     }
  *
- *     void Update() override {
+ *     void update(double deltaTime) override {
+ *         (void)deltaTime;
  *         // Per-frame gameplay logic.
  *     }
  *
- *     void Destroy() override {
- *         // Release scene-owned resources.
+ *     void draw() override {
+ *         // Scene-specific drawing.
  *     }
+ *
+ *     void reset() override {}
+ *     void loadResources() override {}
  * };
  * @endcode
  *
@@ -75,21 +141,31 @@
  * @code
  * class Player : public CosmicEngine::Object {
  * public:
- *     void Init() override {
- *         body = BOD_MN.Add(new CosmicEngine::Body(this, {0, 0}, {32, 32}));
- *         body->SetOnCollisionCallback(
- *             [this](CosmicEngine::Body*, CosmicEngine::BodyCollisionSide) {
- *                 // React to the collision here.
- *             });
+ *     Player()
+ *         : Object("Player", {0.0f, 0.0f, 0.0f}, {32.0f, 32.0f, 32.0f}, {0.0f, 0.0f, 0.0f})
+ *     {
+ *         body = new CosmicEngine::Body(
+ *             this,
+ *             {0.0f, 0.0f, 0.0f},
+ *             {32.0f, 32.0f, 32.0f},
+ *             CALLBACK_COLLISION_EVENT(OnCollision));
+ *         BOD_MN.Add(body);
  *     }
  *
- *     void Update() override {
- *         if (INP_MN.IsKeyPressed(GLFW_KEY_RIGHT))
- *             body->velocity.x = 200.0f;
+ *     void update(float deltaTime) override {
+ *         (void)deltaTime;
+ *         if (INP_MN.IsKeyPressed(GLFW_KEY_RIGHT, CosmicEngine::KeyPress))
+ *             SetVelocity({200.0f, 0.0f, 0.0f});
  *     }
  *
  * private:
- *     CosmicEngine::Body* body = nullptr;
+ *     void OnCollision(CosmicEngine::Object* other, CosmicEngine::BodyCollisionSide side)
+ *     {
+ *         (void)other;
+ *         (void)side;
+ *     }
+ *
+ *     CosmicEngine::Body *body = nullptr;
  * };
  * @endcode
  *
@@ -130,7 +206,18 @@
  *     try
  *     {
  *         CosmicEngine::Logger::init(true, true);
- *         CosmicEngine::GameManager::GetInstance().init({1280, 720, 1280, 720});
+ *         CosmicEngine::GameManagerInitParams params{
+ *             "My Game",
+ *             "",
+ *             1280,
+ *             720,
+ *             1280,
+ *             720,
+ *             false,
+ *             true};
+ *
+ *         CosmicEngine::GameManager::GetInstance().init(params);
+ *         CosmicEngine::GameManager::GetInstance().setFirstScene(new MainScene());
  *         CosmicEngine::GameManager::GetInstance().update();
  *         CosmicEngine::GameManager::GetInstance().shutdown();
  *         CosmicEngine::Logger::shutdown();
@@ -147,29 +234,40 @@
  *
  * @section build_sec Building
  *
- * The project now uses **CMake presets** so every platform / game-mode / build-type
- * combination has its own dedicated build tree and runtime output directory. This
- * avoids the need to delete @c CMakeCache.txt when switching between 2D and 3D,
- * Windows and Linux, or @c Debug and @c Release.
+ * The repository now uses **project-oriented CMake presets**. Instead of selecting
+ * a single global 2D or 3D build, each configure preset chooses one project via
+ * the cache variable @c COSMIC_PROJECT.
+ *
+ * Each project declares:
+ * - its runtime mode (@c GAME_2D_CONFIGURATION or @c GAME_3D_CONFIGURATION),
+ * - its first-scene header and class,
+ * - its executable name,
+ * - its startup window configuration,
+ * - its asset root,
+ * - and its own extra source files.
  *
  * @subsection build_presets_sec Configure Presets
  *
  * Typical preset names:
- * - @c windows-2d-debug
- * - @c windows-2d-release
- * - @c windows-3d-debug
- * - @c windows-3d-release
- * - @c linux-2d-debug
- * - @c linux-2d-release
- * - @c linux-3d-debug
- * - @c linux-3d-release
+ * - @c windows-sandbox-3d-debug
+ * - @c windows-sandbox-3d-release
+ * - @c windows-basicdemo-2d-debug
+ * - @c windows-basicdemo-2d-release
+ * - @c windows-basicdemo-3d-debug
+ * - @c windows-basicdemo-3d-release
+ * - @c windows-networkdemo-debug
+ * - @c windows-networkdemo-release
+ * - @c linux-sandbox-3d-debug
+ * - @c linux-basicdemo-2d-release
+ * - @c linux-basicdemo-3d-release
+ * - @c linux-networkdemo-release
  *
  * @subsection build_cli_sec Command-Line Usage
  *
  * @code{.sh}
- * # Configure and build Windows 3D Release
- * cmake --preset windows-3d-release
- * cmake --build --preset build-windows-3d-release
+ * # Configure and build the BasicDemo_3D release preset on Windows
+ * cmake --preset windows-basicdemo-3d-release
+ * cmake --build --preset build-windows-basicdemo-3d-release
  * @endcode
  *
  * Linux and WSL builds use the equivalent @c linux-* presets and generate into
@@ -188,39 +286,48 @@
  * @subsection build_layout_sec Build And Runtime Layout
  *
  * Each preset writes its CMake cache and intermediate files into a dedicated
- * directory under @c build/:
+ * directory under @c build/[platform]/[preset-name]/:
  *
  * @code{.txt}
  * build/
- *   windows-2d-debug/
- *   windows-2d-release/
- *   windows-3d-debug/
- *   windows-3d-release/
- *   linux-2d-debug/
- *   linux-2d-release/
- *   linux-3d-debug/
- *   linux-3d-release/
+ *   Windows/
+ *     windows-basicdemo-2d-debug/
+ *     windows-basicdemo-3d-release/
+ *     windows-networkdemo-release/
+ *     windows-sandbox-3d-debug/
+ *   Linux/
+ *     linux-basicdemo-2d-debug/
+ *     linux-basicdemo-3d-release/
+ *     linux-networkdemo-release/
+ *     linux-sandbox-3d-release/
  * @endcode
  *
  * Final executables and copied runtime assets are emitted under @c bin/ using the
- * platform, game mode, and build configuration as path components:
+ * project, platform, and build configuration as path components:
  *
  * @code{.txt}
  * bin/
- *   windows/
- *     2d/Debug/
- *     2d/Release/
- *     3d/Debug/
- *     3d/Release/
- *   linux/
- *     2d/Debug/
- *     2d/Release/
- *     3d/Debug/
- *     3d/Release/
+ *   BasicDemo_2D/
+ *     windows/Debug/
+ *     windows/Release/
+ *   BasicDemo_3D/
+ *     windows/Debug/
+ *     windows/Release/
+ *   NetworkDemo/
+ *     windows/Debug/
+ *     windows/Release/
+ *   sandbox_3D/
+ *     windows/Debug/
+ *     windows/Release/
  * @endcode
  *
- * At post-build time, the build system copies only the @c assets/ directory into
- * the runtime output directory.
+ * At post-build time, the build system removes the previous runtime asset copy
+ * for the active project and then copies only that project's declared asset tree.
+ * This prevents stale resources from an older build from leaking into the new
+ * runtime directory.
+ *
+ * On Linux, the build also provides support files for bundling dependencies and
+ * creating a launcher around the generated executable.
  *
  * To regenerate this documentation:
  * @code{.sh}

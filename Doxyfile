@@ -1,5 +1,5 @@
 PROJECT_NAME           = "CosmicEngine"
-PROJECT_BRIEF          = "Technical API documentation for the CosmicEngine core framework"
+PROJECT_BRIEF          = "Technical API documentation for the CosmicEngine multi-project framework"
 OUTPUT_DIRECTORY       = docs/doxygen
 CREATE_SUBDIRS         = NO
 ALLOW_UNICODE_NAMES    = YES
@@ -33,6 +33,6 @@ QUIET                  = NO
 INPUT                  = include/CosmicEngine docs/mainpage.dox
 FILE_PATTERNS          = *.hpp *.cpp *.h *.c
 RECURSIVE              = YES
-EXCLUDE                = src/scenes/main_scene.cpp src/scenes/main_scene.hpp src/scenes/network_demo_scene.cpp src/scenes/network_demo_scene.hpp src/entities/json_demo_object.cpp src/entities/json_demo_object.hpp src/entities/collision_demo_object_3d.cpp src/entities/collision_demo_object_3d.hpp src/entities/network_demo_player.cpp src/entities/network_demo_player.hpp src/entities/network_demo_projectile.cpp src/entities/network_demo_projectile.hpp
+EXCLUDE                =
 USE_MDFILE_AS_MAINPAGE =
 FILE_PATTERNS         += *.dox

@@ -21,9 +21,23 @@ namespace CosmicEngine
      *
      * LightManager owns all active lights and pushes their uniforms into every
      * registered shader each frame.  It also exposes a global ambient light that
-     * applies to the entire scene independently of point/spot lights.
+        * applies to the entire scene independently of point/spot lights.
+        *
+        * Point lights are split into two internal registries:
+        * - static lights, which are cached and re-sorted only when the camera moves
+        *   enough or the static registry changes,
+        * - dynamic lights, which are evaluated every frame.
+        *
+        * When the number of visible point lights exceeds the active shader budget,
+        * the manager keeps only the closest lights relative to the current camera.
+        * The last active set receives a small hysteresis advantage so lights do not
+        * flicker in and out every frame when several candidates have similar distance.
+        *
+        * This behavior is especially relevant for the lit 3D pipeline, where the
+        * renderer uploads only a bounded number of point lights to the built-in
+        * shaders each frame.
      *
-    * @par Example - setting global ambient light
+        * @par Example - setting global ambient light
      * @code
      * auto& lm = CosmicEngine::LightManager::GetInstance();
      * lm.SetGlobalAmbientLightColor(glm::vec3(0.15f));
@@ -80,11 +94,26 @@ namespace CosmicEngine
         void init();
         /** @brief Draws managed lights for debug or helper visualization. */
         void draw();
-        /** @brief Adds a light to the runtime according to its mobility and assigns it an identifier. */
+        /**
+         * @brief Adds a light to the runtime according to its mobility and assigns it an identifier.
+         *
+         * Static point lights are routed to the cached static registry, while
+         * movable lights are routed to the dynamic registry.
+         */
         void Add(Light *light);
-        /** @brief Adds a point light to the static-light registry and assigns it an identifier. */
+        /**
+         * @brief Adds a point light to the static-light registry and assigns it an identifier.
+         *
+         * Static lights participate in the cached distance ordering reused across
+         * frames until the cache is invalidated.
+         */
         void AddStatic(Light *light);
-        /** @brief Adds a point light to the dynamic-light registry and assigns it an identifier. */
+        /**
+         * @brief Adds a point light to the dynamic-light registry and assigns it an identifier.
+         *
+         * Dynamic lights are reconsidered every frame before selecting the active
+         * point-light upload set.
+         */
         void AddDynamic(Light *light);
         /** @brief Registers a shader that should receive lighting uniforms. */
         void RegisterShader(Shader *shader);
@@ -96,6 +125,9 @@ namespace CosmicEngine
         /**
          * @brief Sets the maximum number of point lights uploaded to shaders each frame.
          * @param maxLights Requested light budget for the current runtime.
+         *
+         * The effective value is clamped by the shader-side GPU budget used by the
+         * built-in lighting pipeline.
          */
         void SetMaxActivePointLights(int maxLights);
         /**
@@ -156,7 +188,12 @@ namespace CosmicEngine
         std::vector<Light *> FindByMousePosition();
         /** @brief Returns a snapshot of all managed lights. */
         std::vector<Light *> GetAll();
-        /** @brief Marks the cached static-light ordering as stale. */
+        /**
+         * @brief Marks the cached static-light ordering as stale.
+         *
+         * Call this after changing the position, visibility, or membership of a
+         * static point light so the cached ordering can be rebuilt on the next update.
+         */
         void InvalidateStaticPointLightCache();
         /** @brief Deletes and removes every managed light. */
         void Clear();

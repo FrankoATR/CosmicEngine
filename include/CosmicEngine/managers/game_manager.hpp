@@ -40,10 +40,14 @@ namespace CosmicEngine
 
         /**
          * @brief Builds a startup parameter block.
+         * @param title Initial window title.
+         * @param iconPath Optional window icon path.
          * @param sw Initial window width in pixels.
          * @param sh Initial window height in pixels.
          * @param bsw Base virtual width.
          * @param bsh Base virtual height.
+         * @param fullscreen Whether the application should start in fullscreen mode.
+         * @param vsync Whether the application should start with vsync enabled.
          */
         GameManagerInitParams(const std::string &title, const std::string &iconPath, int sw, int sh, int bsw, int bsh, bool fullscreen = false, bool vsync = false)
             : windowTitle(title), windowIconPath(iconPath), screenWidth(sw), screenHeight(sh), baseScreenWidth(bsw), baseScreenHeight(bsh), startFullscreen(fullscreen), startVsync(vsync) {}
@@ -74,7 +78,7 @@ namespace CosmicEngine
      * {
      *     CosmicEngine::Logger::init(true, true);
      *
-     *     CosmicEngine::GameManagerInitParams params{1280, 720, 1920, 1080};
+    *     CosmicEngine::GameManagerInitParams params{"My Game", "", 1280, 720, 1920, 1080, false, true};
      *     CosmicEngine::GameManager::GetInstance().init(params);
      *     CosmicEngine::GameManager::GetInstance().setFirstScene(new MainScene);
      *     CosmicEngine::GameManager::GetInstance().update();
