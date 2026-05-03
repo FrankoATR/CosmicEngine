@@ -22,7 +22,7 @@ namespace CosmicEngine
     * @par Example - loading a texture through ResourceManager
      * @code
      * RS_MN.LoadTexture("test_texture", "assets/textures/test.png");
-     * RS_MN.Render2DSprite("test_texture", position, size);
+    * RS_MN.Render2DSpriteUnlit("test_texture", position, size);
      * @endcode
      */
     class Texture2D

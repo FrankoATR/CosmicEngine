@@ -214,6 +214,28 @@ namespace CosmicEngine
         return doc["objects"].contains(className);
     }
 
+    std::vector<std::string> JsonManager::GetRegisteredFields(const std::string& className) const
+    {
+        auto itReg = serialization_resources.find(className);
+        if (itReg == serialization_resources.end())
+        {
+            return {};
+        }
+
+        return itReg->second.Fields;
+    }
+
+    Object* JsonManager::CreateObjectFromSerializedData(const std::string& className, const nlohmann::json& data) const
+    {
+        auto itReg = serialization_resources.find(className);
+        if (itReg == serialization_resources.end())
+        {
+            return nullptr;
+        }
+
+        return itReg->second.Constructor(data);
+    }
+
     void JsonManager::SaveObjectsData(const std::string& className)
     {
         if (!initialized)

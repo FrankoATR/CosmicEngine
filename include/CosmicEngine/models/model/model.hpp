@@ -58,6 +58,10 @@ namespace CosmicEngine
         string directory;
         /** @brief Indicates whether gamma correction should be applied to loaded textures. */
         bool gammaCorrection;
+        /** @brief Model-space center used to normalize imported meshes around the origin. */
+        glm::vec3 normalizationCenter{0.0f};
+        /** @brief Uniform scale used to fit imported meshes into a predictable size range. */
+        float normalizationScale{1.0f};
 
         /**
          * @brief Loads a model from disk.
@@ -75,12 +79,13 @@ namespace CosmicEngine
     private:
         void loadModel(string const &path);
 
-        void processNode(aiNode *node, const aiScene *scene);
+        void processNode(aiNode *node, const aiScene *scene, const glm::mat4 &parentTransform);
 
-        Mesh processMesh(aiMesh *mesh, const aiScene *scene);
+        Mesh processMesh(aiMesh *mesh, const aiScene *scene, const glm::mat4 &nodeTransform);
 
-        vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName);
+        vector<Texture> loadMaterialTextures(aiMaterial *mat, const aiScene *scene, aiTextureType type, string typeName);
         unsigned int TextureFromFile(const char *path, const string &directory, bool gamma = false);
+        unsigned int TextureFromEmbedded(const aiTexture *textureData, const string &textureName, bool gamma = false);
     };
 
 }

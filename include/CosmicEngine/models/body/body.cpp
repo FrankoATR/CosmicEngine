@@ -152,8 +152,9 @@ namespace CosmicEngine
 
 		void Body::draw()
 		{
+			const glm::vec3 bodyCenter = position + (size * 0.5f);
 			ResourceManager::GetInstance().RenderParallelepipedLines(
-				position,
+				bodyCenter,
 				size,
 				glm::vec3(0.0f),
 				glm::vec3(0.0f),

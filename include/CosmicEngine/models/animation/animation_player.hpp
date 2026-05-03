@@ -32,7 +32,7 @@ namespace CosmicEngine
      * animationPlayer->Play();
      *
      * // Draw the current frame inside your draw() method:
-     * RS_MN.Render2DSpriteFromTextureSheet(
+    * RS_MN.Render2DSpriteFromTextureSheetUnlit(
      *     animationPlayer->GetTextureSheetKey(),
      *     animationPlayer->GetCurrentRow(),
      *     animationPlayer->GetCurrentColumn(),

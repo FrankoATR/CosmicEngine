@@ -34,14 +34,14 @@ namespace CosmicEngine
      *
     * @par Example - rendering a 2D sprite and text
      * @code
-     * RS_MN.Render2DSprite("test_texture", position, size);
+    * RS_MN.Render2DSpriteUnlit("test_texture", position, size);
      * RS_MN.RenderText("Hello!", "test_font",
      *     {100.0f, 200.0f, 0.0f}, {0.55f, 0.55f, 1.0f});
      * @endcode
      *
     * @par Example - rendering from a texture sheet (sprite animation)
      * @code
-     * RS_MN.Render2DSpriteFromTextureSheet(
+    * RS_MN.Render2DSpriteFromTextureSheetUnlit(
      *     "player_sheet", row, col,
      *     position, size, rotation,
      *     color, alpha, CosmicEngine::ViewType::Ortho);
@@ -125,6 +125,32 @@ namespace CosmicEngine
         Texture_Sheet *GetTextureSheet(const std::string &key) const;
         Font *GetFont(const std::string &key) const;
 
+        void Render2DSpriteWithShader(
+            const std::string &vaoKey,
+            const std::string &shaderKey,
+            const std::string &textureKey,
+            glm::vec2 position,
+            glm::vec2 size,
+            float rotation,
+            glm::vec3 color,
+            float alpha,
+            ViewType viewType
+        );
+
+        void Render2DSpriteFromTextureSheetWithShader(
+            const std::string &vaoKey,
+            const std::string &shaderKey,
+            const std::vector<std::pair<std::string, std::string>> &shaderVar_textureKey,
+            int row,
+            int column,
+            glm::vec2 position,
+            glm::vec2 size,
+            float rotation,
+            glm::vec3 color,
+            float alpha,
+            ViewType viewType
+        );
+
         Model *GetModel(const std::string &key) const;
 
         template <typename V, typename Callback>
@@ -146,7 +172,7 @@ namespace CosmicEngine
         bool init();
 
         /**
-         * @brief Renders a textured 2D sprite using a previously loaded texture.
+         * @brief Renders a textured 2D sprite using the built-in unlit shader.
          * @param textureKey Texture resource key.
          * @param position Sprite position.
          * @param size Sprite size.
@@ -155,7 +181,7 @@ namespace CosmicEngine
          * @param alpha Alpha multiplier.
          * @param viewType Projection mode used for rendering.
          */
-        void Render2DSprite(
+        void Render2DSpriteUnlit(
             const std::string &textureKey,
             glm::vec2 position,
             glm::vec2 size,
@@ -166,7 +192,7 @@ namespace CosmicEngine
         );
 
         /**
-         * @brief Renders a textured 2D sprite in UI space.
+         * @brief Renders a textured 2D sprite using the built-in lit shader.
          * @param textureKey Texture resource key.
          * @param position Sprite position.
          * @param size Sprite size.
@@ -175,31 +201,7 @@ namespace CosmicEngine
          * @param alpha Alpha multiplier.
          * @param viewType Projection mode used for rendering.
          */
-        void Render2DSprite_UI(
-            const std::string &textureKey,
-            glm::vec2 position,
-            glm::vec2 size,
-            float rotation = 0.0f,
-            glm::vec3 color = glm::vec3(1.0f),
-            float alpha = 1.0f,
-            ViewType viewType = ViewType::Ortho // Verify whether this default is needed for each caller.
-        );
-
-        /**
-         * @brief Renders a textured 2D sprite using explicit VAO and shader resources.
-         * @param vaoKey Static VAO resource key.
-         * @param shaderKey Shader resource key.
-         * @param textureKey Texture resource key.
-         * @param position Sprite position.
-         * @param size Sprite size.
-         * @param rotation Sprite rotation.
-         * @param color Color tint multiplier.
-         * @param alpha Alpha multiplier.
-         * @param viewType Projection mode used for rendering.
-         */
-        void Render2DSprite(
-            const std::string &vaoKey,
-            const std::string &shaderKey,
+        void Render2DSpriteLit(
             const std::string &textureKey,
             glm::vec2 position,
             glm::vec2 size,
@@ -210,7 +212,7 @@ namespace CosmicEngine
         );
 
         /**
-         * @brief Renders a tile from a texture sheet.
+         * @brief Renders a tile from a texture sheet using the built-in unlit shader.
          * @param textureKey Texture-sheet resource key.
          * @param row Tile row.
          * @param column Tile column.
@@ -221,7 +223,7 @@ namespace CosmicEngine
          * @param alpha Alpha multiplier.
          * @param viewType Projection mode used for rendering.
          */
-        void Render2DSpriteFromTextureSheet(
+        void Render2DSpriteFromTextureSheetUnlit(
             const std::string &textureKey,
             int row, int column,
             glm::vec2 position,
@@ -233,10 +235,8 @@ namespace CosmicEngine
         );
 
         /**
-         * @brief Renders a tile from a texture sheet using explicit VAO, shader, and bound texture variables.
-         * @param vaoKey Static VAO resource key.
-         * @param shaderKey Shader resource key.
-         * @param shaderVar_textureKey Texture bindings by shader variable name.
+         * @brief Renders a lit tile from a texture sheet using the built-in lit shader.
+         * @param textureKey Texture-sheet resource key.
          * @param row Tile row.
          * @param column Tile column.
          * @param position Sprite position.
@@ -246,9 +246,8 @@ namespace CosmicEngine
          * @param alpha Alpha multiplier.
          * @param viewType Projection mode used for rendering.
          */
-        void Render2DSpriteFromTextureSheet(
-            const std::string &vaoKey, const std::string &shaderKey,
-            const std::vector<std::pair<std::string, std::string>> &shaderVar_textureKey,
+        void Render2DSpriteFromTextureSheetLit(
+            const std::string &textureKey,
             int row, int column,
             glm::vec2 position,
             glm::vec2 size,
@@ -421,7 +420,18 @@ namespace CosmicEngine
                 ViewType viewType = ViewType::Ortho
             );
 
-            void RenderParallelepipedTexture(
+            /**
+             * @brief Renders a textured parallelepiped using the built-in lit shader.
+             * @param textureKey Texture resource key.
+             * @param position Parallelepiped position.
+             * @param size Parallelepiped scale.
+             * @param pivot Rotation pivot.
+             * @param rotation Euler rotation in degrees.
+             * @param color Base color fallback when textures are missing.
+             * @param alpha Alpha multiplier.
+             * @param viewType Projection mode used for rendering.
+             */
+            void RenderParallelepipedTextureLit(
                 std::string textureKey,
                 glm::vec3 position,
                 glm::vec3 size = glm::vec3(1.0f),
@@ -432,7 +442,103 @@ namespace CosmicEngine
                 ViewType viewType = ViewType::Ortho
             );
 
-            void Render3DModel(
+            /**
+             * @brief Renders a textured parallelepiped using the built-in unlit shader.
+             * @param textureKey Texture resource key.
+             * @param position Parallelepiped position.
+             * @param size Parallelepiped scale.
+             * @param pivot Rotation pivot.
+             * @param rotation Euler rotation in degrees.
+             * @param color Base color fallback when textures are missing.
+             * @param alpha Alpha multiplier.
+             * @param viewType Projection mode used for rendering.
+             */
+            void RenderParallelepipedTextureUnlit(
+                std::string textureKey,
+                glm::vec3 position,
+                glm::vec3 size = glm::vec3(1.0f),
+                glm::vec3 pivot = glm::vec3(0.0f),
+                glm::vec3 rotation = glm::vec3(0.0f),
+                glm::vec3 color = glm::vec3(1.0f),
+                float alpha = 1.0f,
+                ViewType viewType = ViewType::Ortho
+            );
+
+            /**
+             * @brief Renders a textured cube using a cross-layout atlas and the built-in lit shader.
+             * @param textureKey Texture atlas resource key.
+             * @param position Cube position.
+             * @param size Cube scale.
+             * @param pivot Rotation pivot.
+             * @param rotation Euler rotation in degrees.
+             * @param color Base color fallback when textures are missing.
+             * @param alpha Alpha multiplier.
+             * @param viewType Projection mode used for rendering.
+             */
+            void RenderParallelepipedTextureAtlasLit(
+                std::string textureKey,
+                glm::vec3 position,
+                glm::vec3 size = glm::vec3(1.0f),
+                glm::vec3 pivot = glm::vec3(0.0f),
+                glm::vec3 rotation = glm::vec3(0.0f),
+                glm::vec3 color = glm::vec3(1.0f),
+                float alpha = 1.0f,
+                ViewType viewType = ViewType::Ortho
+            );
+
+            /**
+             * @brief Renders a textured cube using a cross-layout atlas and the built-in unlit shader.
+             * @param textureKey Texture atlas resource key.
+             * @param position Cube position.
+             * @param size Cube scale.
+             * @param pivot Rotation pivot.
+             * @param rotation Euler rotation in degrees.
+             * @param color Base color fallback when textures are missing.
+             * @param alpha Alpha multiplier.
+             * @param viewType Projection mode used for rendering.
+             */
+            void RenderParallelepipedTextureAtlasUnlit(
+                std::string textureKey,
+                glm::vec3 position,
+                glm::vec3 size = glm::vec3(1.0f),
+                glm::vec3 pivot = glm::vec3(0.0f),
+                glm::vec3 rotation = glm::vec3(0.0f),
+                glm::vec3 color = glm::vec3(1.0f),
+                float alpha = 1.0f,
+                ViewType viewType = ViewType::Ortho
+            );
+
+            /**
+             * @brief Renders a 3D model using the built-in lit shader.
+             * @param modelKey Model resource key.
+             * @param position Model position.
+             * @param size Model scale.
+             * @param rotation Model rotation.
+             * @param color Base color fallback used when the model has no diffuse texture.
+             * @param alpha Alpha multiplier.
+             * @param viewType Projection mode used for rendering.
+             */
+            void Render3DModelLit(
+                const std::string &modelKey,
+                glm::vec3 position,
+                glm::vec3 size,
+                glm::vec3 rotation = glm::vec3(0.0f),
+                glm::vec3 color = glm::vec3(1.0f),
+                float alpha = 1.0f,
+                ViewType viewType = ViewType::Ortho
+            );
+
+            /**
+             * @brief Renders a 3D model using the built-in unlit shader.
+             * @param modelKey Model resource key.
+             * @param position Model position.
+             * @param size Model scale.
+             * @param rotation Model rotation.
+             * @param color Base color fallback used when the model has no diffuse texture.
+             * @param alpha Alpha multiplier.
+             * @param viewType Projection mode used for rendering.
+             */
+            void Render3DModelUnlit(
                 const std::string &modelKey,
                 glm::vec3 position,
                 glm::vec3 size,
@@ -467,6 +573,8 @@ namespace CosmicEngine
         bool LoadShaderFromPath(const std::string &key, const std::string &vs_path, const std::string &fs_path, const std::string &gs_path = "");
         /** @brief Loads a shader program from in-memory source strings. */
         bool LoadShaderFromCode(const std::string &key, const char* vertexSource, const char* fragmentSource, const char* geometrySource = nullptr);
+        /** @brief Registers an already loaded shader with the light manager by key. */
+        bool RegisterShaderForLighting(const std::string &key);
         /** @brief Loads a texture resource from disk. */
         bool LoadTexture(const std::string &key, const std::string &path);
         /** @brief Loads a texture sheet resource from disk. */

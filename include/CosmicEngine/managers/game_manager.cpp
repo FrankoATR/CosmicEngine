@@ -26,6 +26,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <stb_image.h>
+
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
@@ -52,6 +54,10 @@ namespace CosmicEngine
         int screenHeight  = params.screenHeight;
         int baseScreenWidth = params.baseScreenWidth;
         int baseScreenHeight = params.baseScreenHeight;
+		const std::string windowTitle = params.windowTitle.empty() ? "CosmicEngine" : params.windowTitle;
+		const std::string windowIconPath = params.windowIconPath;
+		bool startFullscreen = params.startFullscreen;
+		bool startVsync = params.startVsync;
 
 		window = nullptr;
 		fullScreenMode = false;
@@ -77,7 +83,7 @@ namespace CosmicEngine
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 			// glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-			window = glfwCreateWindow(screenWidth, screenHeight, "CosmicEngine", nullptr, nullptr);
+			window = glfwCreateWindow(screenWidth, screenHeight, windowTitle.c_str(), nullptr, nullptr);
 
 			if (window == nullptr)
 			{
@@ -89,7 +95,10 @@ namespace CosmicEngine
 			{
 				Logger::error("Failed to initialize GLAD.");
 			}
-			glfwSwapInterval(0);
+			setWindowTitle(windowTitle);
+			setWindowIcon(windowIconPath);
+			glfwSwapInterval(startVsync ? 1 : 0);
+			vsyncEnabled = startVsync;
 
 
 			#if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
@@ -105,6 +114,11 @@ namespace CosmicEngine
 			glViewport(0, 0, screenWidth, screenHeight);
 
 			glfwSetWindowUserPointer(window, this);
+
+			if (startFullscreen)
+			{
+				toggleFullscreen();
+			}
 
 			setFrameBufferSizeCallback([&](int width, int height){
 				float currentAspect = (float)width / (float)height;
@@ -400,6 +414,41 @@ namespace CosmicEngine
 
 	void GameManager::setWindowSize(glm::vec2 screenSize)
 	{
+	}
+
+	void GameManager::setWindowTitle(const std::string &title)
+	{
+		if (!window || title.empty())
+		{
+			return;
+		}
+
+		glfwSetWindowTitle(window, title.c_str());
+	}
+
+	void GameManager::setWindowIcon(const std::string &iconPath)
+	{
+		if (!window || iconPath.empty())
+		{
+			return;
+		}
+
+		int iconWidth = 0;
+		int iconHeight = 0;
+		int iconChannels = 0;
+		unsigned char *pixels = stbi_load(iconPath.c_str(), &iconWidth, &iconHeight, &iconChannels, 4);
+		if (!pixels)
+		{
+			RUNTIME_WARNING("[GameManager] Failed to load window icon: " << iconPath);
+			return;
+		}
+
+		GLFWimage iconImage{};
+		iconImage.width = iconWidth;
+		iconImage.height = iconHeight;
+		iconImage.pixels = pixels;
+		glfwSetWindowIcon(window, 1, &iconImage);
+		stbi_image_free(pixels);
 	}
 
 	GLFWwindow *GameManager::getWindowPtr() const

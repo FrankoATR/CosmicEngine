@@ -286,8 +286,9 @@ namespace CosmicEngine
             {
                 for (int column = 0; column < Columns; ++column)
                 {
+                    const glm::vec3 cellCenter = Cells[layer][row][column].Position + glm::vec3(CellSize * 0.5f);
                     ResourceManager::GetInstance().RenderParallelepipedLines(
-                        Cells[layer][row][column].Position,
+                        cellCenter,
                         glm::vec3(CellSize),
                         glm::vec3(0.0f),
                         glm::vec3(0.0f),

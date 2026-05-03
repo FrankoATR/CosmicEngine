@@ -4,6 +4,7 @@
  */
 
 #include "light.hpp"
+#include "../../managers/light/light_manager.hpp"
 #include "../../utils/log.hpp"
 
 namespace CosmicEngine
@@ -54,6 +55,11 @@ namespace CosmicEngine
 		RUNTIME_LIFECYCLE("Light", "destroyed");
     }
 
+    LightMobility Light::GetMobility() const
+    {
+        return this->mobility;
+    }
+
 
     #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
         Light::Light(
@@ -65,7 +71,8 @@ namespace CosmicEngine
             float linearLight,
             float quadraticLight,
             float shininess,
-            bool visible
+            bool visible,
+            LightMobility mobility
         )
         {
             this->position = position;
@@ -77,12 +84,17 @@ namespace CosmicEngine
             this->quadraticLight = quadraticLight;
             this->shininess = shininess;
             this->visible = visible;
+            this->mobility = mobility;
 			RUNTIME_LIFECYCLE("Light", "created");
         }
 
         void Light::SetPosition(glm::vec2 newPosition)
         {
             this->position = newPosition;
+            if (this->mobility == LightMobility::Static)
+            {
+                LightManager::GetInstance().InvalidateStaticPointLightCache();
+            }
         }
 
         glm::vec2 Light::GetPosition() const
@@ -101,7 +113,8 @@ namespace CosmicEngine
             float linearLight,
             float quadraticLight,
             float shininess,
-            bool visible
+            bool visible,
+            LightMobility mobility
         )
         {
             this->position = position;
@@ -113,12 +126,17 @@ namespace CosmicEngine
             this->quadraticLight = quadraticLight;
             this->shininess = shininess;
             this->visible = visible;
+            this->mobility = mobility;
 			RUNTIME_LIFECYCLE("Light", "created");
         }
         
         void Light::SetPosition(glm::vec3 newPosition)
         {
             this->position = newPosition;
+            if (this->mobility == LightMobility::Static)
+            {
+                LightManager::GetInstance().InvalidateStaticPointLightCache();
+            }
         }
 
         glm::vec3 Light::GetPosition() const

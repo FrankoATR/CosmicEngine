@@ -43,7 +43,7 @@ namespace CosmicEngine
 
         if(!texture.empty())
         {
-            ResourceManager::GetInstance().Render2DSprite(texture, Position, Size, 0.0f, glm::vec3(1.0f), 1.0f, ViewType::UI);
+            ResourceManager::GetInstance().Render2DSpriteUnlit(texture, Position, Size, 0.0f, glm::vec3(1.0f), 1.0f, ViewType::UI);
         }
         else
         {

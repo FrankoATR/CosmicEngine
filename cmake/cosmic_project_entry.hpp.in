@@ -1,0 +1,12 @@
+#ifndef COSMIC_PROJECT_ENTRY_HPP
+#define COSMIC_PROJECT_ENTRY_HPP
+
+#include <CosmicEngine/models/scene/scene.hpp>
+#include "@COSMIC_PROJECT_FIRST_SCENE_HEADER@"
+
+inline CosmicEngine::Scene *CreateCosmicProjectFirstScene()
+{
+    return new @COSMIC_PROJECT_FIRST_SCENE_CLASS@();
+}
+
+#endif

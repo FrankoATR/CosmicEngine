@@ -21,6 +21,10 @@ namespace CosmicEngine
      */
     struct GameManagerInitParams
     {
+        /** @brief Initial GLFW window title. */
+        std::string windowTitle;
+        /** @brief Optional image path for the GLFW window icon. */
+        std::string windowIconPath;
         /** @brief Initial window width in pixels. */
         int screenWidth;
         /** @brief Initial window height in pixels. */
@@ -29,6 +33,10 @@ namespace CosmicEngine
         int baseScreenWidth;
         /** @brief Virtual base height used by camera and UI calculations. */
         int baseScreenHeight;
+        /** @brief Whether the application should start in fullscreen mode. */
+        bool startFullscreen;
+        /** @brief Whether the application should start with vsync enabled. */
+        bool startVsync;
 
         /**
          * @brief Builds a startup parameter block.
@@ -37,8 +45,8 @@ namespace CosmicEngine
          * @param bsw Base virtual width.
          * @param bsh Base virtual height.
          */
-        GameManagerInitParams(int sw, int sh, int bsw, int bsh)
-            : screenWidth(sw), screenHeight(sh), baseScreenWidth(bsw), baseScreenHeight(bsh) {}
+        GameManagerInitParams(const std::string &title, const std::string &iconPath, int sw, int sh, int bsw, int bsh, bool fullscreen = false, bool vsync = false)
+            : windowTitle(title), windowIconPath(iconPath), screenWidth(sw), screenHeight(sh), baseScreenWidth(bsw), baseScreenHeight(bsh), startFullscreen(fullscreen), startVsync(vsync) {}
     };
 
     class Scene;
@@ -181,6 +189,10 @@ namespace CosmicEngine
          * @param screenSize New window size in pixels.
          */
         void setWindowSize(glm::vec2 screenSize);
+        /** @brief Updates the GLFW window title at runtime. */
+        void setWindowTitle(const std::string &title);
+        /** @brief Loads and applies a GLFW window icon from an image file. */
+        void setWindowIcon(const std::string &iconPath);
         /** @brief Switches the current window into fullscreen mode. */
         void setWindowFullScreenMode();
         /**

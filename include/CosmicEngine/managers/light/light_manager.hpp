@@ -38,11 +38,25 @@ namespace CosmicEngine
         glm::vec3 globalAmbientLightDiffuse;
         glm::vec3 globalAmbientLightSpecular;
 
-        std::vector<Light*> point_lights_resources;
+        std::vector<Light*> static_point_lights_resources;
+        std::vector<Light*> dynamic_point_lights_resources;
+        std::vector<Light*> cached_static_point_lights;
+        std::vector<int> lastActivePointLightIds;
         std::vector<Shader*> target_shader_resources;
         std::vector<Light*> spot_lights;
 
+        bool staticPointLightsDirty;
+
+        #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+            glm::vec2 lastStaticCacheCameraPosition;
+        #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+            glm::vec3 lastStaticCacheCameraPosition;
+        #else
+            #error "[LightManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
+        #endif
+
         int nextEntityId;
+        int maxActivePointLights;
 
         LightManager();
         ~LightManager();
@@ -66,8 +80,12 @@ namespace CosmicEngine
         void init();
         /** @brief Draws managed lights for debug or helper visualization. */
         void draw();
-        /** @brief Adds a light to the runtime and assigns it an identifier. */
+        /** @brief Adds a light to the runtime according to its mobility and assigns it an identifier. */
         void Add(Light *light);
+        /** @brief Adds a point light to the static-light registry and assigns it an identifier. */
+        void AddStatic(Light *light);
+        /** @brief Adds a point light to the dynamic-light registry and assigns it an identifier. */
+        void AddDynamic(Light *light);
         /** @brief Registers a shader that should receive lighting uniforms. */
         void RegisterShader(Shader *shader);
         /**
@@ -75,6 +93,16 @@ namespace CosmicEngine
          * @param ID Value provided by the caller.
          */
         void Remove(int ID);
+        /**
+         * @brief Sets the maximum number of point lights uploaded to shaders each frame.
+         * @param maxLights Requested light budget for the current runtime.
+         */
+        void SetMaxActivePointLights(int maxLights);
+        /**
+         * @brief Returns the current point-light upload budget.
+         * @return The current point-light upload budget.
+         */
+        int GetMaxActivePointLights() const;
 
         /**
          * @brief Sets the global ambient light color.
@@ -128,6 +156,8 @@ namespace CosmicEngine
         std::vector<Light *> FindByMousePosition();
         /** @brief Returns a snapshot of all managed lights. */
         std::vector<Light *> GetAll();
+        /** @brief Marks the cached static-light ordering as stale. */
+        void InvalidateStaticPointLightCache();
         /** @brief Deletes and removes every managed light. */
         void Clear();
     };

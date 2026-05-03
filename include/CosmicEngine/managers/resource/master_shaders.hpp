@@ -8,33 +8,8 @@
 
 
 #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
-    /** @brief Default 2D sprite vertex shader source (textured quad with model/projection). */
-    const char *sprite_vs = 
-    "#version 330 core\n"
-    "layout (location = 0) in vec4 vertex;\n"
-    "out vec2 TexCoords;\n"
-    "uniform mat4 model;\n"
-    "uniform mat4 projection;\n"
-    "void main()\n"
-    "{\n"
-    "TexCoords = vertex.zw;\n"
-    "gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);\n"
-    "}\0";
-
-    /** @brief Default 2D sprite fragment shader source (samples a texture and tints by spriteColor). */
-    const char *sprite_fs = 
-    "#version 330 core\n"
-    "in vec2 TexCoords;\n"
-    "out vec4 color;\n"
-    "uniform sampler2D image;\n"
-    "uniform vec3 spriteColor;\n"
-    "void main()\n"
-    "{\n"
-    "color = vec4(spriteColor, 1.0) * texture(image, TexCoords);\n"
-    "}\0";
-
-    /** @brief Sprite-sheet vertex shader source (remaps UVs through uvMin / uvMax). */
-    const char *spriteSheet_vs = 
+    /** @brief Unlit sprite-sheet vertex shader source (remaps UVs through uvMin / uvMax). */
+    const char *spriteSheet_unlit_vs = 
     "#version 330 core\n"
     "layout (location = 0) in vec4 vertex;\n"
     "out vec2 TexCoords;\n"
@@ -48,8 +23,8 @@
     "gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);\n"
     "}\0";
 
-    /** @brief Sprite-sheet fragment shader source (samples the active frame and tints by spriteColor). */
-    const char *spriteSheet_fs = 
+    /** @brief Unlit sprite-sheet fragment shader source (samples the active frame and tints by spriteColor). */
+    const char *spriteSheet_unlit_fs = 
     "#version 330 core\n"
     "in vec2 TexCoords;\n"
     "out vec4 color;\n"
@@ -59,6 +34,92 @@
     "{\n"
     "color = vec4(spriteColor, 1.0) * texture(image, TexCoords);\n"
     "}\0";
+
+    /** @brief 2D lit sprite-sheet vertex shader source (world-space position + UV remap for point-light shading). */
+    const char *spriteSheet_lit_vs = R"glsl(
+        #version 330 core
+        layout (location = 0) in vec4 vertex;
+        out vec2 TexCoords;
+        out vec2 WorldPos;
+        uniform mat4 model;
+        uniform mat4 projection;
+        uniform vec2 uvMin;
+        uniform vec2 uvMax;
+
+        void main()
+        {
+            TexCoords = mix(uvMin, uvMax, vertex.zw);
+            vec4 world = model * vec4(vertex.xy, 0.0, 1.0);
+            WorldPos = world.xy;
+            gl_Position = projection * world;
+        }
+    )glsl";
+
+    /** @brief 2D lit sprite-sheet fragment shader source using LightManager point-light uniforms. */
+    const char *spriteSheet_lit_fs = R"glsl(
+        #version 330 core
+        out vec4 color;
+
+        struct Material {
+            float shininess;
+        };
+
+        struct DirLight {
+            vec3 direction;
+            vec3 ambient;
+            vec3 diffuse;
+            vec3 specular;
+        };
+
+        struct PointLight {
+            vec2 position;
+            float constant;
+            float linear;
+            float quadratic;
+            vec2 ambient;
+            vec2 diffuse;
+            vec2 specular;
+        };
+
+        #define NR_POINT_LIGHTS 8
+
+        in vec2 TexCoords;
+        in vec2 WorldPos;
+
+        uniform sampler2D image;
+        uniform vec3 spriteColor;
+        uniform int activePointLightCount;
+        uniform DirLight dirLight;
+        uniform PointLight pointLights[NR_POINT_LIGHTS];
+        uniform Material material;
+
+        float CalcPointLight(PointLight light, vec2 fragPos)
+        {
+            vec2 delta = light.position - fragPos;
+            float distance = length(delta);
+            float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * distance * distance);
+            float energy = light.ambient.x + light.diffuse.x;
+            return attenuation * energy;
+        }
+
+        void main()
+        {
+            vec4 texel = texture(image, TexCoords) * vec4(spriteColor, 1.0);
+            if (texel.a <= 0.01)
+            {
+                discard;
+            }
+
+            float lighting = dirLight.ambient.x + dirLight.diffuse.x;
+            for (int i = 0; i < activePointLightCount; ++i)
+            {
+                lighting += CalcPointLight(pointLights[i], WorldPos);
+            }
+
+            lighting = clamp(lighting, 0.03, 0.95);
+            color = vec4(texel.rgb * lighting, texel.a);
+        }
+    )glsl";
 
     /** @brief 2D primitive vertex shader source used by the PrimitiveManager. */
     const char *shape_2D_vs = 
@@ -108,33 +169,8 @@
 
 
 #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
-/** @brief Default 2D-billboard sprite vertex shader source for 3D mode (orthographic overlay). */
-const char *sprite_vs = 
-"#version 330 core\n"
-"layout (location = 0) in vec4 vertex;\n"
-"out vec2 TexCoords;\n"
-"uniform mat4 model;\n"
-"uniform mat4 projection;\n"
-"void main()\n"
-"{\n"
-"TexCoords = vertex.zw;\n"
-"gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);\n"
-"}\0";
-
-/** @brief Default 2D-billboard sprite fragment shader source for 3D mode. */
-const char *sprite_fs = 
-"#version 330 core\n"
-"in vec2 TexCoords;\n"
-"out vec4 color;\n"
-"uniform sampler2D image;\n"
-"uniform vec3 spriteColor;\n"
-"void main()\n"
-"{\n"
-"color = vec4(spriteColor, 1.0) * texture(image, TexCoords);\n"
-"}\0";
-
-/** @brief Sprite-sheet vertex shader source for 3D mode (animated frames in HUD layer). */
-const char *spriteSheet_vs = 
+/** @brief Unlit sprite-sheet vertex shader source for 3D mode (animated frames in HUD layer). */
+const char *spriteSheet_unlit_vs = 
 "#version 330 core\n"
 "layout (location = 0) in vec4 vertex;\n"
 "out vec2 TexCoords;\n"
@@ -148,8 +184,8 @@ const char *spriteSheet_vs =
 "gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);\n"
 "}\0";
 
-/** @brief Sprite-sheet fragment shader source for 3D mode. */
-const char *spriteSheet_fs = 
+/** @brief Unlit sprite-sheet fragment shader source for 3D mode. */
+const char *spriteSheet_unlit_fs = 
 "#version 330 core\n"
 "in vec2 TexCoords;\n"
 "out vec4 color;\n"
@@ -234,8 +270,8 @@ const char *text_fs =
 
 
 
-/** @brief 3D model vertex shader source (Phong-style lighting prep). */
-const char *model_3d_vs = R"glsl(
+/** @brief 3D lit model vertex shader source (Phong-style lighting prep). */
+const char *model_3d_lit_vs = R"glsl(
     #version 330 core
     layout (location = 0) in vec3 aPos;
     layout (location = 1) in vec3 aNormal;
@@ -260,8 +296,8 @@ const char *model_3d_vs = R"glsl(
 )glsl";
 
 
-/** @brief 3D model fragment shader source (Material + DirLight/PointLight/SpotLight). */
-const char *model_3d_fs = R"glsl(
+/** @brief 3D lit model fragment shader source (Material + DirLight/PointLight/SpotLight). */
+const char *model_3d_lit_fs = R"glsl(
     #version 330 core
     out vec4 FragColor;
     
@@ -306,13 +342,17 @@ const char *model_3d_fs = R"glsl(
         vec3 specular;       
     };
     
-    #define NR_POINT_LIGHTS 4
+    #define NR_POINT_LIGHTS 8
     
     in vec3 FragPos;
     in vec3 Normal;
     in vec2 TexCoords;
     
     uniform vec3 viewPos;
+    uniform vec3 baseColor;
+    uniform bool hasDiffuseTexture;
+    uniform bool hasSpecularTexture;
+    uniform int activePointLightCount;
     uniform DirLight dirLight;
     uniform PointLight pointLights[NR_POINT_LIGHTS];
     uniform SpotLight spotLight;
@@ -328,7 +368,7 @@ const char *model_3d_fs = R"glsl(
         vec3 viewDir = normalize(viewPos - FragPos);
         
         vec3 result = CalcDirLight(dirLight, norm, viewDir);
-        for(int i = 0; i < NR_POINT_LIGHTS; i++)
+        for(int i = 0; i < activePointLightCount; i++)
             result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);
         //result += CalcSpotLight(spotLight, norm, FragPos, viewDir);    
         
@@ -343,9 +383,11 @@ const char *model_3d_fs = R"glsl(
         float diff = max(dot(normal, lightDir), 0.0);
         vec3 reflectDir = reflect(-lightDir, normal);
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-        vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoords));
-        vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
-        vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
+        vec3 diffuseColor = hasDiffuseTexture ? vec3(texture(material.diffuse, TexCoords)) : baseColor;
+        vec3 specularColor = hasSpecularTexture ? vec3(texture(material.specular, TexCoords)) : vec3(0.04);
+        vec3 ambient = light.ambient * diffuseColor;
+        vec3 diffuse = light.diffuse * diff * diffuseColor;
+        vec3 specular = light.specular * spec * specularColor;
         return (ambient + diffuse + specular);
     }
     
@@ -357,9 +399,11 @@ const char *model_3d_fs = R"glsl(
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
         float distance = length(light.position - fragPos);
         float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
-        vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoords));
-        vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
-        vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
+        vec3 diffuseColor = hasDiffuseTexture ? vec3(texture(material.diffuse, TexCoords)) : baseColor;
+        vec3 specularColor = hasSpecularTexture ? vec3(texture(material.specular, TexCoords)) : vec3(0.04);
+        vec3 ambient = light.ambient * diffuseColor;
+        vec3 diffuse = light.diffuse * diff * diffuseColor;
+        vec3 specular = light.specular * spec * specularColor;
         ambient *= attenuation;
         diffuse *= attenuation;
         specular *= attenuation;
@@ -377,15 +421,45 @@ const char *model_3d_fs = R"glsl(
         float theta = dot(lightDir, normalize(-light.direction)); 
         float epsilon = light.cutOff - light.outerCutOff;
         float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
-        vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoords));
-        vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
-        vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
+        vec3 diffuseColor = hasDiffuseTexture ? vec3(texture(material.diffuse, TexCoords)) : baseColor;
+        vec3 specularColor = hasSpecularTexture ? vec3(texture(material.specular, TexCoords)) : vec3(0.04);
+        vec3 ambient = light.ambient * diffuseColor;
+        vec3 diffuse = light.diffuse * diff * diffuseColor;
+        vec3 specular = light.specular * spec * specularColor;
         ambient *= attenuation * intensity;
         diffuse *= attenuation * intensity;
         specular *= attenuation * intensity;
         return (ambient + diffuse + specular);
     }
     )glsl";
+
+
+/** @brief 3D unlit model fragment shader source (textured/baseColor output without LightManager uniforms). */
+const char *model_3d_unlit_fs = R"glsl(
+    #version 330 core
+    out vec4 FragColor;
+
+    struct Material {
+        sampler2D diffuse;
+        sampler2D specular;
+        float shininess;
+    };
+
+    in vec3 FragPos;
+    in vec3 Normal;
+    in vec2 TexCoords;
+
+    uniform vec3 baseColor;
+    uniform bool hasDiffuseTexture;
+    uniform bool hasSpecularTexture;
+    uniform Material material;
+
+    void main()
+    {
+        vec3 diffuseColor = hasDiffuseTexture ? vec3(texture(material.diffuse, TexCoords)) : baseColor;
+        FragColor = vec4(diffuseColor, 1.0);
+    }
+)glsl";
 
 
 #else

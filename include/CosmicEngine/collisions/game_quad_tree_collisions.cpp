@@ -488,9 +488,10 @@ namespace CosmicEngine
                 std::min(0.25f + 0.08f * static_cast<float>(node->depth), 0.70f),
                 std::min(0.85f, 0.40f + 0.10f * static_cast<float>(node->objects.size())),
                 std::min(0.30f + 0.07f * static_cast<float>(node->depth), 0.80f));
+            const glm::vec3 nodeCenter = node->position + (node->size * 0.5f);
 
             ResourceManager::GetInstance().RenderParallelepipedLines(
-                node->position,
+                nodeCenter,
                 node->size,
                 glm::vec3(0.0f),
                 glm::vec3(0.0f),

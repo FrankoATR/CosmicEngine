@@ -120,6 +120,11 @@ namespace CosmicEngine
         /** @brief Loads objects of the requested class from the JSON document into the runtime. */
         void LoadObjectsData(const std::string& className);
 
+        /** @brief Returns the registered serialized field names for a class, or an empty list when it is not registered. */
+        std::vector<std::string> GetRegisteredFields(const std::string& className) const;
+        /** @brief Builds a single object instance from serialized JSON using a previously registered constructor. */
+        Object* CreateObjectFromSerializedData(const std::string& className, const nlohmann::json& data) const;
+
         /** @brief Returns whether the JSON document already contains a section for the given class. */
         bool HasClassSection(const std::string& className) const;
     };

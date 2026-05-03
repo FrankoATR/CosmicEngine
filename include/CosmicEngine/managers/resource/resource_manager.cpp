@@ -193,6 +193,18 @@ namespace CosmicEngine
         }
     }
 
+    bool ResourceManager::RegisterShaderForLighting(const std::string &key)
+    {
+        Shader *shader = GetShader(key);
+        if (!shader)
+        {
+            return false;
+        }
+
+        LightManager::GetInstance().RegisterShader(shader);
+        return true;
+    }
+
     bool ResourceManager::LoadTexture(const std::string &key, const std::string &path)
     {
         if (texture_resources.find(key) != texture_resources.end())
@@ -422,17 +434,29 @@ namespace CosmicEngine
 
         if (!require(LoadShaderFromCode("COSMIC_Shape_2D", shape_2D_vs, shape_2D_fs), "[ResourceManager] Failed to create built-in shader COSMIC_Shape_2D."))
             return false;
-        if (!require(LoadShaderFromCode("COSMIC_Sprite", sprite_vs, sprite_fs), "[ResourceManager] Failed to create built-in shader COSMIC_Sprite."))
-            return false;
-        if (!require(LoadShaderFromCode("COSMIC_SpriteSheet", spriteSheet_vs, spriteSheet_fs), "[ResourceManager] Failed to create built-in shader COSMIC_SpriteSheet."))
+        if (!require(LoadShaderFromCode("COSMIC_SpriteSheet_Unlit", spriteSheet_unlit_vs, spriteSheet_unlit_fs), "[ResourceManager] Failed to create built-in shader COSMIC_SpriteSheet_Unlit."))
             return false;
         if (!require(LoadShaderFromCode("COSMIC_Text", text_vs, text_fs), "[ResourceManager] Failed to create built-in shader COSMIC_Text."))
             return false;
 
         #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+        if (!require(LoadShaderFromCode("COSMIC_SpriteSheet_Lit", spriteSheet_lit_vs, spriteSheet_lit_fs), "[ResourceManager] Failed to create built-in shader COSMIC_SpriteSheet_Lit."))
+            return false;
+        if (!require(RegisterShaderForLighting("COSMIC_SpriteSheet_Lit"), "[ResourceManager] Failed to register built-in shader COSMIC_SpriteSheet_Lit for lighting."))
+            return false;
         
         
         #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+
+        const float atlasU0 = 0.0f;
+        const float atlasU1 = 0.25f;
+        const float atlasU2 = 0.50f;
+        const float atlasU3 = 0.75f;
+        const float atlasU4 = 1.00f;
+        const float atlasV0 = 0.0f;
+        const float atlasV1 = 1.0f / 3.0f;
+        const float atlasV2 = 2.0f / 3.0f;
+        const float atlasV3 = 1.0f;
 
         std::vector<std::vector<float>> Parallelepiped_texture_normal_vertices = {
                 {-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f},
@@ -477,6 +501,50 @@ namespace CosmicEngine
                 {-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f},
                 {-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f}
             };
+
+            std::vector<std::vector<float>> Parallelepiped_cube_atlas_vertices = {
+                {-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  atlasU4, atlasV1},
+                { 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  atlasU3, atlasV1},
+                { 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  atlasU3, atlasV2},
+                { 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  atlasU3, atlasV2},
+                {-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  atlasU4, atlasV2},
+                {-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  atlasU4, atlasV1},
+
+                {-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  atlasU1, atlasV1},
+                { 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  atlasU2, atlasV1},
+                { 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  atlasU2, atlasV2},
+                { 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  atlasU2, atlasV2},
+                {-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  atlasU1, atlasV2},
+                {-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  atlasU1, atlasV1},
+
+                {-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  atlasU1, atlasV1},
+                {-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  atlasU1, atlasV2},
+                {-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  atlasU0, atlasV2},
+                {-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  atlasU0, atlasV2},
+                {-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  atlasU0, atlasV1},
+                {-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  atlasU1, atlasV1},
+
+                { 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  atlasU2, atlasV1},
+                { 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  atlasU2, atlasV2},
+                { 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  atlasU3, atlasV2},
+                { 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  atlasU3, atlasV2},
+                { 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  atlasU3, atlasV1},
+                { 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  atlasU2, atlasV1},
+
+                {-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  atlasU1, atlasV1},
+                { 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  atlasU2, atlasV1},
+                { 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  atlasU2, atlasV0},
+                { 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  atlasU2, atlasV0},
+                {-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  atlasU1, atlasV0},
+                {-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  atlasU1, atlasV1},
+
+                {-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  atlasU1, atlasV3},
+                { 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  atlasU2, atlasV3},
+                { 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  atlasU2, atlasV2},
+                { 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  atlasU2, atlasV2},
+                {-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  atlasU1, atlasV2},
+                {-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  atlasU1, atlasV3}
+            };
         
             std::vector<std::vector<float>> ParallelepipedLinesVertices = {
                 { -0.5f, -0.5f, -0.5f }, {  0.5f, -0.5f, -0.5f },
@@ -502,16 +570,20 @@ namespace CosmicEngine
                 return false;
             if (!require(Load_Static_VAO("COSMIC_Parallelepiped", Parallelepiped_texture_normal_vertices, {3,3,2}), "[ResourceManager] Failed to create built-in VAO COSMIC_Parallelepiped."))
                 return false;
-            if (!require(LoadShaderFromCode("COSMIC_3DModel", model_3d_vs, model_3d_fs), "[ResourceManager] Failed to create built-in shader COSMIC_3DModel."))
+            if (!require(Load_Static_VAO("COSMIC_Parallelepiped_CubeAtlas", Parallelepiped_cube_atlas_vertices, {3,3,2}), "[ResourceManager] Failed to create built-in VAO COSMIC_Parallelepiped_CubeAtlas."))
+                return false;
+            if (!require(LoadShaderFromCode("COSMIC_3DModel_Lit", model_3d_lit_vs, model_3d_lit_fs), "[ResourceManager] Failed to create built-in shader COSMIC_3DModel_Lit."))
+                return false;
+            if (!require(LoadShaderFromCode("COSMIC_3DModel_Unlit", model_3d_lit_vs, model_3d_unlit_fs), "[ResourceManager] Failed to create built-in shader COSMIC_3DModel_Unlit."))
                 return false;
 
-            if (Shader *modelShader = GetShader("COSMIC_3DModel"))
+            if (Shader *modelShader = GetShader("COSMIC_3DModel_Lit"))
             {
                 LightManager::GetInstance().RegisterShader(modelShader); // MOVE TO ...?
             }
             else
             {
-                RUNTIME_WARNING("[ResourceManager] Built-in shader COSMIC_3DModel is missing after initialization.");
+                RUNTIME_WARNING("[ResourceManager] Built-in shader COSMIC_3DModel_Lit is missing after initialization.");
                 return false;
             }
 
@@ -522,9 +594,7 @@ namespace CosmicEngine
         RUNTIME_LIFECYCLE("Resource manager", "initialized");
 		return true;
     }
-
-
-    void ResourceManager::Render2DSprite(
+    void ResourceManager::Render2DSpriteUnlit(
         const std::string &textureKey,
         glm::vec2 position,
         glm::vec2 size,
@@ -550,11 +620,11 @@ namespace CosmicEngine
             return;
         }
 
-        Shader *spriteShader = GetShader("COSMIC_Sprite");
+        Shader *spriteShader = GetShader("COSMIC_SpriteSheet_Unlit");
 
         if (!spriteShader)
         {
-            RUNTIME_WARNING("[ResourceManager] Shader not found: COSMIC_Sprite");
+            RUNTIME_WARNING("[ResourceManager] Shader not found: COSMIC_SpriteSheet_Unlit");
             return;
         }
 
@@ -572,6 +642,8 @@ namespace CosmicEngine
         spriteShader->SetModel("model", glm::vec3(position, 0.0f), glm::vec3(size, 0.0f), glm::vec3(0.0f, 0.0f, rotation));
         spriteShader->SetProjection("projection", viewType);
         spriteShader->SetVec3("spriteColor", color);
+        spriteShader->SetVec2("uvMin", glm::vec2(0.0f, 0.0f));
+        spriteShader->SetVec2("uvMax", glm::vec2(1.0f, 1.0f));
 
         unsigned int textureIndex = 0;
         texture->Bind(textureIndex);
@@ -585,7 +657,30 @@ namespace CosmicEngine
         spriteShader->EndUse();
     }
 
-    void ResourceManager::Render2DSprite(
+    void ResourceManager::Render2DSpriteLit(
+        const std::string &textureKey,
+        glm::vec2 position,
+        glm::vec2 size,
+        float rotation,
+        glm::vec3 color,
+        float alpha,
+        ViewType viewType
+    )
+    {
+        Render2DSpriteWithShader(
+            "COSMIC_Sprite",
+            "COSMIC_SpriteSheet_Lit",
+            textureKey,
+            position,
+            size,
+            rotation,
+            color,
+            alpha,
+            viewType
+        );
+    }
+
+    void ResourceManager::Render2DSpriteWithShader(
         const std::string &vaoKey,
         const std::string &shaderKey,
         const std::string &textureKey,
@@ -610,6 +705,8 @@ namespace CosmicEngine
         shader->SetModel("model", glm::vec3(position, 0.0f), glm::vec3(size, 0.0f), glm::vec3(0.0f, 0.0f, rotation));
         shader->SetProjection("projection", viewType);
         shader->SetVec3("spriteColor", color);
+        shader->SetVec2("uvMin", glm::vec2(0.0f, 0.0f));
+        shader->SetVec2("uvMax", glm::vec2(1.0f, 1.0f));
 
         unsigned int textureIndex = 0;
         texture->Bind(textureIndex);
@@ -623,7 +720,7 @@ namespace CosmicEngine
         shader->EndUse();
     }
 
-    void ResourceManager::Render2DSpriteFromTextureSheet(
+    void ResourceManager::Render2DSpriteFromTextureSheetUnlit(
         const std::string &textureKey,
         int row,
         int column,
@@ -643,7 +740,7 @@ namespace CosmicEngine
             return;
         }
 
-        Shader *spriteSheetShader = GetShader("COSMIC_SpriteSheet");
+        Shader *spriteSheetShader = GetShader("COSMIC_SpriteSheet_Unlit");
 
         spriteSheetShader->Use();
         spriteSheetShader->SetModel("model", glm::vec3(position, 0.0f), glm::vec3(size, 0.0f), glm::vec3(0.0f, 0.0f, rotation));
@@ -679,7 +776,34 @@ namespace CosmicEngine
         spriteSheetShader->EndUse();
     }
 
-    void ResourceManager::Render2DSpriteFromTextureSheet( // normal, specular, etc...
+    void ResourceManager::Render2DSpriteFromTextureSheetLit(
+        const std::string &textureKey,
+        int row,
+        int column,
+        glm::vec2 position,
+        glm::vec2 size,
+        float rotation,
+        glm::vec3 color,
+        float alpha,
+        ViewType viewType
+    )
+    {
+        Render2DSpriteFromTextureSheetWithShader(
+            "COSMIC_Sprite",
+            "COSMIC_SpriteSheet_Lit",
+            {{"image", textureKey}},
+            row,
+            column,
+            position,
+            size,
+            rotation,
+            color,
+            alpha,
+            viewType
+        );
+    }
+
+    void ResourceManager::Render2DSpriteFromTextureSheetWithShader(
         const std::string &vaoKey,
         const std::string &shaderKey,
         const std::vector<std::pair<std::string, std::string>> &shaderVar_textureKey,  //"name on shader uniform - name on resource manager"
@@ -1080,18 +1204,7 @@ namespace CosmicEngine
 
         Shader *shapeShader = GetShader("COSMIC_Shape_3D");
         shapeShader->Use();
-
-        glm::mat4 model(1.0f);
-        glm::vec3 center = position + size * 0.5f;
-
-        model = glm::translate(model, center + pivot);
-        model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::translate(model, -pivot);
-        model = glm::scale(model, size);
-
-        shapeShader->SetMatrix4("model", model);
+        shapeShader->SetModel("model", position, size, rotation, position);
 
         shapeShader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
         shapeShader->SetMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
@@ -1107,7 +1220,7 @@ namespace CosmicEngine
     }
 
 
-    void ResourceManager::RenderParallelepipedTexture(
+    void ResourceManager::RenderParallelepipedTextureLit(
         std::string textureKey,
         glm::vec3 position,
         glm::vec3 size,
@@ -1120,28 +1233,34 @@ namespace CosmicEngine
     {
         auto vao = Get_Static_VAO("COSMIC_Parallelepiped");
 
-        Shader *shader = GetShader("COSMIC_3DModel");
+        Shader *shader = GetShader("COSMIC_3DModel_Lit");
         Texture2D *texture = GetTexture(textureKey);
         Texture2D *texture2 = GetTexture("cobblestone_specular");
-        
-        if ((vao == 0) || !texture || !shader || !texture2)
+
+        if ((vao == 0) || !texture || !shader)
         {
             return;
         }
 
         shader->Use();
         shader->SetVec3("viewPos", CameraManager::GetInstance().GetPosition()); 
-        shader->SetModel("model", position, size, rotation);
+        shader->SetVec3("baseColor", color);
+        shader->SetBool("hasDiffuseTexture", true);
+        shader->SetBool("hasSpecularTexture", texture2 != nullptr);
+        shader->SetModel("model", position, size, rotation, position);
         shader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
         shader->SetMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture->GetID());
         shader->SetInt("material.diffuse", 0);
-    
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2->GetID());
-        shader->SetInt("material.specular", 1);
+
+        if (texture2)
+        {
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, texture2->GetID());
+            shader->SetInt("material.specular", 1);
+        }
 
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -1151,7 +1270,139 @@ namespace CosmicEngine
     }
 
 
-    void ResourceManager::Render3DModel(
+    void ResourceManager::RenderParallelepipedTextureUnlit(
+        std::string textureKey,
+        glm::vec3 position,
+        glm::vec3 size,
+        glm::vec3 pivot,
+        glm::vec3 rotation,
+        glm::vec3 color,
+        float alpha,
+        ViewType viewType
+    )
+    {
+        auto vao = Get_Static_VAO("COSMIC_Parallelepiped");
+
+        Shader *shader = GetShader("COSMIC_3DModel_Unlit");
+        Texture2D *texture = GetTexture(textureKey);
+
+        if ((vao == 0) || !texture || !shader)
+        {
+            return;
+        }
+
+        shader->Use();
+        shader->SetVec3("baseColor", color);
+        shader->SetBool("hasDiffuseTexture", true);
+        shader->SetBool("hasSpecularTexture", false);
+        shader->SetModel("model", position, size, rotation, position);
+        shader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());
+        shader->SetMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture->GetID());
+        shader->SetInt("material.diffuse", 0);
+
+        glBindVertexArray(vao);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+
+        shader->EndUse();
+    }
+
+
+    void ResourceManager::RenderParallelepipedTextureAtlasLit(
+        std::string textureKey,
+        glm::vec3 position,
+        glm::vec3 size,
+        glm::vec3 pivot,
+        glm::vec3 rotation,
+        glm::vec3 color,
+        float alpha,
+        ViewType viewType
+    )
+    {
+        auto vao = Get_Static_VAO("COSMIC_Parallelepiped_CubeAtlas");
+
+        Shader *shader = GetShader("COSMIC_3DModel_Lit");
+        Texture2D *texture = GetTexture(textureKey);
+        Texture2D *texture2 = GetTexture("cobblestone_specular");
+
+        if ((vao == 0) || !texture || !shader)
+        {
+            return;
+        }
+
+        shader->Use();
+        shader->SetVec3("viewPos", CameraManager::GetInstance().GetPosition());
+        shader->SetVec3("baseColor", color);
+        shader->SetBool("hasDiffuseTexture", true);
+        shader->SetBool("hasSpecularTexture", texture2 != nullptr);
+        shader->SetModel("model", position, size, rotation, position);
+        shader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());
+        shader->SetMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture->GetID());
+        shader->SetInt("material.diffuse", 0);
+
+        if (texture2)
+        {
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, texture2->GetID());
+            shader->SetInt("material.specular", 1);
+        }
+
+        glBindVertexArray(vao);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+
+        shader->EndUse();
+    }
+
+
+    void ResourceManager::RenderParallelepipedTextureAtlasUnlit(
+        std::string textureKey,
+        glm::vec3 position,
+        glm::vec3 size,
+        glm::vec3 pivot,
+        glm::vec3 rotation,
+        glm::vec3 color,
+        float alpha,
+        ViewType viewType
+    )
+    {
+        auto vao = Get_Static_VAO("COSMIC_Parallelepiped_CubeAtlas");
+
+        Shader *shader = GetShader("COSMIC_3DModel_Unlit");
+        Texture2D *texture = GetTexture(textureKey);
+
+        if ((vao == 0) || !texture || !shader)
+        {
+            return;
+        }
+
+        shader->Use();
+        shader->SetVec3("baseColor", color);
+        shader->SetBool("hasDiffuseTexture", true);
+        shader->SetBool("hasSpecularTexture", false);
+        shader->SetModel("model", position, size, rotation, position);
+        shader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());
+        shader->SetMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture->GetID());
+        shader->SetInt("material.diffuse", 0);
+
+        glBindVertexArray(vao);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+
+        shader->EndUse();
+    }
+
+
+    void ResourceManager::Render3DModelLit(
         const std::string &modelKey,
         glm::vec3 position,
         glm::vec3 size,
@@ -1169,12 +1420,45 @@ namespace CosmicEngine
             return;
         }
 
-        Shader *modelShader = GetShader("COSMIC_3DModel");
+        Shader *modelShader = GetShader("COSMIC_3DModel_Lit");
 
         modelShader->Use();
         modelShader->SetVec3("viewPos", CameraManager::GetInstance().GetPosition()); 
-        modelShader->SetModel("model", position, size, rotation);
+        modelShader->SetVec3("baseColor", color);
+        modelShader->SetModel("model", position, size, rotation, position);
         modelShader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
+        modelShader->SetProjection("projection", viewType);
+
+        model->draw(*modelShader);
+
+        modelShader->EndUse();
+
+    }
+
+    void ResourceManager::Render3DModelUnlit(
+        const std::string &modelKey,
+        glm::vec3 position,
+        glm::vec3 size,
+        glm::vec3 rotation,
+        glm::vec3 color,
+        float alpha,
+        ViewType viewType
+    )
+    {
+
+        Model *model = GetModel(modelKey);
+
+        if (!model)
+        {
+            return;
+        }
+
+        Shader *modelShader = GetShader("COSMIC_3DModel_Unlit");
+
+        modelShader->Use();
+        modelShader->SetVec3("baseColor", color);
+        modelShader->SetModel("model", position, size, rotation, position);
+        modelShader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());
         modelShader->SetProjection("projection", viewType);
 
         model->draw(*modelShader);

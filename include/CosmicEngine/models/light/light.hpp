@@ -11,6 +11,12 @@
 
 namespace CosmicEngine
 {
+    /** @brief Identifies whether a point light is expected to remain fixed or move at runtime. */
+    enum class LightMobility
+    {
+        Dynamic = 0,
+        Static = 1
+    };
 
     class LightManager;
 
@@ -42,6 +48,7 @@ namespace CosmicEngine
 
         int ID;
         bool visible;
+        LightMobility mobility;
         float constantLight;
         float linearLight;
         float quadraticLight;
@@ -106,6 +113,9 @@ namespace CosmicEngine
         /** @brief Marks the light for removal from the runtime. */
         void Destroy();
 
+        /** @brief Returns whether the light is registered as static or dynamic. */
+        LightMobility GetMobility() const;
+
         #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
             /**
              * @brief Creates a 2D light.
@@ -118,6 +128,7 @@ namespace CosmicEngine
              * @param quadraticLight Quadratic attenuation factor.
              * @param shininess Specular shininess factor.
              * @param visible Initial visibility state.
+             * @param mobility Runtime mobility classification used by the light manager.
              */
             Light(
                 glm::vec2 position,
@@ -128,7 +139,8 @@ namespace CosmicEngine
                 float linearLight = 0.09f,
                 float quadraticLight = 0.032f,
                 float shininess = 64.0f,
-                bool visible = true);
+                bool visible = true,
+                LightMobility mobility = LightMobility::Dynamic);
 
             /**
              * @brief Sets the 2D position of the light.
@@ -153,6 +165,7 @@ namespace CosmicEngine
              * @param quadraticLight Quadratic attenuation factor.
              * @param shininess Specular shininess factor.
              * @param visible Initial visibility state.
+             * @param mobility Runtime mobility classification used by the light manager.
              */
             Light(
                 glm::vec3 position,
@@ -163,7 +176,8 @@ namespace CosmicEngine
                 float linearLight = 0.09f,
                 float quadraticLight = 0.032f,
                 float shininess = 64.0f,
-                bool visible = true);
+                bool visible = true,
+                LightMobility mobility = LightMobility::Dynamic);
 
             /**
              * @brief Sets the 3D position of the light.

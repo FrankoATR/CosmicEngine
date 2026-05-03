@@ -62,7 +62,7 @@ namespace CosmicEngine
      *
      *     void draw() const override
      *     {
-     *         RS_MN.Render2DSprite("test_texture",
+    *         RS_MN.Render2DSpriteUnlit("test_texture",
      *             GetPosition(), GetSize(), GetRotation(), GetColor());
      *     }
      * };
