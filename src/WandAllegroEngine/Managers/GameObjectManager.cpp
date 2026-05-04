@@ -1,8 +1,9 @@
 #include "GameObjectManager.h"
 #include "../Models/GameObject.h"
 
-GameObjectManager::GameObjectManager()
+GameObjectManager::GameObjectManager() : nextEntityId(0)
 {
+
 }
 
 GameObjectManager::~GameObjectManager()
@@ -35,8 +36,8 @@ void GameObjectManager::Draw()
 
 void GameObjectManager::Add(GameObject *actor)
 {
-    actor->SetObjectId(nextEntityId);
-    nextEntityId++;
+    actor->SetObjectId(nextEntityId++);
+    actor->Init();
     actors.push_back(actor);
 
     SortByLayer();

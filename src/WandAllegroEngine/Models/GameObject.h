@@ -40,6 +40,7 @@ public:
     GameObject() = delete;
     GameObject(GameManager* Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId);
     virtual void Draw();
+    virtual void Init();
     virtual void Update(float deltaTime);
     virtual void OnCollision(GameObject* other);
 

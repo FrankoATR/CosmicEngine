@@ -14,7 +14,7 @@ public:
 
     void Update();
     void Draw();
-    void Add(GameBodyObject* body);
+    void Add(GameObject *obj, Vec2 Position, Vec2 Size);
     void Remove(int entityId);
     void Clear();
 

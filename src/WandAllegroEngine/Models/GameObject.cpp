@@ -6,6 +6,12 @@ GameObject::GameObject(GameManager *Game, Object ObjectType, Vec2 Position, Vec2
     this->AliveInGameManager = true;
 }
 
+void GameObject::Init()
+{
+
+}
+
+
 void GameObject::Draw()
 {
     if (Sprite)

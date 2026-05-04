@@ -20,23 +20,37 @@ void GameInScene::Init()
         Game->keyState[key] = false;
     }
 
-    Game->resourceManager->loadSpriteSheet("Player", CHARACTERS_IMAGE_PATH, 2, 7);
-    Game->resourceManager->loadSpriteSheet("SpriteSheet", DUNGUEON1_IMAGE_PATH, 4, 4);
-    Game->resourceManager->loadFont("Font", RETRO_FONT_PATH, 50);
+    auto GRM = Game->resourceManager;
+    GRM->loadSpriteSheet("Player", CHARACTERS_IMAGE_PATH, 2, 7);
+    GRM->loadSpriteSheet("SpriteSheet", DUNGUEON1_IMAGE_PATH, 4, 4);
+    GRM->loadFont("Font", RETRO_FONT_PATH, 50);
 
 
-    GameObject* player = new LinkObject(Game, DynamicEntity, Vec2(100, 100), Vec2(64, 64), "NAME", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 1, 1), 1, 20, Game->resourceManager->getFont("Font"));
+    GameObject* player = new LinkObject(Game, DynamicEntity, Vec2(100, 100), Vec2(64, 64), "Player", GRM->getBitmapRegionFromSpriteSheet("Player", 1, 1), 1, 20, GRM->getFont("Font"));
     Game->gameObjectManager->Add(player);
 
+    /*
+    
     float load = 1.0;
-    for(int i=0; i < 20; i++)
-        for(int j=0; j < 20; j++){
-            GameObject* tmp = new MapTileObject(Game, DynamicEntity, Vec2(32*i, 32*j), Vec2(32, 32), "Tile", Game->resourceManager->getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
+    for(int i=0; i < 10; i++)
+        for(int j=0; j < 10; j++){
+            GameObject* tmp = new MapTileObject(Game, DynamicEntity, Vec2(64*i, 64*j), Vec2(64, 64), "Tile", GRM->getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
             Game->gameObjectManager->Add(tmp);
             load++;
-            SetProgressLoadingScene((load/(50.0f*30.0f)));
+            //SetProgressLoadingScene((load/(50.0f*30.0f)));
         }
 
+    
+    */
+
+    for(int i = 0; i < 100; i++)
+    {
+            int x = rand()%1920;
+            int y = rand()%1080; 
+            GameObject* tmp = new MapTileObject(Game, DynamicEntity, Vec2(x, y), Vec2(64, 64), "Tile", GRM->getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
+            Game->gameObjectManager->Add(tmp);
+    }
+    
     SetProgressLoadingScene(1.0f);
 
     Game->SetBackBufferColor(al_map_rgb(155, 141, 30));
@@ -65,6 +79,9 @@ void GameInScene::Update(double deltaTime)
 
     if (Game->keyState[ALLEGRO_KEY_ESCAPE]) {
         Game->gameSceneManager->PopScene();
+    }
+    if(Game->keyState[ALLEGRO_KEY_H] && Game->Event.type == ALLEGRO_EVENT_KEY_DOWN){
+        Game->ToggleShowBody();
     }
     if(Game->keyState[ALLEGRO_KEY_SPACE]){
         Game->gameSceneManager->ReplaceScene(new MainScene(Game));

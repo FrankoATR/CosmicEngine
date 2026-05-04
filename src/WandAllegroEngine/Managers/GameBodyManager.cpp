@@ -45,7 +45,25 @@ void GameBodyManager::Update()
         Remove(id);
     }
 
-    for (auto& grid : gameGridCollisions)
+    /*
+        for (const auto &body : bodys)
+    {
+        for (const auto &body2 : bodys)
+        {
+            if (body != body2)
+            {
+                if (RectToRectCollisionBody(body, body2))
+                {
+                    //std::cout << "COLLISION" << std::endl;   //VARIAS COLISIONES SE ESTAN BORRANDO A LA VEZ, CUANDO SOLO TOCO 1
+                    body->GetParent()->OnCollision(body2->GetParent());
+                    body2->GetParent()->OnCollision(body->GetParent());
+                }
+            }
+        }
+    }
+    */
+
+    for (auto &grid : gameGridCollisions)
     {
         grid.Find_collision_grid();
         grid.ClearGrid();
@@ -64,7 +82,7 @@ bool GameBodyManager::RectToRectCollisionBody(GameBodyObject *body1, GameBodyObj
 
 void GameBodyManager::Draw()
 {
-    for (auto& grid : gameGridCollisions)
+    for (auto &grid : gameGridCollisions)
     {
         grid.DrawCells();
     }
@@ -74,18 +92,20 @@ void GameBodyManager::Draw()
     }
 }
 
-void GameBodyManager::Add(GameBodyObject *body)
+void GameBodyManager::Add(GameObject *obj, Vec2 Position, Vec2 Size)
 {
-    if(body->GetParent()){
-        body->SetObjectId(body->GetParent()->GetObjectId());
+    if (obj)
+    {
+        GameBodyObject* body = new GameBodyObject(obj, obj->GetPosition(), obj->GetSize());
+        body->SetObjectId(obj->GetObjectId());
         bodys.push_back(body);
     }
 }
 
 void GameBodyManager::Remove(int entityId)
 {
-    auto it = std::find_if(bodys.begin(), bodys.end(), [entityId](GameBodyObject *obj)
-                           { return obj->GetObjectId() == entityId; });
+    auto it = std::find_if(bodys.begin(), bodys.end(), [entityId](GameBodyObject *body)
+                           { return body->GetObjectId() == entityId; });
     if (it != bodys.end())
     {
         delete *it;
@@ -99,9 +119,9 @@ void GameBodyManager::Clear()
     {
         grid.ClearGrid();
     }
-    //gameGridCollisions.clear(); Pensar si hacer un Manager para grid y otro para colisiones
+    // gameGridCollisions.clear(); Pensar si hacer un Manager para grid y otro para colisiones
 
-    for (const auto& body : bodys)
+    for (const auto &body : bodys)
     {
         delete body;
     }

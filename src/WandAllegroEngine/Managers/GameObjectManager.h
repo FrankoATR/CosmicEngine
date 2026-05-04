@@ -10,7 +10,7 @@ class GameObject;
 class GameObjectManager {
 private:
     std::vector<GameObject*> actors;
-    int nextEntityId = 1;
+    int nextEntityId;
 public:
     GameObjectManager();
     ~GameObjectManager();

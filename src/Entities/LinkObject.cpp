@@ -4,8 +4,13 @@ LinkObject::LinkObject(GameManager* Game, Object ObjectType, Vec2 Position, Vec2
 GameObject(Game, ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP)
 {
     this->font = font;
-    Game->gameBodyManager->Add(new GameBodyObject(this, GetPosition(), GetSize()));
 }
+
+
+void LinkObject::Init(){
+    Game->gameBodyManager->Add(this, GetPosition(), GetSize());
+}
+
 
 
 void LinkObject::Draw(){

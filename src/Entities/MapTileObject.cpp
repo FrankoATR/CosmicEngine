@@ -4,7 +4,12 @@
 MapTileObject::MapTileObject(GameManager* Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId) : 
 GameObject(Game, ObjectType, Position, Size, ObjectName, Sprite, LayerId)
 {
-    Game->gameBodyManager->Add(new GameBodyObject(this, GetPosition(), GetSize()));
+
+}
+
+
+void MapTileObject::Init(){
+    Game->gameBodyManager->Add(this, GetPosition(), GetSize());
 }
 
 

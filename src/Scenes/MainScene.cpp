@@ -38,11 +38,12 @@ void MainScene::Init()
     SetProgressLoadingScene(0.4f);
 
 
-    GameObject* player = new LinkObject(Game, DynamicEntity, Vec2(400, 300), Vec2(64, 64), "PLAYER", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 1, 4), 1, 20, Game->resourceManager->getFont("Font"));
+    GameObject* player = new LinkObject(Game, DynamicEntity, Vec2(400, 300), Vec2(64, 64), "Player", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 1, 4), 1, 20, Game->resourceManager->getFont("Font"));
     Game->gameObjectManager->Add(player);
 
-    GameObject* enemy = new CustomEnemy(Game, DynamicEntity, Vec2(600, 600), Vec2(64, 64), "ENEMY", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 0, 2), 1, 20, Game->resourceManager->getFont("Font"));
+    GameObject* enemy = new CustomEnemy(Game, DynamicEntity, Vec2(600, 600), Vec2(64, 64), "Enemy", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 0, 2), 1, 20, Game->resourceManager->getFont("Font"));
     Game->gameObjectManager->Add(enemy);
+
     SetProgressLoadingScene(0.6f);
 
     for(int i=0; i < 5; i++){
