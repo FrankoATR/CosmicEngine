@@ -1,0 +1,68 @@
+******************************************************************* Español *******************************************************************
+ACUERDO DE LICENCIA DE SOFTWARE
+
+Este Acuerdo de Licencia de Software es un contrato legal entre el usuario y Wand, propietario de los derechos de software del juego TetrisChafa Software . Al instalar, copiar o de cualquier otra manera utilizar el Software, el Usuario acepta estar sujeto a los términos y condiciones de este Acuerdo.
+
+1. LICENCIA DE USO
+
+1.1 Concesión de Licencia: Wand otorga al Usuario una licencia no exclusiva, intransferible y revocable para utilizar, modificar y ejecutar el código fuente del Software con el único propósito de disfrutar de la experiencia de juego.
+
+2. RESTRICCIONES
+
+2.1 Distribución Comercial Prohibida: El Usuario reconoce y acepta que no tiene el derecho de distribuir, vender, sublicenciar ni comercializar el Software o cualquier modificación del código fuente del Software con fines lucrativos.
+
+2.2 Propiedad Intelectual: El Usuario reconoce que TetrisChafa y todo el código fuente asociado son propiedad exclusiva de Wand. No se concede ninguna propiedad sobre el Software, y el Usuario acepta no reclamar ningún derecho de propiedad sobre el mismo.
+
+3. MODIFICACIONES Y DERIVADOS
+
+3.1 Libertad de Modificación: El Usuario tiene el derecho de modificar el código fuente del Software para su uso personal y no comercial.
+
+3.2 Prohibición de Distribución Comercial de Derivados: Aunque el Usuario puede modificar el código fuente del Software, no tiene el derecho de distribuir comercialmente dichas modificaciones.
+
+4. TERMINACIÓN
+
+4.1 Revocación de la Licencia: Wand se reserva el derecho de revocar esta licencia en caso de incumplimiento de los términos establecidos en este Acuerdo.
+
+5. DISPOSICIONES GENERALES
+
+5.1 Ley Aplicable: Este Acuerdo se regirá e interpretará de acuerdo con las leyes de El Salvador, sin tener en cuenta sus conflictos de principios legales.
+
+Al instalar, copiar o utilizar el Software, el Usuario reconoce haber leído y entendido este Acuerdo y acepta cumplir con sus términos y condiciones.
+
+Wand
+Fecha: 21 de noviembre de 2023
+
+
+******************************************************************* English *******************************************************************
+SOFTWARE LICENSE AGREEMENT
+
+This Software License Agreement is a legal contract between the user and Wand, owner of the software rights of the TetrisChafa Software game. By installing, copying or otherwise using the Software, User agrees to be bound by the terms and conditions of this Agreement.
+
+1. LICENSE OF USE
+
+1.1 Grant of License: Wand grants the User a non-exclusive, non-transferable and revocable license to use, modify and execute the source code of the Software for the sole purpose of enjoying the gaming experience.
+
+2. RESTRICTIONS
+
+2.1 Prohibited Commercial Distribution: The User acknowledges and agrees that he or she does not have the right to distribute, sell, sublicense or commercialize the Software or any modification of the Software source code for profit.
+
+2.2 Intellectual Property: The User acknowledges that TetrisChafa and all associated source code are the exclusive property of Wand. No ownership is granted in the Software, and User agrees not to claim any ownership rights in the Software.
+
+3. MODIFICATIONS AND DERIVATIVES
+
+3.1 Freedom of Modification: The User has the right to modify the source code of the Software for personal and non-commercial use.
+
+3.2 Prohibition of Commercial Distribution of Derivatives: Although the User may modify the source code of the Software, he does not have the right to commercially distribute such modifications.
+
+4. TERMINATION
+
+4.1 License Revocation: Wand reserves the right to revoke this license in the event of your failure to comply with the terms set forth in this Agreement.
+
+5. GENERAL PROVISIONS
+
+5.1 Applicable Law: This Agreement shall be governed and construed in accordance with the laws of El Salvador, without regard to its conflicts of law principles.
+
+By installing, copying or using the Software, the User acknowledges that he or she has read and understood this Agreement and agrees to comply with its terms and conditions.
+
+Wand
+Date: November 21, 2023

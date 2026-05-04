@@ -1,0 +1,5 @@
+#define BG_FOREST_IMAGE_PATH "assets/img/backgrounds/bg2.jpg"
+#define LINK_IMAGE_PATH "assets/img/blocks/white1.png"
+#define CHARACTERS_IMAGE_PATH "assets/img/entities/Dungeon_Character_2.png"
+#define DUNGUEON1_IMAGE_PATH "assets/img/blocks/SpriteSheet-Dungueon.png"
+#define RETRO_FONT_PATH "assets/fonts/ThaleahFat.ttf"

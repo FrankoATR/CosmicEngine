@@ -1,41 +1,19 @@
-#include <CosmicEngine/managers/game_manager.hpp>
-#include <CosmicEngine/utils/log.hpp>
-#include <CosmicEngine/utils/logger.hpp>
-#include "scenes/main_scene.hpp"
+#include "WandAllegroEngine/Managers/GameManager.h"
 
-using namespace CosmicEngine;
+int main(){
 
-int main()
-{
-	try
-	{
-		#ifdef NDEBUG
-				Logger::init(false, false);
-		#else
-				Logger::init(true, true);
-		#endif
 
-		Logger::info("************************************* [PROGRAM START] **************************************");
+	int ScreenWidth = GetSystemMetrics(SM_CXSCREEN);
+	int ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-		GameManagerInitParams params{
-			GAME_INITIAL_SCREEN_WIDTH,
-			GAME_INITIAL_SCREEN_HEIGHT,
-			GAME_BASE_RENDER_SCREEN_WIDTH,
-			GAME_BASE_RENDER_SCREEN_HEIGHT};
+	GameManager* Game = new GameManager(Size(ScreenWidth, ScreenHeight));
 
-		Manager<GameManager>().init(params);
-		Manager<GameManager>().setFirstScene(new MainScene);
-		Manager<GameManager>().update();
-		Manager<GameManager>().shutdown();
-
-		Logger::info("******************************** [END PROGRAM SUCCESSFULLY] ********************************");
-		Logger::shutdown();
-		return 0;
+	if(Game->Init()){
+		Game->Update();
 	}
-	catch (const std::exception &e)
-	{
-		std::cerr << "[Fatal] " << e.what() << std::endl;
-		Logger::shutdown();
-		return 1;
-	}
+	
+	delete Game;
+
+	return 0;
 }
+
