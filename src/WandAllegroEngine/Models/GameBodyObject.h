@@ -32,6 +32,7 @@ private:
 	GameObject* Parent;
 
 public:
+	GameBodyObject() = delete;
 	GameBodyObject(GameObject* Parent, Vec2 Position, Vec2 Size);
 
 	void SetPosition(Vec2 NewPosition);
@@ -50,9 +51,6 @@ public:
 	GameObject* GetParent();
 
 	~GameBodyObject();
-
-
-
 };
 
 #endif

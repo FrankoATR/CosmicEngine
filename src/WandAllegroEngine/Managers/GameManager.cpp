@@ -8,6 +8,7 @@ GameManager::GameManager(Size ScreenSize) : ScreenSize(ScreenSize), Window(nullp
 {
     this->redraw = true;
     this->ShowBodys = false;
+	this->BackBufferColor = al_map_rgb(0, 0, 0);
 
 }
 
@@ -79,7 +80,7 @@ void GameManager::Update(){
 
 		switch (Event.type){
 			case ALLEGRO_EVENT_DISPLAY_CLOSE:
-				gameSceneManager->PopScene();
+				gameSceneManager->Clear();
 				break;
 
 			case ALLEGRO_EVENT_TIMER:
@@ -104,7 +105,7 @@ void GameManager::Update(){
 			redraw = false;
 
 			if(gameSceneManager->IsSceneLoaded()){
-				al_clear_to_color(al_map_rgb(30, 50, 0));
+				al_clear_to_color(BackBufferColor);
 
 				gameObjectManager->Draw();
 
@@ -126,6 +127,11 @@ void GameManager::Update(){
 
 void GameManager::ToggleShowBody(){
     this->ShowBodys = !this->ShowBodys;
+}
+
+
+void GameManager::SetBackBufferColor(ALLEGRO_COLOR color){
+	this->BackBufferColor = color;
 }
 
 
@@ -160,7 +166,7 @@ void GameManager::SetWindows_WindowsMode(){
 }
 
 
-GameManager::~GameManager(){
+void GameManager::End(){
 	al_unregister_event_source(event_queue, al_get_mouse_event_source());
     al_unregister_event_source(event_queue, al_get_keyboard_event_source());
 	al_unregister_event_source(event_queue, al_get_display_event_source(Window));
@@ -189,4 +195,12 @@ GameManager::~GameManager(){
 	delete gameObjectManager;
 	delete gameSceneManager;
 	delete gameBodyManager;
+
+}
+
+
+
+GameManager::~GameManager(){
+	std::cout << "END PROGRAM SUCCESFULY" << std::endl;
+	End();
 }

@@ -1,6 +1,6 @@
 #include "GameScene.h"
 
-GameScene::GameScene(GameManager* Game) : Game(Game), ProgressLoadingScene(0.0f)
+GameScene::GameScene(GameManager* Game, std::string Name) : Game(Game), ProgressLoadingScene(0.0f), Name(Name)
 {
 
 }
@@ -15,12 +15,10 @@ void GameScene::UpdateLoadingScene(){
 void GameScene::SetProgressLoadingScene(float Progress){
     if(Progress > 1.0)
         this->ProgressLoadingScene = 1.0;
-    else if(Progress < 0.0){
+    else if(Progress < 0.0)
         this->ProgressLoadingScene = 0.0;
-    }
-    else{
+    else
         this->ProgressLoadingScene = Progress;
-    }
 }
 
 
@@ -34,10 +32,12 @@ bool GameScene::IsProgressLoadinSceneComplete(){
 }
 
 
+std::string GameScene::GetName(){
+    return this->Name;
+}
 
 
-
-void GameScene::Clean(){
+void GameScene::Clear(){
     this->Game->gameBodyManager->Clear();
     this->Game->gameObjectManager->Clear();
     this->Game->resourceManager->clear();
@@ -47,7 +47,7 @@ void GameScene::Clean(){
 
 GameScene::~GameScene()
 {
-    std::cout << "GameScene Destroyed" << std::endl;
-    Clean();
+    std::cout << "DESTROY SCENE: " << GetName() << std::endl;
+    Clear();
 
 }

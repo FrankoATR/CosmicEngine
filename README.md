@@ -2,298 +2,127 @@
 
 ## Fecha efectiva
 
-**24 de septiembre de 2024**
+**31 de octubre de 2024**
 
-## Descripcion general
+## Descripción general
 
-`WandAllegroEngine` constituye la base inicial del proyecto antes de la evolucion hacia la estructura moderna del framework. En este estado, el motor se presenta como un framework 2D orientado a juegos construidos sobre Allegro 5, con una organizacion centrada en managers, escenas, objetos, recursos y colisiones.
+Esta versión documenta únicamente los cambios técnicos incorporados sobre el estado previamente descrito en el README committeado anterior. El enfoque de esta iteración no está en redefinir el framework base, sino en registrar qué partes se agregan, cuáles cambian de comportamiento y qué responsabilidades se reorganizan dentro del código visible.
 
-La responsabilidad principal del framework es inicializar la plataforma, abrir la ventana del juego, mantener el ciclo principal, actualizar las escenas activas, actualizar los objetos registrados, procesar entradas de teclado y raton mediante Allegro, dibujar el contenido visible y administrar recursos graficos basicos como bitmaps, spritesheets y fuentes.
+## Objetivo técnico
 
-Aunque el repositorio ya incluye `nlohmann` dentro de `include/`, el nucleo funcional visible de esta version se concentra principalmente en Allegro 5 y en una arquitectura propia de clases base y managers.
-
-## Objetivo tecnico del framework
-
-En esta etapa, el framework busca resolver una base comun para juegos 2D con las siguientes capacidades:
-
-- inicializacion centralizada del runtime y de los addons de Allegro;
-- control del ciclo principal de juego con timer a 60 FPS;
-- manejo de escenas cargadas en forma de pila;
-- registro y actualizacion de objetos del juego;
-- administracion de cuerpos de colision separados de la logica visual;
-- carga y consulta de recursos visuales y tipograficos;
-- soporte para pantalla completa, modo ventana y redimension de la ventana;
-- propagacion del `deltaTime` para movimiento y logica por frame;
-- soporte base para overlays de depuracion de colisiones.
+El objetivo de esta actualización es consolidar mejor el ciclo de vida interno del framework y hacer más explícita la relación entre escenas, objetos, recursos y colisiones. En términos prácticos, esta versión introduce un control más claro sobre el reemplazo de escenas, mueve el registro de objetos hacia las escenas concretas, incorpora configuración de color de fondo por escena y simplifica la estructura interna del sistema de colisiones.
 
 ## Estructura del proyecto
 
-La estructura visible de esta version queda organizada de esta forma:
+La estructura general del proyecto se mantiene, pero esta iteración introduce cambios visibles dentro de estos puntos:
 
-```text
-src/
-  main.cpp
-  Scenes/
-  Entities/
-  Utilities/
-  WandAllegroEngine/
-    Managers/
-    Models/
-    Collisions/
-include/
-  allegro5/
-  nlohmann/
-assets/
-```
+- `src/Scenes/`, donde cambia la forma de construir y reemplazar escenas activas.
+- `src/Entities/`, donde las entidades dejan de registrarse a sí mismas en el manager global de objetos.
+- `src/WandAllegroEngine/Managers/`, donde se amplía el control de cierre, reemplazo de escenas, color de fondo y ordenamiento de objetos.
+- `src/WandAllegroEngine/Collisions/`, donde cambia la representación interna de la grilla de colisiones.
+- `src/Utilities/Paths.h`, donde se agrega una nueva ruta de fondo.
 
-### `src/main.cpp`
+## Arquitectura o sistemas principales
 
-El punto de entrada crea una instancia de `GameManager` usando el tamano de la pantalla del sistema operativo y delega todo el arranque del juego al framework:
+### Cambios en `GameManager`
 
-- construye el manager principal con un `Size(ScreenWidth, ScreenHeight)`;
-- llama `Init()` para inicializar Allegro y los subsistemas internos;
-- llama `Update()` para entrar al loop principal;
-- destruye el manager al finalizar.
+`GameManager` incorpora ajustes funcionales concretos:
 
-Esto deja claro que el framework se plantea para que la aplicacion cliente dependa de una unica clase coordinadora.
+- se agrega `BackBufferColor` como estado persistente del manager;
+- se agrega `SetBackBufferColor(ALLEGRO_COLOR color)` para que cada escena defina su propio color de limpieza;
+- el loop principal deja de usar un color fijo hardcodeado y pasa a limpiar con el color almacenado;
+- ante `ALLEGRO_EVENT_DISPLAY_CLOSE`, el cierre ya no depende de sacar una sola escena con `PopScene()`, sino de limpiar toda la pila mediante `gameSceneManager->Clear()`;
+- se separa la lógica de liberación final en `End()`, que luego es invocada desde el destructor.
 
-## Arquitectura principal
+Estos cambios hacen más explícito el control del ciclo de vida del runtime y evitan que el cierre dependa únicamente del comportamiento de la escena activa.
 
-## `GameManager`
+### Cambios en el sistema de escenas
 
-`GameManager` pasa a ser el centro de control del framework. Desde esta clase se coordinan:
+El sistema de escenas cambia en dos frentes principales.
 
-- la ventana (`ALLEGRO_DISPLAY`);
-- la cola global de eventos (`ALLEGRO_EVENT_QUEUE`);
-- el timer principal (`ALLEGRO_TIMER`);
-- el estado de teclado mediante `std::map<int, bool>`;
-- el calculo de `deltaTime`;
-- la creacion y destruccion de los managers internos.
+En `GameScene`:
 
-Durante `Init()` el framework realiza lo siguiente:
+- el constructor pasa a recibir un nombre de escena;
+- se agrega el atributo `Name`;
+- se agrega `GetName()`;
+- la operación de limpieza visible pasa de `Clean()` a `Clear()`.
 
-- inicializa Allegro;
-- activa audio, codecs, fuentes, TTF, primitivas, imagenes, raton y teclado;
-- reserva un sample de audio;
-- configura la ventana con OpenGL;
-- crea la ventana y la pone en `fullscreen window`;
-- crea la cola de eventos;
-- registra fuentes de eventos de timer, mouse, teclado y display;
-- crea un timer a `1.0 / 60`;
-- instancia `ResourceManager`, `GameObjectManager`, `GameSceneManager` y `GameBodyManager`.
+En `GameSceneManager`:
 
-Durante `Update()` el manager:
+- se agrega `ReplaceScene(GameScene* scene)`;
+- se agrega `Clear()` como operación explícita para vaciar la pila completa;
+- los puntos donde antes se llamaba `Clean()` pasan a usar `Clear()`;
+- `MainScene` y `GameInScene` dejan de navegar con `PushScene()` para intercambio principal y pasan a usar `ReplaceScene()`.
 
-- inserta la escena inicial `MainScene`;
-- espera eventos con `al_wait_for_event`;
-- detecta cierre de ventana;
-- marca redraw en eventos del timer principal;
-- actualiza escenas, objetos y cuerpos en cada iteracion;
-- limpia la pantalla y dibuja objetos cuando la escena esta cargada;
-- puede dibujar cuerpos de colision si esta activa la bandera de depuracion.
+Este cambio modifica el modelo de transición entre escenas: la iteración ya no trata el paso entre menú y juego como simple apilamiento, sino como reemplazo directo del estado activo.
 
-## Sistema de escenas
+### Cambios en el sistema de objetos
 
-El framework queda apoyado en dos capas para escenas:
+La modificación más importante del sistema de objetos está en la responsabilidad de registro.
 
-- `GameScene`, como clase base abstracta;
-- `GameSceneManager`, como administrador de la pila de escenas.
+En esta versión:
 
-### `GameScene`
+- `BackgroundObject`, `LinkObject` y `MapTileObject` dejan de llamar a `Game->gameObjectManager->Add(this)` dentro de sus constructores;
+- la escena que crea cada entidad pasa a ser responsable de registrarla explícitamente en `GameObjectManager`.
 
-`GameScene` define la interfaz minima que debe implementar una escena:
+Además:
 
-- `Init()` para carga e inicializacion;
-- `Update(double deltaTime)` para logica por frame;
-- `UpdateLoadingScene()` para una pantalla de carga basica;
-- control de progreso mediante `SetProgressLoadingScene()` y consultas de estado.
+- `GameObjectManager` incorpora `SortByLayer()` como método propio reutilizable;
+- `GameObject::SetLayerId()` pasa a invocar `Game->gameObjectManager->SortByLayer()` cuando cambia la capa;
+- se prohíbe la construcción por defecto de `GameObject` y `GameBodyObject` mediante constructores `= delete`.
 
-Tambien mantiene una referencia al `GameManager`, lo cual permite a cada escena acceder directamente al estado global del engine, eventos, recursos y managers.
+La consecuencia técnica es clara: la construcción del objeto deja de implicar registro automático, y la propiedad del flujo de alta queda del lado de la escena que decide usarlo.
 
-### `GameSceneManager`
+### Cambios en el sistema de colisiones
 
-`GameSceneManager` gestiona las escenas mediante una pila (`sceneStack`). Esto permite:
+El sistema de colisiones presenta una reorganización interna importante.
 
-- hacer `PushScene()` para entrar a una nueva escena;
-- hacer `PopScene()` para salir de la escena actual;
-- mantener el juego corriendo mientras hubiera escenas activas;
-- diferenciar entre una escena cargada y una escena en transicion.
+En `GameBodyManager`:
 
-En la practica, esta arquitectura permite flujos simples como:
+- la grilla deja de ser un único puntero dinámico y pasa a almacenarse como `std::vector<GameGridCollisions>`;
+- la configuración visible cambia a una grilla activa de `9 x 12` con celdas de `100` unidades;
+- durante cada `Update()`, los cuerpos se redistribuyen en la grilla activa y luego la grilla se limpia al final del ciclo;
+- `Add()` deja de insertar directamente el cuerpo en la grilla en el momento de registro;
+- `Clear()` limpia primero las grillas y luego destruye los cuerpos.
 
-- menu principal -> escena de juego;
-- escena de juego -> volver al menu;
-- salida del juego al vaciar la pila.
+En `GameGridCollisions`:
 
-## Sistema de objetos
+- la estructura `Cell** Cells` se reemplaza por `std::vector<std::vector<Cell>>`;
+- se elimina la gestión manual de memoria basada en `new[]` y `delete[]`;
+- se agrega `GetCellByPosition(Vec2 position)`;
+- se agrega `ClearGrid()`;
+- se elimina `UpdatePositions()` del diseño visible;
+- `AddObject()` cambia de comportamiento: si un cuerpo cae fuera de la grilla, destruye al objeto padre en lugar de ignorarlo silenciosamente.
 
-La base de objetos del framework queda construida alrededor de `GameObject` y `GameObjectManager`.
+El cambio de fondo es que la ocupación espacial ya no se actualiza de forma incremental, sino que se reconstruye en cada frame a partir de la posición actual de cada cuerpo.
 
-### `GameObject`
+### Cambios en el sistema de recursos y paths
 
-`GameObject` representa la entidad visual y logica elemental del juego. Cada objeto tiene:
+La API de `ResourceManager` no cambia de forma estructural, pero sí cambia el uso visible desde las escenas.
 
-- nombre (`ObjectName`);
-- tipo (`DynamicEntity` o `StaticEntity`);
-- identificador numerico;
-- sprite de Allegro (`ALLEGRO_BITMAP*`);
-- posicion actual y ultima posicion;
-- tamano;
-- capa de dibujado (`LayerId`);
-- bandera de vida para ser removido del manager.
+- `MainScene` ahora carga dos fondos distintos, `Background1` y `Background2`.
+- `src/Utilities/Paths.h` agrega `BG_SPACE_IMAGE_PATH`.
+- cada escena define ahora de forma más explícita qué recursos carga y qué color de fondo establece.
 
-La clase expone comportamiento base para:
+## Dependencias externas visibles
 
-- `Draw()` usando `al_draw_tinted_scaled_rotated_bitmap`;
-- `Update(float deltaTime)`;
-- `OnCollision(GameObject* other)`;
-- mover y redimensionar el objeto;
-- restaurar la ultima posicion;
-- destruir el objeto logicamente con `Destroy()`.
+En esta iteración no aparecen nuevas dependencias externas respecto al estado anterior.
 
-### `GameObjectManager`
+- **Allegro 5** sigue siendo la dependencia activa del framework.
+- **`nlohmann/json`** sigue presente vendorizado en `include/`, sin integración visible nueva en el código revisado de esta versión.
 
-`GameObjectManager` mantiene un vector de actores y asigna IDs incrementales. Sus responsabilidades son:
+## Resumen técnico de la versión
 
-- registrar objetos con `Add()`;
-- ordenar los objetos por `LayerId` despues de agregarlos;
-- actualizar todos los objetos vivos;
-- remover y destruir objetos marcados como no vivos;
-- dibujar todos los objetos registrados;
-- limpiar completamente la lista al cerrar.
+Los cambios incorporados en esta fecha se concentran en estos puntos:
 
-Esto muestra que el framework ya establece una separacion clara entre la definicion del objeto y su administracion centralizada.
-
-## Sistema de colisiones
-
-La parte de colisiones queda dividida entre:
-
-- `GameBodyObject`, como representacion fisica o de hitbox;
-- `GameBodyManager`, como coordinador de los cuerpos;
-- `GameGridCollisions`, como acelerador espacial por celdas.
-
-### `GameBodyObject`
-
-Cada cuerpo de colision almacena:
-
-- tipo de cuerpo;
-- identificador;
-- posicion y tamano;
-- referencia al `GameObject` padre.
-
-El cuerpo no es el objeto jugable en si, sino su representacion para deteccion fisica. Esta separacion es importante porque ya muestra una intencion de desacoplar logica visual de logica de colision.
-
-### `GameBodyManager`
-
-`GameBodyManager` sincroniza cada cuerpo con la posicion de su objeto padre, elimina cuerpos de objetos destruidos y ejecuta el flujo de colisiones en cada update.
-
-En esta version, el manager construye un `GameGridCollisions(Vec2(0, 0), 11, 19, 100)`, lo que implica:
-
-- una grilla fija de colisiones;
-- 11 filas por 19 columnas;
-- celdas de 100 unidades;
-- broad-phase basado en particion espacial discreta.
-
-Tambien incorpora una funcion `RectToRectCollisionBody()` para chequeo AABB entre dos cuerpos rectangulares.
-
-### `GameGridCollisions`
-
-La estructura de grid administra celdas que contienen listas de objetos, y provee operaciones para:
-
-- agregar y remover cuerpos de la grilla;
-- actualizar posiciones de ocupacion;
-- dibujar la grilla para depuracion;
-- buscar colisiones entre celdas;
-- resolver colisiones rectangulo-rectangulo.
-
-Para esta etapa del framework, la grilla se convierte en el mecanismo principal de organizacion espacial de colisiones.
-
-## Sistema de recursos
-
-`ResourceManager` es el modulo dedicado a cargar y cachear recursos basicos. El manager mantiene mapas de:
-
-- bitmaps individuales;
-- spritesheets, almacenando bitmap y metadata de filas y columnas;
-- fuentes.
-
-Las operaciones visibles son:
-
-- `loadBitmap(key, path)`;
-- `loadSpriteSheet(key, path, files, columns)`;
-- `loadFont(key, path, size)`;
-- `getBitmap(key)`;
-- `getBitmapRegionFromSpriteSheet(key, file, column)`;
-- `getFont(key)`;
-- `clear()`.
-
-Con esto, el framework ya soporta una capa de recursos reutilizable sin obligar a cada escena u objeto a recargar archivos directamente.
-
-## Manejo de entrada y ventana
-
-El estado de entrada aun no queda encapsulado en un manager independiente. En su lugar:
-
-- `GameManager` mantiene el ultimo `ALLEGRO_EVENT` global;
-- cada escena inspecciona `Game->Event.type`;
-- `MainScene` y `GameInScene` actualizan manualmente `Game->keyState` en eventos `KEY_DOWN` y `KEY_UP`.
-
-Ese esquema permite una entrada funcional, aunque con fuerte acoplamiento entre escena y estado global del manager.
-
-Ademas, el framework ya permite:
-
-- alternar visualizacion de cuerpos con `ToggleShowBody()`;
-- cambiar a pantalla completa con `SetWindows_FullScreenMode()`;
-- volver a modo ventana con `SetWindows_WindowsMode()`;
-- redimensionar la ventana con `SetWindows_Size()`;
-- consultar si la ventana estaba en fullscreen.
-
-## Flujo real visible en las escenas incluidas
-
-Las escenas `MainScene` y `GameInScene` muestran como se usa el framework:
-
-- cargan recursos desde rutas fijas en `Utilities/Paths.h`;
-- inicializan el estado de teclas;
-- construyen entidades como `LinkObject` y tiles del mapa;
-- actualizan transiciones entre escenas con `PushScene()` y `PopScene()`;
-- cambian opciones de ventana mediante combinaciones de teclado;
-- actualizan la barra de progreso de carga con `SetProgressLoadingScene()`.
-
-`GameInScene` tambien evidencia un uso orientado a mapas 2D basados en mosaicos, creando una cuadricula de tiles en tiempo de carga.
-
-## Modelo de entidades derivadas
-
-Las entidades de `src/Entities` funcionan como especializaciones de `GameObject`.
-
-Por ejemplo, `LinkObject`:
-
-- se registra a si mismo en `GameObjectManager`;
-- crea automaticamente un `GameBodyObject` asociado y lo registra en `GameBodyManager`;
-- responde a WASD para movimiento;
-- define comportamiento en `OnCollision()`;
-- puede usar una fuente Allegro para overlays de texto.
-
-Este patron indica que el framework ya favorece la herencia para crear actores concretos del juego, dejando al manager la administracion global de vida, dibujo y colision.
-
-## Estado tecnico del framework en esta version
-
-En terminos de madurez, esta instantanea muestra un framework funcional pero todavia temprano. Sus rasgos tecnicos mas importantes son:
-
-- arquitectura simple y centralizada alrededor de `GameManager`;
-- fuerte acoplamiento entre escenas, eventos globales y managers;
-- especializacion clara para juegos 2D;
-- dependencia directa del ecosistema Allegro para render, input, fuentes y audio;
-- managers separados para escenas, objetos, cuerpos y recursos;
-- soporte de colision rectangular con optimizacion por grid;
-- sistema de capas de dibujo y destruccion controlada de objetos.
-
-Todavia no se observa una separacion mas avanzada por modulos independientes, configuracion por proyecto, escenas desacopladas del bootstrap, ni sistemas modernos de render, iluminacion, networking o persistencia integrados como en etapas posteriores del repositorio.
-
-## Dependencias externas visibles en esta etapa
-
-Las dependencias externas que pueden identificarse directamente en esta version son:
-
-- **Allegro 5**: biblioteca principal sobre la que se construye el framework. Se utiliza para ventana, eventos, timer, input, dibujo 2D, primitivas, imagenes, fuentes, TTF y audio.
-- **nlohmann/json**: distribuida dentro de `include/nlohmann/` como dependencia disponible del repositorio. En esta instantanea no se observa un subsistema JSON protagonista dentro del nucleo principal leido, pero la libreria ya forma parte de los headers incluidos por el proyecto.
-
-## Resumen
-
-`WandAllegroEngine` representa la primera base estructurada del framework: un motor 2D construido sobre Allegro 5, con managers propios para escena, objetos, cuerpos y recursos, soporte de colisiones por grid, manejo de sprites y fuentes, y una arquitectura suficientemente modular para crear escenas y entidades derivadas, aunque todavia con un fuerte acoplamiento interno y una orientacion marcadamente prototipica.
+- se agrega reemplazo explícito de escenas mediante `ReplaceScene()`;
+- se agrega limpieza global de escenas mediante `Clear()`;
+- se renombra y reorganiza la limpieza de `GameScene` hacia `Clear()`;
+- se traslada el registro de objetos desde los constructores hacia las escenas concretas;
+- se agrega control de color de fondo por escena en `GameManager`;
+- se agrega `CustomEnemy` como nueva entidad visible en `MainScene`;
+- `GameInScene` reduce la generación visible de tiles de `50 x 30` a `20 x 20`;
+- el sistema de colisiones cambia a contenedores estándar y reconstrucción espacial por frame;
+- se agrega una segunda ruta de fondo en `Paths.h`.
+
+Como documento de esta etapa, este README no reemplaza la explicación base del framework ya registrada anteriormente. Su función es dejar constancia precisa de lo que cambia en la versión efectiva al **31 de octubre de 2024**.

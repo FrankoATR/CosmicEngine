@@ -17,12 +17,13 @@ class GameScene
 {
 private:
     float ProgressLoadingScene;
+    std::string Name;
 
 public:
     GameManager* Game;
     ALLEGRO_THREAD *loadingThread = nullptr;
     
-    GameScene(GameManager* Game);
+    GameScene(GameManager* Game, std::string Name);
 
     virtual void Init() = 0;
     virtual void Update(double deltaTime) = 0;
@@ -33,7 +34,9 @@ public:
     float GetProgressLoadingScene();
     bool IsProgressLoadinSceneComplete();
 
-    void Clean();
+    std::string GetName();
+
+    void Clear();
 
     ~GameScene();
 };

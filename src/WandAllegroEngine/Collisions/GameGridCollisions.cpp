@@ -4,21 +4,18 @@
 
 GameGridCollisions::GameGridCollisions(Vec2 GridPosition, int Arrows, int Columns, int CellSize) : GridPosition(GridPosition), Arrows(Arrows), Columns(Columns), CellSize(CellSize), EntitiesOnGrid(0)
 {
-    Cells = new Cell*[Arrows];
-    for (int i = 0; i < Arrows; i++) {
-        Cells[i] = new Cell[Columns];
-        for (int j = 0; j < Columns; j++) {
+    Cells.resize(Arrows);
+    for(int i = 0; i < Arrows; i++){
+        Cells[i].resize(Columns);
+        for(int j = 0; j < Columns; j++){
             Cells[i][j] = Cell(Vec2(GridPosition.x + j * CellSize, GridPosition.y + i * CellSize));
-            std::cout << "Cell[" << i << "][" << j << "] initialized at position: "
-                    << Cells[i][j].Position.x << ", " << Cells[i][j].Position.y << std::endl;
-        }
+        }    
     }
 }
 
 
 void GameGridCollisions::DrawCells(){
 
-    /*
     for(int i=0; i<=Arrows; i++){
         al_draw_line(GridPosition.x, GridPosition.y+i*CellSize, GridPosition.x+Columns*CellSize, GridPosition.y+i*CellSize, al_map_rgba(255,255,255,255), 1);
     }
@@ -26,32 +23,11 @@ void GameGridCollisions::DrawCells(){
         al_draw_line(GridPosition.x+j*CellSize, GridPosition.y, GridPosition.x+j*CellSize, GridPosition.y+Arrows*CellSize, al_map_rgba(255,255,255,255), 1);
     }
 
-    */
-
-    for (int i = 0; i < Arrows; i++) {
-        for (int j = 0; j < Columns; j++) {
-            Cell* cell = GetCell(i, j);
-            if(cell){
-                int x = cell->Position.x;
-                int y = cell->Position.y;
-                if(cell->objects.empty()) {
-                    al_draw_rectangle(x+1, y+1, x+CellSize-1, y+CellSize-1, al_map_rgba(255,255,255,255), 1);
-                }
-                else{
-                    al_draw_rectangle(x+1, y+1, x+CellSize-1, y+CellSize-1, al_map_rgba(255,0,0,255), 1);
-                }
-            }
-        }
-    }
 }
 
 
 GameGridCollisions::~GameGridCollisions() {
-    for (int i = 0; i < Arrows; ++i)
-        delete[] Cells[i];
-    delete[] Cells;
-    EntitiesOnGrid = 0;;
-
+    this->ClearGrid();
 }
 
 
@@ -65,95 +41,66 @@ Cell* GameGridCollisions::GetCell(int Arrow, int Column) {
 
 
 void GameGridCollisions::AddObject(GameBodyObject* obj) {
-    int relX = obj->GetPosition().x - GridPosition.x;
-    int relY = obj->GetPosition().y - GridPosition.y;
-
-    if(relX >= 0 && relY >= 0) {
-        int Column = relX / CellSize;
-        int Arrow = relY / CellSize;
-
-        if (Arrow < Arrows && Column < Columns) {
-            Cell* Cell = GetCell(Arrow, Column);
-            if (Cell) {
-                Cell->objects.push_back(obj);
-                //std::cout << "Insert: " << obj->GetObjectId() << " in arrow: "<< Arrow << ", column: "<< Column << std::endl;
-                EntitiesOnGrid++;
-            }
-        }
+    
+    Cell* cell = GetCellByPosition(obj->GetPosition());
+    if(!cell){
+        obj->GetParent()->Destroy();
+        return;
     }
+
+    cell->objects.push_back(obj);
+    EntitiesOnGrid++;
+
 }
 
 
 
 void GameGridCollisions::RemoveObject(GameBodyObject* obj) {
-    int relX = obj->GetPosition().x - GridPosition.x;
-    int relY = obj->GetPosition().y - GridPosition.y;
 
-    if(relX >= 0 && relY >= 0) {
-        int Column = relX / CellSize;
-        int Arrow = relY / CellSize;
+    Cell* cell = GetCellByPosition(obj->GetPosition());
 
-        if (Arrow < Arrows && Column < Columns) {
-            Cell* Cell = GetCell(Arrow, Column);
+    if(!cell) return;
 
-            if (Cell) {
-                auto& objects = Cell->objects;
-                objects.erase(std::remove(objects.begin(), objects.end(), obj), objects.end());
-                EntitiesOnGrid--;
-            }
+    auto& objects = cell->objects;
+    objects.erase(std::remove(objects.begin(), objects.end(), obj), objects.end());
+    EntitiesOnGrid--;
+}
+
+
+void GameGridCollisions::ClearGrid(){
+    for (int i = 0; i < Arrows; i++)
+    {
+        for (int j = 0; j < Columns; j++)
+        {
+            Cells[i][j].objects.clear();
         }
+    }
+    EntitiesOnGrid = 0;
+}
+
+
+
+Cell* GameGridCollisions::GetCellByPosition(Vec2 position){
+    int relX = position.x - GridPosition.x;
+    int relY = position.y - GridPosition.y;
+
+    int Column = relX / CellSize;
+    int Arrow = relY / CellSize;
+
+    if (Arrow >= 0 && Arrow < this->Arrows && Column >= 0 && Column < this->Columns) {
+        return &Cells[Arrow][Column];
+    } else {
+        return nullptr;
     }
 
 }
 
-
-void GameGridCollisions::UpdatePositions(){
-    std::vector<std::tuple<GameBodyObject*, int, int>> toMove;
-
-    for (int y = 0; y < Arrows; ++y) {
-        for (int x = 0; x < Columns; ++x) {
-            auto& cell = Cells[y][x];
-            auto it = cell.objects.begin();
-            while (it != cell.objects.end()) {
-                GameBodyObject* obj = *it;
-                int relX = obj->GetPosition().x - GridPosition.x;
-                int relY = obj->GetPosition().y - GridPosition.y;
-
-                if(relX >= 0 && relY >= 0) {
-                    int newColumn = relX / CellSize;
-                    int newArrow = relY / CellSize;
-
-                    if (newArrow < Arrows && newColumn < Columns && (newArrow != y || newColumn != x)) {
-                        toMove.push_back(std::make_tuple(obj, newArrow, newColumn));
-                        it = cell.objects.erase(it);
-                    } else {
-                        ++it;
-                    }
-                }
-                else{
-                    ++it;
-                }
-            }
-        }
-    }
-
-    for (auto& item : toMove) {
-        GameBodyObject* obj = std::get<0>(item);
-        int newArrow = std::get<1>(item);
-        int newColumn = std::get<2>(item);
-
-        if (newArrow >= 0 && newArrow < Arrows && newColumn >= 0 && newColumn < Columns) {
-            Cells[newArrow][newColumn].objects.push_back(obj);
-        }
-    }
-
-}
 
 
 
 void GameGridCollisions::Check_cells_collisions(Cell* cell_1, Cell* cell_2) {
-    for (auto obj_1 : cell_1->objects) {
-        for (auto obj_2 : cell_2->objects) {
+    for (auto &obj_1 : cell_1->objects) {
+        for (auto &obj_2 : cell_2->objects) {
             if (obj_1 != obj_2) {
                 if (RectToRectCollisionBody(obj_1, obj_2)) {
                     obj_1->GetParent()->OnCollision(obj_2->GetParent());

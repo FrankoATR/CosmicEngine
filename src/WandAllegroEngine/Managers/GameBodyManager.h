@@ -7,7 +7,7 @@
 class GameBodyManager {
 private:
     std::vector<GameBodyObject*> bodys;
-    GameGridCollisions* gameGridCollisions;
+    std::vector<GameGridCollisions > gameGridCollisions;
 public:
     GameBodyManager();
     ~GameBodyManager();

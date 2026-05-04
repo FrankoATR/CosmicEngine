@@ -2,7 +2,7 @@
 #include "MainScene.h"
 #include "../Entities/MapTileObject.h"
 
-GameInScene::GameInScene(GameManager* Game) : GameScene(Game)
+GameInScene::GameInScene(GameManager* Game) : GameScene(Game, "GameInScene")
 {
 
 }
@@ -25,16 +25,21 @@ void GameInScene::Init()
     Game->resourceManager->loadFont("Font", RETRO_FONT_PATH, 50);
 
 
-    this->player = new LinkObject(Game, DynamicEntity, Vec2(100, 100), Vec2(64, 64), "NAME", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 1, 1), 1, 20, Game->resourceManager->getFont("Font"));
-
+    GameObject* player = new LinkObject(Game, DynamicEntity, Vec2(100, 100), Vec2(64, 64), "NAME", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 1, 1), 1, 20, Game->resourceManager->getFont("Font"));
+    Game->gameObjectManager->Add(player);
 
     float load = 1.0;
-    for(int i=0; i < 50; i++)
-        for(int j=0; j < 30; j++){
-            new MapTileObject(Game, DynamicEntity, Vec2(32*i, 32*j), Vec2(32, 32), "Tile", Game->resourceManager->getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
+    for(int i=0; i < 20; i++)
+        for(int j=0; j < 20; j++){
+            GameObject* tmp = new MapTileObject(Game, DynamicEntity, Vec2(32*i, 32*j), Vec2(32, 32), "Tile", Game->resourceManager->getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
+            Game->gameObjectManager->Add(tmp);
             load++;
             SetProgressLoadingScene((load/(50.0f*30.0f)));
         }
+
+    SetProgressLoadingScene(1.0f);
+
+    Game->SetBackBufferColor(al_map_rgb(155, 141, 30));
 
 }
 
@@ -62,7 +67,7 @@ void GameInScene::Update(double deltaTime)
         Game->gameSceneManager->PopScene();
     }
     if(Game->keyState[ALLEGRO_KEY_SPACE]){
-        Game->gameSceneManager->PushScene(new MainScene(Game));
+        Game->gameSceneManager->ReplaceScene(new MainScene(Game));
     }
 
 }

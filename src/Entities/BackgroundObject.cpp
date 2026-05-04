@@ -3,7 +3,7 @@
 BackgroundObject::BackgroundObject(GameManager* Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId) : 
 GameObject(Game, ObjectType, Position, Size, ObjectName, Sprite, LayerId)
 {
-    Game->gameObjectManager->Add(this);
+
 }
 
 

@@ -24,7 +24,8 @@ class GameGridCollisions {
     int Arrows;
     int Columns;
     int CellSize;
-    Cell** Cells;
+    std::vector<std::vector<Cell>> Cells;
+
     int EntitiesOnGrid;
 
     GameGridCollisions(Vec2 GridPosition, int Arrows, int Columns, int CellSize);
@@ -35,11 +36,12 @@ class GameGridCollisions {
     void DrawCells();
     void AddObject(GameBodyObject* obj);
     void RemoveObject(GameBodyObject* obj);
-    void UpdatePositions();
     void Check_cells_collisions(Cell* cell_1, Cell* cell_2);
     void Find_collision_grid();
     bool RectToRectCollisionBody(GameBodyObject* body1, GameBodyObject* body2);
+    Cell* GetCellByPosition(Vec2 position);
 
+    void ClearGrid();
 };
 
 

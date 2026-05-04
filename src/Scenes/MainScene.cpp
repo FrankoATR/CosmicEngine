@@ -1,8 +1,11 @@
 #include "MainScene.h"
 #include "GameInScene.h"
 #include "../Entities/BackgroundObject.h"
+#include "../Utilities/Paths.h"
+#include "../Entities/LinkObject.h"
+#include "../Entities/CustomEnemy.h"
 
-MainScene::MainScene(GameManager* Game) : GameScene(Game)
+MainScene::MainScene(GameManager* Game) : GameScene(Game, "MainScene")
 {
 
 }
@@ -22,17 +25,24 @@ void MainScene::Init()
         Game->keyState[key] = false;
     }
 
-    Game->resourceManager->loadBitmap("Background", BG_FOREST_IMAGE_PATH);
+    Game->resourceManager->loadBitmap("Background1", BG_FOREST_IMAGE_PATH);
+    Game->resourceManager->loadBitmap("Background2", BG_SPACE_IMAGE_PATH);
     Game->resourceManager->loadSpriteSheet("Player", CHARACTERS_IMAGE_PATH, 2, 7);
     Game->resourceManager->loadFont("Font", RETRO_FONT_PATH, 50);
     SetProgressLoadingScene(0.2f);
 
 
-    //new BackgroundObject(Game, StaticEntity, Vec2(0, 0), Vec2(1920, 1080), "BG", Game->resourceManager->getBitmap("Background"), 0);
+    GameObject* bg = new BackgroundObject(Game, StaticEntity, Vec2(0, 0), Vec2(1920, 1080), "BG", Game->resourceManager->getBitmap("Background2"), 0);
+    Game->gameObjectManager->Add(bg);
+
     SetProgressLoadingScene(0.4f);
 
 
-    this->player = new LinkObject(Game, DynamicEntity, Vec2(400, 300), Vec2(64, 64), "PLAYER", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 1, 4), 1, 20, Game->resourceManager->getFont("Font"));
+    GameObject* player = new LinkObject(Game, DynamicEntity, Vec2(400, 300), Vec2(64, 64), "PLAYER", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 1, 4), 1, 20, Game->resourceManager->getFont("Font"));
+    Game->gameObjectManager->Add(player);
+
+    GameObject* enemy = new CustomEnemy(Game, DynamicEntity, Vec2(600, 600), Vec2(64, 64), "ENEMY", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 0, 2), 1, 20, Game->resourceManager->getFont("Font"));
+    Game->gameObjectManager->Add(enemy);
     SetProgressLoadingScene(0.6f);
 
     for(int i=0; i < 5; i++){
@@ -42,8 +52,8 @@ void MainScene::Init()
 
     //new LinkObject(Game, DynamicEntity, Vec2(300, 200), Vec2(64, 64), "Enemy", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 1, 1), 3, 20, Game->resourceManager->getFont("Font"));
     SetProgressLoadingScene(1.0f);
-        
 
+    Game->SetBackBufferColor(al_map_rgb(155, 0, 30));
 
 }
 
@@ -70,9 +80,9 @@ void MainScene::Update(double deltaTime)
         Game->gameSceneManager->PopScene();
     }
     if(Game->keyState[ALLEGRO_KEY_SPACE]){
-        Game->gameSceneManager->PushScene(new GameInScene(Game));
+        Game->gameSceneManager->ReplaceScene(new GameInScene(Game));
     }
-    if(Game->keyState[ALLEGRO_KEY_H]){
+    if(Game->keyState[ALLEGRO_KEY_H] && Game->Event.type == ALLEGRO_EVENT_KEY_DOWN){
         Game->ToggleShowBody();
     }
 

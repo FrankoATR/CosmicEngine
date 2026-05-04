@@ -8,7 +8,7 @@
 class GameInScene : public GameScene
 {
 private:
-    LinkObject* player;
+
 public:
     GameInScene(GameManager* Game);
     

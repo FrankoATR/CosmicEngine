@@ -17,8 +17,11 @@ public:
     GameSceneManager();
     ~GameSceneManager();
     void PushScene(GameScene* scene);
+    void ReplaceScene(GameScene* scene);
     void PopScene();
     void Update(double deltaTime);
+
+    void Clear();
 
     bool IsSceneLoaded();
     bool Running() const;

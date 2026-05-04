@@ -28,6 +28,7 @@ class GameManager {
 private:
     bool redraw;
     bool ShowBodys;
+    ALLEGRO_COLOR BackBufferColor;
 
 public:
     Size ScreenSize;
@@ -52,6 +53,8 @@ public:
 
     void ToggleShowBody();
 
+    void SetBackBufferColor(ALLEGRO_COLOR color);
+
     void SetWindows_Size(Size ScreenSize);
     void SetWindows_FullScreenMode();
     void SetWindows_WindowsMode();
@@ -61,6 +64,7 @@ public:
     
     bool Init();
     void Update();
+    void End();
 
 
 };

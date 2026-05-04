@@ -19,6 +19,7 @@ public:
     void Draw();
     void Add(GameObject* actor);
     void Remove(int entityId);
+    void SortByLayer();
     void Clear();
 
 };
