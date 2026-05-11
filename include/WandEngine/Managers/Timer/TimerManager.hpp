@@ -2,7 +2,7 @@
 #ifndef TIMERMANAGER_HPP
 #define TIMERMANAGER_HPP
 
-#include "../../Models/GameTimer.hpp"
+#include "../../Models/Timer/Timer.hpp"
 #include <vector>
 
 namespace WandEngine
@@ -13,7 +13,7 @@ namespace WandEngine
     class TimerManager
     {
     private:
-        std::vector<GameTimer *> Timers;
+        std::vector<Timer *> Timers;
 
         TimerManager();
         ~TimerManager();
@@ -25,7 +25,7 @@ namespace WandEngine
         
         void Init();
         void Shutdown();
-        void Add(GameTimer *NewTimer);
+        void Add(Timer *NewTimer);
         void Update(double deltaTime);
         void Clear();
     };

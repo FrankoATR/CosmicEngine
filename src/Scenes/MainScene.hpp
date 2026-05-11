@@ -1,14 +1,14 @@
 #ifndef MAINSCENE_HPP
 #define MAINSCENE_HPP
 
-#include <WandEngine/Models/GameScene.hpp>
-#include <WandEngine/Models/GameObject.hpp>
+#include <WandEngine/Models/Scene/Scene.hpp>
+#include <WandEngine/Models/Object/Object.hpp>
 
 using namespace WandEngine;
 
 class Player;
 
-class MainScene : public GameScene
+class MainScene : public Scene
 {
 private:
     int CurrentLevel;
@@ -31,7 +31,7 @@ private:
     bool mouseKeyDownForArea;
 
     bool EditorMode;
-    GameObject* selectedObject = nullptr;
+    Object* selectedObject = nullptr;
     float lineMusicPos = 0.0f;
 
     std::string droppedlevelfilepath = "";

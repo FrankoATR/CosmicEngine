@@ -9,12 +9,12 @@
 
 namespace WandEngine
 {
-    class GameObject;
+    class Object;
 
     struct SerializedObjects
     {
         std::vector<std::pair<std::string, std::string>> Columns;
-        std::function<GameObject*(char**)> Constructor;
+        std::function<Object*(char**)> Constructor;
     };
 
     class DataBaseManager
@@ -45,7 +45,7 @@ namespace WandEngine
         void ConsultTable(const std::string &tableName, const std::string &columns, int (*callback)(void *, int, char **, char **), void* data = nullptr);
 
 
-        void RegisterSerialization(const std::string& className, std::vector<std::pair<std::string, std::string>> columns, std::function<GameObject*(char**)> constructor);
+        void RegisterSerialization(const std::string& className, std::vector<std::pair<std::string, std::string>> columns, std::function<Object*(char**)> constructor);
 
         void ClearDatabase();
         void SaveObjectsData(const std::string& className);

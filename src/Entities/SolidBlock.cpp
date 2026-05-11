@@ -10,16 +10,15 @@
 
 #include <sstream>
 
-SolidBlock::SolidBlock(int BlockID, glm::vec2 Position, glm::vec2 Size, short int LayerId) : 
-    GameObject("SolidBlock", Position, Size, 0.0f, LayerId), BlockID(BlockID)
+SolidBlock::SolidBlock(int BlockID, glm::vec2 position, glm::vec2 Size, short int LayerId) : 
+    Object("SolidBlock", position, Size, 0.0f, LayerId), BlockID(BlockID)
 {
 }
 
 void SolidBlock::Init()
 {
-    Body = new GameBodyObject(this, glm::vec2(0.0f), GetSize(), [this](GameObject *Other, CollisionSide Side)
-                              { BodyCollisionEvent(Other, Side); });
-    BodyManager::GetInstance().Add(Body);
+    body = new Body(this, glm::vec2(0.0f), GetSize(), CALLBACK_COLLISION_EVENT(BodyCollisionEvent));
+    BodyManager::GetInstance().Add(body);
 
 
 
@@ -28,14 +27,14 @@ void SolidBlock::Init()
 void SolidBlock::Draw() const
 {
 
-    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", BlockID % 3, BlockID / 3, Position, Size, Rotation, MainColor, 1.0f);
+    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", BlockID % 3, BlockID / 3, position, size, rotation, mainColor, 1.0f);
 }
 
 void SolidBlock::Update(float deltaTime)
 {
 }
 
-void SolidBlock::BodyCollisionEvent(GameObject *Other, CollisionSide Side)
+void SolidBlock::BodyCollisionEvent(Object *Other, BodyCollisionSide Side)
 {
 
 }
@@ -48,8 +47,8 @@ int SolidBlock::GetBlockID()
 
 std::vector<std::string> SolidBlock::GetAllValues() const {
     return {
-        std::to_string(Position.x),
-        std::to_string(Position.y),
+        std::to_string(position.x),
+        std::to_string(position.y),
         std::to_string(BlockID)
     };
 }
@@ -64,7 +63,7 @@ void SolidBlock::RegisterSerialize()
             {"PositionY", "REAL"},
             {"BlockID" , "INTEGER"}
         },
-        [](char** argv) -> GameObject*
+        [](char** argv) -> Object*
         {
             float posX = std::stof(argv[0]);
             float posY = std::stof(argv[1]);

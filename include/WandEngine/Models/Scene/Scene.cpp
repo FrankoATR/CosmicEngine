@@ -1,46 +1,46 @@
-#include "GameScene.hpp"
-#include "../Managers/Resource/ResourceManager.hpp"
-#include "../Managers/Body/BodyManager.hpp"
-#include "../Managers/Object/ObjectManager.hpp"
-#include "../Managers/GameManager.hpp"
-#include "../Managers/Event/EventManager.hpp"
-#include "../Managers/Audio/Music/MusicManager.hpp"
-#include "../Managers/Audio/Sound/SoundManager.hpp"
-#include "../Managers/Camera/CameraManager.hpp"
-#include "../Managers/Input/InputManager.hpp"
-#include "../Managers/Timer/TimerManager.hpp"
-#include "../Managers/UI/UIManager.hpp"
+#include "Scene.hpp"
+#include "../../Managers/Resource/ResourceManager.hpp"
+#include "../../Managers/Body/BodyManager.hpp"
+#include "../../Managers/Object/ObjectManager.hpp"
+#include "../../Managers/GameManager.hpp"
+#include "../../Managers/Event/EventManager.hpp"
+#include "../../Managers/Audio/Music/MusicManager.hpp"
+#include "../../Managers/Audio/Sound/SoundManager.hpp"
+#include "../../Managers/Camera/CameraManager.hpp"
+#include "../../Managers/Input/InputManager.hpp"
+#include "../../Managers/Timer/TimerManager.hpp"
+#include "../../Managers/UI/UIManager.hpp"
 
 #include <iostream>
 
 namespace WandEngine
 {
-    GameScene::GameScene(std::string Name) : ProgressLoadingScene(0.0f), Name(Name)
+    Scene::Scene(std::string Name) : ProgressLoadingScene(0.0f), Name(Name)
     {
         this->ShowBodys = false;
         this->ShowGrid = false;
         this->ShowCamera = false;
     }
 
-    void GameScene::Reset()
+    void Scene::Reset()
     {
 
     }
 
-    bool GameScene::IsProgressLoadingSceneComplete()
+    bool Scene::IsProgressLoadingSceneComplete()
     {
         //return GetProgressLoadingScene() >= 1.0f;
         return true;
     }
 
-    std::string GameScene::GetName()
+    std::string Scene::GetName()
     {
         return Name;
     }
 
 
 /*
-    void GameScene::SetProgressLoadingScene(float Progress)
+    void Scene::SetProgressLoadingScene(float Progress)
     {
         std::lock_guard<std::mutex> lock(progressMutex);
         if (Progress > 1.0f)
@@ -51,24 +51,24 @@ namespace WandEngine
             ProgressLoadingScene = Progress;
     }
 
-    float GameScene::GetProgressLoadingScene()
+    float Scene::GetProgressLoadingScene()
     {
         std::lock_guard<std::mutex> lock(progressMutex);
         return ProgressLoadingScene;
     }
 
-    void GameScene::StartLoadingThread()
+    void Scene::StartLoadingThread()
     {
         loadingThread = std::thread([this]()
                                     { this->Init(); });
     }
 
-    bool GameScene::IsLoadingThreadJoinable() const
+    bool Scene::IsLoadingThreadJoinable() const
     {
         return loadingThread.joinable();
     }
 
-    void GameScene::JoinLoadingThread()
+    void Scene::JoinLoadingThread()
     {
         if (loadingThread.joinable())
         {
@@ -76,25 +76,25 @@ namespace WandEngine
         }
     }
 
-    void GameScene::UpdateLoadingScene(double deltaTime)
+    void Scene::UpdateLoadingScene(double deltaTime)
     {
         glm::vec2 pos = GameManager::GetInstance().GetWindowsSize();
         CameraManager::GetInstance().FocusPosition(glm::vec2(pos.x/2, pos.y/2));
     }
 
-    void GameScene::DrawLoadingScene()
+    void Scene::DrawLoadingScene()
     {
         int W_width = WandEngine::GameManager::GetInstance().GetWindowsSize().x;
         //al_draw_filled_rectangle(50, W_width / 2 - 10, 50 + 800 * GetProgressLoadingScene(), W_width / 2 + 10, al_map_rgb(0, 255, 0));
     }
 */
 
-    void GameScene::Draw()
+    void Scene::Draw()
     {
 
     }
 
-    void GameScene::UpdateManagers(double deltaTime)
+    void Scene::UpdateManagers(double deltaTime)
     {
         Update(deltaTime);
         ObjectManager::GetInstance().Update(deltaTime);
@@ -103,7 +103,7 @@ namespace WandEngine
 
     }
 
-    void GameScene::DrawManagers()
+    void Scene::DrawManagers()
     {
         this->Draw();
         
@@ -128,23 +128,23 @@ namespace WandEngine
         InputManager::GetInstance().DrawMouseSprite();
     }
 
-    void GameScene::ToogleShowBodys()
+    void Scene::ToogleShowBodys()
     {
         this->ShowBodys = !this->ShowBodys;
     }
 
-    void GameScene::ToogleShowGrid()
+    void Scene::ToogleShowGrid()
     {
         this->ShowGrid = !this->ShowGrid;
     }
 
-    void GameScene::ToogleShowCamera()
+    void Scene::ToogleShowCamera()
     {
         this->ShowCamera = !this->ShowCamera;
     }
 
 
-    void GameScene::Clear()
+    void Scene::Clear()
     {
         MusicManager::GetInstance().Clear();
         SoundManager::GetInstance().Clear();
@@ -169,7 +169,7 @@ namespace WandEngine
     }
 
 
-    GameScene::~GameScene()
+    Scene::~Scene()
     {
         #ifndef NDEBUG
             std::cout << "SCENE **" << GetName() << "** DESTROYED" << std::endl;

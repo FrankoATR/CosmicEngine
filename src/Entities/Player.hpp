@@ -1,8 +1,9 @@
 #ifndef PLAYER_HPP
 #define PLAYER_HPP
 
-#include <WandEngine/Models/GameObject.hpp>
-#include <WandEngine/Models/GameBodyObject.hpp>
+#include <WandEngine/Models/Object/Object.hpp>
+#include <WandEngine/Models/Body/Body.hpp>
+#include <WandEngine/Models/Timer/Timer.hpp>
 #include <random>
 
 using namespace WandEngine;
@@ -18,7 +19,7 @@ enum class PlayerMode
     Swim
 };
 
-class Player : public GameObject
+class Player : public Object
 {
 private:
     std::string UniqueName;
@@ -26,8 +27,8 @@ private:
     bool OnGroundOrBlock;
     float Gravity;
 
-    GameBodyObject* Body1;
-    GameBodyObject* Body2;
+    Body* body1;
+    Body* body2;
 
     bool KeySpaceDown, KeySpaceRelease;
     bool RigthClickDown, RigthClickRelease;
@@ -37,7 +38,7 @@ private:
 
     std::random_device rd;
 
-    GameTimer* TimeToEndTimer;
+    Timer* TimeToEndTimer;
 
     int randomNumber1;
 
@@ -52,8 +53,8 @@ public:
     void SetUniqueName(const std::string & name);
     const std::string& GetUniqueName() const;
 
-    void Body1CollisionEvent(GameObject *Other, CollisionSide Side);
-    void Body2CollisionEvent(GameObject *Other, CollisionSide Side);
+    void Body1CollisionEvent(Object *Other, BodyCollisionSide Side);
+    void Body2CollisionEvent(Object *Other, BodyCollisionSide Side);
 
 };
 

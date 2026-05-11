@@ -1,62 +1,64 @@
 #ifndef GAMEGRIDCOLLISIONS_HPP
 #define GAMEGRIDCOLLISIONS_HPP
 
-#include <glm/glm.hpp>
-#include <vector>
+#if defined(GAME_2D_CONFIGURATION)
 
-namespace WandEngine
-{
+    #include <glm/glm.hpp>
+    #include <vector>
 
-    enum class CollisionType
+    namespace WandEngine
     {
-        Grid,
-        QuadTree
-    };
-    
-    enum class CollisionSide;
 
-    class GameBodyObject;
+        enum class CollisionType
+        {
+            Grid,
+            QuadTree
+        };
 
-    struct Cell
-    {
-        glm::vec2 Position;
-        std::vector<GameBodyObject *> objects;
-        Cell() : Position(glm::vec2(0.0f)) {}
-        Cell(glm::vec2 Position) : Position(Position) {}
-    };
+        enum class BodyCollisionSide;
 
-    
-    class GameGridCollisions
-    {
-    public:
-        glm::vec2 GridPosition;
-        glm::vec2 GridSize;
-        int Arrows;
-        int Columns;
-        int CellSize;
-        std::vector<std::vector<Cell>> Cells;
+        class Body;
 
-        int EntitiesOnGrid;
+        struct Cell
+        {
+            glm::vec2 Position;
+            std::vector<Body *> objects;
+            Cell() : Position(glm::vec2(0.0f)) {}
+            Cell(glm::vec2 Position) : Position(Position) {}
+        };
 
-        GameGridCollisions(glm::vec2 GridPosition, int Arrows, int Columns, int CellSize);
-        ~GameGridCollisions();
+        class GameGridCollisions
+        {
+        public:
+            glm::vec2 GridPosition;
+            glm::vec2 GridSize;
+            int Arrows;
+            int Columns;
+            int CellSize;
+            std::vector<std::vector<Cell>> Cells;
 
-        glm::vec2 GetPosition();
-        void SetPosition(glm::vec2 NewsPosition);
-        Cell *GetCell(int Arrow, int Column);
-        void DrawCells();
-        void AddObject(GameBodyObject *obj);
-        void RemoveObject(GameBodyObject *obj);
-        void Check_cells_collisions(Cell *cell_1, Cell *cell_2);
-        void Find_collision_grid();
-        bool RectToRectCollisionBody(GameBodyObject *body1, GameBodyObject *body2);
-        CollisionSide GetCollisionSide(GameBodyObject *body1, GameBodyObject *body2);
-        
-        Cell *GetCellByPositionAndSize(glm::vec2 position, glm::vec2 size);
+            int EntitiesOnGrid;
 
-        void ClearGrid();
-    };
+            GameGridCollisions(glm::vec2 GridPosition, int Arrows, int Columns, int CellSize);
+            ~GameGridCollisions();
 
-}
+            glm::vec2 GetPosition();
+            void SetPosition(glm::vec2 NewsPosition);
+            Cell *GetCell(int Arrow, int Column);
+            void DrawCells();
+            void AddObject(Body *obj);
+            void RemoveObject(Body *obj);
+            void Check_cells_collisions(Cell *cell_1, Cell *cell_2);
+            void Find_collision_grid();
+            bool RectToRectCollisionBody(Body *body1, Body *body2);
+            BodyCollisionSide GetCollisionSide(Body *body1, Body *body2);
+
+            Cell *GetCellByPositionAndSize(glm::vec2 position, glm::vec2 size);
+
+            void ClearGrid();
+        };
+
+    }
+#endif
 
 #endif // GAMEGRIDCOLLISIONS_HPP

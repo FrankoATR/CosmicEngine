@@ -2,109 +2,107 @@
 
 ## Fecha efectiva
 
-**12 de abril de 2025**
+**21 de abril de 2025**
 
 ## Descripción general
 
-En esta etapa el cambio dominante ya no es la depuración del core, sino su recomposición sobre una API más ambiciosa y coherente. El framework vuelve a crecer alrededor de un `ResourceManager` mucho más expresivo, reincorpora texto y persistencia declarativa al núcleo, y formaliza una capa de UI propia integrada al ciclo principal del engine.
+En esta etapa el cambio dominante ya no está en agregar subsistemas al core, sino en normalizar su contrato público. El framework reorganiza sus tipos base alrededor de nombres más generales, introduce una configuración explícita de proyecto para elegir entre modo 2D y 3D en tiempo de compilación, y desacopla parte del bootstrap del motor mediante callbacks y constantes globales de inicialización.
 
-La evidencia visible de esta versión se concentra sobre todo en cuatro decisiones: `ResourceManager` pasa a centralizar sprites, formas, texto y buffers con soporte de múltiples vistas; `Shader` recupera helpers de alto nivel y unifica la proyección mediante `ViewType`; `UIManager`, `UIButton` y `UIText` vuelven a ser parte explícita del framework; y `DataBaseManager` junto con `GameObject` reabren la ruta de serialización por clase dentro del core.
+La evidencia visible de esta versión se concentra sobre todo en tres decisiones: `GameObject`, `GameScene` y `GameTimer` desaparecen como nombres públicos y son sustituidos por `Object`, `Scene` y `Timer`; `Configurations.hpp` pasa a controlar el perfil activo del engine y condiciona la forma de varios managers y modelos; y `GameManager` deja de codificar ciertos callbacks como detalle interno fijo para exponerlos mediante `std::function`.
 
-Con ello el proyecto no solo recupera capacidad perdida respecto a días anteriores, sino que reorganiza esa capacidad bajo contratos públicos más consistentes. El framework queda otra vez más amplio, pero también más alineado entre render, UI, runtime y persistencia.
+Con ello el proyecto no abandona la expansión del 12 de abril, pero sí la reordena. El framework queda menos atado a una semántica de demo o de implementación histórica, y más cerca de una API de engine reusable con perfiles de compilación definidos.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- consolidar un pipeline gráfico único capaz de atender render 2D, UI y distintas proyecciones desde una misma base de recursos;
-- reincorporar subsistemas transversales del framework, especialmente texto, UI y persistencia estructurada;
-- estandarizar los managers y contratos base del runtime para que el uso del engine sea más uniforme.
+- homogeneizar la nomenclatura del núcleo para que sus clases base representen conceptos de engine y no variantes heredadas del prefijo `Game`;
+- introducir una puerta de configuración única para decidir el perfil 2D o 3D del proyecto;
+- desacoplar el arranque y ciertos eventos del runtime para que el framework sea más configurable desde afuera.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `include/WandEngine/Managers/Resource/ResourceManager.*`, donde reaparece una infraestructura amplia con VAO estáticos, buffers dinámicos, fuentes tipográficas, medición de texto y helpers de render sobre múltiples vistas.
-- `include/WandEngine/Models/Shader.*`, donde vuelve una API de mayor nivel con `ViewType`, `SetModel()`, `SetProjection()` y un uso más expresivo de uniforms y compilación.
-- `include/WandEngine/Models/TextFont/`, que regresa al árbol del framework para sostener la carga de glifos y el render de texto desde el propio engine.
-- `include/WandEngine/Managers/UI/` y `include/WandEngine/Models/UIElements/`, donde se formaliza otra vez una capa de UI con manager dedicado y elementos como `UIButton` y `UIText`.
-- `include/WandEngine/Managers/DataBase/` y `include/WandEngine/Models/GameObject.*`, donde reaparecen la serialización por clase, `GetAllValues()`, `Reset()` y el contrato para reconstrucción de objetos desde persistencia.
-- `include/WandEngine/Managers/GameManager.*` y `include/WandEngine/Interfaces/Definitions.hpp`, donde se estabiliza la ergonomía del framework con singleton managers, drag-and-drop, aspecto base y aliases globales para UI y base de datos.
+- `include/WandEngine/Models/Object/Object.hpp`, `include/WandEngine/Models/Scene/Scene.hpp` y `include/WandEngine/Models/Timer/Timer.hpp`, donde el contrato base del runtime se reexpresa con nombres más generales y una organización nueva por dominio.
+- `include/WandEngine/Utils/Configurations.hpp`, que aparece como archivo central de selección de configuración del proyecto y define dimensiones iniciales y perfil de render.
+- `include/WandEngine/Managers/Object/ObjectManager.hpp`, `include/WandEngine/Managers/Scene/SceneManager.hpp` y `include/WandEngine/Managers/Timer/TimerManager.hpp`, donde los managers se ajustan a los nuevos nombres base y a la bifurcación 2D/3D.
+- `include/WandEngine/Managers/GameManager.hpp`, donde el manager principal incorpora callbacks configurables con `std::function` y se apoya en la nueva configuración global.
+- `src/main.cpp`, únicamente como evidencia de integración del framework, donde el arranque pasa a usar constantes de `Configurations.hpp`, logging explícito y una escena 3D de entrada.
 
 ## Arquitectura o sistemas principales
 
-### ResourceManager como hub de render del framework
+### Normalización del modelo base del runtime
 
-El cambio técnico más fuerte de esta etapa está en `ResourceManager`. El manager vuelve a convertirse en el centro real del pipeline gráfico del engine y deja de limitarse a texturas y shaders básicos. En esta versión concentra:
+El cambio técnico más fuerte de esta etapa está en la sustitución de las clases base con prefijo `Game` por nombres más neutrales. `Object`, `Scene` y `Timer` pasan a ser las referencias principales del framework para entidad, escena y temporizador.
 
-- VAO estáticos y buffers dinámicos diferenciados;
-- render de sprites, spritesheets y primitivas geométricas;
-- carga y render de texto mediante `TextFont`;
-- helpers como `MeasureText()` y `RenderText()`;
-- selección de vista mediante `ViewType` para reutilizar la misma infraestructura entre mundo, proyección y UI.
+Esto no es solo un cambio cosmético de nombres. También reordena el árbol público del engine y deja más clara la intención de uso de cada tipo: ya no se presentan como piezas ligadas a una implementación concreta del juego, sino como abstracciones base del framework.
 
-Eso redefine el alcance del subsistema: ya no es solo un repositorio de recursos, sino una capa integrada de render con semántica propia del framework.
+El resultado es una API más limpia para construir sobre ella, aunque el propio diff deja ver que la migración todavía está en curso y conserva algunas referencias heredadas en headers auxiliares.
 
-### Proyección unificada con ViewType
+### Configuración de proyecto como puerta de compilación
 
-`Shader` recupera una API más rica y reaparece `ViewType` como enum central del pipeline. Con `SetProjection()` y `SetModel()`, el framework vuelve a encapsular transformaciones y elección de matrices dentro del propio shader wrapper, en lugar de dejar toda esa responsabilidad dispersa por fuera.
+`Configurations.hpp` se vuelve una pieza estructural del motor. En lugar de asumir implícitamente un perfil de ejecución, el framework define macros de configuración para elegir entre `GAME_2D_CONFIGURATION` y `GAME_3D_CONFIGURATION`, además de constantes para tamaño inicial de ventana y base de render.
 
-La implicación arquitectónica es importante porque ordena el render alrededor de una misma convención de vistas. Un sprite, una forma o un texto pueden pasar por el mismo esquema de proyección sin duplicar lógica por subsistema.
+La implicación aquí es fuerte porque varios contratos pasan a depender de esa selección. `Object`, por ejemplo, cambia sus propiedades públicas y protegidas según el modo activo: vectores 2D con `layerId` y rotación escalar para un perfil, o vectores 3D y rotaciones vectoriales para el otro.
 
-### Texto y UI otra vez dentro del core
+Eso convierte la configuración del proyecto en una decisión explícita del framework y no en una acumulación de supuestos dispersos.
 
-La vuelta de `TextFont` no llega aislada. Está acompañada por la reaparición de `UIManager`, `UIButton` y `UIText`, lo que convierte al texto en un servicio transversal y no solo en una utilidad auxiliar. El framework vuelve a ofrecer una capa de interfaz propia, con actualización y dibujo integrados al ciclo de escena.
+### Managers adaptados a perfiles 2D y 3D
 
-En términos de diseño, esto vuelve a acercar el engine a una plataforma más completa para herramientas y HUDs. La UI deja de ser responsabilidad externa y pasa a formar parte explícita del contrato del motor.
+`ObjectManager` hace visible esa misma bifurcación con una API condicionada por compilación. En modo 2D mantiene búsquedas por capa, área o posición del mouse; en modo 3D abre rutas como búsquedas por volumen o raycast de vista.
 
-### Persistencia declarativa y GameObject extendido
+La importancia de este punto está en que la arquitectura deja de fingir una neutralidad total cuando en realidad el dominio cambia entre 2D y 3D. En lugar de esconder esa diferencia, la hace parte formal del contrato del manager.
 
-`DataBaseManager` también regresa con un enfoque estructurado: registro de serialización por clase, columnas declaradas, callbacks de reconstrucción y rutas de guardado y carga por tipo. Eso vuelve a insertar la persistencia en el corazón del framework.
+`SceneManager` y `TimerManager` también se ajustan al nuevo vocabulario del core, reforzando la idea de un runtime más consistente alrededor de `Scene` y `Timer` como tipos base.
 
-Para sostenerlo, `GameObject` retoma un contrato más amplio. Reaparecen `GetAllValues()`, `Reset()` y `Draw() const`, además de una semántica más preparada para clonación, referencias y restauración de estado. El modelo base vuelve a exponer la información que la persistencia necesita sin delegarla a lógica externa al objeto.
+### GameManager más desacoplado del detalle de ventana
 
-Con ello el runtime recupera una ambición que en la etapa previa se había retirado: el motor vuelve a describir, guardar y reconstruir parte de su estado como responsabilidad interna.
+`GameManager` también cambia de tono. Sigue siendo el punto de entrada del ciclo principal, pero ahora admite callbacks configurables de framebuffer y drop mediante `std::function`, en lugar de tratar esos eventos como rutas internas rígidas.
 
-### Managers más uniformes y framework más ergonómico
+Eso reduce acoplamiento con la implementación directa de GLFW y permite que el usuario del framework extienda o reemplace parte del comportamiento del bootstrap sin intervenir el núcleo del manager.
 
-El ensanchamiento del core también viene acompañado por una estandarización de managers y atajos públicos. `GameManager` incorpora soporte para archivos soltados sobre la ventana y control explícito del aspecto base, mientras `Definitions.hpp` vuelve a exponer aliases para UI y base de datos junto a los demás managers del engine.
+Además, el uso conjunto con `Configurations.hpp` mueve la inicialización de pantalla y aspecto a un esquema más declarativo y menos hardcodeado dentro del arranque.
 
-No es el cambio más vistoso, pero sí uno importante para uso diario: el framework queda más homogéneo en cómo inicializa, centraliza y expone sus subsistemas.
+### Bootstrap del framework más explícito
 
-### Mesh y Model como soporte, no como eje dominante
+Aunque no conviene documentar la demo como eje del cambio, `src/main.cpp` sí confirma un ajuste propio del framework: el arranque se apoya ahora en `Configurations.hpp`, usa logging explícito y selecciona la escena inicial desde una interfaz más limpia.
 
-`Mesh` y `Model` siguen presentes dentro del stack del engine y forman parte del soporte general para geometría y carga de assets 3D. Sin embargo, en esta fecha no son el centro del cambio arquitectónico. El peso real del delta está en la recomposición de recursos, vistas, UI, texto y persistencia.
+Eso refuerza la lectura general de esta fecha: el motor no solo renombra tipos, sino que también intenta hacer más predecible y configurable el punto de entrada para proyectos que lo consuman.
 
-Eso conviene dejarlo explícito para no sobredocumentar un área que aquí actúa más como continuidad del framework que como novedad dominante.
+### Migración en curso, no sustitución completamente cerrada
+
+El árbol público deja ver que esta normalización todavía no está completada del todo. Persisten referencias heredadas como macros antiguas en `Definitions.hpp` o forward declarations con nombres previos en algunos managers.
+
+Eso conviene dejarlo explícito porque describe mejor la realidad del diff: el 21 de abril no es una limpieza final del framework, sino una fase fuerte de transición hacia una API más estable y genérica.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en tres sentidos:
 
-- el render vuelve a apoyarse en una infraestructura unificada capaz de atender mundo, proyección y UI bajo una misma convención;
-- la capa de interfaz y texto ya puede vivir dentro del motor sin depender de soluciones externas ad hoc;
-- la persistencia vuelve a disponer de contratos explícitos entre `DataBaseManager` y `GameObject` para guardar y reconstruir objetos del runtime.
+- el proyecto puede declarar desde un único punto si compila contra un perfil 2D o 3D;
+- los tipos base del runtime quedan menos acoplados al vocabulario histórico de la reconstrucción;
+- el bootstrap del motor expone más puntos de extensión para integrar callbacks y parámetros de inicialización desde afuera.
 
-Con ello dejé una base de engine bastante más completa que la del 6 de abril. La mejora principal de esta etapa no está en un subsistema aislado, sino en cómo varias capas del framework vuelven a conectarse entre sí bajo una API más consistente.
+Con ello dejé una base de engine más configurable que la del 12 de abril. La mejora principal de esta etapa no está en añadir render, UI o persistencia, sino en ordenar cómo el framework se presenta, se configura y se consume.
 
 ## Dependencias externas visibles
 
-No aparece un cambio de stack principal, pero sí una ampliación clara de cómo el framework usa dependencias ya presentes:
+No aparece un cambio principal de librerías externas en esta etapa. El cambio está en cómo el framework organiza su relación con ellas:
 
-- OpenGL sigue siendo la base del render, ahora con una envoltura más rica en `ResourceManager` y `Shader`;
-- FreeType vuelve a tener presencia directa en el core a través de `TextFont` y del render de texto;
-- `sqlite3` vuelve a sostener una capa propia del framework mediante `DataBaseManager` y la serialización declarativa por clase;
-- Assimp y el stack de modelos siguen integrados, aunque en esta fecha actúan como soporte y no como eje principal del cambio.
+- GLFW sigue siendo la base de la ventana y eventos, pero `GameManager` encapsula mejor sus callbacks;
+- OpenGL y el resto del stack gráfico permanecen como infraestructura ya existente, sin ser el eje dominante de esta fecha;
+- `sqlite3` y otros subsistemas del core continúan presentes, pero aquí operan como continuidad del estado previo y no como la novedad principal.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **12 de abril de 2025** queda delimitada por estos movimientos:
+La etapa efectiva al **21 de abril de 2025** queda delimitada por estos movimientos:
 
-- reconstruí `ResourceManager` como hub central de sprites, formas, texto y buffers con soporte de múltiples vistas;
-- restauré una API de shader más rica con `ViewType`, `SetModel()` y `SetProjection()`;
-- reincorporé `TextFont` y el render de texto al núcleo del framework;
-- formalicé otra vez una capa de UI con `UIManager`, `UIButton` y `UIText` integrada al ciclo del motor;
-- reintroduje `DataBaseManager` y devolví a `GameObject` los contratos necesarios para serialización y restauración de estado;
-- amplié la ergonomía del engine con drag-and-drop, aspecto base y aliases globales para subsistemas que vuelven a ser parte del core.
+- renombré y reorganicé el modelo base del runtime alrededor de `Object`, `Scene` y `Timer`;
+- introduje `Configurations.hpp` como punto único para definir perfil 2D/3D y constantes principales de inicialización;
+- adapté managers como `ObjectManager`, `SceneManager` y `TimerManager` al nuevo vocabulario del framework y a la bifurcación por configuración;
+- desacoplé `GameManager` mediante callbacks configurables con `std::function` y un arranque más declarativo;
+- alineé el bootstrap del engine con logging explícito y parámetros de configuración centralizados;
+- dejé visible que la migración todavía está en curso, porque sobreviven referencias heredadas del esquema anterior en parte del árbol público.
 
-Con esta etapa dejé el framework en una versión claramente más completa y más integrada: un core otra vez amplio, con más servicios internos y con una arquitectura pública mejor alineada entre render, UI, runtime y persistencia.
+Con esta etapa dejé el framework en una transición importante hacia una API más genérica y reusable: menos peso del legado nominal, más configuración explícita del proyecto y un núcleo mejor preparado para separar perfiles 2D y 3D.

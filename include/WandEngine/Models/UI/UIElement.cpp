@@ -1,7 +1,7 @@
 #include "UIElement.hpp"
-#include "../Managers/GameManager.hpp"
-#include "../Managers/Camera/CameraManager.hpp"
-#include "../Managers/Input/InputManager.hpp"
+#include "../../Managers/GameManager.hpp"
+#include "../../Managers/Camera/CameraManager.hpp"
+#include "../../Managers/Input/InputManager.hpp"
 
 #include <algorithm>
 #include <iostream>

@@ -1,20 +1,20 @@
-#ifndef GAMETIMER_HPP
-#define GAMETIMER_HPP
+#ifndef WAND_TIMER_HPP
+#define WAND_TIMER_HPP
 
 #include <string>
 
 namespace WandEngine
 {
-    class GameTimer
+    class Timer
     {
         private:
             double TargetTime, ElapsedTime;
             bool Loop, Paused, Triggered, Alive;
-            GameTimer* flag;
+            Timer* flag;
 
         public:
-            GameTimer(double TargetTime, bool Loop, bool Paused, GameTimer *flag = nullptr);
-            ~GameTimer() = default;
+            Timer(double TargetTime, bool Loop, bool Paused, Timer *flag = nullptr);
+            ~Timer() = default;
 
             void Update(double deltaTime);
 
@@ -40,4 +40,4 @@ namespace WandEngine
 }
 
 
-#endif //GAMETIMER_HPP
+#endif //WAND_TIMER_HPP

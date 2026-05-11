@@ -1,15 +1,24 @@
 #ifndef BODYMANAGER_HPP
 #define BODYMANAGER_HPP
 
+#include "../../Utils/Configurations.hpp"
 #include <glm/glm.hpp>
 #include <vector>
 
 namespace WandEngine
 {
 
-    class GameBodyObject;
-    class GameObject;
-    class GameGridCollisions;
+    class Body;
+    class Object;
+
+    #if defined(GAME_2D_CONFIGURATION)
+        class GameGridCollisions;
+
+    #elif defined(GAME_3D_CONFIGURATION)
+
+    #else
+        #error "[BodyManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
+    #endif
 
     class BodyManager
     {
@@ -19,29 +28,43 @@ namespace WandEngine
         BodyManager(const BodyManager &) = delete;
         BodyManager &operator=(const BodyManager &) = delete;
 
-        std::vector<GameBodyObject *> bodys;
+        std::vector<Body *> bodys;
         std::vector<int> toDelete;
-        GameGridCollisions *GridArea;
         int nextEntityId;
+
+        #if defined(GAME_2D_CONFIGURATION)
+            GameGridCollisions *GridArea;
+
+        #elif defined(GAME_3D_CONFIGURATION)
+
+        #else
+            #error "[BodyManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
+        #endif
 
     public:
         static BodyManager &GetInstance();
 
-        glm::vec2 GetGridPosition();
-        void SetGridPosition(glm::vec2 NewPosition);
-
         void Init();
-        void Update();
         void Draw();
-        void Add(GameBodyObject *body);
-
-        std::vector<GameBodyObject *> FindAllByParent(GameObject* Parent);
-
+        void Update();
+        void Add(Body *body);
         void Remove(int entityId);
         void Clear();
 
-        void SetNewGridArea(GameGridCollisions*);
-        bool RectToRectCollisionBody(GameBodyObject *body_1, GameBodyObject *body_2);
+        std::vector<Body *> FindAllByParent(Object* parent);
+        
+        #if defined(GAME_2D_CONFIGURATION)
+            void SetNewGridArea(GameGridCollisions*);
+
+            void SetGridPosition(glm::vec2 newPosition);
+            glm::vec2 GetGridPosition();
+
+        #elif defined(GAME_3D_CONFIGURATION)
+
+
+        #else
+            #error "[BodyManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
+        #endif
     };
 
 }

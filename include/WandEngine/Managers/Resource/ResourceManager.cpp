@@ -1,6 +1,9 @@
 #include "ResourceManager.hpp"
 #include "MasterShaders.hpp"
 
+#include "../Camera/CameraManager.hpp"
+
+
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -277,8 +280,12 @@ namespace WandEngine
         model = glm::translate(model, -pivot);
 
         shapeShader->SetMatrix4("model", model);
+        
+        shapeShader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
+
         shapeShader->SetProjection("projection", viewType);
         shapeShader->SetVec4("LineColor", glm::vec4(color, alpha));
+
 
         glLineWidth(lineWidth);
 

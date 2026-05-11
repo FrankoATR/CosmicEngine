@@ -72,13 +72,51 @@ namespace WandEngine
 		}
 		glfwSwapInterval(0);
 
-		// glEnable(GL_DEPTH_TEST);  //en 3D
+
+		#if defined(GAME_3D_CONFIGURATION)
+			glEnable(GL_DEPTH_TEST);
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		#endif
+
+		
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glViewport(0, 0, screenWidth, screenHeight);
-		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-		glfwSetDropCallback(window, DropCallback);
+
+		
+		SetFramebufferSize_Callback([&](int width, int height){
+			float currentAspect = (float)width / (float)height;
+			int newWidth = width;
+			int newHeight = height;
+	
+			glm::vec2 baseAspect = GetBaseAspectSize();
+	
+			if (currentAspect > (baseAspect.x / baseAspect.y))
+			{
+				newWidth = (int)(height * (baseAspect.x / baseAspect.y));
+			}
+			else
+			{
+				newHeight = (int)(width / (baseAspect.x / baseAspect.y));
+			}
+	
+			int offsetX = (width - newWidth) / 2;
+			int offsetY = (height - newHeight) / 2;
+			glfwSetWindowAspectRatio(window, baseAspect.x, baseAspect.y);
+	
+			glViewport(offsetX, offsetY, newWidth, newHeight);
+		});
+
+		
+		SetDrop_Callback([&](int count, const char** paths){
+			for (int i = 0; i < count; i++)
+			{
+				PushDroppedFile(paths[i]);
+			}
+		});
+
+
 
 
 		InitManagers();
@@ -121,8 +159,6 @@ namespace WandEngine
 		BodyManager::GetInstance().Init();
 		DataBaseManager::GetInstance().Init();
 		CameraManager::GetInstance().Init(baseAspectSize);
-
-		NetworkManager::GetInstance().Init();
 
 		return true;
 	}
@@ -189,36 +225,29 @@ namespace WandEngine
 		}
 	}
 
-	void GameManager::framebuffer_size_callback(GLFWwindow *window, int width, int height)
+
+	void GameManager::SetFramebufferSize_Callback(std::function<void(int, int)> callback)
 	{
-		float currentAspect = (float)width / (float)height;
-		int newWidth = width;
-		int newHeight = height;
-
-		glm::vec2 baseAspect = GameManager::GetInstance().GetBaseAspectSize();
-
-		if (currentAspect > (baseAspect.x / baseAspect.y))
-		{
-			newWidth = (int)(height * (baseAspect.x / baseAspect.y));
-		}
-		else
-		{
-			newHeight = (int)(width / (baseAspect.x / baseAspect.y));
-		}
-
-		int offsetX = (width - newWidth) / 2;
-		int offsetY = (height - newHeight) / 2;
-		glfwSetWindowAspectRatio(window, baseAspect.x, baseAspect.y);
-
-		glViewport(offsetX, offsetY, newWidth, newHeight);
+		framebufferSizeCallback = callback;
+		glfwSetWindowUserPointer(window, this);
+		glfwSetFramebufferSizeCallback(window, [](GLFWwindow* win, int w, int h) {
+			auto self = static_cast<GameManager*>(glfwGetWindowUserPointer(win));
+			if (self && self->framebufferSizeCallback) {
+				self->framebufferSizeCallback(w, h);
+			}
+		});
 	}
-
-	void GameManager::DropCallback(GLFWwindow *window, int count, const char **paths)
+	
+	void GameManager::SetDrop_Callback(std::function<void(int, const char**)> callback)
 	{
-		for (int i = 0; i < count; i++)
-		{
-			GameManager::GetInstance().PushDroppedFile(paths[i]);
-		}
+		dropCallback = callback;
+		glfwSetWindowUserPointer(window, this);
+		glfwSetDropCallback(window, [](GLFWwindow* win, int count, const char** paths) {
+			auto self = static_cast<GameManager*>(glfwGetWindowUserPointer(win));
+			if (self && self->dropCallback) {
+				self->dropCallback(count, paths);
+			}
+		});
 	}
 
 	std::vector<std::string> GameManager::GetDroppedFiles()
@@ -271,7 +300,7 @@ namespace WandEngine
 		return VSyncEnable;
 	}
 
-	void GameManager::SetFirstScene(GameScene *scene)
+	void GameManager::SetFirstScene(Scene *scene)
 	{
 		if (SceneManager::GetInstance().Empty())
 		{

@@ -1,5 +1,5 @@
-#ifndef UIELEMENT_HPP
-#define UIELEMENT_HPP
+#ifndef WAND_UIELEMENT_HPP
+#define WAND_UIELEMENT_HPP
 
 #include <glm/glm.hpp>
 #include <string>
@@ -55,4 +55,4 @@ namespace WandEngine
 
 }
 
-#endif // UIELEMENT_HPP
+#endif // WAND_UIELEMENT_HPP

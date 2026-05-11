@@ -1,15 +1,15 @@
-#include "GameTimer.hpp"
+#include "Timer.hpp"
 #include <iostream>
 
 namespace WandEngine
 {
-    GameTimer::GameTimer(double TargetTime, bool Loop, bool Paused, GameTimer *flag) :  //Es necesario el flag o quedará mejor en Schedule ? o trabajar solo con almacenar el puntero del Timer/Schedule
+    Timer::Timer(double TargetTime, bool Loop, bool Paused, Timer *flag) :  //Es necesario el flag o quedará mejor en Schedule ? o trabajar solo con almacenar el puntero del Timer/Schedule
         TargetTime(TargetTime), Loop(Loop), Paused(Paused), flag(flag), ElapsedTime(0.0), Alive(true)
     {
     
     }
 
-    void GameTimer::Update(double deltaTime)
+    void Timer::Update(double deltaTime)
     {
         Triggered = false;
 
@@ -38,68 +38,68 @@ namespace WandEngine
 
     }
 
-    bool GameTimer::IsTrigger()
+    bool Timer::IsTrigger()
     {
         return this->Triggered;
     }
 
-    void GameTimer::SetTargetTime(double NewTargetTime)
+    void Timer::SetTargetTime(double NewTargetTime)
     {
         this->TargetTime = NewTargetTime;
     }
 
-    double GameTimer::GetTargetTime()
+    double Timer::GetTargetTime()
     {
         return this->TargetTime;
     }
 
-    double GameTimer::GetElapsedTime()
+    double Timer::GetElapsedTime()
     {
         return this->ElapsedTime;
     }
 
-    void GameTimer::EnableLoop()
+    void Timer::EnableLoop()
     {
         this->Loop = true;
     }
 
-    void GameTimer::DisableLoop()
+    void Timer::DisableLoop()
     {
         this->Loop = false;
     }
 
 
-    bool GameTimer::HaveLoop()
+    bool Timer::HaveLoop()
     {
         return this->Loop;
     }
 
-    void GameTimer::Reset()
+    void Timer::Reset()
     {
         this->ElapsedTime = 0.0;
     }
 
-    void GameTimer::Pause()
+    void Timer::Pause()
     {
         this->Paused = true;
     }
 
-    bool GameTimer::IsOnPause()
+    bool Timer::IsOnPause()
     {
         return this->Paused;
     }
 
-    void GameTimer::Play()
+    void Timer::Play()
     {
         this->Paused = false;
     }
 
-    void GameTimer::Destroy()
+    void Timer::Destroy()
     {
         this->Alive = false;
     }
 
-    bool GameTimer::IsAlive()
+    bool Timer::IsAlive()
     {
         return this->Alive;
     }

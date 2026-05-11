@@ -30,8 +30,14 @@ namespace WandEngine
         MouseSpriteSize = glm::vec2(32.0f);
         disableMouse = false;
 
-        glfwSetCursorPosCallback(window, MouseCallback);
-        glfwSetScrollCallback(window, ScrollCallback);
+
+        SetMousePosition_Callback([](double x, double y){
+            CameraManager::GetInstance().Classic3DProcessMouseMovement(x, y);
+        });
+
+        SetMouseScroll_Callback([](double x, double y){
+            CameraManager::GetInstance().Classic3DProcessMouseScroll(x, y);
+        });
 
         std::cout << "Input manager initialized" << std::endl;
     }
@@ -123,15 +129,32 @@ namespace WandEngine
         return joystickButtonState.count(button) && joystickButtonState.at(button);
     }
 
-    void InputManager::MouseCallback(GLFWwindow *window, double xpos, double ypos)
-    {
-        CameraManager::GetInstance().ProcessMouseMovement(xpos, ypos);
-    }
+    void InputManager::SetMousePosition_Callback(std::function<void(double, double)> callback)
+	{
+		mousePositionCallback = callback;
+        GLFWwindow* window = GameManager::GetInstance().GetWindow();
+		glfwSetWindowUserPointer(window, this);
+		glfwSetCursorPosCallback(window, [](GLFWwindow* win, double xpos, double ypos) {
+			auto self = static_cast<InputManager*>(glfwGetWindowUserPointer(win));
+			if (self && self->mousePositionCallback) {
+				self->mousePositionCallback(xpos, ypos);
+			}
+		});
+	}
+	
+	void InputManager::SetMouseScroll_Callback(std::function<void(double, double)> callback)
+	{
+		mouseScrollCallback = callback;
+        GLFWwindow* window = GameManager::GetInstance().GetWindow();
+		glfwSetScrollCallback(window, [](GLFWwindow* win, double xoffset, double yoffset) {
+			auto self = static_cast<InputManager*>(glfwGetWindowUserPointer(win));
+			if (self && self->mouseScrollCallback) {
+				self->mouseScrollCallback(xoffset, yoffset);
+			}
+		});
+	}
 
-    void InputManager::ScrollCallback(GLFWwindow *window, double xoffset, double yoffset)
-    {
-        CameraManager::GetInstance().ProcessMouseScroll(xoffset, yoffset);
-    }
+
 
     glm::vec2 InputManager::GetMousePosition() const
     {

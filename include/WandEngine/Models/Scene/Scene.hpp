@@ -1,11 +1,11 @@
-#ifndef GAMESCENE_HPP
-#define GAMESCENE_HPP
+#ifndef WAND_SCENE_HPP
+#define WAND_SCENE_HPP
 
 #include <string>
 
 namespace WandEngine
 {
-    class GameScene
+    class Scene
     {
     private:
         float ProgressLoadingScene;
@@ -18,8 +18,8 @@ namespace WandEngine
         bool ShowCamera;
 
     public:
-        GameScene(std::string Name);
-        virtual ~GameScene();
+        Scene(std::string Name);
+        virtual ~Scene();
 
         virtual void Init() = 0;
         virtual void Reset();
@@ -53,4 +53,4 @@ namespace WandEngine
     };
 }
 
-#endif // GAMESCENE_HPP
+#endif // WAND_SCENE_HPP

@@ -1,9 +1,8 @@
 #ifndef ORB_HPP
 #define ORB_HPP
 
-#include <WandEngine/Models/GameObject.hpp>
-#include <WandEngine/Models/GameBodyObject.hpp>
-#include <WandEngine/Models/GameTimer.hpp>
+#include <WandEngine/Models/Object/Object.hpp>
+#include <WandEngine/Models/Body/Body.hpp>
 
 using namespace WandEngine;
 
@@ -16,14 +15,12 @@ enum class OrbType
     Black
 };
 
-class Orb : public GameObject
+class Orb : public Object
 {
 private:
-    GameBodyObject* Body;
+    Body* body;
     OrbType Type;
     bool Used;
-
-    GameTimer* RotateSprite_Timer;
 
 public:
     Orb(OrbType Type, glm::vec2 Position, glm::vec2 Size, short int LayerId);
@@ -31,7 +28,7 @@ public:
     void Init() override;
     void Draw() const override;
     void Update(float deltaTime) override;
-    void BodyCollisionEvent(GameObject *other, CollisionSide Side);
+    void BodyCollisionEvent(Object *other, BodyCollisionSide Side);
 
     void SetUsed();
     bool IsUsed();

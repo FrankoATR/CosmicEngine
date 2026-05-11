@@ -1,30 +1,30 @@
 #include "Orb.hpp"
 #include "Player.hpp"
 
-#include <WandEngine/Managers/Input/InputManager.hpp>
 #include <WandEngine/Managers/Object/ObjectManager.hpp>
 #include <WandEngine/Managers/Body/BodyManager.hpp>
-#include <WandEngine/Managers/Camera/CameraManager.hpp>
 #include <WandEngine/Managers/Resource/ResourceManager.hpp>
-#include <WandEngine/Managers/Timer/TimerManager.hpp>
 #include <WandEngine/Managers/DataBase/DataBaseManager.hpp>
 
 #include <sstream>
 
 Orb::Orb(OrbType Type, glm::vec2 Position, glm::vec2 Size, short int LayerId) :
-GameObject("Orb", Position, Size, 0.0f, LayerId), Type(Type), Used(false)
+    Object("Orb", Position, Size, 0.0f, LayerId), Type(Type), Used(false)
 {
-    AngularVelocity = 500.0f;
+    angularVelocity = 500.0f;
 }
 
 
 void Orb::Init()
 {
-    Body = new GameBodyObject(this, glm::vec2(0.0f), GetSize(), [this](GameObject* Other, CollisionSide Side){BodyCollisionEvent(Other, Side);});
-    BodyManager::GetInstance().Add(Body);
+    glm::vec2 collisionSize = {size.x * 1.2f, size.y * 1.2f};
+    glm::vec2 collisionPosition = {
+        (size.x - collisionSize.x) / 2,
+        (size.y - collisionSize.y) / 2
+    };
 
-    //RotateSprite_Timer = new GameTimer(0.030, true, false);
-    //TimerManager::GetInstance().Add(RotateSprite_Timer);
+    body = new Body(this, collisionPosition, collisionSize, CALLBACK_COLLISION_EVENT(BodyCollisionEvent)); // TODO: increse hitbox
+    BodyManager::GetInstance().Add(body);
 }
 
 
@@ -32,7 +32,7 @@ void Orb::Draw() const
 {
     int idx = Type == OrbType::Green ? 0 : 1;
 
-    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", 5, idx, Position, Size, Rotation, MainColor, 1.0f);
+    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", 5, idx, position, size, rotation, mainColor, 1.0f);
 }
 
 
@@ -42,7 +42,7 @@ void Orb::Update(float deltaTime)
 }
 
 
-void Orb::BodyCollisionEvent(GameObject *Other, CollisionSide Side)
+void Orb::BodyCollisionEvent(Object *Other, BodyCollisionSide Side)
 {
 
 
@@ -75,8 +75,8 @@ Orb::~Orb()
 
 std::vector<std::string> Orb::GetAllValues() const {
     return {
-        std::to_string(Position.x),
-        std::to_string(Position.y),
+        std::to_string(position.x),
+        std::to_string(position.y),
         std::to_string(static_cast<int>(Type))
     };
 }
@@ -91,7 +91,7 @@ void Orb::RegisterSerialize()
             {"PositionY", "REAL"},
             {"OrbType", "INTEGER"}
         },
-        [](char** argv) -> GameObject*
+        [](char** argv) -> Object*
         {
             float posX = std::stof(argv[0]);
             float posY = std::stof(argv[1]);

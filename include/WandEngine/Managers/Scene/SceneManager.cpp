@@ -1,6 +1,6 @@
 #include "SceneManager.hpp"
 
-#include "../../Models/GameScene.hpp"
+#include "../../Models/Scene/Scene.hpp"
 #include <iostream>
 
 namespace WandEngine
@@ -38,13 +38,13 @@ namespace WandEngine
     }
 
 
-    void SceneManager::PushScene(GameScene *scene)
+    void SceneManager::PushScene(Scene *scene)
     {
         sceneStack.push_back(scene);
         sceneStack.back()->Init();
     }
 
-    void SceneManager::ReplaceScene(GameScene *scene)
+    void SceneManager::ReplaceScene(Scene *scene)
     {
         if (NextScene != nullptr)
         {

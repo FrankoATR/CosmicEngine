@@ -1,7 +1,7 @@
 #include "UIButton.hpp"
-#include "../../Managers/Input/InputManager.hpp"
-#include "../../Managers/Camera/CameraManager.hpp"
-#include "../../Managers/Resource/ResourceManager.hpp"
+#include "../../../Managers/Input/InputManager.hpp"
+#include "../../../Managers/Camera/CameraManager.hpp"
+#include "../../../Managers/Resource/ResourceManager.hpp"
 
 #include <iostream>
 

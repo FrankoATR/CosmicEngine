@@ -12,8 +12,8 @@
 #include <sstream>
 #include <iostream>
 
-Spike::Spike(SpikeType Type, glm::vec2 Position, glm::vec2 Size, short int LayerId) :
-GameObject("Spike", Position, Size, 0.0f, LayerId), Type(Type)
+Spike::Spike(SpikeType Type, glm::vec2 position, glm::vec2 size, short int LayerId) :
+    Object("Spike", position, size, 0.0f, LayerId), Type(Type)
 {
 
 }
@@ -28,24 +28,24 @@ void Spike::Init()
     {
         collisionSize = {GetSize().x * 0.2f, GetSize().y * 0.4f};
         collisionPosition = {
-            Size.x / 2 - collisionSize.x / 2,
-            Size.y / 2 - collisionSize.y / 2
+            size.x / 2 - collisionSize.x / 2,
+            size.y / 2 - collisionSize.y / 2
         };
     }
     else if(Type == SpikeType::Medium)
     {
         collisionSize = {GetSize().x * 0.2f, GetSize().y * 0.2f};
         collisionPosition = {
-            Size.x / 2 - collisionSize.x / 2,
-            Size.y * 0.7
+            size.x / 2 - collisionSize.x / 2,
+            size.y * 0.7
         };
     }
     else if(Type == SpikeType::Small)
     {
         collisionSize = {GetSize().x * 0.12f, GetSize().y * 0.25f};
         collisionPosition = {
-            Size.x / 2 - collisionSize.x / 2,
-            Size.y * 0.55
+            size.x / 2 - collisionSize.x / 2,
+            size.y * 0.55
         };
     }
     else if(Type == SpikeType::Small)
@@ -57,15 +57,15 @@ void Spike::Init()
         std::cerr << "No SpikeType found" << std::endl;
     }
 
-    Body = new GameBodyObject(this, collisionPosition, collisionSize, [this](GameObject* Other, CollisionSide Side){BodyCollisionEvent(Other, Side);});
-    BodyManager::GetInstance().Add(Body);
+    body = new Body(this, collisionPosition, collisionSize, CALLBACK_COLLISION_EVENT(BodyCollisionEvent));
+    BodyManager::GetInstance().Add(body);
 
 }
 
 
 void Spike::Draw() const
 {
-    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", 4, static_cast<int>(Type), Position, Size, Rotation, MainColor, 1.0f);
+    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", 4, static_cast<int>(Type), position, size, rotation, mainColor, 1.0f);
 }
 
 
@@ -75,7 +75,7 @@ void Spike::Update(float deltaTime)
 }
 
 
-void Spike::BodyCollisionEvent(GameObject *Other, CollisionSide Side)
+void Spike::BodyCollisionEvent(Object *Other, BodyCollisionSide Side)
 {
 
 
@@ -90,10 +90,10 @@ SpikeType Spike::GetSpikeType()
 
 std::vector<std::string> Spike::GetAllValues() const {
     return {
-        std::to_string(Position.x),
-        std::to_string(Position.y),
+        std::to_string(position.x),
+        std::to_string(position.y),
         std::to_string(static_cast<int>(Type)),
-        std::to_string(Rotation)
+        std::to_string(rotation)
     };
 }
 
@@ -108,7 +108,7 @@ void Spike::RegisterSerialize()
             {"SpikeType", "INTEGER"},
             {"Rotation", "REAL"}
         },
-        [](char** argv) -> GameObject*
+        [](char** argv) -> Object*
         {
             float posX = std::stof(argv[0]);
             float posY = std::stof(argv[1]);

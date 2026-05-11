@@ -1,5 +1,5 @@
-#ifndef SCENEMANAGER_HPP
-#define SCENEMANAGER_HPP
+#ifndef WAND_SCENEMANAGER_HPP
+#define WAND_SCENEMANAGER_HPP
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -7,7 +7,7 @@
 namespace WandEngine
 {
 
-    class GameScene;
+    class Scene;
 
     class SceneManager
     {
@@ -17,10 +17,10 @@ namespace WandEngine
         SceneManager(const SceneManager &) = delete;
         SceneManager &operator=(const SceneManager &) = delete;
 
-        std::vector<GameScene *> sceneStack;
+        std::vector<Scene *> sceneStack;
         bool isRunning;
         glm::vec3 BackgroundColor;
-        GameScene* NextScene;
+        Scene* NextScene;
         
     public:
         static SceneManager &GetInstance();
@@ -30,8 +30,8 @@ namespace WandEngine
         void Update(double deltaTime);
         void Draw();
 
-        void PushScene(GameScene *scene);
-        void ReplaceScene(GameScene *scene);
+        void PushScene(Scene *scene);
+        void ReplaceScene(Scene *scene);
         void PopScene();
 
 
@@ -48,4 +48,4 @@ namespace WandEngine
 
 }
 
-#endif // SCENEMANAGER_HPP
+#endif // WAND_SCENEMANAGER_HPP

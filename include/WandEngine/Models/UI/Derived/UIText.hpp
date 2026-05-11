@@ -1,5 +1,5 @@
-#ifndef UITEXT_HPP
-#define UITEXT_HPP
+#ifndef WAND_UITEXT_HPP
+#define WAND_UITEXT_HPP
 
 #include <glm/glm.hpp>
 #include "../UIElement.hpp"
@@ -37,4 +37,4 @@ namespace WandEngine
 
 }
 
-#endif // UITEXT_HPP
+#endif // WAND_UITEXT_HPP

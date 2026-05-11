@@ -1,8 +1,8 @@
 #ifndef SPIKE_HPP
 #define SPIKE_HPP
 
-#include <WandEngine/Models/GameObject.hpp>
-#include <WandEngine/Models/GameBodyObject.hpp>
+#include <WandEngine/Models/Object/Object.hpp>
+#include <WandEngine/Models/Body/Body.hpp>
 
 using namespace WandEngine;
 
@@ -14,12 +14,12 @@ enum class SpikeType
     Diminute
 };
 
-class Spike : public GameObject
+class Spike : public Object
 {
 private:
     SpikeType Type;
 
-    GameBodyObject *Body;
+    Body *body;
 
 public:
 
@@ -27,7 +27,7 @@ public:
     void Init() override;
     void Draw() const override;
     void Update(float deltaTime) override;
-    void BodyCollisionEvent(GameObject *other, CollisionSide Side);
+    void BodyCollisionEvent(Object *other, BodyCollisionSide Side);
 
     virtual Spike* Clone() const override
     {

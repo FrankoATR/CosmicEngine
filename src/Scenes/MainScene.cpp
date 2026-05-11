@@ -26,9 +26,8 @@
 #include DATABASEMANAGER_HEADER
 
 #include <WandEngine/Managers/Resource/ResourceManager.hpp>
-#include <WandEngine/Managers/Network/NetworkManager.hpp>
 
-MainScene::MainScene() : GameScene("MainScene")
+MainScene::MainScene() : Scene("MainScene")
 {
     currentMusic = "";
     player = nullptr;
@@ -51,7 +50,6 @@ void MainScene::LoadResources()
 
 void MainScene::Init()
 {
-    CAM_MN.SetCameraMode(CameraMode::CAMERA_2D);
     CAM_MN.SetFocusPosition(glm::vec2(-200.0f, -400.0f));
 
     // RS_MN.LoadShader("sprite", SHADER_SPRITE_VS, SHADER_SPRITE_FS);
@@ -87,8 +85,6 @@ void MainScene::Init()
 
     Reset();
 
-    //PROBAR NO USANDO STATIC EN LOS MANAGERS Y PONERLOS DENTRO DE GAMEMANAGER
-    NetworkManager::GetInstance().StartServer(4000); // HACER UN INIT ANTES EN EL GAMEMANAGER
 
     // SetProgressLoadingScene(1.0);
 };

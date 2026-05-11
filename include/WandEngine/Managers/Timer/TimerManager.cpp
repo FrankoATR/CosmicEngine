@@ -34,7 +34,7 @@ namespace WandEngine
     }
     
 
-    void TimerManager::Add(GameTimer *NewTimer)
+    void TimerManager::Add(Timer *NewTimer)
     {
         Timers.push_back(NewTimer);
     }
@@ -47,7 +47,7 @@ namespace WandEngine
 
             if (!(*it)->IsAlive())
             {
-                GameTimer *tmp = (*it);
+                Timer *tmp = (*it);
                 it = Timers.erase(it);
                 delete tmp;
             }

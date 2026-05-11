@@ -1,9 +1,9 @@
 #ifndef UIMANAGER_HPP
 #define UIMANAGER_HPP
 
-#include "../../Models/UIElement.hpp"
-#include "../../Models/UIElements/UIButton.hpp"
-#include "../../Models/UIElements/UIText.hpp"
+#include "../../Models/UI/UIElement.hpp"
+#include "../../Models/UI/Derived/UIButton.hpp"
+#include "../../Models/UI/Derived/UIText.hpp"
 #include <vector>
 
 namespace WandEngine

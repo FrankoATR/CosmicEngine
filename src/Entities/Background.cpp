@@ -2,7 +2,7 @@
 
 #include <WandEngine/Managers/Object/ObjectManager.hpp>
 
-Background::Background(glm::vec2 Position, glm::vec2 Size, short int LayerId) : GameObject("Background", Position, Size, 0.0f, LayerId)
+Background::Background(glm::vec2 position, glm::vec2 size, short int layerId) : Object("Background", position, size, 0.0f, layerId)
 {
 
 

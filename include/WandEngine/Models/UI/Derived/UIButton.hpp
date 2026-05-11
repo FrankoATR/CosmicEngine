@@ -1,5 +1,5 @@
-#ifndef UIBUTTON_HPP
-#define UIBUTTON_HPP
+#ifndef WAND_UIBUTTON_HPP
+#define WAND_UIBUTTON_HPP
 
 #include <glm/glm.hpp>
 #include "../UIElement.hpp"
@@ -49,4 +49,4 @@ namespace WandEngine
 
 }
 
-#endif // UIBUTTON_HPP
+#endif // WAND_UIBUTTON_HPP

@@ -1,30 +1,27 @@
 #include <WandEngine/Managers/GameManager.hpp>
-#include <glm/glm.hpp>
-#include <iostream>
-#include "Scenes/MainScene.hpp"
+#include <WandEngine/Utils/Configurations.hpp>
+#include <WandEngine/Utils/Log.hpp>
+#include "Scenes/SecondScene3D.hpp"
 
 using namespace WandEngine;
 
-int main(){
+int main()
+{
 
-	std::cout << "********************************PROGRAM START********************************" << std::endl;
+	RUNTIME_INFO("********************************PROGRAM START********************************");
 
-	int screenWidth = 960;
-	int screenHeight = 540;
-
-	int baseScreenWidth = 1920;
-	int baseScreenHeight = 1080;
-
-	if(GameManager::GetInstance().Init(screenWidth, screenHeight, baseScreenWidth, baseScreenHeight)){
-		GameManager::GetInstance().SetFirstScene(new MainScene);
+	if (GameManager::GetInstance().Init(GAME_INITIAL_SCREEN_WIDTH, GAME_INITIAL_SCREEN_HEIGHT, GAME_BASE_RENDER_SCREEN_WIDTH, GAME_BASE_RENDER_SCREEN_HEIGHT))
+	{
+		GameManager::GetInstance().SetFirstScene(new SecondScene3D);
 		GameManager::GetInstance().Update();
 		GameManager::GetInstance().Shutdown();
 	}
-	else{
-		std::cerr << "********************************ERROR********************************" << std::endl;
+	else
+	{
+		RUNTIME_WARNING("********************************ERROR********************************");
 	}
-
-	std::cout << "********************************END PROGRAM SUCCESSFULLY********************************" << std::endl;
+	
+	RUNTIME_INFO("********************************END PROGRAM SUCCESSFULLY********************************");
 
 	return 0;
 }

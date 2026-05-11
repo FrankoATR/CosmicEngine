@@ -1,15 +1,15 @@
 #ifndef SOLIDBLOCK_HPP
 #define SOLIDBLOCK_HPP
 
-#include <WandEngine/Models/GameObject.hpp>
-#include <WandEngine/Models/GameBodyObject.hpp>
+#include <WandEngine/Models/Object/Object.hpp>
+#include <WandEngine/Models/Body/Body.hpp>
 
 using namespace WandEngine;
 
-class SolidBlock : public GameObject
+class SolidBlock : public Object
 {
 private:
-    GameBodyObject* Body;
+    Body* body;
     int BlockID;
     
 public:
@@ -23,7 +23,7 @@ public:
         return new SolidBlock(*this);
     }
 
-    void BodyCollisionEvent(GameObject *other, CollisionSide Side);
+    void BodyCollisionEvent(Object *other, BodyCollisionSide Side);
 
     std::vector<std::string> GetAllValues() const;
     static void RegisterSerialize();

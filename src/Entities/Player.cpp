@@ -11,14 +11,14 @@
 #include <WandEngine/Managers/Timer/TimerManager.hpp>
 #include <WandEngine/Managers/Audio/Sound/SoundManager.hpp>
 
-Player::Player(std::string UniqueName, PlayerMode mode, glm::vec2 Position, glm::vec2 Size, float Rotation, short int LayerId) : 
-    GameObject("Player", Position, Size, Rotation, LayerId), CurrentPlayerMode(mode)
+Player::Player(std::string UniqueName, PlayerMode mode, glm::vec2 position, glm::vec2 size, float rotation, short int LayerId) : 
+    Object("Player", position, size, rotation, LayerId), CurrentPlayerMode(mode)
 {
     OnGroundOrBlock = false;
-    Velocity.x = 1040.0f;
-    Velocity.y = 0.0f;
-    Acceleration.y = 9200.0f;
-    AngularVelocity = 0.0f;
+    velocity.x = 1040.0f;
+    velocity.y = 0.0f;
+    acceleration.y = 9200.0f;
+    angularVelocity = 0.0f;
     KeySpaceDown = false;
     RigthClickDown = false;
     KeySpaceRelease = false;
@@ -29,22 +29,20 @@ Player::Player(std::string UniqueName, PlayerMode mode, glm::vec2 Position, glm:
 
 void Player::Init()
 {
-    Body1 = new GameBodyObject(this, glm::vec2(0.0f), GetSize(), [this](GameObject *Other, CollisionSide Side)
-                               { Body1CollisionEvent(Other, Side); });
-    BodyManager::GetInstance().Add(Body1);
+    body1 = new Body(this, glm::vec2(0.0f), GetSize(), CALLBACK_COLLISION_EVENT(Body1CollisionEvent));
+    BodyManager::GetInstance().Add(body1);
 
 
-    glm::vec2 collisionSize = {GetSize().x * 0.30f, GetSize().y * 0.30f};
-    glm::vec2 collisionPosition = {
-        (GetSize().x - collisionSize.x) / 2,
-        (GetSize().y - collisionSize.y) / 2
+    glm::vec2 collisionsize = {GetSize().x * 0.30f, GetSize().y * 0.30f};
+    glm::vec2 collisionposition = {
+        (GetSize().x - collisionsize.x) / 2,
+        (GetSize().y - collisionsize.y) / 2
     };
-    Body2 = new GameBodyObject(this, collisionPosition, collisionSize, [this](GameObject *Other, CollisionSide Side)
-                               { Body2CollisionEvent(Other, Side); });
-    BodyManager::GetInstance().Add(Body2);
+    body2 = new Body(this, collisionposition, collisionsize, CALLBACK_COLLISION_EVENT(Body2CollisionEvent));
+    BodyManager::GetInstance().Add(body2);
 
 
-    TimeToEndTimer = new GameTimer(1.0, false, false, TimeToEndTimer);
+    TimeToEndTimer = new Timer(1.0, false, false, TimeToEndTimer);
     TimerManager::GetInstance().Add(TimeToEndTimer);
 
     std::random_device rd;
@@ -60,42 +58,42 @@ void Player::Init()
 void Player::Draw() const
 {
 
-    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(Position.x + sin(OtherRotation * 0.015) * 200, Position.y + cos(OtherRotation * 0.015) * 200), Size, -OtherRotation, MainColor, 1.0f);
-    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(Position.x + Size.x/4 + sin(glm::radians(OtherRotation - 90.0f * 0)) * Size.x * 1, Position.y + Size.y/4 + cos(glm::radians(OtherRotation - 90.0f * 0))* Size.y * 1), glm::vec2(Size.x / 2, Size.y / 2 ), -OtherRotation - 90.0f * 0, MainColor, 1.0f);
-    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(Position.x + Size.x/4 + sin(glm::radians(OtherRotation - 90.0f * 1)) * Size.x * 1, Position.y + Size.y/4 + cos(glm::radians(OtherRotation - 90.0f * 1))* Size.y * 1), glm::vec2(Size.x / 2, Size.y / 2 ), -OtherRotation - 90.0f * 1, MainColor, 1.0f);
-    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(Position.x + Size.x/4 + sin(glm::radians(OtherRotation - 90.0f * 2)) * Size.x * 1, Position.y + Size.y/4 + cos(glm::radians(OtherRotation - 90.0f * 2))* Size.y * 1), glm::vec2(Size.x / 2, Size.y / 2 ), -OtherRotation - 90.0f * 2, MainColor, 1.0f);
-    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(Position.x + Size.x/4 + sin(glm::radians(OtherRotation - 90.0f * 3)) * Size.x * 1, Position.y + Size.y/4 + cos(glm::radians(OtherRotation - 90.0f * 3))* Size.y * 1), glm::vec2(Size.x / 2, Size.y / 2 ), -OtherRotation - 90.0f * 3, MainColor, 1.0f);
+    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(position.x + sin(Otherrotation * 0.015) * 200, position.y + cos(Otherrotation * 0.015) * 200), size, -Otherrotation, MainColor, 1.0f);
+    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(position.x + size.x/4 + sin(glm::radians(Otherrotation - 90.0f * 0)) * size.x * 1, position.y + size.y/4 + cos(glm::radians(Otherrotation - 90.0f * 0))* size.y * 1), glm::vec2(size.x / 2, size.y / 2 ), -Otherrotation - 90.0f * 0, MainColor, 1.0f);
+    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(position.x + size.x/4 + sin(glm::radians(Otherrotation - 90.0f * 1)) * size.x * 1, position.y + size.y/4 + cos(glm::radians(Otherrotation - 90.0f * 1))* size.y * 1), glm::vec2(size.x / 2, size.y / 2 ), -Otherrotation - 90.0f * 1, MainColor, 1.0f);
+    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(position.x + size.x/4 + sin(glm::radians(Otherrotation - 90.0f * 2)) * size.x * 1, position.y + size.y/4 + cos(glm::radians(Otherrotation - 90.0f * 2))* size.y * 1), glm::vec2(size.x / 2, size.y / 2 ), -Otherrotation - 90.0f * 2, MainColor, 1.0f);
+    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(position.x + size.x/4 + sin(glm::radians(Otherrotation - 90.0f * 3)) * size.x * 1, position.y + size.y/4 + cos(glm::radians(Otherrotation - 90.0f * 3))* size.y * 1), glm::vec2(size.x / 2, size.y / 2 ), -Otherrotation - 90.0f * 3, MainColor, 1.0f);
 
     //std::vector<std::pair<std::string, std::string>> shadertexture = {{"image", "gd"}};
-    // ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("quad", "sprite_sheet", shadertexture, 3, 1, Position, Size, Rotation, MainColor, 1.0f);
+    // ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("quad", "sprite_sheet", shadertexture, 3, 1, position, size, rotation, MainColor, 1.0f);
 
-    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", 3, randomNumber1, Position, Size, Rotation, MainColor, 1.0f);
+    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", 3, randomNumber1, position, size, rotation, mainColor, 1.0f);
 
     /*
     ResourceManager::GetInstance().RenderLine(
-        glm::vec3(Position, 0.0f),
-        glm::vec3(Position + Size, 0.0f),
-        glm::vec3(Position.x + Size.x / 2, Position.y + Size.y / 2, 0.0f),
-        glm::vec3(0.0f, 0.0f, Rotation),
+        glm::vec3(position, 0.0f),
+        glm::vec3(position + size, 0.0f),
+        glm::vec3(position.x + size.x / 2, position.y + size.y / 2, 0.0f),
+        glm::vec3(0.0f, 0.0f, rotation),
         glm::vec3(0.0f, 0.0f, 1.0f),
         1.0f,
         10.0f);
 
     ResourceManager::GetInstance().RenderTriangle(
-        glm::vec3(Position.x, Position.y + Size.y, 0.0f), 
-        glm::vec3(Position.x + Size.x / 2, Position.y, 0.0f), 
-        glm::vec3(Position + Size, 0.0f), 
-        glm::vec3(Position.x + Size.x / 2, Position.y + Size.y / 2, 0.0f), 
-        glm::vec3(0.0f, 0.0f, Rotation), 
+        glm::vec3(position.x, position.y + size.y, 0.0f), 
+        glm::vec3(position.x + size.x / 2, position.y, 0.0f), 
+        glm::vec3(position + size, 0.0f), 
+        glm::vec3(position.x + size.x / 2, position.y + size.y / 2, 0.0f), 
+        glm::vec3(0.0f, 0.0f, rotation), 
         glm::vec3(1.0f, 0.5f, 0.5f), 
         0.1f, 
         5.0f);
 
     ResourceManager::GetInstance().RenderRectangle(
-        glm::vec3(Position, 0.0f), 
-        glm::vec3(Position + Size, 0.0f), 
-        glm::vec3(Position.x + Size.x / 2, Position.y + Size.y / 2, 0.0f), 
-        glm::vec3(0.0f, 0.0f, Rotation), 
+        glm::vec3(position, 0.0f), 
+        glm::vec3(position + size, 0.0f), 
+        glm::vec3(position.x + size.x / 2, position.y + size.y / 2, 0.0f), 
+        glm::vec3(0.0f, 0.0f, rotation), 
         glm::vec3(0.0f, 1.0f, 0.0f), 
         1.0f, 
         1.0f);
@@ -134,38 +132,38 @@ void Player::Update(float deltaTime)
 
     if(MainJumpControlRelease && OnGroundOrBlock)
     {
-        Velocity.y = -2000.0f;
+        velocity.y = -2000.0f;
         ReleaseJumping = false;
     }
 
     if(!OnGroundOrBlock)
     {
-        AngularVelocity = 400.0f;
+        angularVelocity = 400.0f;
     }
     else
     {
-        auto currentRot = glm::mod(Rotation, 90.0f);
+        auto currentRot = glm::mod(rotation, 90.0f);
         if(5 < currentRot && currentRot < 85)
         {
             if(currentRot >= 45)
             {
-                AngularVelocity = 500.0f;
+                angularVelocity = 500.0f;
             }
             else
             {
-                AngularVelocity = -500.0f;
+                angularVelocity = -500.0f;
             }
         }
         else
         {
-            AngularVelocity = 0;
+            angularVelocity = 0;
             if(currentRot >= 45)
             {
-                Rotation = Rotation - currentRot + 90;
+                rotation = rotation - currentRot + 90;
             }
             else
             {
-                Rotation = Rotation - currentRot;
+                rotation = rotation - currentRot;
             }
 
         }
@@ -174,11 +172,11 @@ void Player::Update(float deltaTime)
 
 
     
-    if(Velocity.y >= 0 && Position.y + Size.y > 0.0f)
+    if(velocity.y >= 0 && position.y + size.y > 0.0f)
     {
         OnGroundOrBlock = true;
-        Position.y = 0.0f - Size.y;
-        Velocity.y = 0.0f;
+        position.y = 0.0f - size.y;
+        velocity.y = 0.0f;
     }
     else
     {
@@ -199,43 +197,43 @@ const std::string&  Player::GetUniqueName() const
     return this->UniqueName;
 }
 
-void Player::Body1CollisionEvent(GameObject *Other, CollisionSide Side)
+void Player::Body1CollisionEvent(Object *Other, BodyCollisionSide Side)
 {
 
     IF_GET_TYPE(current, SolidBlock, Other)
     {
         switch (Side) {
-            case CollisionSide::TOP:
+            case BodyCollisionSide::TOP:
                 if(CurrentPlayerMode == PlayerMode::Ship)
                 {
-                    if(Velocity.y <= 0 && Position.y + 4 > current->GetPosition().y + current->GetSize().y)
+                    if(velocity.y <= 0 && position.y + 4 > current->GetPosition().y + current->GetSize().y)
                     {
                         OnGroundOrBlock = true;
-                        Position.y = current->GetPosition().y + current->GetSize().y;
-                        Velocity.y = 0;  
+                        position.y = current->GetPosition().y + current->GetSize().y;
+                        velocity.y = 0;  
                 
                     }
                 }
                 break;
 
-            case CollisionSide::BOTTOM:
+            case BodyCollisionSide::BOTTOM:
                 if(CurrentPlayerMode == PlayerMode::Normal)
                 {
-                    if((Velocity.y >= 0 && Position.y + Size.y < current->GetPosition().y + current->GetSize().y * 0.35))
+                    if((velocity.y >= 0 && position.y + size.y < current->GetPosition().y + current->GetSize().y * 0.35))
                     {
                         OnGroundOrBlock = true;
-                        Position.y = current->GetPosition().y - Size.y;
-                        Velocity.y = 0;  
+                        position.y = current->GetPosition().y - size.y;
+                        velocity.y = 0;  
                     
                     }
                 }
                 if(CurrentPlayerMode == PlayerMode::Ship)
                 {
-                    if(Velocity.y >= 0 && Position.y + Size.y < current->GetPosition().y)
+                    if(velocity.y >= 0 && position.y + size.y < current->GetPosition().y)
                     {
                         OnGroundOrBlock = true;
-                        Position.y = current->GetPosition().y - Size.y;
-                        Velocity.y = 0;  
+                        position.y = current->GetPosition().y - size.y;
+                        velocity.y = 0;  
                     
                     }
                 }
@@ -259,11 +257,11 @@ void Player::Body1CollisionEvent(GameObject *Other, CollisionSide Side)
             switch (current->GetOrbType())
             {
             case OrbType::Green:
-                Velocity.y = -2000;
+                velocity.y = -2000;
                 break;
 
             case OrbType::Blue:
-                Velocity.y = -1500;
+                velocity.y = -1500;
                 break;
 
             default:
@@ -280,7 +278,7 @@ void Player::Body1CollisionEvent(GameObject *Other, CollisionSide Side)
 
 }
 
-void Player::Body2CollisionEvent(GameObject *Other, CollisionSide Side)
+void Player::Body2CollisionEvent(Object *Other, BodyCollisionSide Side)
 {
     IF_GET_TYPE(current, SolidBlock, Other)
     {

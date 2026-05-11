@@ -1,6 +1,6 @@
 #include "DataBaseManager.hpp"
 #include "../Object/ObjectManager.hpp"
-#include "../../Models/GameObject.hpp"
+#include "../../Models/Object/Object.hpp"
 #include <thread>
 #include <chrono>
 #include <vector>
@@ -153,7 +153,7 @@ namespace WandEngine
         ExecuteQuery(sql, callback, data);
     }
 
-    void DataBaseManager::RegisterSerialization(const std::string &className, std::vector<std::pair<std::string, std::string>> columns, std::function<GameObject *(char **)> constructor)
+    void DataBaseManager::RegisterSerialization(const std::string &className, std::vector<std::pair<std::string, std::string>> columns, std::function<Object *(char **)> constructor)
     {
         serialization_resources[className] = {columns, constructor};
     }
@@ -165,7 +165,7 @@ namespace WandEngine
         if (objs.empty())
             return;
 
-        auto first = dynamic_cast<GameObject *>(objs[0]);
+        auto first = dynamic_cast<Object *>(objs[0]);
         auto columns = serialization_resources[className].Columns;
 
         std::ostringstream colTypeStr;
@@ -186,7 +186,7 @@ namespace WandEngine
                 colStr << ", ";
         }
 
-        for (GameObject *obj : objs)
+        for (Object *obj : objs)
         {
             std::ostringstream valStr;
             auto values = obj->GetAllValues();
@@ -212,7 +212,7 @@ namespace WandEngine
             auto it = self->serialization_resources.find(className);
             if (it != self->serialization_resources.end())
             {
-                GameObject *obj = it->second.Constructor(argv);
+                Object *obj = it->second.Constructor(argv);
                 ObjectManager::GetInstance().Add(obj);
             }
             return 0;
