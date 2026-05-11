@@ -17,8 +17,6 @@ namespace WandEngine
         std::string Name;
         std::thread loadingThread;
         std::mutex progressMutex;
-        std::queue<std::function<void()>> mainThreadTasks;
-        std::mutex taskMutex;
 
         bool ShowBodys;
         bool ShowGrid;
@@ -30,8 +28,9 @@ namespace WandEngine
 
         virtual void Init() = 0;
         virtual void Update(double deltaTime) = 0;
+        virtual void LoadResources() = 0;
 
-        virtual void UpdateLoadingScene(); // Utilizar en caso de animaciones en la pantalla de carga
+        virtual void UpdateLoadingScene(double deltaTime); // Utilizar en caso de animaciones en la pantalla de carga
         virtual void DrawLoadingScene();
 
         void UpdateManagers(double deltaTime);

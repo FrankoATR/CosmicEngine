@@ -71,10 +71,10 @@ namespace WandEngine
         return this->Position;
     }
 
-    void GameObject::UpdatePosition(float Velocity, double DeltaTime)
+    void GameObject::UpdatePosition(float DeltaTime)
     {
-        Position.x += Direction.x * Velocity * DeltaTime;
-        Position.y += Direction.y * Velocity * DeltaTime;
+        Position.x += Direction.x * Velocity.x * DeltaTime;
+        Position.y += Direction.y * Velocity.y * DeltaTime;
     }
 
 
@@ -197,12 +197,12 @@ namespace WandEngine
         return this->Rotation;
     }
 
-    void GameObject::SetVelocity(float NewVelocity)
+    void GameObject::SetVelocity(WAND_VEC2 NewVelocity)
     {
         this->Velocity = NewVelocity;
     }
 
-    float GameObject::GetVelocity() const
+    WAND_VEC2 GameObject::GetVelocity() const
     {
         return this->Velocity;
     }
@@ -225,7 +225,8 @@ namespace WandEngine
         }
         else
         {
-            UpdatePosition(VelocityForDuration, DeltaTime);
+            Position.x += Direction.x * VelocityForDuration * DeltaTime;
+            Position.y += Direction.y * VelocityForDuration * DeltaTime;
             return false;
         }
     }
@@ -252,7 +253,7 @@ namespace WandEngine
             }
             else
             {
-                UpdatePosition(Velocity, DeltaTime);
+                UpdatePosition(DeltaTime);
                 return false;
             }
         }

@@ -43,7 +43,7 @@ namespace WandEngine
         else
         {
             Triggered = false;
-            if(flag) *flag = false;
+            //if(flag) *flag = false;
 
         }
 

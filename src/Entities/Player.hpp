@@ -32,6 +32,8 @@ private:
     bool RigthClickDown, RigthClickRelease;
     bool ReleaseJumping;
 
+    PlayerMode CurrentPlayerMode;
+
 public:
     Player(PlayerMode mode, WAND_VEC2 Position, WAND_VEC2 Size, ALLEGRO_BITMAP *Sprite, short int LayerId);
     ~Player();

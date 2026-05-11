@@ -14,8 +14,8 @@ GameObject(Object::StaticEntity, Position, Size, "Ground", Sprite, LayerId)
 
 void Ground::Init()
 {
-    Body = new GameBodyObject(this, Position, GetSize(), [this](GameObject* Other, CollisionSide Side){BodyCollisionEvent(Other, Side);});
-    BodyManager::GetInstance().Add(Body);
+    //Body = new GameBodyObject(this, Position, GetSize(), [this](GameObject* Other, CollisionSide Side){BodyCollisionEvent(Other, Side);});
+    //BodyManager::GetInstance().Add(Body);
 }
 
 
@@ -34,6 +34,7 @@ void Ground::Update(float deltaTime)
 }
 
 
+/*
 void Ground::BodyCollisionEvent(GameObject *Other, CollisionSide Side)
 {
 
@@ -44,3 +45,4 @@ void Ground::BodyCollisionEvent(GameObject *Other, CollisionSide Side)
     }
 
 }
+*/

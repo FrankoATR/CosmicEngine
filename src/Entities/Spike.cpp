@@ -14,7 +14,7 @@ GameObject(Object::StaticEntity, Position, Size, "Spike", Sprite, LayerId)
 
 void Spike::Init()
 {
-    WAND_VEC2 collisionSize = {GetSize().x * 0.2f, GetSize().y * 0.2f};
+    WAND_VEC2 collisionSize = {GetSize().x * 0.2f, GetSize().y * 0.4f};
     WAND_VEC2 collisionPosition = {
         Position.x + (GetSize().x - collisionSize.x) / 2,
         Position.y + (GetSize().y - collisionSize.y) / 2

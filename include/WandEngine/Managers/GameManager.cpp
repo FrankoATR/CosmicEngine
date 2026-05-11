@@ -91,10 +91,11 @@ namespace WandEngine
 
 			SceneManager::GetInstance().Update(deltaTime);
 
-			if (redraw && al_is_event_queue_empty(event_queue))
+			if (redraw)
 			{
 				redraw = false;
 				SceneManager::GetInstance().Draw();
+
 			}
 		}
 	}

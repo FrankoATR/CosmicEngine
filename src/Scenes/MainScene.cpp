@@ -8,6 +8,7 @@
 #include <WandEngine/Managers/MusicManager.hpp>
 #include <WandEngine/Managers/SoundManager.hpp>
 #include <WandEngine/Managers/UIManager.hpp>
+#include <WandEngine/Managers/GameManager.hpp>
 #include <WandEngine/Collisions/GameGridCollisions.hpp>
 
 #include "../Utilities/Paths.hpp"
@@ -24,50 +25,48 @@ MainScene::MainScene(int Level, int Attempts) : GameScene("MainScene")
 {
     this->Current_Level = (Level % 3);
     this->Current_Attempts = Attempts;
+    this->current_music = "";
+}
+
+
+void MainScene::LoadResources()
+{
+    ResourceManager::GetInstance().loadFont("ThaleahFat", FONT_1_PATH, 75);
+
+    ResourceManager::GetInstance().loadBitmap("BG1", BG_1_IMAGE_PATH);
+    ResourceManager::GetInstance().loadBitmap("GS1", GS_1_IMAGE_PATH);
+
+    ResourceManager::GetInstance().loadBitmap("BG2", BG_2_IMAGE_PATH);
+    ResourceManager::GetInstance().loadBitmap("GS2", GS_2_IMAGE_PATH);
+
+    ResourceManager::GetInstance().loadBitmap("BG3", BG_3_IMAGE_PATH);
+    ResourceManager::GetInstance().loadBitmap("GS3", GS_3_IMAGE_PATH);
+
+
+    ResourceManager::GetInstance().loadSpriteSheet("MISC", MISC_1_IMAGE_PATH, 6, 6);
+
+    MusicManager::GetInstance().Load("Practice", TRACK0_PATH);
+    MusicManager::GetInstance().Load("Electrodynamix", TRACK1_PATH);
+    MusicManager::GetInstance().Load("Cycles", TRACK2_PATH);
+
+    SoundManager::GetInstance().Load("Dead", SOUND1_PATH);
+    SoundManager::GetInstance().Load("EndLevel", SOUND2_PATH);
+    SceneManager::GetInstance().SetBackBufferColor(WAND_COLOR(0.0f, 0.0f, 0.0f));
+
+    LoadMap();
+    MusicManager::GetInstance().Play(current_music, 0.4, false);
+
 }
 
 void MainScene::Init()
 {
-    AddMainThreadTask([this]()
-    {
-        ResourceManager::GetInstance().loadFont("ThaleahFat", FONT_1_PATH, 75);
-
-        ResourceManager::GetInstance().loadBitmap("BG1", BG_1_IMAGE_PATH);
-        ResourceManager::GetInstance().loadBitmap("GS1", GS_1_IMAGE_PATH);
-
-        ResourceManager::GetInstance().loadBitmap("BG2", BG_2_IMAGE_PATH);
-        ResourceManager::GetInstance().loadBitmap("GS2", GS_2_IMAGE_PATH);
-
-        ResourceManager::GetInstance().loadBitmap("BG3", BG_3_IMAGE_PATH);
-        ResourceManager::GetInstance().loadBitmap("GS3", GS_3_IMAGE_PATH);
+    
 
 
-        ResourceManager::GetInstance().loadSpriteSheet("MISC", MISC_1_IMAGE_PATH, 6, 6);
 
-        MusicManager::GetInstance().Load("Practice", TRACK0_PATH);
-        MusicManager::GetInstance().Load("Electrodynamix", TRACK1_PATH);
-        MusicManager::GetInstance().Load("Cycles", TRACK2_PATH);
-
-        SoundManager::GetInstance().Load("Dead", SOUND1_PATH);
-        SoundManager::GetInstance().Load("EndLevel", SOUND2_PATH);
-
-        LoadMap();
-
-        Respawn_Timer = new GameTimer(1.0, true, true);
-        TimerManager::GetInstance().Add(Respawn_Timer);
-
-        Attempts_Label = new UIText("Attempt", ResourceManager::GetInstance().getFont("ThaleahFat"), WAND_VEC2(100, 50), WAND_SIZE(300, 100), true, nullptr);
-        UIManager::GetInstance().AddElement(Attempts_Label);
-
-        //ToogleShowGrid();
-        //ToogleShowCamera();
-        BodyManager::GetInstance().SetNewGridArea(new GameGridCollisions(WAND_VEC2(-1000, -650 * 15), 20, 52, 650));
-
-
-        SceneManager::GetInstance().SetBackBufferColor(WAND_COLOR(100.0f, 100.0f, 100.0f));
-        SetProgressLoadingScene(1.0);
-    });
-}
+    SetProgressLoadingScene(1.0);
+        
+};
 
 void MainScene::Update(double deltaTime)
 {
@@ -75,7 +74,24 @@ void MainScene::Update(double deltaTime)
     GameObject* end = ObjectManager::GetInstance().FindByUniqueName("EndLevel");
     if(player)
     {
-        CameraManager::GetInstance().FocusPosition(WAND_VEC2(player->GetPosition().x + 300, player->GetPosition().y - 150));
+        WAND_VEC2 camera_pos = {player->GetPosition().x + 300, CameraManager::GetInstance().GetFocusPosition().y};
+        if(player->GetPosition().y < CameraManager::GetInstance().GetPosition().y + 325)
+        {
+            if(CameraMovement_Timer->IsTrigger())
+            {
+                camera_pos.y -= 2;
+            }
+        }
+
+        if(player->GetPosition().y > CameraManager::GetInstance().GetPosition().y + CameraManager::GetInstance().GetSize().height - 325)
+        {
+            if(CameraMovement_Timer->IsTrigger())
+            {
+                camera_pos.y += 2;
+            }
+        }
+
+        CameraManager::GetInstance().FocusPosition(camera_pos);
     }
     else
     {
@@ -102,7 +118,7 @@ void MainScene::Update(double deltaTime)
                 Current_Level++;
                 Current_Attempts = 0;
             }
-
+            
             SceneManager::GetInstance().ReplaceScene(new MainScene(Current_Level, Current_Attempts+1));
 
         }
@@ -139,10 +155,35 @@ void MainScene::Update(double deltaTime)
 
 }
 
+void MainScene::UpdateLoadingScene(double deltaTime)
+{
+    WAND_SIZE pos = GameManager::GetInstance().GetWindowsSize();
+    CameraManager::GetInstance().FocusPosition(WAND_VEC2(pos.width/2, pos.height/2));
+    if(InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_ESCAPE, KeyEventType::KeyDown))
+    {
+        std::cout << "ESCAPE" << std::endl;
+    }
+}
+
 
 
 void MainScene::LoadMap()
 {
+
+    srand(time(NULL));
+
+    Respawn_Timer = new GameTimer(1.0, true, true);
+    TimerManager::GetInstance().Add(Respawn_Timer);
+
+    CameraMovement_Timer = new GameTimer(0.001, true, false);
+    TimerManager::GetInstance().Add(CameraMovement_Timer);
+
+    Attempts_Label = new UIText("Attempt", ResourceManager::GetInstance().getFont("ThaleahFat"), WAND_VEC2(100, 50), WAND_SIZE(300, 100), true, nullptr);
+    UIManager::GetInstance().AddElement(Attempts_Label);
+
+    //ToogleShowGrid();
+    //ToogleShowCamera();
+    BodyManager::GetInstance().SetNewGridArea(new GameGridCollisions(WAND_VEC2(-1000, -650 * 15), 20, 52, 650));
 
     int StandarSizeEntities = 100;
 
@@ -169,9 +210,9 @@ void MainScene::LoadMap()
         {0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0, 0,0,0,0,0,2,1,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,-2,0},
         {0,0,0,0,0,0,0,0,1,2,2,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,2,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,1,0, 0,0,1,1,1,1,1,0,0,0,2,0,2,1,0,0,0,0,0,0,0,2,2,0,0,0,1,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,2,2,2,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0, 0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,2,0,0,0,1,0,0,2,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,2,2,2,0,0,0,1,1,0,0,4,0,0,0,0,0,1,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0, 0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,4,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,2,0,0,0,1,0,0,2,0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,1,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,1,1,2,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0},
-        {-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,1,0,0,1,1,0,1,1,0,0,0,0,0,1,2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,2,2,2,2,2,0,0,0,1,2,1,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,0,2,1,0,0,0, 0,0,0,0,2,2,2,1,2,0,0,0,0,0,1,2,2,2,1,2,1,0,0,0,0,0,1,2,2,2,1,1,1,1,2,1,1,1,0,1,0,0,0,0,0,0,1,2,2,2}
+        {-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,2,2,2,2,1,1,0,1,1,0,0,0,0,0,1,2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,2,2,2,2,2,0,0,0,1,2,1,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,0,2,1,0,0,0, 0,0,0,0,2,2,2,1,2,0,0,0,0,0,1,2,2,2,1,2,1,0,0,0,0,0,1,2,2,2,1,1,1,1,2,1,1,1,0,1,0,0,0,0,0,0,1,2,2,2}
     };
 
 
@@ -216,8 +257,7 @@ void MainScene::LoadMap()
 
         bg_name = "BG1";
         g_name = "GS1";
-
-        MusicManager::GetInstance().Play("Electrodynamix", 0.4, false);
+        current_music = "Electrodynamix";
     }
     else if(Current_Level == 1)
     {
@@ -234,8 +274,7 @@ void MainScene::LoadMap()
 
         bg_name = "BG3";
         g_name = "GS2";
-
-        MusicManager::GetInstance().Play("Cycles", 0.4, false);
+        current_music = "Cycles";
     }
     else if(Current_Level == 2)
     {
@@ -253,8 +292,7 @@ void MainScene::LoadMap()
 
         bg_name = "BG2";
         g_name = "GS3";
-
-        MusicManager::GetInstance().Play("Practice", 0.4, false);
+        current_music = "Practice";
     }
 
 
@@ -272,13 +310,15 @@ void MainScene::LoadMap()
         ObjectManager::GetInstance().Add(bg1);
     }
 
+    float load = 0;
+
     for(short unsigned int i = 0; i < 10; i++)
     {
         for(short unsigned int j = 0; j < 150; j++)
         {
             if(map[i][j] == -1)
             {
-                Player* player = new Player(PlayerMode::Normal, WAND_VEC2(StandarSizeEntities * j, 825 - StandarSizeEntities*10 + StandarSizeEntities*i ), WAND_VEC2(StandarSizeEntities, StandarSizeEntities), ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("MISC", 3, rand()%5), 10);
+                Player* player = new Player(PlayerMode::Normal, WAND_VEC2(StandarSizeEntities * j, 825 - StandarSizeEntities*10 + StandarSizeEntities*i ), WAND_VEC2(StandarSizeEntities, StandarSizeEntities), ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("MISC", 3, 5), 0);
                 player->SetColor(p_c);
                 ObjectManager::GetInstance().Add(player);
             }

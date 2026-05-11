@@ -12,21 +12,17 @@ namespace WandEngine
         this->NextScene = nullptr;
     }
 
-    void SceneManager::StartSceneLoading(GameScene *scene)
-    {
-        scene->StartLoadingThread();
-    }
 
     void SceneManager::PushScene(GameScene *scene)
     {
         sceneStack.push_back(scene);
-        StartSceneLoading(scene);
+        sceneStack.back()->LoadResources();
+        sceneStack.back()->StartLoadingThread();
     }
 
     void SceneManager::ReplaceScene(GameScene *scene)
     {
         NextScene = scene;
-        StartSceneLoading(scene);
     }
 
     void SceneManager::PopScene()
@@ -44,6 +40,11 @@ namespace WandEngine
             if (sceneStack.empty())
             {
                 isRunning = false;
+            }
+            else
+            {
+                sceneStack.back()->LoadResources();
+                sceneStack.back()->StartLoadingThread();
             }
         }
     }
@@ -64,27 +65,38 @@ namespace WandEngine
             }
 
             sceneStack.push_back(NextScene);
+            sceneStack.back()->LoadResources();
+            sceneStack.back()->StartLoadingThread();
+
             NextScene = nullptr;
         }
 
         if (!sceneStack.empty())
         {
-            GameScene *currentScene = sceneStack.back();
+            GameScene* currentScene = sceneStack.back();
 
-            if (currentScene->IsProgressLoadingSceneComplete())
+            bool progressComplete = currentScene->IsProgressLoadingSceneComplete();
+            bool threadActive = currentScene->IsLoadingThreadJoinable();
+            
+            if (progressComplete)
             {
-                if (currentScene->IsLoadingThreadJoinable())
+                if (threadActive)
                 {
                     currentScene->JoinLoadingThread();
                 }
 
-                currentScene->ExecuteMainThreadTasks();
-                currentScene->UpdateManagers(deltaTime);
+                if (!threadActive) 
+                {
+                    currentScene->UpdateManagers(deltaTime);
+                }
+                else
+                {
+                    currentScene->UpdateLoadingScene(deltaTime);
+                }
             }
             else
             {
-                currentScene->ExecuteMainThreadTasks();
-                currentScene->UpdateLoadingScene();
+                currentScene->UpdateLoadingScene(deltaTime);
             }
         }
         else

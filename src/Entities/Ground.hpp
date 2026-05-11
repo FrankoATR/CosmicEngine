@@ -15,7 +15,7 @@ public:
     void Draw() override;
     void Init() override;
     void Update(float deltaTime) override;
-    void BodyCollisionEvent(GameObject *other, CollisionSide Side);
+    //void BodyCollisionEvent(GameObject *other, CollisionSide Side);
 
 };
 

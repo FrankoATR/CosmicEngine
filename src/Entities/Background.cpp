@@ -5,7 +5,7 @@
 Background::Background(WAND_VEC2 Position, WAND_VEC2 Size, ALLEGRO_BITMAP *Sprite, short int LayerId) :
 GameObject(Object::StaticEntity, Position, Size, "Background", Sprite, LayerId)
 {
-    Velocity = 400;
+    Velocity = WAND_VEC2(400.0f, 400.0f);
     Direction.x = 2.3;
 }
 
@@ -33,6 +33,6 @@ void Background::Update(float deltaTime)
         Direction.x = 0;
     }
 
-    UpdatePosition(Velocity, deltaTime);
+    UpdatePosition(deltaTime);
 
 }

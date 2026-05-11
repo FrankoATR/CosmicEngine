@@ -7,9 +7,9 @@
 #include <WandEngine/Managers/ResourceManager.hpp>
 
 Player::Player(PlayerMode mode, WAND_VEC2 Position, WAND_VEC2 Size, ALLEGRO_BITMAP *Sprite, short int LayerId) :
-GameObject(Object::DynamicEntity, Position, Size, "Player", Sprite, LayerId)
+GameObject(Object::DynamicEntity, Position, Size, "Player", Sprite, LayerId), CurrentPlayerMode(mode)
 {
-    Velocity  = 400;
+    Velocity = WAND_VEC2(400.0f, 400.f);
     OnGroundOrBlock = false;
     Direction.x = 2.4;
     KeySpaceDown = false;
@@ -27,7 +27,7 @@ void Player::Init()
     BodyManager::GetInstance().Add(Body1);
 
 
-    WAND_VEC2 collisionSize = {GetSize().x * 0.3f, GetSize().y * 0.3f};
+    WAND_VEC2 collisionSize = {GetSize().x * 0.4f, GetSize().y * 0.4f};
     WAND_VEC2 collisionPosition = {
         Position.x + (GetSize().x - collisionSize.x) / 2,
         Position.y + (GetSize().y - collisionSize.y) / 2
@@ -87,75 +87,147 @@ void Player::Update(float deltaTime)
         ReleaseJumping = false;
     }
     
-    if( (KeySpaceRelease || RigthClickRelease) && OnGroundOrBlock)
+    if(CurrentPlayerMode == PlayerMode::Normal)
     {
-        Direction.y = -4.6;
-        OnGroundOrBlock = false;
-        ReleaseJumping = false;
-    }
-
-    if(OnGroundOrBlock)
-    {
-        if(!RotateSprite_Timer->IsPause())
+        if( (KeySpaceRelease || RigthClickRelease) && OnGroundOrBlock)
         {
-            if(Rotation % 90 >= 45)
-            {
-                Rotation = Rotation - Rotation % 90 + 90;
-            }
-            else
-            {
-                Rotation = Rotation - Rotation % 90;
-            }
-
-            RotateSprite_Timer->Pause();
-            RotateSprite_Timer->Reset();
+            Direction.y = -4.6;
+            ReleaseJumping = false;
         }
-    }
-    else
-    {
-        if(RotateSprite_Timer->IsPause())
+
+        if(OnGroundOrBlock)
         {
-            RotateSprite_Timer->Play();
+            if(!RotateSprite_Timer->IsPause())
+            {
+                if(Rotation % 90 >= 45)
+                {
+                    Rotation = Rotation - Rotation % 90 + 90;
+                }
+                else
+                {
+                    Rotation = Rotation - Rotation % 90;
+                }
+
+                RotateSprite_Timer->Pause();
+                RotateSprite_Timer->Reset();
+            }
         }
         else
         {
-            if(RotateSprite_Timer->IsTrigger())
+            if(RotateSprite_Timer->IsPause())
             {
-                Rotation += 10;
+                RotateSprite_Timer->Play();
+            }
+            else
+            {
+                if(RotateSprite_Timer->IsTrigger())
+                {
+                    Rotation += 11;
+                }
             }
         }
+
+
+        Rotation = Rotation % 360;
+
+
+        if(Update_Gravity_Timer->IsTrigger())
+        {
+            Direction.y += 0.1;
+        }
+
+        if(Direction.y > 6.0)
+        {
+            Direction.y = 6.0;
+        }
+
+
     }
-
-
-    Rotation = Rotation % 360;
-
-
-    if(Update_Gravity_Timer->IsTrigger())
+    else if(CurrentPlayerMode == PlayerMode::Ship)
     {
-        Direction.y += 0.1;
+        if(KeySpaceRelease || RigthClickRelease)
+        {
+            Direction.y -= 0.003;
+
+            if(RotateSprite_Timer->IsTrigger())
+            {
+                Rotation -= 3;
+            }
+
+            if(Direction.y < -3)
+            {
+                Direction.y = -3;
+            }
+        }
+        else
+        {
+            if(Update_Gravity_Timer->IsTrigger())
+            {
+                Direction.y += 0.04;
+            }
+
+            if(RotateSprite_Timer->IsTrigger())
+            {
+                Rotation += 2.5;
+            }
+
+            if(Direction.y > 3)
+            {
+                Direction.y = 3; // TARABAJAR CON VELOCITY MEJOR X, Y
+            }
+        }
+
+        
+        if(Rotation < -45)
+        {
+            Rotation = -45;
+        }
+        else if(Rotation > 45)
+        {
+            Rotation = 45;
+        }
+
+
+        if(OnGroundOrBlock)
+        {
+            Rotation = 0;
+            if(!RotateSprite_Timer->IsPause())
+            {
+                RotateSprite_Timer->Reset();
+                RotateSprite_Timer->Pause();
+            }
+        }
+        else
+        {
+            if(RotateSprite_Timer->IsPause())
+            {
+                RotateSprite_Timer->Play();
+            }
+        }
+
+
     }
 
-    if(Direction.y > 6.0)
+
+    OnGroundOrBlock = false;
+
+    if(Position.y > 825 - Size.y )
     {
-        Direction.y = 6.0;
+        Position.y = 825 - Size.y;
+        OnGroundOrBlock = true;
+        Direction.y = 0;
     }
 
-
-    UpdatePosition(Velocity, deltaTime);
+    
+    UpdatePosition(deltaTime);
     Body1->SetPosition(Position);
     
-    WAND_VEC2 collisionSize = {GetSize().x * 0.3f, GetSize().y * 0.3f};
+    WAND_VEC2 collisionSize = {GetSize().x * 0.4f, GetSize().y * 0.4f};
     WAND_VEC2 collisionPosition = {
         Position.x + (GetSize().x - collisionSize.x) / 2,
         Position.y + (GetSize().y - collisionSize.y) / 2
     };
     Body2->SetPosition(collisionPosition);
-
-    //Label_Info1->SetPosition(WAND_VEC2(100, 0));
-    //Label_Info1->SetText(OnGroundOrBlock ? "NOT ON AIR" : "ON AIR");
-
-    OnGroundOrBlock = false;
-
 }
 
 
@@ -163,21 +235,40 @@ void Player::Update(float deltaTime)
 void Player::Body1CollisionEvent(GameObject *Other, CollisionSide Side)
 {
 
+    /*
     if (Other->GetObjectName() == "Ground")
     {
         OnGroundOrBlock = true;
         Position.y = Other->GetPosition().y - Size.y;
         Direction.y = 0;
     }
+    */
 
 
     if (Other->GetObjectName() == "SolidBlock")
     {
         switch (Side) {
+            case CollisionSide::TOP:
+                if(CurrentPlayerMode == PlayerMode::Ship)
+                {
+                    if(Direction.y <= 0 && Position.y + 4 > Other->GetPosition().y + Other->GetSize().y)
+                    {
+                        OnGroundOrBlock = true;
+                        Position.y = Other->GetPosition().y + Other->GetSize().y;
+                        Direction.y = 0;  
+                
+                    }
+                }
+                break;
+
             case CollisionSide::BOTTOM:
-                OnGroundOrBlock = true;
-                Position.y = Other->GetPosition().y - Size.y;
-                Direction.y = 0;
+                if(Direction.y >= 0 && Position.y + Size.y < Other->GetPosition().y + 4)
+                {
+                    OnGroundOrBlock = true;
+                    Position.y = Other->GetPosition().y - Size.y;
+                    Direction.y = 0;  
+             
+                }
                 break;
 
             default:
@@ -205,7 +296,7 @@ void Player::Body1CollisionEvent(GameObject *Other, CollisionSide Side)
                 break;
 
             case OrbType::Blue:
-                Direction.y = -3.4;
+                Direction.y = -3.2;
                 break;
 
             default:
@@ -230,6 +321,7 @@ void Player::Body2CollisionEvent(GameObject *Other, CollisionSide Side)
     {
         this->Destroy();
     }
+
 
 }
 

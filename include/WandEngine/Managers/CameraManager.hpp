@@ -23,7 +23,7 @@ namespace WandEngine
         CameraManager(const CameraManager &) = delete;
         CameraManager &operator=(const CameraManager &) = delete;
 
-        WAND_VEC2 GetGridPosition();
+        WAND_VEC2 GetGridPosition() const;
         void SetGridPosition(WAND_VEC2 NewPosition);
 
     public:
@@ -33,15 +33,16 @@ namespace WandEngine
             return instance;
         }
 
-        WAND_VEC2 GetPosition();
+        WAND_VEC2 GetPosition() const;
+        WAND_SIZE GetSize() const;
         void Draw();
         void FocusObject(GameObject *Obj);
         void FocusPosition(WAND_VEC2 NewPosition);
-        WAND_VEC2 GetFocusPosition();
+        WAND_VEC2 GetFocusPosition() const;
 
         void Reset();
 
-        bool IsObjectInsideCameraArea(GameObject *Obj);
+        bool IsObjectInsideCameraArea(GameObject *Obj) const;
     };
 
 }

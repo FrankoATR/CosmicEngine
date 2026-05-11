@@ -50,26 +50,6 @@ namespace WandEngine
         return Name;
     }
 
-    void GameScene::AddMainThreadTask(std::function<void()> task)
-    {
-        std::lock_guard<std::mutex> lock(taskMutex);
-        mainThreadTasks.push(task);
-    }
-
-    void GameScene::ExecuteMainThreadTasks()
-    {
-        std::queue<std::function<void()>> tasksCopy;
-        {
-            std::lock_guard<std::mutex> lock(taskMutex);
-            std::swap(tasksCopy, mainThreadTasks);
-        }
-
-        while (!tasksCopy.empty())
-        {
-            tasksCopy.front()();
-            tasksCopy.pop();
-        }
-    }
 
     void GameScene::StartLoadingThread()
     {
@@ -90,8 +70,10 @@ namespace WandEngine
         }
     }
 
-    void GameScene::UpdateLoadingScene()
+    void GameScene::UpdateLoadingScene(double deltaTime)
     {
+        WAND_SIZE pos = GameManager::GetInstance().GetWindowsSize();
+        CameraManager::GetInstance().FocusPosition(WAND_VEC2(pos.width/2, pos.height/2));
     }
 
     void GameScene::DrawLoadingScene()

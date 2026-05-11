@@ -30,7 +30,7 @@ namespace WandEngine
     {
         Grid,
         QuadTree
-    }
+    };
 
     enum class GameBodyObjectType
     {

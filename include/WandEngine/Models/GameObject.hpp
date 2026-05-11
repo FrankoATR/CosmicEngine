@@ -34,7 +34,7 @@ namespace WandEngine
         WAND_VEC2 Size;
         short int LayerId;  //0-254  char
         short int Rotation; //0-359
-        float Velocity;
+        WAND_VEC2 Velocity;
         //Utilizar vectores para indicar la direccion de visualizacion WAND_VEC2
         bool Visible;
         bool InsideGridArea;
@@ -53,7 +53,7 @@ namespace WandEngine
         void SetPosition(WAND_VEC2 NewPosition);
         WAND_VEC2 GetPosition() const;
 
-        void UpdatePosition(float Velocity, double DeltaTime);
+        void UpdatePosition(float DeltaTime);
 
         void SetSize(WAND_VEC2 NewSize);
         WAND_VEC2 GetSize() const;
@@ -87,8 +87,8 @@ namespace WandEngine
         void SetRotation(short int NewRotation);
         short int GetRotation() const; 
 
-        void SetVelocity(float NewVelocity);
-        float GetVelocity() const;
+        void SetVelocity(WAND_VEC2 NewVelocity);
+        WAND_VEC2 GetVelocity() const;
 
         bool ReachPositionInTime(WAND_VEC2 NewPosition, double Duration, double DeltaTime);
         bool MoveForDirection(WAND_VEC2 NewDirection, double Duration, double DeltaTime);

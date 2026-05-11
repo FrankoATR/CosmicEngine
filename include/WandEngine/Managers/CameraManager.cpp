@@ -11,7 +11,7 @@ namespace WandEngine
         Reset();
     }
 
-    WAND_VEC2 CameraManager::GetGridPosition()
+    WAND_VEC2 CameraManager::GetGridPosition() const
     {
         return BodyManager::GetInstance().GetGridPosition();
     }
@@ -34,9 +34,14 @@ namespace WandEngine
         al_use_transform(&camera);
     }
 
-    WAND_VEC2 CameraManager::GetPosition()
+    WAND_VEC2 CameraManager::GetPosition() const
     {
         return this->Position;
+    }
+ 
+    WAND_SIZE CameraManager::GetSize() const
+    {
+        return this->Size;
     }
 
     void CameraManager::Draw()
@@ -60,12 +65,12 @@ namespace WandEngine
         Transform();
     }
 
-    WAND_VEC2 CameraManager::GetFocusPosition()
+    WAND_VEC2 CameraManager::GetFocusPosition() const
     {
         return WAND_VEC2(this->Position.x + (Size.width / 2), this->Position.y + (Size.height / 2));
     }
 
-    bool CameraManager::IsObjectInsideCameraArea(GameObject *Obj)
+    bool CameraManager::IsObjectInsideCameraArea(GameObject *Obj) const
     {
         return (Obj->GetPosition().x < Position.x + Size.width &&
         Obj->GetPosition().x + Obj->GetSize().x > Position.x &&

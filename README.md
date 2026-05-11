@@ -2,112 +2,118 @@
 
 ## Fecha efectiva
 
-**26 de diciembre de 2024**
+**27 de diciembre de 2024**
 
 ## Descripción general
 
-En esta etapa continué sobre la reorganización previa del repositorio, pero el cambio dominante ya no está en la estructura de carpetas sino en la capacidad del runtime para soportar interacciones más ricas dentro de la escena principal. La base visible del framework ahora expone colisiones con lado de contacto, manejo de múltiples cuerpos por entidad y soporte de entrada por mouse integrado al mismo esquema de consulta que ya usaba teclado.
+En esta etapa el cambio dominante pasa al ciclo de escena y al modelo de movimiento del runtime. La base del framework deja de concentrar toda la preparación dentro de `Init()` y empieza a separar de forma visible la carga de recursos, la pantalla de carga y la inicialización final de la escena, con un flujo más claro entre `LoadResources()`, el hilo de carga y la entrada efectiva al update principal.
 
-Sobre esa base también amplié el juego de ejemplo para que deje de ser solo una escena lineal mínima y pase a manejar múltiples mapas, intentos, reaparición, fin de nivel y objetos interactivos como orbes. El resultado visible de esta etapa es un template que ya no solo compila y organiza mejor el engine, sino que además demuestra un flujo jugable más completo apoyado directamente por el runtime.
+Sobre esa reorganización del ciclo también amplié el modelo base de movimiento para trabajar con velocidad vectorial en lugar de una única magnitud escalar. Esa decisión ya se refleja en cámara, fondos, jugador y escena principal, donde el template empieza a comportarse menos como una demo fija y más como una base jugable con fullscreen adaptado a la resolución real, transición de carga y modos de movimiento más específicos.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- enriquecer el modelo de colisión para distinguir lados de contacto y permitir respuestas más específicas por entidad;
-- ampliar la infraestructura de entrada para combinar teclado y mouse bajo una misma API del engine;
-- utilizar esas bases para construir un flujo de escena más completo con mapas, intentos, reaparición y objetos interactivos.
+- separar explícitamente la carga de recursos de la inicialización operativa de cada escena;
+- refinar cámara, pantalla de carga y arranque de ventana para un flujo visual más consistente;
+- extender el modelo base de movimiento hacia velocidades vectoriales y usarlo en modos de jugador y elementos del escenario.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `include/WandEngine/Interfaces/Definitions.hpp`, donde aparecen nuevas enumeraciones visibles para `CollisionSide` y `CollisionType`, abriendo una semántica más explícita para resolver contactos y preparar estrategias de colisión.
-- `include/WandEngine/Models/GameBodyObject.*` y `include/WandEngine/Managers/BodyManager.*`, donde el runtime consolida la noción de cuerpos múltiples, callbacks de colisión con información de lado y búsqueda de cuerpos por objeto padre.
-- `include/WandEngine/Managers/InputManager.*`, donde la gestión de mouse ya queda integrada mediante estados `down`, `up` y sostenido, al mismo nivel de consulta que teclado.
-- `src/Entities/`, donde se incorporan `Orb` y `EndLevel` y se reajustan `Player`, `Ground`, `Spike`, `SolidBlock` y `Background` para responder a un flujo jugable más amplio.
-- `src/Scenes/MainScene.*`, donde la escena principal pasa a manejar varios mapas, intentos, temporizador de respawn, reinicio manual y finalización de nivel.
-- `CMakeLists.txt`, donde también se actualiza la composición del ejecutable para incluir las nuevas entidades y ajustar el nombre final del binario a `GeometryClone`.
+- `include/WandEngine/Models/GameScene.*`, donde el contrato visible de escena incorpora `LoadResources()` y reajusta el manejo de la pantalla de carga y del hilo de carga.
+- `include/WandEngine/Managers/SceneManager.*`, donde el cambio de escena ya coordina de forma más explícita carga de recursos, activación del hilo de carga y reemplazo diferido de escenas.
+- `include/WandEngine/Managers/CameraManager.*`, donde la cámara expone tamaño, punto de foco y reinicio más claros para soportar carga y seguimiento vertical dentro del juego.
+- `include/WandEngine/Models/GameObject.*`, donde la velocidad pasa a representarse con `WAND_VEC2` y el desplazamiento deja de depender de un único escalar.
+- `src/Scenes/MainScene.*`, donde la escena principal se reorganiza para cargar recursos por separado, controlar música por nivel, centrar la cámara durante carga y añadir desplazamiento vertical progresivo.
+- `src/Entities/Player.*`, `Background.*`, `Ground.*` y `Spike.*`, donde el ejemplo adapta colisiones y movimiento al nuevo modelo vectorial y al soporte de modos de jugador.
+- `src/main.cpp` y `include/WandEngine/Managers/GameManager.cpp`, donde el arranque visible del programa pasa a usar tamaño de pantalla del sistema y fullscreen por ventana como configuración efectiva.
 
 ## Arquitectura o sistemas principales
 
-### Colisiones con semántica de lado
+### Separación entre carga de recursos e inicialización
 
-La base visible del framework deja de tratar la colisión solo como un encuentro binario entre cuerpos y pasa a exponer también el lado del contacto mediante `CollisionSide`. Esa información se propaga desde el cuerpo físico hacia la entidad propietaria, lo que permite que cada objeto reaccione distinto si el impacto ocurrió por abajo, por arriba o por un lateral.
+`GameScene` cambia su contrato visible y deja de asumir que toda la preparación ocurre dentro de `Init()`. A partir de esta etapa, cada escena expone `LoadResources()` como punto explícito para cargar bitmaps, fuentes, audio y demás dependencias previas a la ejecución efectiva.
 
-En esta etapa esa semántica ya se usa de forma concreta para:
+`SceneManager` se alinea con ese cambio y ahora dispara la secuencia visible en este orden:
 
-- estabilizar al jugador cuando cae sobre `Ground` o sobre la cara superior de un `SolidBlock`;
-- distinguir colisiones letales con `Spike`;
-- reservar un segundo cuerpo interno del jugador para detectar casos más estrictos de impacto y destrucción.
+- creación o reemplazo de la escena;
+- carga inicial de recursos mediante `LoadResources()`;
+- inicio del hilo de carga con `StartLoadingThread()`;
+- transición desde `DrawLoadingScene()` y `UpdateLoadingScene()` hasta el update operativo normal.
 
-Además, `Definitions.hpp` incorpora `CollisionType` con valores para `Grid` y `QuadTree`, dejando visible una dirección de extensión futura aunque la integración efectiva siga apoyándose en `GameGridCollisions`.
+Con ello el framework deja una separación más clara entre preparar contenido y ejecutar la lógica viva de la escena.
 
-### Múltiples cuerpos por entidad
+### Pantalla de carga y cámara más controladas
 
-`GameBodyObject` y `BodyManager` refuerzan el modelo de cuerpos físicos del runtime. A partir de esta etapa, una entidad puede apoyarse en más de un cuerpo simultáneo y cada uno puede disparar su propia respuesta de colisión.
+La cámara pasa a participar explícitamente en el flujo de carga. `GameScene::UpdateLoadingScene()` y la implementación específica de `MainScene` recentran el foco durante la carga, evitando arrastres del estado anterior mientras la escena todavía no entra a su ciclo normal.
 
-La aplicación más clara de esta base aparece en `Player`, que pasa a usar:
+Además, `CameraManager` amplía su contrato visible con:
 
-- un cuerpo principal para resolver piso, bloques, pinchos y orbes;
-- un cuerpo secundario interno para endurecer contactos y detectar ciertas colisiones destructivas.
+- lectura del tamaño de cámara;
+- lectura del punto de foco efectivo;
+- `Reset()` para recomponer el estado inicial según el tamaño de ventana.
 
-Para soportar esto, `BodyManager` ya mantiene identificadores de cuerpos, eliminación diferida por estado de vida y una búsqueda por objeto padre mediante `FindAllByParent()`.
+Sobre esa base, `MainScene` introduce un seguimiento más estable del jugador, donde la cámara ya no se limita a seguir un punto fijo horizontal, sino que ajusta gradualmente su componente vertical con apoyo de un timer específico.
 
-### Entrada unificada para teclado y mouse
+### Movimiento base con velocidad vectorial
 
-`InputManager` amplía su contrato y ya no se limita al teclado. En esta etapa registra eventos de mouse, mantiene estados `down`, `up` y sostenido para botones y expone `IsMouseButtonPressed()` con la misma semántica de consulta usada por `IsKeyPressed()`.
+`GameObject` abandona la velocidad escalar única y pasa a trabajar con `WAND_VEC2 Velocity`. Desde esta etapa, `UpdatePosition()` usa velocidad y dirección por eje, lo que deja una base más útil para objetos cuyo desplazamiento horizontal y vertical no comparten la misma magnitud ni la misma semántica.
 
-Ese cambio permite que la lógica del jugador y de la escena ya no dependa solo de `SPACE`, sino también de clic derecho u otros botones del mouse bajo una API común del engine.
+Ese ajuste visible se aprovecha de inmediato en:
 
-### Escena principal con progreso, reaparición y depuración
+- `Player`, cuyo desplazamiento ya distingue mejor avance horizontal y respuesta vertical;
+- `Background`, que mantiene desplazamiento lateral autónomo mientras el jugador sigue activo;
+- futuros modos de movimiento que no encajan bien en una sola velocidad global.
 
-`MainScene` deja de ser solo una carga fija de objetos y pasa a coordinar un ciclo más completo de juego. La escena visible ahora maneja:
+### Modos de jugador y control de vuelo
 
-- selección entre varios mapas internos;
-- conteo de intentos;
-- temporizador de respawn;
-- avance al siguiente nivel;
-- reinicio manual con teclado;
-- visualización opcional de cuerpos de colisión.
+`Player` deja de estar restringido al comportamiento base del cubo y empieza a modelar modos concretos mediante `PlayerMode`. En esta etapa ya queda visible un comportamiento diferenciado entre:
 
-En paralelo, la UI se usa para mostrar el estado de intentos y el cierre del juego, mientras la cámara sigue al jugador dentro del mapa activo.
+- `Normal`, con salto puntual, gravedad acumulativa y rotación por cuartos de vuelta;
+- `Ship`, con empuje sostenido, caída progresiva, rotación acotada y resolución distinta respecto a los bloques.
 
-### Objetos interactivos del ejemplo
+Esa ampliación no solo afecta la lógica de input, sino también la forma en que se interpretan las colisiones superior e inferior contra `SolidBlock`.
 
-El juego de ejemplo incorpora dos tipos nuevos de entidad que demuestran el uso del runtime ampliado:
+### Escena principal más desacoplada y progresiva
 
-- `Orb`, que responde al contacto con el jugador y permite modificar el salto según su tipo cuando la entrada está siendo utilizada;
-- `EndLevel`, que funciona como disparador de fin de nivel, reproduce sonido y fuerza el cierre de la entidad principal para avanzar la escena.
+`MainScene` redistribuye sus responsabilidades para alinearse con el nuevo flujo del framework. La escena ahora:
 
-Con ello el template ya muestra un uso más claro del engine para resolver objetos activables, transiciones de nivel y feedback audiovisual dentro de una escena continua.
+- carga recursos y audio desde `LoadResources()`;
+- deja `Init()` como cierre liviano de la carga;
+- fija música según el nivel activo sin duplicar esa selección en la lógica de update;
+- crea timers específicos para respawn y movimiento vertical de cámara;
+- usa una pantalla de carga centrada antes de entrar al juego.
 
-### Ajustes visibles del build
+Con ello la escena principal queda más cerca de un patrón reutilizable para niveles futuros que de una inicialización monolítica única.
 
-La configuración de `CMakeLists.txt` se actualiza para reflejar esta etapa del proyecto. El ejecutable pasa a llamarse `GeometryClone` y el target incorpora de forma explícita las nuevas entidades `Orb` y `EndLevel` junto al resto de archivos del juego y del engine.
+### Arranque ajustado a la resolución real
+
+`main.cpp` y `GameManager` terminan de orientar la ejecución a fullscreen por ventana usando el tamaño real de la pantalla del sistema en lugar de una resolución fija de desarrollo. Ese cambio reduce la dependencia de medidas hardcodeadas en el arranque inicial y alinea mejor cámara, ventana y escena desde el primer frame.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- el jugador ya combina dos cuerpos de colisión, temporizadores y entrada mixta de teclado y mouse para resolver movimiento, salto y muerte dentro del mapa;
-- la escena principal ya usa timers, UI, audio, colisiones y reemplazo de escena para implementar intentos, reaparición, cambio de nivel y finalización del flujo.
+- la escena principal ya separa carga de recursos, transición de carga y ejecución de gameplay dentro del ciclo de escenas del engine;
+- el jugador, la cámara y los fondos ya usan el nuevo modelo de velocidad vectorial y timers especializados para producir seguimiento, vuelo y desplazamiento más controlados.
 
-Con ello dejé una base más útil para construir prototipos donde el engine no solo dibuja y actualiza objetos, sino que además coordina interacciones más precisas entre input, colisión, audio, UI y transición entre escenas.
+Con ello dejé una base más útil para seguir construyendo escenas con carga explícita, transición visual y modos de movimiento más expresivos sin tener que reescribir el flujo principal del runtime.
 
 ## Dependencias externas visibles
 
-No aparecen dependencias externas nuevas respecto a la etapa anterior. Se mantiene la construcción con CMake y el enlace con la biblioteca monolítica de Allegro, además de `sqlite3`, `ole32` y `uuid` definidos en la configuración del proyecto.
+No aparecen dependencias externas nuevas respecto a la etapa anterior. Se mantiene el mismo entorno visible basado en CMake, Allegro y las bibliotecas auxiliares ya declaradas por el proyecto.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **26 de diciembre de 2024** queda delimitada por estos movimientos:
+La etapa efectiva al **27 de diciembre de 2024** queda delimitada por estos movimientos:
 
-- amplié la semántica visible de colisión con `CollisionSide` y la preparación de estrategias mediante `CollisionType`;
-- reforcé `GameBodyObject` y `BodyManager` para soportar múltiples cuerpos por entidad y callbacks de colisión más expresivos;
-- extendí `InputManager` para manejar botones de mouse con la misma lógica de consulta usada por teclado;
-- expandí `MainScene` para manejar múltiples niveles, intentos, respawn, reinicio manual y finalización del recorrido;
-- incorporé `Orb` y `EndLevel` como entidades nuevas del ejemplo para demostrar interacciones activables y transición de nivel;
-- ajusté `CMakeLists.txt` para integrar las nuevas fuentes del juego y renombrar el ejecutable a `GeometryClone`.
+- separé la carga de recursos del resto de la inicialización de escena mediante `LoadResources()` y ajusté `SceneManager` a ese nuevo ciclo;
+- reforcé la pantalla de carga y el control de cámara para mantener un foco estable antes de entrar al gameplay;
+- cambié `GameObject` a un modelo de velocidad vectorial con `WAND_VEC2 Velocity`;
+- amplié `Player` con modos de movimiento diferenciados, incluyendo una lógica visible para `Ship` además del modo `Normal`;
+- añadí timers específicos para movimiento vertical de cámara y reajusté la escena principal alrededor de ese seguimiento;
+- adapté el arranque del programa a la resolución real de pantalla y al uso efectivo de fullscreen por ventana.
 
-Con esta etapa dejé el template en una versión donde la reorganización previa del proyecto ya se traduce en una demostración más rica de colisiones, entrada y flujo de escena dentro del framework.
+Con esta etapa dejé el framework más preparado para escenas que cargan contenido de forma explícita y para entidades cuyo comportamiento ya requiere movimiento, cámara y transición de estado más finos que en la versión anterior.
