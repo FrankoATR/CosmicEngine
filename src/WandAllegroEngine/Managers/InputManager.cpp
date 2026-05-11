@@ -95,11 +95,11 @@ namespace WandEngine
     {
         switch (eventType)
         {
-        case KeyDown:
+        case KeyEventType::KeyDown:
             return keyDownState.count(keycode) && keyDownState.at(keycode);
-        case KeyUp:
+        case KeyEventType::KeyUp:
             return keyUpState.count(keycode) && keyUpState.at(keycode);
-        case KeyRelease:
+        case KeyEventType::KeyRelease:
             return keyHeldState.count(keycode) && keyHeldState.at(keycode);
         default:
             return false;
@@ -110,11 +110,11 @@ namespace WandEngine
     {
         switch (eventType)
         {
-        case KeyDown:
+        case KeyEventType::KeyDown:
             return mouseButtonDownState.count(button) && mouseButtonDownState.at(button);
-        case KeyUp:
+        case KeyEventType::KeyUp:
             return mouseButtonUpState.count(button) && mouseButtonUpState.at(button);
-        case KeyRelease:
+        case KeyEventType::KeyRelease:
             return mouseButtonHeldState.count(button) && mouseButtonHeldState.at(button);
         default:
             return false;
@@ -183,7 +183,7 @@ namespace WandEngine
     {
         if(MouseSprite)
         {
-            al_draw_tinted_scaled_rotated_bitmap(MouseSprite, al_map_rgba(255,255,255, 255), 0, 0, GetMousePosition().x, GetMousePosition().y, MouseSpriteSize.width/al_get_bitmap_width(MouseSprite), MouseSpriteSize.height/al_get_bitmap_height(MouseSprite), 0, NULL );
+            al_draw_tinted_scaled_rotated_bitmap(MouseSprite, al_map_rgba(255,255,255, 255), 0, 0, GetMousePosition().x, GetMousePosition().y, MouseSpriteSize.width/al_get_bitmap_width(MouseSprite), MouseSpriteSize.height/al_get_bitmap_height(MouseSprite), 0, 0 );
         }
     }
 

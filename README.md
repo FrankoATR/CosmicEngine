@@ -2,69 +2,83 @@
 
 ## Fecha efectiva
 
-**19 de noviembre de 2024**
+**20 de noviembre de 2024**
 
 ## Descripción general
 
-En esta etapa terminé de volver utilizable la infraestructura de temporización incorporada previamente. El cambio ya no está solo en tener timers registrados por un manager, sino en que `GameTimer` corrige su arranque para no dispararse de forma inmediata al crearse y pasa a sostener comportamientos repetitivos y temporales con una referencia inicial de tiempo coherente.
+En esta etapa consolidé varias piezas base del runtime para que objetos, timers e input trabajen con reglas más consistentes. El cambio principal ya no está solo en disponer de temporización reutilizable, sino en que el modelo base de objetos empieza a exponer movimiento parametrizado por dirección, velocidad y duración, mientras la temporización corrige mejor su relación con el estado de pausa.
 
-Sobre esa misma base el framework ya empieza a absorber patrones más concretos de temporización, como esperas entre acciones y vidas útiles limitadas, sin volver a depender de comparaciones manuales dispersas contra `al_get_time()`.
+Sobre esa misma base endurecí el tratamiento de objetos que salen del área válida del grid, ajusté detalles de limpieza entre managers y terminé de alinear parte de la API de entrada con tipos fuertemente tipados del framework.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- estabilizar el comportamiento inicial de los timers del framework;
-- validar el uso de temporización para cadencias y expiración de objetos;
-- seguir desplazando lógica temporal manual hacia un servicio reutilizable del motor.
+- ampliar el modelo base de objetos con movimiento utilitario reutilizable;
+- refinar la semántica temporal de `GameTimer` cuando el timer nace en pausa;
+- endurecer ciclo de vida, limpieza y tipado de entrada dentro del runtime.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Models/GameTimer.*`, donde la lógica interna del timer se ajusta para inicializar correctamente su referencia temporal al primer `Update()`.
-- `src/Entities/`, donde la capa de timers empieza a sostener tanto esperas entre acciones como expiración automática de objetos temporales.
-- `src/Utilities/DataManager.cpp`, donde se ajusta la integración con persistencia SQLite sin cambiar el contrato público del servicio.
+- `src/WandAllegroEngine/Models/`, donde `GameObject` amplía de forma visible su contrato con dirección, velocidad, rotación y helpers de movimiento basados en tiempo.
+- `src/WandAllegroEngine/Models/GameTimer.*`, donde la temporización afina su comportamiento de arranque en pausa y expone lectura de tiempo transcurrido.
+- `src/WandAllegroEngine/Collisions/`, `src/WandAllegroEngine/Managers/` e `src/WandAllegroEngine/Interfaces/`, donde se endurecen reglas de destrucción fuera del grid, limpieza de recursos y uso de `enum class` para eventos de entrada.
 
 ## Arquitectura o sistemas principales
 
-### Arranque consistente de GameTimer
+### Movimiento utilitario en GameObject
 
-`GameTimer` incorpora ahora un estado interno `Init` y utiliza el primer `Update(double CurrentTime)` para fijar `LastTimeTrigger` antes de evaluar el umbral de espera.
+`GameObject` deja de limitarse a posición y tamaño básicos y pasa a exponer una base de movimiento reutilizable dentro del propio modelo. La ampliación visible incluye:
 
-El efecto práctico es que un timer deja de comportarse como si ya hubiera estado corriendo desde tiempo cero. Con ello el primer disparo ocurre después del intervalo configurado y no inmediatamente al registrarse en el runtime.
+- `Direction` y `ViewDirection` como vectores de estado;
+- `Velocity` y `Rotation` como parte del contrato del objeto;
+- `SetDirection()` y `GetDirection()`;
+- `SetRotation()` y `GetRotation()`;
+- `SetVelocity()` y `GetVelocity()`;
+- `UpdatePosition(float Velocity, double DeltaTime)`;
+- `ReachPositionInTime(WAND_VEC2 NewPosition, double Duration, double DeltaTime)`;
+- `MoveForDirection(WAND_VEC2 NewDirection, double Duration, double DeltaTime)`.
 
-Ese ajuste vuelve utilizable la semántica temporal del framework para cooldowns, loops y expiraciones donde el instante de creación del timer debe considerarse el verdadero punto de partida.
+Con ello el framework ya puede encapsular desplazamiento continuo y desplazamiento acotado por duración sin obligar a cada entidad a recalcular siempre su propia lógica vectorial desde cero.
 
-### Temporización aplicada a cadencias y vida útil
+### Temporización más consistente bajo pausa
 
-La nueva semántica ya se aprovecha en dos patrones concretos que validan la capa de timers:
+`GameTimer` conserva la corrección previa de arranque diferido, pero ahora la inicialización de `LastTimeTrigger` ocurre solo cuando el timer deja de estar pausado. Ese ajuste evita que un timer nacido en pausa consuma tiempo lógico antes de activarse realmente.
 
-- esperas entre acciones repetidas, donde un timer puede activarse, pausarse y reiniciarse para controlar una cadencia;
-- vida útil limitada de objetos temporales, donde un timer no cíclico puede marcar el momento de finalización del objeto.
+Además, el modelo expone `GetElapsedTime()`, lo que deja una lectura explícita del punto temporal interno usado por el timer para coordinar su siguiente disparo.
 
-Aunque esos casos visibles hoy aparecen consumidos desde entidades concretas, lo importante es que el framework ya demuestra dos usos distintos de la misma infraestructura temporal sin lógica manual adicional.
+Con esto la infraestructura temporal queda mejor alineada con casos donde el timer se crea antes de empezar a correr, como cooldowns retenidos o movimientos activados bajo una condición posterior.
 
-### TimerManager como coordinador operativo
+### Movimiento con duración apoyado en timers
 
-`TimerManager` mantiene el rol central introducido previamente, pero en esta etapa queda validado como coordinador operativo de timers reales que dependen de inicialización diferida, repetición y finalización.
+El propio `GameObject` pasa a poder apoyarse en un `MovementTimer` interno para resolver desplazamientos durante una duración fija. La semántica visible es que el modelo puede iniciar un movimiento orientado, mantenerlo activo mientras el timer no termina y cerrarlo cuando la duración se cumple.
 
-La combinación entre `Add(GameTimer *NewTimer)`, `Update(double CurrentTime)` y `Clear()` ya no queda solo como contrato base, sino como flujo suficiente para sostener timers activos ligados al ciclo completo del runtime.
+Esto no reemplaza todavía toda la lógica específica de entidades, pero sí deja en el nivel base del framework una ruta reutilizable para mover objetos por tiempo en lugar de solo por frame o por entrada directa.
 
-### Ajustes menores de integración
+### Endurecimiento del ciclo de vida espacial
 
-En la capa de persistencia se corrige la ubicación del include de `LinkObject` dentro de `DataManager.cpp`, manteniendo la integración con SQLite sin alterar la interfaz pública del servicio.
+`GameGridCollisions` cambia la consecuencia visible de salir del área válida: el objeto deja de volver a la última posición y pasa a destruirse directamente cuando su cuerpo ya no cabe dentro del grid activo.
 
-Además, el modelo base conserva `Rotation` como campo preparado para extensiones futuras, pero en esta iteración el cambio dominante sigue siendo la estabilización funcional del sistema de timers.
+En paralelo, la verificación de colisión evita procesar pares cuyo objeto padre ya no está vivo. Con ello la capa de colisiones deja una semántica más estricta para objetos fuera de rango y reduce trabajo sobre entidades ya marcadas para destrucción.
+
+### Ajustes de robustez en managers e input
+
+En `BodyManager::Clear()` la grilla activa ahora también se destruye y la referencia se nulifica, evitando que el manager conserve memoria o punteros residuales después de limpiar una escena.
+
+Además, `Definitions.hpp` convierte `KeyEventType` en `enum class`, e `InputManager` adapta sus comparaciones a ese tipado fuerte. Junto con ello se corrigen varias llamadas de Allegro para usar valores nulos y banderas explícitas en lugar de literales heredados.
+
+En `GameScene::Clear()` también se reordena la liberación para vaciar primero música y sonido antes del resto de managers visuales y espaciales.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- el runtime ya puede crear timers sin que se disparen de forma anticipada al primer frame útil;
-- la misma infraestructura temporal ya sirve tanto para intervalos repetitivos como para expiración de objetos temporales.
+- el modelo base de objetos ya puede servir como punto común para movimiento dirigido, movimiento por duración y temporización de desplazamientos;
+- el runtime maneja con reglas más estrictas la salida del área activa, la limpieza de grillas y el uso tipado de entrada dentro de managers y utilidades visuales.
 
-Con ello dejé una base más útil para cooldowns, proyectiles, IA simple y futuros eventos diferidos, con una semántica temporal más consistente dentro del motor.
+Con ello dejé una base más útil para movimientos programados, proyectiles, comportamientos dirigidos y limpieza segura de recursos espaciales, con una semántica temporal y de entrada más consistente dentro del motor.
 
 ## Dependencias externas visibles
 
@@ -72,12 +86,13 @@ No incorporé dependencias externas visibles nuevas en esta etapa.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **19 de noviembre de 2024** queda delimitada por estos movimientos:
+La etapa efectiva al **20 de noviembre de 2024** queda delimitada por estos movimientos:
 
-- corregí el arranque interno de `GameTimer` para que el primer disparo respete el tiempo de espera configurado desde su creación;
-- validé la infraestructura temporal del framework para manejar tanto cadencias repetitivas como vida útil limitada de objetos temporales;
-- mantuve la integración de `TimerManager` con el loop principal y el cierre de escena como base operativa de esa temporización;
-- ajusté la integración de `DataManager` con SQLite sin modificar su contrato público;
-- conservé `Rotation` en `GameObject` como preparación de estado adicional para extensiones posteriores.
+- amplié `GameObject` con dirección, velocidad, rotación y helpers visibles para movimiento continuo o acotado por duración;
+- incorporé soporte interno de movimiento temporal en el propio modelo base mediante `MovementTimer`;
+- ajusté `GameTimer` para que su referencia inicial se fije solo al comenzar realmente cuando nace en pausa y añadí `GetElapsedTime()`;
+- endurecí `GameGridCollisions` para destruir objetos que salen del área válida y evitar colisiones sobre entidades ya no vivas;
+- completé la limpieza de `BodyManager` destruyendo la grilla activa y nulificando su referencia;
+- convertí `KeyEventType` en `enum class` y alineé `InputManager` con ese tipado fuerte.
 
-Con esta etapa dejé el framework más sólido para lógica basada en tiempo y para objetos que necesitan cadencia o expiración controlada dentro del runtime.
+Con esta etapa dejé el framework más preparado para movimiento dirigido, control temporal más preciso y manejo espacial más estricto dentro del runtime.

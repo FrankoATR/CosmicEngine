@@ -39,7 +39,7 @@ namespace WandEngine
         StaticEntity
     };
 
-    enum KeyEventType
+    enum class KeyEventType
     {
         KeyDown,
         KeyUp,

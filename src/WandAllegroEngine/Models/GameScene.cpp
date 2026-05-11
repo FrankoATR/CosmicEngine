@@ -57,12 +57,12 @@ namespace WandEngine
 
     void GameScene::Clear()
     {
+        MusicManager::GetInstance().Clear();
+        SoundManager::GetInstance().Clear();
         BodyManager::GetInstance().Clear();
         ObjectManager::GetInstance().Clear();
         ResourceManager::GetInstance().Clear();
         EventManager::GetInstance().Clear();
-        MusicManager::GetInstance().Clear();
-        SoundManager::GetInstance().Clear();
         TimerManager::GetInstance().Clear();
         UIManager::GetInstance().Clear();
         InputManager::GetInstance().ResetMouseSettings();

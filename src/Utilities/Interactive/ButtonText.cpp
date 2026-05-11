@@ -10,12 +10,12 @@ ButtonText::ButtonText(int x, int y, ALLEGRO_BITMAP* sprite, std::string text, A
 	ALLEGRO_BITMAP* newSprite = al_create_bitmap(text.length() * loopLong + 32, 64);
 	al_set_target_bitmap(newSprite);
 
-	al_draw_bitmap_region(sprite, 0, 0, 16, 64, 0, 0, NULL);
+	al_draw_bitmap_region(sprite, 0, 0, 16, 64, 0, 0, 0);
 
 	for (int i = 0; i < text.length(); i++)
-		al_draw_bitmap_region(sprite, 16, 0, 36, 64, 16 + loopLong * i, 0, NULL);
+		al_draw_bitmap_region(sprite, 16, 0, 36, 64, 16 + loopLong * i, 0, 0);
 
-	al_draw_bitmap_region(sprite, 48, 0, 16, 64, 16 + loopLong * text.length(), 0, NULL);
+	al_draw_bitmap_region(sprite, 48, 0, 16, 64, 16 + loopLong * text.length(), 0, 0);
 
 	ALLEGRO_BITMAP* newSprite2 = al_create_bitmap(al_get_bitmap_width(newSprite) * 1.6, al_get_bitmap_height(newSprite) * 1.6);
 	al_set_target_bitmap(newSprite2);

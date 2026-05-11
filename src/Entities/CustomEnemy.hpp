@@ -10,7 +10,7 @@ class CustomEnemy : public GameObject
 {
 private:
 
-    enum class Direction {
+    enum class MoveDirection {
         UP,
         DOWN,
         LEFT,
@@ -19,13 +19,13 @@ private:
         UP_RIGHT,
         DOWN_LEFT,
         DOWM_RIGHT
-    }directions[8] = {Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT, Direction::UP_LELFT, Direction::UP_RIGHT, Direction::DOWN_LEFT, Direction::DOWM_RIGHT};
+    }directions[8] = {MoveDirection::UP, MoveDirection::DOWN, MoveDirection::LEFT, MoveDirection::RIGHT, MoveDirection::UP_LELFT, MoveDirection::UP_RIGHT, MoveDirection::DOWN_LEFT, MoveDirection::DOWM_RIGHT};
 
     ALLEGRO_FONT* font;
     int HP;
-    GameTimer* MoveTimer;
-    Direction CurrentDirection;
-    float Velocity;
+    //GameTimer* MoveTimer;
+    MoveDirection CurrentDirection;
+    bool InitFollow;
 
 public:
     CustomEnemy(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font);

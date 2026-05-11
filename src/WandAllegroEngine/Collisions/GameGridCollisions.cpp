@@ -67,7 +67,7 @@ namespace WandEngine
         if (!cell)
         {
             obj->GetParent()->SetInsideGridArea(false);
-            obj->GetParent()->SetToLastPosition();
+            obj->GetParent()->Destroy();
             return;
         }
         obj->GetParent()->SetInsideGridArea(true);
@@ -129,7 +129,7 @@ namespace WandEngine
         {
             for (auto &obj_2 : cell_2->objects)
             {
-                if (obj_1 != obj_2)
+                if (obj_1 != obj_2 && obj_1->GetParent()->GetAliveInGameManager() && obj_2->GetParent()->GetAliveInGameManager())
                 {
                     if (RectToRectCollisionBody(obj_1, obj_2))
                     {

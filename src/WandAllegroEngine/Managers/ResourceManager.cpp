@@ -85,7 +85,7 @@ namespace WandEngine
             return false;
         }
 
-        ALLEGRO_FONT *font = al_load_font(path.c_str(), size, NULL);
+        ALLEGRO_FONT *font = al_load_font(path.c_str(), size, 0);
         if (!font)
         {
             return false;

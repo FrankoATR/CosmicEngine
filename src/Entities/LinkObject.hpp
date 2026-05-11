@@ -14,7 +14,6 @@ private:
     int HP;
     bool DestructorMode;
     bool IsTPActive;
-    float Velocity;
     GameTimer* WaitShootTimer;
 
 public:
@@ -24,17 +23,6 @@ public:
     void Init() override;
     void Update(float deltaTime) override;
     void OnCollision(GameObject *other) override;
-
-    void MoveUp(float deltaTime);
-    void MoveDown(float deltaTime);
-    void MoveRight(float deltaTime);
-    void MoveLeft(float deltaTime);
-    
-    void MoveUpLeft(float deltaTime);
-    void MoveUpRight(float deltaTime);
-    void MoveDownLeft(float deltaTime);
-    void MoveDownRight(float deltaTime);
-
 
 };
 

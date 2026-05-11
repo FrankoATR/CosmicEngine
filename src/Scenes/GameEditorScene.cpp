@@ -153,7 +153,7 @@ void GameEditorScene::Update(double deltaTime)
                 int newPosY = (int)auxPos.y - OffSetY;
                 ObjectInHand->SetPosition( WAND_VEC2(newPosX, newPosY) );
 
-                if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyDown))
+                if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyDown))
                 {
                     std::vector<GameObject*> objects = ObjectManager::GetInstance().FindByMousePosition();
                     for(auto it = objects.begin(); it!= objects.end();)
@@ -173,7 +173,7 @@ void GameEditorScene::Update(double deltaTime)
                         ObjectManager::GetInstance().Add(NewObj);
                     }
                 }
-                else if (InputManager::GetInstance().IsMouseButtonPressed(2, KeyRelease))
+                else if (InputManager::GetInstance().IsMouseButtonPressed(2, KeyEventType::KeyRelease))
                 {
                     std::vector<GameObject*> objects = ObjectManager::GetInstance().FindByMousePosition();
                     for(auto it = objects.begin(); it!= objects.end();)
@@ -198,7 +198,7 @@ void GameEditorScene::Update(double deltaTime)
 
         if(ActualMode == HandMode::Delete)
         {
-            if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyDown))
+            if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyDown))
             {
                 std::vector<GameObject*> objects = ObjectManager::GetInstance().FindByMousePosition();
                 if(!objects.empty())
@@ -211,7 +211,7 @@ void GameEditorScene::Update(double deltaTime)
                 }
 
             }
-            else if (InputManager::GetInstance().IsMouseButtonPressed(2, KeyRelease))
+            else if (InputManager::GetInstance().IsMouseButtonPressed(2, KeyEventType::KeyRelease))
             {
                 std::vector<GameObject*> objects = ObjectManager::GetInstance().FindByMousePosition();
                 if(!objects.empty())
@@ -228,7 +228,7 @@ void GameEditorScene::Update(double deltaTime)
 
         if(ActualMode == HandMode::Move)
         {
-            if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyDown))
+            if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyDown))
             {
                 std::vector<GameObject*> objects = ObjectManager::GetInstance().FindByMousePosition();
                 if(!objects.empty())
@@ -245,7 +245,7 @@ void GameEditorScene::Update(double deltaTime)
     }
 
 
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_1, KeyDown))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_1, KeyEventType::KeyDown))
     {
         if(ObjectInHand)
         {
@@ -254,7 +254,7 @@ void GameEditorScene::Update(double deltaTime)
         }
         ActualMode = HandMode::Drag;
     }
-    else if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_2, KeyDown))
+    else if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_2, KeyEventType::KeyDown))
     {
         if(ObjectInHand)
         {
@@ -263,7 +263,7 @@ void GameEditorScene::Update(double deltaTime)
         }
         ActualMode = HandMode::Delete;
     }
-    else if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_3, KeyDown))
+    else if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_3, KeyEventType::KeyDown))
     {
         if(ObjectInHand)
         {
@@ -308,19 +308,19 @@ void GameEditorScene::Update(double deltaTime)
 
 
     WAND_VEC2 actPos = CameraManager::GetInstance().GetFocusPosition();
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_A, KeyRelease))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_A, KeyEventType::KeyRelease))
     {
         CameraManager::GetInstance().FocusPosition(WAND_VEC2(actPos.x-deltaTime*400, actPos.y));
     }
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_D, KeyRelease))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_D, KeyEventType::KeyRelease))
     {
         CameraManager::GetInstance().FocusPosition(WAND_VEC2(actPos.x+deltaTime*400, actPos.y));
     }
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_W, KeyRelease))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_W, KeyEventType::KeyRelease))
     {
         CameraManager::GetInstance().FocusPosition(WAND_VEC2(actPos.x, actPos.y-deltaTime*400));
     }
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_S, KeyRelease))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_S, KeyEventType::KeyRelease))
     {
         CameraManager::GetInstance().FocusPosition(WAND_VEC2(actPos.x, actPos.y+deltaTime*400));
     }

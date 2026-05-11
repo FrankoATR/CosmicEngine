@@ -91,7 +91,7 @@ namespace WandEngine
     void UIButton::HandleInput()
     {
         bool wasPressed = isPressed;
-        isPressed = MouseHover() && InputManager::GetInstance().IsMouseButtonPressed(1, KeyDown);
+        isPressed = MouseHover() && InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyDown);
 
         if (wasPressed && !isPressed && onClick)
         {

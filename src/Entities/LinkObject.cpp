@@ -4,6 +4,7 @@
 #include "../WandAllegroEngine/Managers/InputManager.hpp"
 #include "../WandAllegroEngine/Managers/TimerManager.hpp"
 #include "../WandAllegroEngine/Managers/ObjectManager.hpp"
+#include "../WandAllegroEngine/Managers/SoundManager.hpp"
 #include "ProjectileObject.hpp"
 
 #include <math.h>
@@ -20,7 +21,7 @@ LinkObject::LinkObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, st
 void LinkObject::Init()
 {
     BodyManager::GetInstance().Add(this, Position, GetSize());
-    WaitShootTimer = new GameTimer(0.2, true, true);
+    WaitShootTimer = new GameTimer(0.05, true, true);
     TimerManager::GetInstance().Add(WaitShootTimer);
 }
 
@@ -38,74 +39,84 @@ void LinkObject::Draw()
 void LinkObject::Update(float deltaTime)
 {
 
-    /*
+    LastPosition = Position;
+
+    bool KeyARelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_A, KeyEventType::KeyRelease);
+    bool KeyDRelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_D, KeyEventType::KeyRelease);
+    bool KeyWRelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_W, KeyEventType::KeyRelease);
+    bool KeySRelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_S, KeyEventType::KeyRelease);
     
-    if(!GetInsideGridArea())
+
+    if (KeyARelease && KeyWRelease)  //Puedo usar -1 a 1,   0.5 si quiero tener movimiento constante
     {
-        SetToLastPosition();
-    }
-    
-    GameObject::Update(deltaTime);
-
-    */
-
-    bool KeyARelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_A, KeyRelease);
-    bool KeyDRelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_D, KeyRelease);
-    bool KeyWRelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_W, KeyRelease);
-    bool KeySRelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_S, KeyRelease);
-    
-
-    if (KeyARelease && KeyWRelease)
-    {
-        MoveUpLeft(deltaTime);
+        Direction.x = -1;
+        Direction.y = -1;
     }
     else if (KeyWRelease && KeyDRelease)
     {
-        MoveUpRight(deltaTime);
+        Direction.x = 1;
+        Direction.y = -1;
     }
     else if (KeyDRelease && KeySRelease)
     {
-        MoveDownRight(deltaTime);
+        Direction.x = 1;
+        Direction.y = 1;
     }
     else if (KeySRelease && KeyARelease)
     {
-        MoveDownLeft(deltaTime);
+        Direction.x = -1;
+        Direction.y = 1;
     }
     else if (KeyARelease)
     {
-        MoveLeft(deltaTime);
+        Direction.x = -1;
+        Direction.y = 0;
     }
     else if (KeyDRelease)
     {
-        MoveRight(deltaTime);
+        Direction.x = 1;
+        Direction.y = 0;
     }
     else if (KeyWRelease)
     {
-        MoveUp(deltaTime);
+        Direction.x = 0;
+        Direction.y = -1;
     }
     else if (KeySRelease)
     {
-        MoveDown(deltaTime);
+        Direction.x = 0;
+        Direction.y = 1;
     }
 
 
+    UpdatePosition(Velocity, deltaTime);
 
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_E, KeyDown))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_E, KeyEventType::KeyDown))
     {
         DestructorMode = !DestructorMode;
     }
 
-
-    if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyRelease))
+    if (DestructorMode && InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyRelease))
+    {
+        MoveForDirection(InputManager::GetInstance().GetMousePosition(), 0.05, deltaTime);
+    }
+    else
+    {
+        Direction.x = 0;
+        Direction.y = 0;
+    }
+    
+    if (!DestructorMode && InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyRelease))
     {
         if(WaitShootTimer->IsTrigger())
         {
             ProjectileObject* projectile = new ProjectileObject(Object::DynamicEntity, Position, WAND_VEC2(16, 16), "Projectile", Sprite, 3, this, InputManager::GetInstance().GetMousePosition());
             ObjectManager::GetInstance().Add(projectile);
+            SoundManager::GetInstance().Play("Shoot", 1.0f, false);
         }
         WaitShootTimer->Play();
     }
-    else if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyUp))
+    else if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyUp))
     {
         WaitShootTimer->Pause();
         WaitShootTimer->Reset();
@@ -120,56 +131,11 @@ void LinkObject::Update(float deltaTime)
 
 }
 
-void LinkObject::MoveUp(float deltaTime)
-{
-    SetPosition(WAND_VEC2(Position.x, (Position.y - Velocity * deltaTime)));
-}
-
-void LinkObject::MoveDown(float deltaTime)
-{
-    SetPosition(WAND_VEC2(Position.x, (Position.y + Velocity * deltaTime)));
-}
-
-void LinkObject::MoveRight(float deltaTime)
-{
-    SetPosition(WAND_VEC2(Position.x + Velocity * deltaTime, (Position.y)));
-}
-
-void LinkObject::MoveLeft(float deltaTime)
-{
-    SetPosition(WAND_VEC2(Position.x - Velocity * deltaTime, (Position.y)));
-}
-
-
-    
-void LinkObject::MoveUpLeft(float deltaTime)
-{
-    SetPosition(WAND_VEC2(Position.x - (Velocity / sqrt(2.0f)) * deltaTime, Position.y - (Velocity / sqrt(2.0f)) * deltaTime));
-
-}
-
-void LinkObject::MoveUpRight(float deltaTime)
-{
-    SetPosition(WAND_VEC2(Position.x + (Velocity / sqrt(2.0f)) * deltaTime, Position.y - (Velocity / sqrt(2.0f)) * deltaTime));
-}
-
-void LinkObject::MoveDownLeft(float deltaTime)
-{
-    SetPosition(WAND_VEC2(Position.x - (Velocity / sqrt(2.0f)) * deltaTime, Position.y + (Velocity / sqrt(2.0f)) * deltaTime));
-
-}
-
-void LinkObject::MoveDownRight(float deltaTime)
-{
-    SetPosition(WAND_VEC2(Position.x + (Velocity / sqrt(2.0f)) * deltaTime, Position.y + (Velocity / sqrt(2.0f)) * deltaTime));
-}
-
-
 
 void LinkObject::OnCollision(GameObject *other)
 {
 
-    if (other->GetObjectName() == "Emerson")
+    if (other->GetObjectName() == "Enemy")
     {
 
         if (DestructorMode)
@@ -180,8 +146,6 @@ void LinkObject::OnCollision(GameObject *other)
         {
             other->Destroy();
         }
-
-        // EventManager::GetInstance().TriggerEvent("OnEnemyDestroy");
 
         if (!IsTPActive)
         {

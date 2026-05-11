@@ -21,10 +21,10 @@ namespace WandEngine
 
             void SetWaitTime(double NewWaitTime);
             double GetWaitTime();
-            
+            double GetElapsedTime();
             //void SetLoop(bool HaveLoop);
             bool HaveLoop();
-
+            
             void Reset();
             void Pause();
             void Play();

@@ -9,7 +9,6 @@ using namespace WandEngine;
 class ProjectileObject : public GameObject
 {
 private:
-    float Velocity;
     float directionX;
     float directionY;
     GameObject* Owner;

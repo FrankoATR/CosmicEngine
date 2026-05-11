@@ -28,66 +28,61 @@ void GameInScene::Init()
 
     AddMainThreadTask([this]()
     {
+
         ResourceManager::GetInstance().loadSpriteSheet("Player", CHARACTERS_IMAGE_PATH, 2, 7);
         ResourceManager::GetInstance().loadSpriteSheet("SpriteSheet", DUNGUEON1_IMAGE_PATH, 4, 4);
         ResourceManager::GetInstance().loadSpriteSheet("Blocks Sprites", BLOCKS_SPRITES_PATH, 5, 3);
         ResourceManager::GetInstance().loadFont("Font", RETRO_FONT_PATH, 50);
-    });
 
-    SetProgressLoadingScene(0.1f);
-
-
-    AddMainThreadTask([this]()
-    {
         GameObject* player = new LinkObject(Object::DynamicEntity, WAND_VEC2(100, 100), WAND_VEC2(64, 64), "Player", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 1), 1, 20, ResourceManager::GetInstance().getFont("Font"));
         ObjectManager::GetInstance().Add(player);
-    });
-
-    SetProgressLoadingScene(0.2f);
 
 
-    AddMainThreadTask([this]()
-    {
+        SetProgressLoadingScene(0.2f);
+
+
+
         float load = 1.0;
-        for(int i=0; i < 40; i++)
-            for(int j=0; j < 20; j++){
+        for(int i=0; i < 80; i++)
+            for(int j=0; j < 80; j++){
                 GameObject* tmp = new MapTileObject(Object::DynamicEntity, WAND_VEC2(100 + 32*i, 100 + 32*j), WAND_VEC2(32, 32), "Tile", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Blocks Sprites", rand()%5, rand()%3), 0);
                 ObjectManager::GetInstance().Add(tmp);
                 load++;
                 SetProgressLoadingScene((load/(40.0f*20.0f)));
             }
-    });
 
 
-    /*
-        for(int i = 0; i < 100; i++)
-        {
-                int x = rand()%1920;
-                int y = rand()%1080; 
-                GameObject* tmp = new MapTileObject(DynamicEntity, WAND_VEC2(x, y), WAND_VEC2(64, 64), "Tile", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
-                ObjectManager::GetInstance().Add(tmp);
-        }
-    */
+
+        /*
+            for(int i = 0; i < 100; i++)
+            {
+                    int x = rand()%1920;
+                    int y = rand()%1080; 
+                    GameObject* tmp = new MapTileObject(DynamicEntity, WAND_VEC2(x, y), WAND_VEC2(64, 64), "Tile", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
+                    ObjectManager::GetInstance().Add(tmp);
+            }
+        */
     
 
 
-    AddMainThreadTask([this]()
-    {
         destroyedTiles = 0;
         EventManager::GetInstance().RegisterEvent("OnTileDestroy", std::function<void()>([](){
                 destroyedTiles++;
                 std::cout << "Tiles Destroyed: " << destroyedTiles << std::endl;
         })
         );
+
+
+        BodyManager::GetInstance().SetNewGridArea(new GameGridCollisions(WAND_VEC2(-200, -200), 40, 40, 100));
+        SceneManager::GetInstance().SetBackBufferColor(WAND_COLOR(155.0f, 141.0f, 30.0f, 0.0f));
+        
+        CameraManager::GetInstance().Reset();
+        SetProgressLoadingScene(1.0f);
+        
+        std::cout << "\n\nSCENE CREATED: " << GetName() << std::endl << std::endl;
     });
 
-    BodyManager::GetInstance().SetNewGridArea(new GameGridCollisions(WAND_VEC2(-200, -200), 30, 30, 100));
-    SceneManager::GetInstance().SetBackBufferColor(WAND_COLOR(155.0f, 141.0f, 30.0f, 0.0f));
-    
-    CameraManager::GetInstance().Reset();
-    SetProgressLoadingScene(1.0f);
-    
-    std::cout << "\n\nSCENE CREATED: " << GetName() << std::endl << std::endl;
+
 
 }
 
@@ -95,20 +90,22 @@ void GameInScene::Init()
 void GameInScene::Update(double deltaTime)
 {
 
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_ESCAPE, KeyDown))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_ESCAPE, KeyEventType::KeyDown))
     {
         SceneManager::GetInstance().PopScene();
     }
     
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_SPACE, KeyDown))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_SPACE, KeyEventType::KeyDown))
     {
         SceneManager::GetInstance().ReplaceScene(new MainScene);
     }
     
 
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_H, KeyDown))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_H, KeyEventType::KeyDown))
     {
-
+        ToogleShowGrid();
+        ToogleShowCamera();
+        ToogleShowBodys();
     }
 
     if(destroyedTiles >= 100)

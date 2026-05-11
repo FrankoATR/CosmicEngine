@@ -116,6 +116,8 @@ namespace WandEngine
         {
             GridArea->ClearGrid();
             std::cout << "GRID DELETE" << std::endl;
+            delete GridArea;
+            GridArea = nullptr;
         }
 
         while (!bodys.empty())

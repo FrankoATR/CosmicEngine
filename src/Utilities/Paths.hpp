@@ -28,3 +28,6 @@
 #define SOUND1_PATH "assets/sounds/Chomp High.mp3"
 #define SOUND2_PATH "assets/sounds/01. Game Start.mp3"
 #define SOUND3_PATH "assets/sounds/Death.mp3"
+#define SOUND4_PATH "assets/sounds/Intermission2.mp3"
+#define SOUND5_PATH "assets/sounds/Froot.mp3"
+#define SOUND6_PATH "assets/sounds/Power.mp3"

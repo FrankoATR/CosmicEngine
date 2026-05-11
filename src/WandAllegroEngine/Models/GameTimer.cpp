@@ -1,5 +1,5 @@
 #include "GameTimer.hpp"
-
+#include <iostream>
 namespace WandEngine
 {
     GameTimer::GameTimer(double WaitTime, bool Loop, bool Paused) :
@@ -10,7 +10,7 @@ namespace WandEngine
 
     void GameTimer::Update(double CurrentTime)
     {
-        if(Init)
+        if(!Paused && Init)
         {
             LastTimeTrigger = CurrentTime;
             Init = false;
@@ -31,6 +31,7 @@ namespace WandEngine
         {
             Triggered = false;
         }
+
     }
 
     bool GameTimer::IsTrigger()
@@ -48,7 +49,11 @@ namespace WandEngine
         return this->WaitTime;
     }
 
-    
+    double GameTimer::GetElapsedTime()
+    {
+        return this->LastTimeTrigger;
+    }
+
     /*
     void GameTimer::SetLoop(bool HaveLoop)
     {

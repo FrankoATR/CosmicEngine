@@ -15,7 +15,7 @@ namespace WandEngine
 	{
 		if (!al_init())
 		{
-			al_show_native_message_box(NULL, "Error", "ERROR: initialize", ":/", NULL, ALLEGRO_MESSAGEBOX_YES_NO);
+			al_show_native_message_box(nullptr, "Error", "ERROR: initialize", ":/", nullptr, ALLEGRO_MESSAGEBOX_YES_NO);
 			return false;
 		}
 
@@ -38,7 +38,7 @@ namespace WandEngine
 
 		if (!event_queue)
 		{
-			al_show_native_message_box(NULL, "Error", "ERROR: initialize", ":/", NULL, ALLEGRO_MESSAGEBOX_ERROR);
+			al_show_native_message_box(nullptr, "Error", "ERROR: initialize", ":/", nullptr, ALLEGRO_MESSAGEBOX_ERROR);
 			return false;
 		}
 
