@@ -1,5 +1,7 @@
 #include "ObjectManager.hpp"
 #include "../Models/GameObject.hpp"
+#include "InputManager.hpp"
+#include "CameraManager.hpp"
 
 namespace WandEngine
 {
@@ -11,10 +13,19 @@ namespace WandEngine
     {
         std::vector<int> toRemove;
 
-        for (auto actor : actors)
+        for (auto actor : objects)
         {
             if (actor->GetAliveInGameManager())
             {
+                if (CameraManager::GetInstance().IsObjectInsideCameraArea(actor))
+                {
+                    actor->SetVisible(true);
+                }
+                else
+                {
+                    actor->SetVisible(false);
+                }
+
                 if (actor->GetInsideGridArea())
                 {
                     actor->Update(deltaTime);
@@ -34,7 +45,7 @@ namespace WandEngine
 
     void ObjectManager::Draw()
     {
-        for (auto actor : actors)
+        for (auto actor : objects)
         {
             if (actor->GetVisible())
             {
@@ -47,27 +58,27 @@ namespace WandEngine
     {
         actor->SetObjectId(nextEntityId++);
         actor->Init();
-        actors.push_back(actor);
+        objects.push_back(actor);
 
         SortByLayer();
     }
 
     void ObjectManager::Remove(int EntityId)
     {
-        auto it = std::find_if(actors.begin(), actors.end(), [EntityId](GameObject *obj)
+        auto it = std::find_if(objects.begin(), objects.end(), [EntityId](GameObject *obj)
                                { return obj->GetObjectId() == EntityId; });
-        if (it != actors.end())
+        if (it != objects.end())
         {
             delete *it;
-            actors.erase(it);
+            objects.erase(it);
         }
     }
 
     GameObject *ObjectManager::FindById(int EntityId)
     {
-        auto it = std::find_if(actors.begin(), actors.end(), [EntityId](GameObject *obj)
+        auto it = std::find_if(objects.begin(), objects.end(), [EntityId](GameObject *obj)
                                { return obj->GetObjectId() == EntityId; });
-        if (it != actors.end())
+        if (it != objects.end())
         {
             return *it;
         }
@@ -79,9 +90,9 @@ namespace WandEngine
 
     GameObject *ObjectManager::FindByUniqueName(std::string UniqueName)
     {
-        auto it = std::find_if(actors.begin(), actors.end(), [UniqueName](GameObject *obj)
+        auto it = std::find_if(objects.begin(), objects.end(), [UniqueName](GameObject *obj)
                                { return obj->GetObjectName() == UniqueName; });
-        if (it != actors.end())
+        if (it != objects.end())
         {
             return *it;
         }
@@ -91,37 +102,67 @@ namespace WandEngine
         }
     }
 
-    std::vector<GameObject *> ObjectManager::FindByLayer(int LayerId){
-        std::vector<GameObject *> layer;
-        for(auto & actor : actors)
+    std::vector<GameObject *> ObjectManager::FindByPosition(WAND_VEC2 Position)
+    {
+        std::vector<GameObject *> ObjectsInPosition;
+
+        for (auto &actor : objects)
         {
-            if(actor->GetLayerId() == LayerId)
+            if (Position.x >= actor->GetPosition().x && Position.x <= actor->GetPosition().x + actor->GetSize().x && Position.y >= actor->GetPosition().y && Position.y <= actor->GetPosition().y + actor->GetSize().y)
             {
-                layer.push_back(actor);
+                ObjectsInPosition.push_back(actor);
             }
         }
-        return this->actors;
+        return ObjectsInPosition;
     }
 
-    std::vector<GameObject *> ObjectManager::GetAll(){
-        return this->actors;
+    std::vector<GameObject *> ObjectManager::FindByMousePosition()
+    {
+        std::vector<GameObject *> ObjectsInPosition;
+        WAND_VEC2 MousePosition = InputManager::GetInstance().GetMousePosition();
+
+        for (auto &actor : objects)
+        {
+            if (MousePosition.x >= actor->GetPosition().x && MousePosition.x <= actor->GetPosition().x + actor->GetSize().x && MousePosition.y >= actor->GetPosition().y && MousePosition.y <= actor->GetPosition().y + actor->GetSize().y)
+            {
+                ObjectsInPosition.push_back(actor);
+            }
+        }
+        return ObjectsInPosition;
     }
 
+    std::vector<GameObject *> ObjectManager::FindByLayer(int LayerId)
+    {
+        std::vector<GameObject *> ObjectsInlayer;
+        for (auto &actor : objects)
+        {
+            if (actor->GetLayerId() == LayerId)
+            {
+                ObjectsInlayer.push_back(actor);
+            }
+        }
+        return ObjectsInlayer;
+    }
 
+    std::vector<GameObject *> ObjectManager::GetAll()
+    {
+        return this->objects;
+    }
 
     void ObjectManager::SortByLayer()
     {
-        std::sort(actors.begin(), actors.end(), [](GameObject *a, GameObject *b)
-                  { return a->GetLayerId() < b->GetLayerId(); });
+        std::sort(objects.begin(), objects.end(), [](GameObject *a, GameObject *b)
+                  { return (a->GetLayerId() < b->GetLayerId()) ||
+                           (a->GetLayerId() == b->GetLayerId() && a->GetObjectId() < b->GetObjectId()); });
     }
 
     void ObjectManager::Clear()
     {
 
-        while (!actors.empty())
+        while (!objects.empty())
         {
-            delete actors.back();
-            actors.pop_back();
+            delete objects.back();
+            objects.pop_back();
         }
 
         nextEntityId = 0;

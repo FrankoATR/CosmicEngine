@@ -1,8 +1,6 @@
 #ifndef DEFINITIONS_HPP
 #define DEFINITIONS_HPP
 
-#include <nlohmann/json.hpp>
-
 namespace WandEngine
 {
 
@@ -48,25 +46,13 @@ namespace WandEngine
         KeyRelease
     };
 
-}
-
-
-namespace nlohmann
-{
-    template <>
-    struct adl_serializer<WandEngine::WAND_VEC2>
+    enum class UIElementType
     {
-        static void to_json(json& j, const WandEngine::WAND_VEC2& vec)
-        {
-            j = json{{"x", vec.x}, {"y", vec.y}};
-        }
-
-        static void from_json(const json& j, WandEngine::WAND_VEC2& vec)
-        {
-            vec.x = j.at("x").get<float>();
-            vec.y = j.at("y").get<float>();
-        }
+        Button,
+        Label,
+        Image
     };
+
 }
 
 #endif // DEFINITIONS_HPP

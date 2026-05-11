@@ -133,6 +133,13 @@ namespace WandEngine
         return WAND_VEC2(CameraManager::GetInstance().GetPosition().x + x, CameraManager::GetInstance().GetPosition().y + y);
     }
 
+    WAND_VEC2 InputManager::GetAbsoluteMousePosition() const
+    {
+        int x, y;
+        al_get_mouse_cursor_position(&x, &y);
+        return WAND_VEC2(x, y);
+    }
+
     void InputManager::ResetMouseSettings()
     {
         if(MouseSprite)

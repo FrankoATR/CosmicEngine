@@ -7,7 +7,8 @@
 namespace WandEngine
 {
 
-    UIButton::UIButton(ALLEGRO_BITMAP *Sprite, const std::string &text, ALLEGRO_FONT *font, WAND_VEC2 Position, WAND_SIZE Size, bool visible, UIElement *parent) : Sprite(Sprite), text(text), font(font), UIElement(Position, Size, visible, parent), textColor(WAND_COLOR(255, 255, 255)), isPressed(false)
+    UIButton::UIButton(ALLEGRO_BITMAP *Sprite, const std::string &text, ALLEGRO_FONT *font, WAND_VEC2 Position, WAND_SIZE Size, bool visible, UIElement *parent) : 
+        Sprite(Sprite), text(text), font(font), UIElement(Position, Size, visible, parent, UIElementType::Button), textColor(WAND_COLOR(255, 255, 255)), isPressed(false)
     {
     }
 
@@ -58,7 +59,11 @@ namespace WandEngine
             }
         }
 
-        // al_draw_rectangle(Position.x, Position.y, Position.x + Size.width, Position.y + Size.height, al_map_rgb(255, 255, 255), 2.0f);
+        if (MouseHover())
+        {
+            al_draw_rectangle(GlobalPosition.x, GlobalPosition.y, GlobalPosition.x + Size.width, GlobalPosition.y + Size.height, al_map_rgb(255, 255, 255), 2.0f);
+        }
+
 
         UIElement::Draw();
     }

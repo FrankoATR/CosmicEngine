@@ -1,8 +1,6 @@
 #include "GameGridCollisions.hpp"
 #include "../Models/GameObject.hpp"
 #include "../Models/GameBodyObject.hpp"
-#include "../Managers/CameraManager.hpp"
-
 namespace WandEngine
 {
 
@@ -129,15 +127,6 @@ namespace WandEngine
     {
         for (auto &obj_1 : cell_1->objects)
         {
-            if (CameraManager::GetInstance().IsObjectInsideCameraArea(obj_1->GetParent()))
-            {
-                obj_1->GetParent()->SetVisible(true);
-            }
-            else
-            {
-                obj_1->GetParent()->SetVisible(false);
-            }
-
             for (auto &obj_2 : cell_2->objects)
             {
                 if (obj_1 != obj_2)

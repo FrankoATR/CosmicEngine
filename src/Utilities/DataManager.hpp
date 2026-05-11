@@ -1,15 +1,14 @@
 #ifndef DATAMANAGER_HPP
 #define DATAMANAGER_HPP
 
-#include <string>
-#include <fstream>
-#include <Windows.h>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
+#include <sqlite/sqlite3.h>
+#include <vector>
 
 namespace WandEngine
 {
+
+    class GameObject;
+
     class DataManager
     {
     private:
@@ -18,8 +17,7 @@ namespace WandEngine
         DataManager(const DataManager &) = delete;
         DataManager &operator=(const DataManager &) = delete;
 
-        static bool EnsureDirectoryExists(const std::wstring &dirPath);
-        std::wstring GetExecutablePath();
+        sqlite3 *db;
 
     public:
         static DataManager &GetInstance()
@@ -28,8 +26,10 @@ namespace WandEngine
             return instance;
         }
 
-        void LoadData(int &PositionX, int &PositionY);
-        void SaveData(int PositionX, int PositionY);
+        void CreateTable();
+        void ClearGameObjects();
+        void SaveData(const GameObject &obj);
+        std::vector<GameObject> LoadData();
     };
 }
 

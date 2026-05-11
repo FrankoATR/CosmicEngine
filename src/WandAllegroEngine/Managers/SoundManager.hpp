@@ -6,7 +6,6 @@
 #include <allegro5/allegro_acodec.h>
 #include <unordered_map>
 #include <string>
-#include <memory>
 #include <iostream>
 
 namespace WandEngine

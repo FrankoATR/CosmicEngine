@@ -5,8 +5,8 @@
 namespace WandEngine
 {
 
-    UIElement::UIElement(WAND_VEC2 Position, WAND_SIZE Size, bool visible, UIElement* parent) : Position(Position), 
-        GlobalPosition(Position), Size(Size), visible(visible), parent(parent)
+    UIElement::UIElement(WAND_VEC2 Position, WAND_SIZE Size, bool visible, UIElement* parent, UIElementType ElementType) : Position(Position), 
+        GlobalPosition(Position), Size(Size), visible(visible), parent(parent), ElementType(ElementType)
     {
         
     }
@@ -105,6 +105,11 @@ namespace WandEngine
     WAND_SIZE UIElement::GetSize() const
     {
         return this->Size;
+    }
+
+    UIElementType UIElement::GetType() const
+    {
+        return this->ElementType;
     }
 
 }

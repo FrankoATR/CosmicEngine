@@ -44,6 +44,9 @@ void MainScene::Init()
 
         ResourceManager::GetInstance().loadBitmap("Background1", BG_FOREST_IMAGE_PATH);
         ResourceManager::GetInstance().loadBitmap("Background2", BG_SPACE_IMAGE_PATH);
+
+        ResourceManager::GetInstance().loadBitmap("Pokemon-center", POKEMONBUILDING_SPRITES_PATH);
+
         ResourceManager::GetInstance().loadSpriteSheet("Mario Sprites", MARIO_SPRITES_PATH, 4, 4);
 
         ResourceManager::GetInstance().loadSpriteSheet("Dungueon Entities", CHARACTERS_IMAGE_PATH, 2, 7);
@@ -62,12 +65,17 @@ void MainScene::Init()
     SetProgressLoadingScene(0.2f);
 
     
+        GameObject *build = new BackgroundObject(Object::StaticEntity, WAND_VEC2(100, 0), WAND_VEC2(80*4, 70*4), "Pokemon-center", ResourceManager::GetInstance().getBitmap("Pokemon-center"), 0);
+        ObjectManager::GetInstance().Add(build);
+
         //GameObject *bg = new BackgroundObject(Object::StaticEntity, WAND_VEC2(0, 0), WAND_VEC2(1920, 1080), "BG", ResourceManager::GetInstance().getBitmap("Background2"), 0);
         //ObjectManager::GetInstance().Add(bg);
 
         int posX = 100;
         int posY = 100;
-        DataManager::GetInstance().LoadData(posX, posY);
+
+        //DataManager::GetInstance().LoadData(posX, posY);
+
         GameObject *player = new LinkObject(Object::DynamicEntity, WAND_VEC2(posX, posY), WAND_VEC2(64, 64), "Player", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Dungueon Entities", 0, 0), 1, 20, ResourceManager::GetInstance().getFont("Font"));
         ObjectManager::GetInstance().Add(player);
 
@@ -102,17 +110,20 @@ void MainScene::Init()
         EventManager::GetInstance().RegisterEvent(
             "ChangePosition",
             std::function<void(GameObject *, GameObject *)>([](GameObject *obj1, GameObject *obj2)
-                                                            {
-                WAND_VEC2 tmp = obj1->GetPosition();
-                obj1->SetPosition(obj2->GetPosition());
-                obj2->SetPosition(tmp);
-                ALLEGRO_BITMAP* tmp2 = obj1->GetSprite();
-                obj1->SetSprite(obj2->GetSprite());
-                obj2->SetSprite(tmp2);
-                std::string tmp3 = obj1->GetObjectName();
-                obj1->SetObjectName(obj2->GetObjectName());
-                obj2->SetObjectName(tmp3);
-                std::cout << "Positions Changed" << std::endl; }));
+                {
+                    WAND_VEC2 tmp = obj1->GetPosition();
+                    obj1->SetPosition(obj2->GetPosition());
+                    obj2->SetPosition(tmp);
+                    //ALLEGRO_BITMAP* tmp2 = obj1->GetSprite();
+                    //obj1->SetSprite(obj2->GetSprite());
+                    //obj2->SetSprite(tmp2);
+                    //std::string tmp3 = obj1->GetObjectName();
+                    //obj1->SetObjectName(obj2->GetObjectName());
+                    //obj2->SetObjectName(tmp3);
+                    std::cout << "Positions Changed" << std::endl; 
+                }
+            )
+        );
 
 
 
@@ -152,7 +163,7 @@ void MainScene::Init()
                 GameObject* player = ObjectManager::GetInstance().FindByUniqueName("Player");
                 if (player)
                 {
-                    DataManager::GetInstance().SaveData(player->GetPosition().x, player->GetPosition().y);
+                    DataManager::GetInstance().SaveData(*player);
                 }
         });
 
@@ -162,13 +173,12 @@ void MainScene::Init()
         UIButton* button5 = new UIButton(ResourceManager::GetInstance().getBitmap("Button1"), "Load Game", ResourceManager::GetInstance().getFont("ButtonFont"), WAND_VEC2(0, 200), WAND_SIZE(150, 75), true, NULL);
 
         button5->SetOnClick([this](){
-            int posX = 100;
-            int posY = 100;
-            DataManager::GetInstance().LoadData(posX, posY);
+            
+            WAND_VEC2 pos = DataManager::GetInstance().LoadData().back().GetPosition();
             GameObject* player = ObjectManager::GetInstance().FindByUniqueName("Player");
             if (player)
             {
-                player->SetPosition(WAND_VEC2(posX, posY));
+                player->SetPosition(pos);
             }
         });
 
@@ -187,7 +197,6 @@ void MainScene::Init()
         Text1 = new UIText("Camera view at: ", ResourceManager::GetInstance().getFont("ButtonFont"), WAND_VEC2(1500, 0), WAND_SIZE(150, 75), true, NULL);
         UIManager::GetInstance().AddElement(Text1);
 
-        textsEntities.clear();
 
 
     InputManager::GetInstance().SetMouseSprite(ResourceManager::GetInstance().getBitmap("HandEditor"));

@@ -1,144 +1,141 @@
 #include "DataManager.hpp"
-#include <Windows.h>
-#include <ShlObj.h>
+#include "../WandAllegroEngine/Models/GameObject.hpp"
 #include <iostream>
 
 namespace WandEngine
 {
     DataManager::DataManager()
     {
+        if (sqlite3_open("./saves/game_data.db", &this->db) != SQLITE_OK)
+        {
+            std::cerr << "No se pudo abrir la base de datos." << std::endl;
+        }
+        else
+        {
+            CreateTable();
+        }
     }
 
     DataManager::~DataManager()
     {
     }
 
-    bool DataManager::EnsureDirectoryExists(const std::wstring &dirPath)
+    void DataManager::CreateTable()
     {
-        // SHCreateDirectoryExW creates all intermediate directories as needed
-        int result = SHCreateDirectoryExW(NULL, dirPath.c_str(), NULL);
-        return result == ERROR_SUCCESS || result == ERROR_ALREADY_EXISTS;
-    }
+        const char *createTableSQL = R"(
+        CREATE TABLE IF NOT EXISTS GameObjects (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Name TEXT NOT NULL,
+            PositionX REAL,
+            PositionY REAL,
+            SizeX REAL,
+            SizeY REAL,
+            LayerId INTEGER,
+            AliveInGameManager BOOLEAN
+        );
+    )";
 
-    std::wstring DataManager::GetExecutablePath()
-    {
-        wchar_t buffer[MAX_PATH];
-        GetModuleFileNameW(NULL, buffer, MAX_PATH);
-        std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
-        return std::wstring(buffer).substr(0, pos + 1);
-    }
+        char *errorMessage = nullptr;
+        int exit = sqlite3_exec(this->db, createTableSQL, nullptr, nullptr, &errorMessage);
 
-    void DataManager::LoadData(int &PositionX, int &PositionY)
-    {
-        PositionX = 0;
-        PositionY = 0.5f;
-
-        PWSTR path = NULL;
-        HRESULT hr = SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_CREATE, NULL, &path);
-        if (SUCCEEDED(hr) && path != NULL)
+        if (exit != SQLITE_OK)
         {
-            std::wstring savedGamesPath(path);
-            CoTaskMemFree(path);
-
-            std::wstring dataDirPath = GetExecutablePath() + L"\\saves";
-            std::wstring jsonFilePath = dataDirPath + L"\\save.json";
-
-            FILE *file = nullptr;
-            if (_wfopen_s(&file, jsonFilePath.c_str(), L"rb") == 0 && file)
-            {
-                try
-                {
-                    // Obtener el tamaño del archivo
-                    fseek(file, 0, SEEK_END);
-                    long fileSize = ftell(file);
-                    rewind(file);
-
-                    // Leer el contenido del archivo en un std::string
-                    std::string fileContents(fileSize, '\0');
-                    size_t bytesRead = fread(&fileContents[0], 1, fileSize, file);
-                    fclose(file);
-
-                    if (bytesRead != fileSize)
-                    {
-                        std::cerr << "Error reading file." << std::endl;
-                        _wremove(jsonFilePath.c_str());
-                        return;
-                    }
-
-                    // Parsear el JSON desde fileContents
-                    json j = json::parse(fileContents);
-
-                    if (j.contains("PositionX"))
-                    {
-                        PositionX = j["PositionX"].get<int>();
-                    }
-
-                    if (j.contains("PositionY"))
-                    {
-                        PositionY = j["PositionY"].get<int>();
-                    }
-                }
-                catch (const json::exception &e)
-                {
-                    std::cerr << "Error parsing JSON: " << e.what() << std::endl;
-                    _wremove(jsonFilePath.c_str());
-                }
-            }
-            else
-            {
-                // Archivo no existe o no se pudo abrir; usar valores por defecto
-            }
+            std::cerr << "Error al crear la tabla: " << errorMessage << std::endl;
+            sqlite3_free(errorMessage);
         }
         else
         {
-            std::cerr << "Failed to get Documents folder path." << std::endl;
+            std::cout << "Tabla creada o ya existe." << std::endl;
         }
     }
 
-    void DataManager::SaveData(int PositionX, int PositionY)
+    void DataManager::ClearGameObjects()
     {
-        PWSTR path = NULL;
-        HRESULT hr = SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_CREATE, NULL, &path);
-        if (SUCCEEDED(hr) && path != NULL)
+        const char *deleteSQL = "DELETE FROM GameObjects;";
+        char *errorMessage = nullptr;
+
+        int exit = sqlite3_exec(db, deleteSQL, nullptr, nullptr, &errorMessage);
+        if (exit != SQLITE_OK)
         {
-            std::wstring savedGamesPath(path);
-            CoTaskMemFree(path);
-
-            std::wstring dataDirPath = GetExecutablePath() + L"\\saves";
-            std::wstring jsonFilePath = dataDirPath + L"\\save.json";
-
-            // Asegurarse de que el directorio existe
-            if (!EnsureDirectoryExists(dataDirPath))
-            {
-                std::cerr << "Failed to create directory." << std::endl;
-                return;
-            }
-
-            json j;
-            j["PositionX"] = PositionX;
-            j["PositionY"] = PositionY;
-
-            std::string jsonString = j.dump(4);
-
-            FILE *file = nullptr;
-            if (_wfopen_s(&file, jsonFilePath.c_str(), L"wb") == 0 && file)
-            {
-                size_t bytesWritten = fwrite(jsonString.c_str(), 1, jsonString.size(), file);
-                fclose(file);
-
-                if (bytesWritten != jsonString.size())
-                {
-                    std::cerr << "Error writing file." << std::endl;
-                }
-            }
-            else
-            {
-                std::cerr << "Failed to open file for writing." << std::endl;
-            }
+            std::cerr << "Error al limpiar la tabla GameObjects: " << errorMessage << std::endl;
+            sqlite3_free(errorMessage);
         }
         else
         {
-            std::cerr << "Failed to get Documents folder path." << std::endl;
+            std::cout << "Tabla GameObjects limpiada correctamente." << std::endl;
         }
     }
+
+    void DataManager::SaveData(const GameObject &obj)
+    {
+        ClearGameObjects();
+
+        const char *insertSQL = R"(
+            INSERT INTO GameObjects (Name, PositionX, PositionY, SizeX, SizeY, LayerId, AliveInGameManager)
+            VALUES (?, ?, ?, ?, ?, ?, ?);
+        )";
+
+        sqlite3_stmt *stmt;
+        int exit = sqlite3_prepare_v2(db, insertSQL, -1, &stmt, nullptr);
+        if (exit != SQLITE_OK)
+        {
+            std::cerr << "Error al preparar la consulta: " << sqlite3_errmsg(db) << std::endl;
+            return;
+        }
+
+        // Bind de los parámetros
+        sqlite3_bind_text(stmt, 1, obj.GetObjectName().c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_double(stmt, 3, obj.GetPosition().x);
+        sqlite3_bind_double(stmt, 4, obj.GetPosition().y);
+        sqlite3_bind_double(stmt, 5, obj.GetSize().x);
+        sqlite3_bind_double(stmt, 6, obj.GetSize().y);
+        sqlite3_bind_int(stmt, 7, obj.GetLayerId());
+        sqlite3_bind_int(stmt, 8, obj.GetAliveInGameManager() ? 1 : 0);
+
+        // Ejecutar la consulta
+        if (sqlite3_step(stmt) != SQLITE_DONE)
+        {
+            std::cerr << "Error al insertar el GameObject: " << sqlite3_errmsg(db) << std::endl;
+        }
+        else
+        {
+            std::cout << "GameObject insertado correctamente." << std::endl;
+        }
+
+        sqlite3_finalize(stmt);
+    }
+
+    std::vector<GameObject> DataManager::LoadData()
+    {
+        const char *selectSQL = "SELECT Name, PositionX, PositionY, SizeX, SizeY, LayerId, AliveInGameManager FROM GameObjects;";
+        sqlite3_stmt *stmt;
+        std::vector<GameObject> objects;
+
+        int exit = sqlite3_prepare_v2(db, selectSQL, -1, &stmt, nullptr);
+        if (exit != SQLITE_OK)
+        {
+            std::cerr << "Error al preparar la consulta SELECT: " << sqlite3_errmsg(db) << std::endl;
+            return objects;
+        }
+
+        while (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            std::string name = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+            float posX = sqlite3_column_double(stmt, 2);
+            float posY = sqlite3_column_double(stmt, 3);
+            float sizeX = sqlite3_column_double(stmt, 4);
+            float sizeY = sqlite3_column_double(stmt, 5);
+            int layerId = sqlite3_column_int(stmt, 6);
+            bool aliveInGameManager = sqlite3_column_int(stmt, 7) != 0;
+
+            // Construir el objeto
+            #include "../Entities/LinkObject.hpp"
+            GameObject obj(Object::DynamicEntity, {posX, posY}, {sizeX, sizeY}, name, nullptr, layerId);
+            objects.push_back(obj);
+        }
+
+        sqlite3_finalize(stmt);
+        return objects;
+    }
+
 }

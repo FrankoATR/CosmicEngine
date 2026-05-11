@@ -13,6 +13,8 @@ namespace WandEngine
     class UIElement
     {
     protected:
+        UIElementType ElementType;
+
         WAND_VEC2 Position;
         WAND_VEC2 GlobalPosition;
         WAND_SIZE Size;
@@ -22,7 +24,7 @@ namespace WandEngine
         std::vector<UIElement*> children;
 
     public:
-        UIElement(WAND_VEC2 Position, WAND_SIZE Size, bool visible, UIElement* parent);
+        UIElement(WAND_VEC2 Position, WAND_SIZE Size, bool visible, UIElement* parent, UIElementType ElementType);
         virtual ~UIElement();
 
         virtual void Update(float deltaTime);
@@ -44,6 +46,7 @@ namespace WandEngine
         
         WAND_VEC2 GetPosition() const;
         WAND_SIZE GetSize() const;
+        UIElementType GetType() const;
     };
 
 }

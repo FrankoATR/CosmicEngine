@@ -2,108 +2,109 @@
 
 ## Fecha efectiva
 
-**13 de noviembre de 2024**
+**17 de noviembre de 2024**
 
 ## Descripción general
 
-En esta etapa amplié la capa de interfaz del framework para que ya no se limite a botones y pueda sostener también texto renderizado y cursores personalizados controlados desde el runtime. A partir de este punto la interacción visual deja de depender de atajos dentro de escenas concretas y pasa a tener soporte explícito desde los managers base de entrada y dibujo.
+En esta etapa llevé el framework hacia un soporte más claro para herramientas de edición y manipulación interactiva del runtime. El cambio más visible es que la capa UI deja de tratar todos los elementos como equivalentes y pasa a distinguir tipos concretos, mientras el sistema de entrada separa la posición absoluta del cursor respecto a la posición transformada por cámara.
 
-Sobre esa misma base también ajusté la validación espacial del grid para considerar tamaño real de cuerpos, y abrí nuevas consultas sobre colecciones de objetos administrados para facilitar herramientas y flujos de inspección dentro del motor.
+Sobre esa misma base también abrí operaciones nuevas sobre el conjunto administrado de objetos, incorporé clonación en el modelo base y reemplacé la persistencia anterior por una implementación apoyada en SQLite para guardar estado de objetos del motor.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- extender la capa UI con texto y cursor administrado desde el framework;
-- endurecer la validación de pertenencia al grid usando posición y tamaño del cuerpo;
-- exponer consultas más directas sobre los objetos administrados por el runtime.
+- tipar los elementos de interfaz para refinar su comportamiento dentro del framework;
+- separar coordenadas de entrada de pantalla y de mundo para soportar edición con cámara;
+- ampliar el acceso, clonación y persistencia de objetos administrados por el runtime.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Models/UIElements/`, donde se incorpora `UIText` como segundo elemento visible de la capa UI del framework.
-- `src/WandAllegroEngine/Managers/` y `src/WandAllegroEngine/Models/`, donde `InputManager`, `GameScene`, `ObjectManager` y `GameObject` amplían su contrato para soportar cursor gráfico, consultas de objetos y lectura de última posición.
-- `src/WandAllegroEngine/Collisions/`, donde `GameGridCollisions` sustituye la validación por punto por una validación basada en posición y tamaño del cuerpo dentro del grid.
+- `src/WandAllegroEngine/Interfaces/` y `src/WandAllegroEngine/Models/`, donde `Definitions.hpp` incorpora `UIElementType` y `UIElement` pasa a conservar el tipo concreto de cada elemento de interfaz.
+- `src/WandAllegroEngine/Managers/`, donde `InputManager` y `ObjectManager` amplían su contrato para selección espacial, lectura de cursor absoluto y administración más directa del conjunto de objetos.
+- `src/Utilities/`, donde `DataManager` abandona el guardado simple anterior y pasa a una base SQLite para persistencia de `GameObject`.
 
 ## Arquitectura o sistemas principales
 
-### Texto nativo dentro de la capa UI
+### Tipado explícito de elementos UI
 
-Agregué `UIText` como nuevo elemento base de interfaz. Su implementación visible resuelve:
+`Definitions.hpp` incorpora `UIElementType` con categorías visibles para `Button`, `Label` e `Image`, y `UIElement` pasa a almacenar ese tipo como parte de su estado base. Desde esta etapa el constructor del elemento ya no solo recibe posición, tamaño y visibilidad, sino también la categoría concreta del nodo de interfaz.
 
-- contenido textual mutable mediante `SetText()`;
-- fuente configurable con `SetFont()`;
-- color lógico de texto con `SetTextColor()`;
-- dibujo centrado dentro del área ocupada por el elemento.
+Ese ajuste se refleja de inmediato en los elementos actuales del framework:
 
-Con ello la UI del framework deja de depender únicamente de sprites interactivos y pasa a poder representar información textual persistente desde la misma jerarquía de `UIElement`.
+- `UIButton` se registra como `UIElementType::Button`;
+- `UIText` se registra como `UIElementType::Label`.
 
-### Cursor gráfico administrado por InputManager
+Con ello la capa UI deja de depender únicamente de comportamiento implícito por clase derivada y gana una clasificación común reutilizable por managers y herramientas.
 
-`InputManager` amplía su responsabilidad y pasa a controlar un cursor visual propio del framework. La interfaz nueva queda formada por:
+### Interacción refinada dentro de UIManager
 
-- `SetMouseSprite()`;
-- `SetMouseSpriteOffSet()`;
-- `SetMouseSpriteSize()`;
-- `DrawMouseSprite()`;
-- `ResetMouseSettings()`.
+Sobre esa nueva clasificación, `UIManager::Update()` deja de considerar todos los elementos como candidatos de hover. A partir de esta etapa, los elementos marcados como `Label` ya no activan `MouseHoverAny`, con lo que el texto puede convivir dentro de la interfaz sin bloquear la interacción destinada a controles realmente interactivos.
 
-Esta capa oculta o restaura el cursor nativo según exista un sprite configurado, conserva tamaño y desplazamiento del cursor gráfico, y deja el dibujo integrado al ciclo visual del runtime.
+Además, `UIButton` agrega una representación visible del hover mediante un contorno dibujado sobre su área efectiva, reforzando la retroalimentación del framework para edición y navegación por interfaz.
 
-En la misma línea, `GameScene::Draw()` ahora invoca `InputManager::GetInstance().DrawMouseSprite()` y `GameScene::Clear()` restablece la configuración de mouse al cerrar la escena.
+### Entrada separada entre pantalla y mundo
 
-### Validación espacial por tamaño real
+`InputManager` amplía su contrato con `GetAbsoluteMousePosition() const`, que devuelve la posición del cursor en coordenadas de pantalla sin aplicar el desplazamiento de cámara.
 
-`GameGridCollisions` deja de decidir pertenencia al grid usando solo un punto y pasa a evaluar posición y tamaño completos del cuerpo con `GetCellByPositionAndSize()`.
+Este cambio convive con `GetMousePosition() const`, que sigue devolviendo la posición transformada al espacio del mundo. Con ambas variantes disponibles, el framework ya puede sostener simultáneamente herramientas de interfaz fija y selección espacial dentro de escenas desplazables.
 
-El cambio visible incluye tres efectos:
+### Consultas y clonación sobre objetos administrados
 
-- la grilla conserva un `GridSize` explícito;
-- un cuerpo que rebasa los límites queda fuera del área activa;
-- cuando eso ocurre, el objeto asociado vuelve a `SetToLastPosition()` en lugar de seguir avanzando fuera del espacio válido.
+`ObjectManager` deja de ofrecer solo búsquedas por identidad o nombre y agrega consultas directamente útiles para herramientas:
 
-Con ello el grid deja de aceptar cuerpos parcialmente fuera de rango como si todavía ocuparan una celda válida.
-
-### Consultas y estado de objetos administrados
-
-`ObjectManager` incorpora dos consultas nuevas:
-
+- `FindByPosition(WAND_VEC2 Position)`;
+- `FindByMousePosition()`;
 - `FindByLayer(int LayerId)`;
 - `GetAll()`.
 
-Además, `GameObject` expone `GetLastPosition() const`, lo que completa el acceso de lectura al estado espacial previo del objeto desde otras capas del framework.
+En paralelo, `GameObject` incorpora un constructor basado en otro objeto y expone `Clone() const`, creando una ruta visible para duplicar entidades administradas a partir de su estado actual.
 
-Con esto el runtime gana una base más útil para inspección, herramientas de edición y lógica auxiliar que necesita observar el conjunto administrado sin acoplarse a detalles internos del manager.
+Con ello el runtime gana soporte directo para selección, duplicación e inspección de objetos sin tener que rearmar manualmente esas operaciones en cada escena o utilidad.
 
-### Ajustes de robustez en recursos
+### Persistencia apoyada en SQLite
 
-En `ResourceManager` corregí la validación de índices de `getBitmapRegionFromSpriteSheet()` para que la comprobación de columnas use el tamaño real de la fila consultada.
+`DataManager` abandona el esquema anterior de guardado simple y pasa a trabajar con `sqlite3`. La nueva implementación visible:
 
-No cambia el contrato principal del manager, pero sí evita lecturas inválidas cuando la hoja cargada no debe tratarse como una matriz cuadrada.
+- abre `./saves/game_data.db` al inicializarse;
+- crea una tabla `GameObjects` si todavía no existe;
+- expone `ClearGameObjects()` para vaciar la tabla;
+- guarda objetos mediante `SaveData(const GameObject &obj)`;
+- reconstruye un conjunto de objetos mediante `LoadData()`.
+
+Con esto la persistencia deja de estar limitada a un par de valores sueltos y pasa a modelarse alrededor de registros de objetos del motor.
+
+### Separación de responsabilidades espaciales
+
+`GameGridCollisions` deja de ocuparse de marcar visibilidad según cámara y ese criterio pasa a concentrarse en `ObjectManager::Update()` mediante `CameraManager::IsObjectInsideCameraArea(actor)`.
+
+El efecto estructural es que la grilla vuelve a centrarse en validación y colisión, mientras el manager de objetos asume la responsabilidad de decidir visibilidad efectiva en el runtime.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- la escena activa ya puede renderizar un cursor gráfico y texto UI dentro del mismo flujo donde dibuja objetos, depuración visual e interfaz;
-- la validación espacial del grid puede rechazar desplazamientos fuera de rango y conservar una última posición consistente para los objetos administrados.
+- la capa UI puede distinguir controles interactivos frente a elementos puramente informativos sin mezclar ambas responsabilidades en el mismo flujo de hover;
+- las herramientas del runtime ya disponen de selección por posición, clonación de objetos y persistencia estructurada sobre una base de datos local.
 
-Con ello dejé una base más útil para menús, herramientas de edición y navegación interactiva, con una capa UI más completa y un control espacial más estricto desde el runtime.
+Con ello dejé una base más útil para editores, inspección de escena y utilidades de manipulación en tiempo de ejecución, con una separación más clara entre interfaz, entrada, selección y persistencia.
 
 ## Dependencias externas visibles
 
-No incorporé dependencias externas visibles nuevas en esta etapa.
+Se incorpora una dependencia externa visible nueva en esta etapa: `sqlite3`, utilizada desde `DataManager` para persistencia local de objetos del framework.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **13 de noviembre de 2024** queda delimitada por estos movimientos:
+La etapa efectiva al **17 de noviembre de 2024** queda delimitada por estos movimientos:
 
-- incorporé `UIText` como nuevo elemento visible de la capa UI del framework;
-- extendí `InputManager` para administrar cursor gráfico, su configuración visual y su restauración al cerrar escena;
-- integré el dibujo del cursor al flujo base de `GameScene`;
-- reemplacé la validación de celda por una validación basada en posición y tamaño completos dentro de `GameGridCollisions`;
-- añadí `GetLastPosition()` a `GameObject` y nuevas consultas de colección a `ObjectManager` para acceso por capa y lectura completa de actores;
-- corregí la validación de índices de sprite sheet en `ResourceManager`.
+- incorporé `UIElementType` como clasificación común para los elementos de interfaz del framework;
+- adapté `UIElement`, `UIButton` y `UIText` a esa clasificación y evité que las etiquetas activen estado de hover interactivo;
+- añadí `GetAbsoluteMousePosition()` a `InputManager` para separar coordenadas de pantalla y coordenadas de mundo;
+- amplié `ObjectManager` con búsquedas por posición, por mouse, por capa y lectura completa del conjunto administrado;
+- incorporé clonación visible en `GameObject` mediante constructor derivado y `Clone() const`;
+- migré `DataManager` a una base SQLite local para persistencia de objetos;
+- trasladé la decisión de visibilidad por cámara desde `GameGridCollisions` hacia `ObjectManager`.
 
-Con esta etapa dejé el framework más preparado para interfaz dinámica, herramientas visuales y control espacial consistente dentro del runtime.
+Con esta etapa dejé el framework más preparado para edición interactiva, selección de objetos y persistencia estructurada dentro del runtime.

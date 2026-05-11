@@ -38,40 +38,4 @@ public:
 };
 
 
-
-namespace nlohmann
-{
-    template <>
-    struct adl_serializer<LinkObject>
-    {
-    static void to_json(nlohmann::json &j, const GameObject &obj)
-    {
-        j = nlohmann::json{
-            {"UniqueName", obj.GetObjectName()},
-            {"SpriteId", 0},
-            {"Position", obj.GetPosition()},
-            {"Size", obj.GetSize()}};
-    }
-
-    static void from_json(const nlohmann::json &j, GameObject &obj)
-    {
-        std::string uniqueName;
-        j.at("UniqueName").get_to(uniqueName);
-        obj.SetObjectName(uniqueName);
-
-        int spriteId;
-        j.at("SpriteId").get_to(spriteId);
-        // obj.SetSpriteId(spriteId);
-
-        WAND_VEC2 position;
-        j.at("Position").get_to(position);
-        obj.SetPosition(position);
-
-        WAND_VEC2 size;
-        j.at("Size").get_to(size);
-        obj.SetSize(size);
-    }
-    };
-}
-
 #endif // LINKOBJECT_HPP

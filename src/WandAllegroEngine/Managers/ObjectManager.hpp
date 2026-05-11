@@ -2,9 +2,9 @@
 #define OBJECTMANAGER_HPP
 
 #include <algorithm>
-#include <list>
 #include <vector>
 #include <string>
+#include "../Interfaces/Definitions.hpp"
 
 namespace WandEngine
 {
@@ -13,7 +13,7 @@ namespace WandEngine
     class ObjectManager
     {
     private:
-        std::vector<GameObject *> actors;
+        std::vector<GameObject *> objects;
 
         int nextEntityId;
 
@@ -35,6 +35,8 @@ namespace WandEngine
         void Remove(int EntityId);
         GameObject *FindById(int EntityId);
         GameObject *FindByUniqueName(std::string UniqueName);
+        std::vector<GameObject *> FindByPosition(WAND_VEC2 Position);
+        std::vector<GameObject *> FindByMousePosition();
         std::vector<GameObject *> FindByLayer(int LayerId);
         std::vector<GameObject *> GetAll();
         void SortByLayer();

@@ -20,7 +20,7 @@ namespace WandEngine
         for (auto &element : elements)
         {
             element->Update(deltaTime);
-            if(element->MouseHover())
+            if( element->GetType() != UIElementType::Label && element->MouseHover())
             {
                 this->MouseHoverAny = true;
             }

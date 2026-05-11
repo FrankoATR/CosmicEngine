@@ -27,16 +27,23 @@ void LinkObject::Draw()
     if (font)
     {
         al_draw_text(font, al_map_rgba(255, 0, 100, 0), GetPosition().x, GetPosition().y - 60, 0, GetObjectName().c_str());
-        al_draw_text(font, al_map_rgba(255, 255, 255, 0), GetPosition().x - 100, GetPosition().y + 60, 0, ("X: " + std::to_string((int)GetPosition().x) + ", ").c_str());
-        al_draw_text(font, al_map_rgba(255, 255, 255, 0), GetPosition().x + 100, GetPosition().y + 60, 0, ("Y: " + std::to_string((int)GetPosition().y)).c_str());
+        al_draw_text(font, al_map_rgba(255, 255, 255, 0), GetPosition().x - 100, GetPosition().y + 60, 0, ("X: " + std::to_string((int)GetPosition().x) + ", " + "Y: " + std::to_string((int)GetPosition().y)).c_str());
     }
 }
 
 void LinkObject::Update(float deltaTime)
 {
 
-
+    /*
+    
+    if(!GetInsideGridArea())
+    {
+        SetToLastPosition();
+    }
+    
     GameObject::Update(deltaTime);
+
+    */
 
     bool KeyARelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_A, KeyRelease);
     bool KeyDRelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_D, KeyRelease);

@@ -34,6 +34,7 @@ namespace WandEngine
 
     public:
         GameObject() = delete;
+        GameObject(GameObject* Other);
         GameObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId);
         virtual void Draw();
         virtual void Init();
@@ -71,6 +72,10 @@ namespace WandEngine
 
         void Destroy();
         bool GetAliveInGameManager() const;
+
+        GameObject* Clone() const{
+            return new GameObject(*this);
+        }
 
         virtual ~GameObject();
     };

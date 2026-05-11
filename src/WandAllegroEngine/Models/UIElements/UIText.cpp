@@ -6,7 +6,8 @@
 namespace WandEngine
 {
 
-    UIText::UIText(const std::string &text, ALLEGRO_FONT *font, WAND_VEC2 Position, WAND_SIZE Size, bool visible, UIElement *parent) : text(text), font(font), UIElement(Position, Size, visible, parent), textColor(WAND_COLOR(255, 255, 255))
+    UIText::UIText(const std::string &text, ALLEGRO_FONT *font, WAND_VEC2 Position, WAND_SIZE Size, bool visible, UIElement *parent) : 
+        text(text), font(font), UIElement(Position, Size, visible, parent, UIElementType::Label), textColor(WAND_COLOR(255, 255, 255))
     {
     }
 

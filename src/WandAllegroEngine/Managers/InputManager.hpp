@@ -45,6 +45,7 @@ namespace WandEngine
         bool IsJoystickButtonPressed(int button) const;
 
         WAND_VEC2 GetMousePosition() const;
+        WAND_VEC2 GetAbsoluteMousePosition() const;
 
         void ResetMouseSettings();
         void SetMouseSprite(ALLEGRO_BITMAP *NewMouseSprite);

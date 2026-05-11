@@ -5,6 +5,19 @@
 
 namespace WandEngine
 {
+    GameObject::GameObject(GameObject* Other){
+        ObjectType = Object::DynamicEntity;
+        ObjectName = Other->GetObjectName();
+        Sprite = Other->GetSprite();
+        Size = Other->GetSize();
+        Position = Other->GetPosition();
+        LastPosition = Other->GetPosition();
+        LayerId = Other->GetLayerId();
+        AliveInGameManager = true;
+        Visible = true;
+        InsideGridArea = true;
+    }
+
 
     GameObject::GameObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId) : ObjectType(ObjectType), ObjectName(ObjectName), Sprite(Sprite), Size(Size), Position(Position), LastPosition(Position), LayerId(LayerId)
     {
