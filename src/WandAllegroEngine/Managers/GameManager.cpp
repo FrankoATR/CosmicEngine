@@ -18,14 +18,10 @@ namespace WandEngine
 			return false;
 		}
 
-		al_install_audio();
-		al_init_acodec_addon();
 		al_init_font_addon();
 		al_init_ttf_addon();
 		al_init_primitives_addon();
 		al_init_image_addon();
-
-		al_reserve_samples(1);
 
 		al_set_new_display_flags(ALLEGRO_OPENGL);
 		al_set_new_display_option(ALLEGRO_OPENGL_MAJOR_VERSION, 3, ALLEGRO_SUGGEST);

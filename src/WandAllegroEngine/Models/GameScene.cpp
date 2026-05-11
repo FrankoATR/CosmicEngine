@@ -4,6 +4,7 @@
 #include "../Managers/ObjectManager.hpp"
 #include "../Managers/GameManager.hpp"
 #include "../Managers/EventManager.hpp"
+#include "../Managers/MusicManager.hpp"
 
 #include <iostream>
 
@@ -56,6 +57,7 @@ void GameScene::Clear()
     WandEngine::ObjectManager::GetInstance().Clear();
     WandEngine::ResourceManager::GetInstance().Clear();
     WandEngine::EventManager::GetInstance().Clear();
+    WandEngine::MusicManager::GetInstance().Clear();
     std::cout << "Scene Clear: " << GetName() << std::endl;}
 
 void GameScene::AddMainThreadTask(std::function<void()> task)

@@ -4,6 +4,7 @@
 #include "../WandAllegroEngine/Managers/ObjectManager.hpp"
 #include "../WandAllegroEngine/Managers/SceneManager.hpp"
 #include "../WandAllegroEngine/Managers/InputManager.hpp"
+#include "../WandAllegroEngine/Managers/MusicManager.hpp"
 #include "../WandAllegroEngine/Managers/GameManager.hpp"
 
 #include "GameInScene.hpp"
@@ -60,15 +61,42 @@ void MainScene::Init()
 
     // new LinkObject(DynamicEntity, Vec2(300, 200), Vec2(64, 64), "Enemy", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 1), 3, 20, WandEngine::ResourceManager::GetInstance().getFont("Font"));
 
-    WandEngine::EventManager::GetInstance().RegisterEvent("OnEnemyDestroy", [](){
-           std::cout << "Enemigo destruido" << std::endl;
-    });
+    WandEngine::EventManager::GetInstance().RegisterEvent("OnEnemyDestroy", std::function<void()>([](){
+        GameObject* player = WandEngine::ObjectManager::GetInstance().FindByUniqueName("Player");
+        if(player){
+            player->SetPosition(Vec2(500, 500));
+        }
+        std::cout << "Enemigo destruido" << std::endl;
+    })
+    );
+
+
+    WandEngine::EventManager::GetInstance().RegisterEvent(
+        "ChangePosition",
+        std::function<void(GameObject*, GameObject*)>([](GameObject* obj1, GameObject* obj2){
+            Vec2 tmp = obj1->GetPosition();
+            obj1->SetPosition(obj2->GetPosition());
+            obj2->SetPosition(tmp);
+            ALLEGRO_BITMAP* tmp2 = obj1->GetSprite();
+            obj1->SetSprite(obj2->GetSprite());
+            obj2->SetSprite(tmp2);
+            std::string tmp3 = obj1->GetObjectName();
+            obj1->SetObjectName(obj2->GetObjectName());
+            obj2->SetObjectName(tmp3);
+            std::cout << "Positions Changed" << std::endl;
+        })
+    );
+
+
+    WandEngine::MusicManager::GetInstance().LoadMusic("Background", "assets/music/Ludum Dare 38 - Track 5.wav");
 
 
     WandEngine::SceneManager::GetInstance().SetBackBufferColor(WandEngine::WAND_COLOR(155.0f, 0.0f, 33.0f, 0.0f));
 
 
     SetProgressLoadingScene(1.0f);
+
+    WandEngine::MusicManager::GetInstance().PlayMusic("Background", 1.0f, true);
 
     std::cout << "\n\nSCENE CREATED: " << GetName() << std::endl << std::endl;
 

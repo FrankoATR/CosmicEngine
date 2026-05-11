@@ -1,9 +1,9 @@
 #ifndef EVENTMANAGER_HPP
 #define EVENTMANAGER_HPP
 
+#include "../Interfaces/Event.hpp"
+#include "../Interfaces/IEvent.hpp"
 #include <unordered_map>
-#include <vector>
-#include <functional>
 #include <string>
 #include <iostream>
 
@@ -18,8 +18,7 @@ namespace WandEngine
         EventManager(const EventManager &) = delete;
         EventManager &operator=(const EventManager &) = delete;
 
-        using EventCallback = std::function<void()>;
-        std::unordered_map<std::string, std::vector<EventCallback>> eventCallbacks;
+        std::unordered_map<std::string, IEvent*> eventCallbacks;
 
     public:
         static EventManager &GetInstance()
@@ -28,10 +27,54 @@ namespace WandEngine
             return instance;
         }
 
+        template <typename... Args>
+        void RegisterEvent(const std::string &eventName, std::function<void(Args...)> callback)
+        {
+            IEvent* eventBase = nullptr;
+            auto it = eventCallbacks.find(eventName);
+            if (it == eventCallbacks.end())
+            {
+                auto event = new Event<Args...>();
+                event->AddListener(callback);
+                eventCallbacks[eventName] = event;
+            }
+            else
+            {
+                eventBase = it->second;
+                auto event = dynamic_cast<Event<Args...>*>(eventBase);
+                if (event)
+                {
+                    event->AddListener(callback);
+                }
+                else
+                {
+                    throw std::runtime_error("Tipos de parámetros del evento no coinciden al registrar.");
+                }
+            }
+        }
 
-        void RegisterEvent(const std::string &eventName, EventCallback callback);
-
-        void TriggerEvent(const std::string &eventName);
+        template <typename... Args>
+        void TriggerEvent(const std::string &eventName, Args... args)
+        {
+            auto it = eventCallbacks.find(eventName);
+            if (it != eventCallbacks.end())
+            {
+                IEvent* eventBase = it->second;
+                auto event = dynamic_cast<Event<Args...>*>(eventBase);
+                if (event)
+                {
+                    event->Invoke(args...);
+                }
+                else
+                {
+                    throw std::runtime_error("Tipos de parámetros del evento no coinciden al disparar.");
+                }
+            }
+            else
+            {
+                std::cerr << "Evento no encontrado: " << eventName << std::endl;
+            }
+        }
 
         void RemoveEvent(const std::string &eventName);
 

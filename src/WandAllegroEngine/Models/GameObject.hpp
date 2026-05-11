@@ -48,6 +48,8 @@ public:
     Vec2 GetSize();
 
     std::string GetObjectName();
+    void SetObjectName(std::string NewName);
+
     Object GetObjectType();
 
     void SetObjectId(int NewObjectId);

@@ -2,9 +2,10 @@
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
 
 CustomEnemy::CustomEnemy(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font) : 
-GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP), TimeToChangeDirection(1.0f), TimeUntilRecibeDamage(1.0f), ActualDirection(RIGHT)
+GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP), TimeToChangeDirection(1), TimeUntilRecibeDamage(1), ActualDirection(Direction::RIGHT)
 {
     this->font = font;
+    this->last_time = 0;
 }
 
 
@@ -30,36 +31,54 @@ void CustomEnemy::Update(float deltaTime){
     }
 */
 
-    if(TimeToChangeDirection >= 1.0){
-        TimeToChangeDirection = 0;
-        if(ActualDirection == LEFT){
-            ActualDirection = RIGHT;
-        }else{
-            ActualDirection = LEFT;
+
+
+    double current_time = al_get_time();
+    if (current_time - last_time >= 1.0)
+    {
+        last_time = current_time;
+        TimeToChangeDirection--;
+
+        if (TimeToChangeDirection <= 0) {
+            ActualDirection = directions[rand()%4];
+            TimeToChangeDirection = 1;
         }
     }
-    else if(TimeToChangeDirection < 0.0){
-        TimeToChangeDirection = 0;
+
+    if(ActualDirection == Direction::UP){
+        MoveUp(deltaTime);
     }
-
-    TimeToChangeDirection += 0.01;
-
-    if(ActualDirection == LEFT){
+    if(ActualDirection == Direction::DOWN){
+        MoveDown(deltaTime);
+    }
+    if(ActualDirection == Direction::LEFT){
         MoveLeft(deltaTime);
-    }else{
+    }
+    if(ActualDirection == Direction::RIGHT){
         MoveRight(deltaTime);
     }
 
 }
 
 
+void CustomEnemy::MoveUp(float deltaTime)
+{
+    SetPosition(Vec2(GetPosition().x, (GetPosition().y - 200 * deltaTime)));
+}
+
+void CustomEnemy::MoveDown(float deltaTime)
+{
+    SetPosition(Vec2(GetPosition().x, (GetPosition().y + 200 * deltaTime)));
+}
+
+
 void CustomEnemy::MoveRight(float deltaTime){
-    SetPosition(Vec2(GetPosition().x + 400*deltaTime, (GetPosition().y)));
+    SetPosition(Vec2(GetPosition().x + 200*deltaTime, (GetPosition().y)));
 }
 
 
 void CustomEnemy::MoveLeft(float deltaTime){
-    SetPosition(Vec2(GetPosition().x - 400*deltaTime, (GetPosition().y)));
+    SetPosition(Vec2(GetPosition().x - 200*deltaTime, (GetPosition().y)));
 }
 
 

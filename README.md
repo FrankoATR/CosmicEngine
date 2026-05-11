@@ -2,69 +2,80 @@
 
 ## Fecha efectiva
 
-**4 de noviembre de 2024**
+**5 de noviembre de 2024**
 
 ## Descripción general
 
-En esta etapa reorganicé el sistema de eventos del framework para dejar de depender de observadores definidos por herencia y pasar a un registro de callbacks asociados por nombre. Con ese cambio el motor ya no necesita una interfaz dedicada para cada consumidor de eventos, sino que puede resolver disparo y suscripción desde el propio manager.
+En esta etapa consolidé dos piezas nuevas del framework: un sistema de eventos tipado que ya no se limita a callbacks sin argumentos y un manager dedicado para reproducción musical persistente. Con eso el motor pasa a poder coordinar reacciones entre subsistemas usando parámetros tipados y también separar el audio musical del arranque general del juego.
 
-En paralelo incorporé una definición propia de color para el framework y la integré en `SceneManager`, con el fin de desacoplar la representación interna del color de la firma directa de Allegro dentro del manager de escenas.
+Sobre esa base también ajusté varios puntos de infraestructura menor para que esos servicios nuevos se integren mejor en el ciclo de vida del runtime.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- sustituir el modelo de eventos basado en objetos observadores por callbacks registrados por nombre;
-- introducir tipos base propios del framework para datos compartidos de infraestructura;
-- simplificar la integración del sistema de eventos en escenas y entidades sin exigir clases adaptadoras adicionales.
+- convertir el sistema de eventos en un mecanismo genérico con parámetros tipados;
+- incorporar un servicio específico para carga y reproducción de música;
+- redistribuir responsabilidades de audio y estado interno para que el framework no dependa de un único punto de inicialización monolítico.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Managers/`, donde `EventManager` abandona el almacenamiento de observadores concretos y pasa a resolver eventos mediante callbacks indexados por nombre, y donde `SceneManager` adopta un color propio del framework.
-- `src/WandAllegroEngine/Interfaces/`, donde aparece `Definitions.hpp` con la estructura `WAND_COLOR` y donde la antigua interfaz `GameEvent` queda desplazada del flujo activo.
-- `src/Events/`, donde `Logger` deja de formar parte efectiva del mecanismo vigente de eventos.
+- `src/WandAllegroEngine/Interfaces/`, donde `GameEvent.hpp` desaparece y se incorporan `IEvent.hpp` y `Event.hpp` como base del nuevo sistema de eventos genéricos.
+- `src/WandAllegroEngine/Managers/`, donde `EventManager` pasa a almacenar eventos tipados, `MusicManager` entra en uso efectivo y `GameManager` deja de inicializar directamente la capa de audio musical.
+- `src/WandAllegroEngine/Models/`, donde `GameObject` agrega mutación explícita del nombre y `GameScene` incorpora limpieza del manager de música dentro del cierre de escena.
 
 ## Arquitectura o sistemas principales
 
-### Sistema de eventos por callbacks
+### Sistema de eventos tipado
 
-En `EventManager` reemplacé el esquema anterior por una tabla de callbacks indexada por nombre de evento. La interfaz activa del manager queda compuesta ahora por:
+En `EventManager` reemplacé el registro anterior por un contenedor de eventos polimórficos apoyado en dos nuevas bases:
 
-- `RegisterEvent(const std::string &eventName, EventCallback callback)`;
-- `TriggerEvent(const std::string &eventName)`;
-- `RemoveEvent(const std::string &eventName)`;
+- `IEvent`, como interfaz mínima para almacenamiento heterogéneo;
+- `Event<Args...>`, como plantilla que conserva y ejecuta listeners con firma tipada.
+
+Con esa base, `EventManager` pasa a registrar y disparar eventos mediante plantillas:
+
+- `RegisterEvent(const std::string &eventName, std::function<void(Args...)> callback)`;
+- `TriggerEvent(const std::string &eventName, Args... args)`;
+- `RemoveEvent(const std::string &eventName)`.
+
+El efecto concreto es que el framework ya puede transportar argumentos tipados dentro del sistema de eventos y validar en tiempo de ejecución si la firma registrada coincide con la firma usada al disparar el evento.
+
+### Retiro del contrato anterior de eventos
+
+Como consecuencia del cambio anterior, `GameEvent.hpp` sale del árbol activo y deja de ser la base del sistema. El modelo anterior, apoyado en objetos con contrato fijo de notificación, queda sustituido por eventos genéricos especializados por plantilla.
+
+Con ello el framework deja de forzar una sola firma de callback para todos los casos y gana un mecanismo más flexible para coordinar subsistemas con necesidades distintas.
+
+### Servicio de música
+
+`MusicManager` entra en uso efectivo como servicio singleton para música continua del runtime. Su interfaz visible queda formada por:
+
+- `LoadMusic(const std::string &name, const std::string &filename)`;
+- `PlayMusic(const std::string &name, float volume = 1.0f, bool loop = true)`;
+- `PauseMusic()`;
+- `ResumeMusic()`;
+- `StopMusic()`;
 - `Clear()`.
 
-Con este ajuste dejé de almacenar instancias de observadores concretos y pasé a resolver la suscripción desde funciones registradas dinámicamente. El efecto inmediato es un sistema de eventos más liviano y menos acoplado a jerarquías de clases.
+La implementación inicializa voz, mixer, reserva de muestras y flujos de audio, y destruye esos recursos al cerrar el manager. Con esto separé la reproducción musical del arranque general de `GameManager` y dejé un punto específico para administrar pistas persistentes.
 
-### Retiro del contrato basado en herencia
+### Ajustes de integración base
 
-La interfaz `GameEvent` y la implementación `Logger` dejan de formar parte efectiva del flujo activo del sistema. Ambas quedaron fuera de uso directo dentro del árbol visible, lo que confirma el desplazamiento del modelo anterior basado en objetos con `OnNotify()`.
+Para acompañar el cambio de eventos y música, `GameScene::Clear()` también limpia `MusicManager`, `GameObject` incorpora `SetObjectName(std::string NewName)` y `GameManager` deja de instalar directamente audio y codecs en su secuencia de inicialización.
 
-Con ello eliminé la necesidad de definir una clase derivada por cada consumidor del sistema de eventos cuando basta con registrar una acción puntual.
-
-### Definición propia de color
-
-En `Definitions.hpp` incorporé `WAND_COLOR` como estructura base del framework para representar color mediante componentes `r`, `g`, `b` y `a`.
-
-Sobre esa base, `SceneManager` deja de conservar `ALLEGRO_COLOR` como estado interno y pasa a trabajar con `WAND_COLOR`, convirtiéndolo a color de Allegro únicamente en el punto de dibujo real mediante `al_map_rgba(...)`.
-
-Con este ajuste reduje la dependencia directa de tipos externos dentro de la API interna del manager de escenas.
-
-### Ajuste mínimo de infraestructura
-
-Además de lo anterior, `Size` incorpora un constructor por defecto y `GameManager` deja de inicializar manualmente ese tamaño desde la lista de inicialización. El cambio no altera el rol del manager, pero sí deja su construcción más alineada con el resto de tipos básicos del framework.
+Estos cambios no introducen subsistemas nuevos por sí mismos, pero sí completan la integración del sistema tipado de eventos y del nuevo manager de música dentro del ciclo de vida del framework.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- las escenas y entidades pueden registrar acciones asociadas a eventos concretos sin crear observadores dedicados;
-- el color de fondo de escena ya puede configurarse mediante una estructura propia del framework en lugar de depender de `ALLEGRO_COLOR` como tipo de intercambio interno.
+- el sistema de eventos ya puede coordinar interacciones que requieren argumentos sin limitarse a notificaciones vacías;
+- la reproducción musical queda administrada desde un servicio específico que puede cargarse, iniciarse, pausarse o limpiarse sin mezclar esa lógica con el manager principal del juego.
 
-Con ello dejé una base más directa para integrar reacciones de gameplay y estados visuales desde la propia capa del framework, con menos clases accesorias y menor acoplamiento a tipos externos.
+Con ello dejé una base más útil para extender la comunicación entre objetos y escenas, y también para sostener audio persistente como parte del runtime sin acoplarlo al flujo central de inicialización.
 
 ## Dependencias externas visibles
 
@@ -72,12 +83,14 @@ No incorporé dependencias externas visibles nuevas en esta etapa.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **4 de noviembre de 2024** queda delimitada por estos movimientos:
+La etapa efectiva al **5 de noviembre de 2024** queda delimitada por estos movimientos:
 
-- reemplacé el sistema de eventos basado en observadores por un registro de callbacks asociados por nombre;
-- retiré del flujo activo la dependencia efectiva de `GameEvent` y de implementaciones concretas como `Logger`;
-- incorporé `WAND_COLOR` como tipo base del framework para representar color;
-- adapté `SceneManager` para conservar y consumir color propio del framework en lugar de `ALLEGRO_COLOR` como estado interno;
-- añadí un constructor por defecto a `Size` para simplificar la inicialización de infraestructura básica.
+- sustituí la base anterior de eventos por una arquitectura tipada apoyada en `IEvent` y `Event<Args...>`;
+- convertí `EventManager` en un registro de eventos genéricos capaces de recibir parámetros al dispararse;
+- retiré `GameEvent.hpp` del flujo activo del framework;
+- integré `MusicManager` como servicio efectivo para carga, reproducción, pausa, reanudación y limpieza de pistas musicales;
+- amplié `GameScene::Clear()` para que el ciclo de cierre de escena también vacíe el manager de música;
+- añadí `SetObjectName()` a `GameObject` como ajuste de mutabilidad básica para objetos administrados por el motor;
+- retiré de `GameManager` la inicialización directa de audio musical para redistribuir esa responsabilidad.
 
-Con esta etapa dejé el framework más coherente en su sistema de eventos y un poco menos dependiente de tipos externos en su API interna, especialmente en los puntos donde la infraestructura del motor necesita exponer mecanismos reutilizables a las escenas.
+Con esta etapa dejé el framework más flexible para comunicación tipada entre subsistemas y mejor preparado para manejar música persistente como parte de la infraestructura general del runtime.

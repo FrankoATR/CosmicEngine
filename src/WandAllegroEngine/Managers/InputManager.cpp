@@ -18,6 +18,8 @@ namespace WandEngine
         al_uninstall_keyboard();
         al_uninstall_mouse();
         al_uninstall_joystick();
+
+        std::cout << "Input manager destroyed" << std::endl;
     }
 
     void InputManager::Init()

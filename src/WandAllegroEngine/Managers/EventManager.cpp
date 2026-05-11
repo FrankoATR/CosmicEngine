@@ -1,38 +1,26 @@
 #include "EventManager.hpp"
-#include "../Interfaces/GameEvent.hpp"
 
 namespace WandEngine
 {
 
-    void EventManager::RegisterEvent(const std::string &eventName, EventCallback callback)
-    {
-        eventCallbacks[eventName].push_back(callback);
-    }
-
-    void EventManager::TriggerEvent(const std::string &eventName)
-    {
-        if (eventCallbacks.find(eventName) != eventCallbacks.end())
-        {
-            for (const auto &callback : eventCallbacks[eventName])
-            {
-                callback();
-            }
-        }
-        else
-        {
-            std::cout << "Event not found: " << eventName << std::endl;
-        }
-    }
-
     void EventManager::RemoveEvent(const std::string &eventName)
     {
-        eventCallbacks.erase(eventName);
+            auto it = eventCallbacks.find(eventName);
+            if (it != eventCallbacks.end())
+            {
+                delete it->second;
+                eventCallbacks.erase(it);
+            }
     }
 
     void EventManager::Clear()
     {
-        eventCallbacks.clear();
-        std::cout << "Event manager cleared" << std::endl;
+            for (auto& pair : eventCallbacks)
+            {
+                delete pair.second;
+            }
+            eventCallbacks.clear();
+            std::cout << "Event manager cleared" << std::endl;
     }
 
     EventManager::~EventManager()

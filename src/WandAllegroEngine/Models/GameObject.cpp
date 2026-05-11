@@ -60,6 +60,11 @@ std::string GameObject::GetObjectName()
     return this->ObjectName;
 }
 
+void GameObject::SetObjectName(std::string NewName)
+{
+    this->ObjectName = NewName;
+}
+
 void GameObject::SetObjectId(int NewObjectId)
 {
     this->ObjectId = NewObjectId;

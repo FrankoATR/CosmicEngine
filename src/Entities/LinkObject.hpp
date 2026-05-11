@@ -11,6 +11,9 @@ private:
     ALLEGRO_FONT* font;
     int HP;
     bool DestructorMode;
+    bool IsTPActive;
+    int TimeToTP;
+    double last_time;
 
 public:
     LinkObject(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font);

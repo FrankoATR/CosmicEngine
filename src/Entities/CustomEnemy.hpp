@@ -7,16 +7,19 @@ class CustomEnemy : public GameObject
 {
 private:
 
-    enum Direction {
+    enum class Direction {
+        UP,
+        DOWN,
         LEFT,
         RIGHT
-    };
+    }directions[4] = {Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT};
 
     //std::vector<GameObject*> inventory;
     ALLEGRO_FONT* font;
     int HP;
-    float TimeToChangeDirection;
-    float TimeUntilRecibeDamage;
+    int TimeToChangeDirection;
+    int TimeUntilRecibeDamage;
+    double last_time;
     Direction ActualDirection;
 
 public:
@@ -25,6 +28,9 @@ public:
     void Init() override;
     void Update(float deltaTime) override;
     void OnCollision(GameObject* other) override;
+    
+    void MoveUp(float deltaTime);
+    void MoveDown(float deltaTime);
     void MoveRight(float deltaTime);
     void MoveLeft(float deltaTime);
 

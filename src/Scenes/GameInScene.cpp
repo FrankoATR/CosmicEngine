@@ -64,10 +64,11 @@ void GameInScene::Init()
     */
     
     destroyedTiles = 0;
-    WandEngine::EventManager::GetInstance().RegisterEvent("OnTileDestroy", [](){
+    WandEngine::EventManager::GetInstance().RegisterEvent("OnTileDestroy", std::function<void()>([](){
             destroyedTiles++;
             std::cout << "Tiles Destroyed: " << destroyedTiles << std::endl;
-    });
+    })
+    );
 
     WandEngine::SceneManager::GetInstance().SetBackBufferColor(WandEngine::WAND_COLOR(155.0f, 141.0f, 30.0f, 0.0f));
 
