@@ -1,46 +1,43 @@
 #include "SolidBlock.hpp"
 
-#include <WandEngine/Managers/InputManager.hpp>
-#include <WandEngine/Managers/TimerManager.hpp>
-#include <WandEngine/Managers/ObjectManager.hpp>
-#include <WandEngine/Managers/BodyManager.hpp>
+#include <WandEngine/Managers/Input/InputManager.hpp>
+#include <WandEngine/Managers/Object/ObjectManager.hpp>
+#include <WandEngine/Managers/Body/BodyManager.hpp>
+#include <WandEngine/Managers/Camera/CameraManager.hpp>
+#include <WandEngine/Managers/Resource/ResourceManager.hpp>
+#include <WandEngine/Managers/Timer/TimerManager.hpp>
 
-SolidBlock::SolidBlock(WAND_VEC2 Position, WAND_VEC2 Size, ALLEGRO_BITMAP *Sprite, short int LayerId) :
-GameObject(Object::StaticEntity, Position, Size, "SolidBlock", Sprite, LayerId)
+#include <random>
+
+SolidBlock::SolidBlock(glm::vec2 Position, glm::vec2 Size, short int LayerId) : GameObject("SolidBlock", Position, Size, 0.0f, LayerId)
 {
-
 }
-
 
 void SolidBlock::Init()
 {
-    Body = new GameBodyObject(this, Position, GetSize(), [this](GameObject* Other, CollisionSide Side){BodyCollisionEvent(Other, Side);});
+    Body = new GameBodyObject(this, glm::vec2(0.0f), GetSize(), [this](GameObject *Other, CollisionSide Side)
+                              { BodyCollisionEvent(Other, Side); });
     BodyManager::GetInstance().Add(Body);
-}
 
+    std::random_device rd;
+
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dist(0, 2);
+
+    randomNumber1 = dist(gen);
+    randomNumber2 = dist(gen);
+}
 
 void SolidBlock::Draw()
 {
-    if(Sprite){
-        al_draw_tinted_scaled_rotated_bitmap(Sprite, al_map_rgba(MainColor.r, MainColor.g, MainColor.b, MainColor.a), 0, 0, Position.x, Position.y, Size.x/al_get_bitmap_width(Sprite), Size.y/al_get_bitmap_height(Sprite), 0, 0 );
-    }
-}
 
+    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", randomNumber1, randomNumber2, Position, Size, Rotation, MainColor, 1.0f);
+}
 
 void SolidBlock::Update(float deltaTime)
 {
-
 }
-
 
 void SolidBlock::BodyCollisionEvent(GameObject *Other, CollisionSide Side)
 {
-
-    if (Other->GetObjectName() == "Player")
-    {
-
-
-
-    }
-
 }

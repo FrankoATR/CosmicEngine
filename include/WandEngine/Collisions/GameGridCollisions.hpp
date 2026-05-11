@@ -1,32 +1,36 @@
 #ifndef GAMEGRIDCOLLISIONS_HPP
 #define GAMEGRIDCOLLISIONS_HPP
 
+#include <glm/glm.hpp>
 #include <vector>
-#include <iostream>
-#include <algorithm>
-#include <allegro5/allegro5.h>
-#include <allegro5/allegro_primitives.h>
-#include "../Interfaces/Definitions.hpp"
 
 namespace WandEngine
 {
+
+    enum class CollisionType
+    {
+        Grid,
+        QuadTree
+    };
+    
+    enum class CollisionSide;
 
     class GameBodyObject;
 
     struct Cell
     {
-        WAND_VEC2 Position;
+        glm::vec2 Position;
         std::vector<GameBodyObject *> objects;
-        Cell() : Position(WAND_VEC2(0, 0)) {}
-        Cell(WAND_VEC2 Position) : Position(Position) {}
+        Cell() : Position(glm::vec2(0.0f)) {}
+        Cell(glm::vec2 Position) : Position(Position) {}
     };
 
     
     class GameGridCollisions
     {
     public:
-        WAND_VEC2 GridPosition;
-        WAND_SIZE GridSize;
+        glm::vec2 GridPosition;
+        glm::vec2 GridSize;
         int Arrows;
         int Columns;
         int CellSize;
@@ -34,11 +38,11 @@ namespace WandEngine
 
         int EntitiesOnGrid;
 
-        GameGridCollisions(WAND_VEC2 GridPosition, int Arrows, int Columns, int CellSize);
+        GameGridCollisions(glm::vec2 GridPosition, int Arrows, int Columns, int CellSize);
         ~GameGridCollisions();
 
-        WAND_VEC2 GetPosition();
-        void SetPosition(WAND_VEC2 NewsPosition);
+        glm::vec2 GetPosition();
+        void SetPosition(glm::vec2 NewsPosition);
         Cell *GetCell(int Arrow, int Column);
         void DrawCells();
         void AddObject(GameBodyObject *obj);
@@ -48,7 +52,7 @@ namespace WandEngine
         bool RectToRectCollisionBody(GameBodyObject *body1, GameBodyObject *body2);
         CollisionSide GetCollisionSide(GameBodyObject *body1, GameBodyObject *body2);
         
-        Cell *GetCellByPositionAndSize(WAND_VEC2 position, WAND_VEC2 size);
+        Cell *GetCellByPositionAndSize(glm::vec2 position, glm::vec2 size);
 
         void ClearGrid();
     };

@@ -1,15 +1,11 @@
 #ifndef GAMEOBJECT_HPP
 #define GAMEOBJECT_HPP
 
+#define IF_GET_TYPE(var, Type, target) \
+    if (Type* var = static_cast<Type*>(target)) \
+        if (var->GetClassName() == std::string(#Type))
+
 #include <iostream>
-#include <allegro5/allegro.h>
-#include <allegro5/allegro_native_dialog.h>
-#include <allegro5/allegro_primitives.h>
-#include <allegro5/allegro_font.h>
-#include <allegro5/allegro_ttf.h>
-#include <allegro5/allegro_image.h>
-#include <allegro5/allegro_audio.h>
-#include <allegro5/allegro_acodec.h>
 
 #include "GameBodyObject.hpp"
 #include "GameTimer.hpp"
@@ -20,87 +16,118 @@ namespace WandEngine
     class GameObject
     {
     private:
-        GameTimer* MovementTimer;
+        GameTimer *MovementTimer;
         float VelocityForDuration;
+
     protected:
-        std::string ObjectName;
-        Object ObjectType;
-        int ObjectId;
-        ALLEGRO_BITMAP *Sprite;
-        WAND_VEC2 Position;
-        WAND_VEC2 LastPosition;
-        WAND_VEC2 Direction;
-        WAND_VEC2 ViewDirection;
-        WAND_VEC2 Size;
-        short int LayerId;  //0-254  char
-        short int Rotation; //0-359
-        WAND_VEC2 Velocity;
-        //Utilizar vectores para indicar la direccion de visualizacion WAND_VEC2
+        std::string ClassName;
+        int ID;
+        glm::vec2 Position;
+        glm::vec2 LastPosition;
+        glm::vec2 ViewDirection;
+        glm::vec2 Size;
+        short int LayerId; // 0-254  char
+
+        float Rotation;
+        float AngularVelocity;
+
+        glm::vec2 Velocity;
+        glm::vec2 MaxVelocity;
+        glm::vec2 MinVelocity;
+        
+        glm::vec2 Acceleration;
+
+        // Utilizar vectores para indicar la direccion de visualizacion glm::vec2
         bool Visible;
         bool InsideGridArea;
         bool AliveInGameManager;
 
-        WAND_COLOR MainColor;
+        glm::vec3 MainColor;
+        float Transparency;
+
+        GameObject &operator=(GameObject *other) // PROBAR AL REVES EN EL O1
+        {
+            if (this != other)
+            {
+                std::cout << "Copiando desde " << other << " a " << this << std::endl;
+                other->pointer_copies.push_back(&other);
+            }
+            return *this;
+        }
+
+
 
     public:
+
+        std::vector<GameObject**> pointer_copies;
+
+
         GameObject() = delete;
-        GameObject(GameObject* Other);
-        GameObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId);
+        GameObject(GameObject *Other);
+        GameObject(std::string ClassName, glm::vec2 Position, glm::vec2 Size, float Rotation, short int LayerId);
         virtual void Draw();
         virtual void Init();
         virtual void Update(float deltaTime);
 
-        void SetPosition(WAND_VEC2 NewPosition);
-        WAND_VEC2 GetPosition() const;
+        void SetPosition(glm::vec2 NewPosition);
+        glm::vec2 GetPosition() const;
 
         void UpdatePosition(float DeltaTime);
 
-        void SetSize(WAND_VEC2 NewSize);
-        WAND_VEC2 GetSize() const;
+        void SetSize(glm::vec2 NewSize);
+        glm::vec2 GetSize() const;
 
-        std::string GetObjectName() const;
-        void SetObjectName(std::string NewName);
+        std::string GetClassName() const;
+        void SetClassName(std::string NewName);
 
-        Object GetObjectType() const;
-
-        void SetObjectId(int NewObjectId);
-        int GetObjectId() const;
+        void SetID(int NewObjectId);
+        int GetID() const;
 
         void SetLayerId(short int NewLayerId);
         short int GetLayerId() const;
 
-        void SetSprite(ALLEGRO_BITMAP *NewSprite);
-        ALLEGRO_BITMAP *GetSprite() const;
-
-        void SetToLastPosition();
-        WAND_VEC2 GetLastPosition() const;
+        void UpdateLastPosition();
+        glm::vec2 GetLastPosition() const;
 
         void SetVisible(bool Visible);
-        bool GetVisible();
+        bool GetVisible() const;
 
-        void SetColor(WAND_COLOR color);
-        WAND_COLOR GetColor() const;
+        void SetColor(glm::vec3 color);
+        glm::vec3 GetColor() const;
 
-        void SetDirection(WAND_VEC2 NewDirection);
-        WAND_VEC2 GetDirection() const;
+        glm::vec2 GetDirection() const;
 
-        void SetRotation(short int NewRotation);
-        short int GetRotation() const; 
+        void SetRotation(float NewRotation);
+        float GetRotation() const;
 
-        void SetVelocity(WAND_VEC2 NewVelocity);
-        WAND_VEC2 GetVelocity() const;
+        void SetVelocity(glm::vec2 NewVelocity);
+        glm::vec2 GetVelocity() const;
 
-        bool ReachPositionInTime(WAND_VEC2 NewPosition, double Duration, double DeltaTime);
-        bool MoveForDirection(WAND_VEC2 NewDirection, double Duration, double DeltaTime);
+        void SetMaxVelocity(glm::vec2 NewMaxVelocity);
+        glm::vec2 GetMaxVelocity() const;
+
+        void SetMinVelocity(glm::vec2 NewMinVelocity);
+        glm::vec2 GetMinVelocity() const;
+
+        bool ReachPositionInTime(glm::vec2 NewPosition, double Duration, double DeltaTime);
+        bool MoveForDirection(glm::vec2 NewDirection, double Duration, double DeltaTime);
 
         void SetInsideGridArea(bool InsideGridArea);
-        bool GetInsideGridArea();
+        bool GetInsideGridArea() const;
 
         void Destroy();
         bool GetAliveInGameManager() const;
 
-        GameObject* Clone() const{
+        GameObject *Clone() const
+        {
             return new GameObject(*this);
+        }
+
+        template<typename TDerived>
+        TDerived* makeReference(TDerived** outPtr) {
+            pointer_copies.push_back(reinterpret_cast<GameObject**>(outPtr));
+            *outPtr = static_cast<TDerived*>(this);
+            return static_cast<TDerived*>(this);
         }
 
         virtual ~GameObject();

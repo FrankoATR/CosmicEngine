@@ -1,51 +1,40 @@
 #include "GameTimer.hpp"
 #include <iostream>
+
 namespace WandEngine
 {
-    GameTimer::GameTimer(double WaitTime, bool Loop, bool Paused, bool *flag) :  //Es necesario el flag o quedará mejor en Schedule ? o trabajar solo con almacenar el puntero del Timer/Schedule
-        WaitTime(WaitTime), Loop(Loop), Paused(Paused), flag(flag), Ended(false), Init(true), ResetFlag(false)
+    GameTimer::GameTimer(double TargetTime, bool Loop, bool Paused, GameTimer *flag) :  //Es necesario el flag o quedará mejor en Schedule ? o trabajar solo con almacenar el puntero del Timer/Schedule
+        TargetTime(TargetTime), Loop(Loop), Paused(Paused), flag(flag), ElapsedTime(0.0), Alive(true)
     {
-        
+    
     }
 
-    GameTimer::GameTimer(double WaitTime, bool Loop, bool Paused) :
-        WaitTime(WaitTime), Loop(Loop), Paused(Paused), flag(nullptr), Ended(false), Init(true), ResetFlag(false)
+    void GameTimer::Update(double deltaTime)
     {
-        
-    }
+        Triggered = false;
 
-    void GameTimer::Update(double CurrentTime)
-    {
-        if(ResetFlag)
+        if(!Paused)
         {
-            LastTimeTrigger = CurrentTime;
-            ResetFlag = false;
-        }
+            ElapsedTime += deltaTime;
 
-        if(!Paused && Init)
-        {
-            LastTimeTrigger = CurrentTime;
-            Init = false;
-        }
-
-        if ( !Paused && CurrentTime - LastTimeTrigger >= WaitTime)
-        {
-            LastTimeTrigger = CurrentTime;
-
-            Triggered = true;
-            if(flag) *flag = true;
-
-            if(!Loop)
+            if (ElapsedTime >= TargetTime)
             {
-                End();
+
+                Triggered = true;
+
+                ElapsedTime -= TargetTime;
+
+                if(!Loop)
+                {
+                    Paused = true;
+                    ElapsedTime = 0.0;
+                    if(flag) flag = nullptr;
+                    
+                }
             }
-        }
-        else
-        {
-            Triggered = false;
-            //if(flag) *flag = false;
 
         }
+
 
     }
 
@@ -54,27 +43,31 @@ namespace WandEngine
         return this->Triggered;
     }
 
-    void GameTimer::SetWaitTime(double NewWaitTime)
+    void GameTimer::SetTargetTime(double NewTargetTime)
     {
-        this->WaitTime = NewWaitTime;
+        this->TargetTime = NewTargetTime;
     }
 
-    double GameTimer::GetWaitTime()
+    double GameTimer::GetTargetTime()
     {
-        return this->WaitTime;
+        return this->TargetTime;
     }
 
     double GameTimer::GetElapsedTime()
     {
-        return this->LastTimeTrigger;
+        return this->ElapsedTime;
     }
 
-    /*
-    void GameTimer::SetLoop(bool HaveLoop)
+    void GameTimer::EnableLoop()
     {
-        this->Loop = HaveLoop;
+        this->Loop = true;
     }
-    */
+
+    void GameTimer::DisableLoop()
+    {
+        this->Loop = false;
+    }
+
 
     bool GameTimer::HaveLoop()
     {
@@ -83,7 +76,7 @@ namespace WandEngine
 
     void GameTimer::Reset()
     {
-        this->ResetFlag = true;
+        this->ElapsedTime = 0.0;
     }
 
     void GameTimer::Pause()
@@ -91,7 +84,7 @@ namespace WandEngine
         this->Paused = true;
     }
 
-    bool GameTimer::IsPause()
+    bool GameTimer::IsOnPause()
     {
         return this->Paused;
     }
@@ -101,14 +94,14 @@ namespace WandEngine
         this->Paused = false;
     }
 
-    void GameTimer::End()
+    void GameTimer::Destroy()
     {
-        this->Ended = true;
+        this->Alive = false;
     }
 
-    bool GameTimer::IsEnded()
+    bool GameTimer::IsAlive()
     {
-        return this->Ended;
+        return this->Alive;
     }
 }
 

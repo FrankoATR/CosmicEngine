@@ -10,7 +10,7 @@ class Background : public GameObject
 private:
 
 public:
-    Background(WAND_VEC2 Position, WAND_VEC2 Size, ALLEGRO_BITMAP *Sprite, short int LayerId);
+    Background(std::string UniqueName, glm::vec2 Position, glm::vec2 Size, short int LayerId);
     void Init() override;
     void Draw() override;
     void Update(float deltaTime) override;

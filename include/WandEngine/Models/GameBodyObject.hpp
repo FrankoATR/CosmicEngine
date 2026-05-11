@@ -1,17 +1,28 @@
 #ifndef GAMEBODYOBJECT_HPP
 #define GAMEBODYOBJECT_HPP
 
-#include <allegro5/allegro.h>
-#include <allegro5/allegro_primitives.h>
-#include <allegro5/allegro_font.h>
-#include <allegro5/allegro_ttf.h>
-#include <iostream>
-#include <functional>
 
-#include "../Interfaces/Definitions.hpp"
+#include <glm/glm.hpp>
+#include <functional>
 
 namespace WandEngine
 {
+
+	enum class GameBodyObjectType
+    {
+        Body_Rectangle,
+        Body_Circle,
+        Body_Triangle
+    };
+
+    enum class CollisionSide {
+        NONE,
+        LEFT,
+        RIGHT,
+        TOP,
+        BOTTOM
+    };
+
 
 	class GameObject;
 
@@ -20,33 +31,42 @@ namespace WandEngine
 
 	private:
 		GameBodyObjectType BodyType;
-		int BodyId;
+		int ID;
 		bool Active;
-		WAND_VEC2 Position;
-		WAND_VEC2 Size;
+		glm::vec2 OffSetParentPosition;
+		glm::vec2 Position;
+		glm::vec2 Size;
+		float Rotation = 0.0f; //Adaptar para las nuevas colisiones y OFFSET X,Y ?
 		GameObject *Parent;
         bool AliveInGameManager;
 
 		std::function<void(GameObject*, CollisionSide)> OnCollisionEvent;
 	public:
 		GameBodyObject() = delete;
-		GameBodyObject(GameObject *Parent, WAND_VEC2 Position, WAND_VEC2 Size, std::function<void(GameObject*, CollisionSide)> OnCollisionEvent);
+		GameBodyObject(GameObject *Parent, glm::vec2 OffSetParentPosition, glm::vec2 Size, std::function<void(GameObject*, CollisionSide)> OnCollisionEvent);
         void OnCollision(GameBodyObject *other, CollisionSide Side);
 
-		void SetPosition(WAND_VEC2 NewPosition);
-		WAND_VEC2 GetPosition();
+		void UpdatePosition();
+		glm::vec2 GetPosition();
 
-		void SetSize(WAND_VEC2 NewSize);
-		WAND_VEC2 GetSize();
+		void SetOffSetParentPosition(glm::vec2 NewOffSetParentPosition);
+		glm::vec2 GetOffSetParentPosition();
+
+
+		void SetSize(glm::vec2 NewSize);
+		glm::vec2 GetSize();
 
 		void DrawBody();
 		void DrawCoordinates();
 
-		void SetObjectId(int NewBodyId);
-		int GetObjectId();
+		void SetID(int NewBodyId);
+		int GetID();
 
 		void SetParent(GameObject *NewParent);
 		GameObject *GetParent();
+
+		void SetOnCollisionEvent(std::function<void(GameObject*, CollisionSide)> newOnCollionEvent);
+		std::function<void(GameObject*, CollisionSide)> GetOnCollisionEvent();
 
 		void Destroy();
         bool GetAliveInGameManager() const;

@@ -1,12 +1,11 @@
 #ifndef UIBUTTON_HPP
 #define UIBUTTON_HPP
 
+#include <glm/glm.hpp>
 #include "../UIElement.hpp"
 #include <functional>
 #include <string>
-#include <iostream>
-#include <allegro5/allegro5.h>
-#include <allegro5/allegro_font.h>
+
 
 namespace WandEngine
 {
@@ -15,18 +14,19 @@ namespace WandEngine
     {
     private:
         std::string text;
-        ALLEGRO_FONT *font;
+        int *font;
         std::function<void()> onClick;
 
-        ALLEGRO_BITMAP* Sprite;
-        WAND_COLOR textColor;
+        unsigned int* Sprite;
+        glm::vec3 textColor;
+        float Transparency;
 
         bool isPressed;
 
         void HandleInput();
 
     public:
-        UIButton(ALLEGRO_BITMAP* Sprite, const std::string &text, ALLEGRO_FONT *font, WAND_VEC2 Position, WAND_SIZE Size, bool visible, UIElement* parent);
+        UIButton(unsigned int* Sprite, const std::string &text, int *font, glm::vec2 Position, glm::vec2 Size, bool visible, UIElement* parent);
         virtual ~UIButton();
 
         void Update(float deltaTime) override;
@@ -34,9 +34,9 @@ namespace WandEngine
 
         void SetOnClick(std::function<void()> callback);
         void SetText(const std::string &text);
-        void SetFont(ALLEGRO_FONT *font);
+        void SetFont(int *font);
 
-        void SetTextColor(WAND_COLOR color);
+        void SetTextColor(glm::vec3 color);
     };
 
 }

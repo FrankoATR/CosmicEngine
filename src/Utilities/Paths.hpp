@@ -1,23 +1,20 @@
 #define BG_1_IMAGE_PATH "assets/GD/Backgrounds/game_bg_01_001-hd.png"
-#define BG_2_IMAGE_PATH "assets/GD/Backgrounds/game_bg_02_001-hd.png"
-#define BG_3_IMAGE_PATH "assets/GD/Backgrounds/game_bg_03_001-hd.png"
-#define BG_4_IMAGE_PATH "assets/GD/Backgrounds/game_bg_04_001-hd.png"
-#define BG_5_IMAGE_PATH "assets/GD/Backgrounds/game_bg_05_001-hd.png"
 
-#define GS_1_IMAGE_PATH "assets/GD/Grounds/groundSquare_01_001-hd.png"
-#define GS_2_IMAGE_PATH "assets/GD/Grounds/groundSquare_02_001-hd.png"
-#define GS_3_IMAGE_PATH "assets/GD/Grounds/groundSquare_03_001-hd.png"
-#define GS_4_IMAGE_PATH "assets/GD/Grounds/groundSquare_04_001-hd.png"
-#define GS_5_IMAGE_PATH "assets/GD/Grounds/groundSquare_05_001-hd.png"
+#define SHADER_SPRITE_VS "assets/engine/shader/vs/sprite.vs"
+#define SHADER_SPRITE_FS "assets/engine/shader/fs/sprite.fs"
+#define SHADER_SPRITESHEET_VS "assets/engine/shader/vs/sprite_sheet.vs"
+#define SHADER_SPRITESHEET_FS "assets/engine/shader/fs/sprite_sheet.fs"
 
-#define MISC_1_IMAGE_PATH "assets/GD/Misc.png"
+#define TEXTURE_ANIME "assets/engine/texture/anime-cara.png"
+#define TEXTURE_FACE "assets/engine/texture/awesomeface.png"
+#define TEXTURE_FIRSTBLOCK "assets/engine/texture/firstBlock.png"
+#define TEXTURESHEET_GD "assets/engine/texture/Misc.png"
 
-#define TRACK0_PATH "assets/music/StayInsideMe.mp3"
-#define TRACK1_PATH "assets/music/Electrodynamix.mp3"
-#define TRACK2_PATH "assets/music/Cycles.mp3"
-#define SOUND1_PATH "assets/sounds/Explode.mp3"
-#define SOUND2_PATH "assets/sounds/EndLevel.mp3"
+#define MUSIC_PVZ_FINALBATTLE "assets/engine/audio/music/10. Ultimate Battle.mp3"
+#define MUSIC_SMASH_FINAL "assets/engine/audio/music/76. Final Destination - Super Smash Bros. Brawl.mp3"
 
-
-
-#define FONT_1_PATH "assets/fonts/ThaleahFat.ttf"
+#define MUSIC_GD_DRYOUT "assets/engine/audio/music/004. Dry Out.mp3"
+#define MUSIC_GD_PRACTICE "assets/engine/audio/music/StayInsideMe.mp3"
+#define MUSIC_GD_ELECTRODYNAMIX "assets/engine/audio/music/Electrodynamix.mp3"
+#define MUSIC_GD_CYCLES "assets/engine/audio/music/Cycles.mp3"
+#define MUSIC_GD_DEAD "assets/engine/audio/sound/Explode.mp3"

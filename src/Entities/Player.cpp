@@ -1,273 +1,288 @@
 #include "Player.hpp"
+#include "SolidBlock.hpp"
+#include "Spike.hpp"
 #include "Orb.hpp"
 
-#include <WandEngine/Managers/InputManager.hpp>
-#include <WandEngine/Managers/ObjectManager.hpp>
-#include <WandEngine/Managers/BodyManager.hpp>
-#include <WandEngine/Managers/ResourceManager.hpp>
+#include <WandEngine/Managers/Input/InputManager.hpp>
+#include <WandEngine/Managers/Object/ObjectManager.hpp>
+#include <WandEngine/Managers/Body/BodyManager.hpp>
+#include <WandEngine/Managers/Camera/CameraManager.hpp>
+#include <WandEngine/Managers/Resource/ResourceManager.hpp>
+#include <WandEngine/Managers/Timer/TimerManager.hpp>
+#include <WandEngine/Managers/Audio/Sound/SoundManager.hpp>
 
-Player::Player(PlayerMode mode, WAND_VEC2 Position, WAND_VEC2 Size, ALLEGRO_BITMAP *Sprite, short int LayerId) :
-GameObject(Object::DynamicEntity, Position, Size, "Player", Sprite, LayerId), CurrentPlayerMode(mode)
+Player::Player(std::string UniqueName, PlayerMode mode, glm::vec2 Position, glm::vec2 Size, float Rotation, short int LayerId) : 
+    GameObject("Player", Position, Size, Rotation, LayerId), CurrentPlayerMode(mode)
 {
-    Velocity = WAND_VEC2(400.0f, 400.f);
+    Velocity = glm::vec2(400.0f, 400.f);
     OnGroundOrBlock = false;
-    Direction.x = 2.4;
+    Velocity.x = 950.0f;
+    Velocity.y = 0.0f;
+    Acceleration.y = 7000.0f;
+    AngularVelocity = 0.0f;
     KeySpaceDown = false;
     RigthClickDown = false;
     KeySpaceRelease = false;
     RigthClickRelease = false;
-    ReleaseJumping  = false;
+    ReleaseJumping = false;
+    this->UniqueName = UniqueName;
+    OtherRotation = 0.0f;
 }
-
 
 void Player::Init()
 {
-
-    Body1 = new GameBodyObject(this, Position, GetSize(), [this](GameObject* Other, CollisionSide Side){Body1CollisionEvent(Other, Side);});
+    Body1 = new GameBodyObject(this, glm::vec2(0.0f), GetSize(), [this](GameObject *Other, CollisionSide Side)
+                               { Body1CollisionEvent(Other, Side); });
     BodyManager::GetInstance().Add(Body1);
 
 
-    WAND_VEC2 collisionSize = {GetSize().x * 0.4f, GetSize().y * 0.4f};
-    WAND_VEC2 collisionPosition = {
-        Position.x + (GetSize().x - collisionSize.x) / 2,
-        Position.y + (GetSize().y - collisionSize.y) / 2
+    glm::vec2 collisionSize = {GetSize().x * 0.4f, GetSize().y * 0.4f};
+    glm::vec2 collisionPosition = {
+        (GetSize().x - collisionSize.x) / 2,
+        (GetSize().y - collisionSize.y) / 2
     };
-
-    Body2 = new GameBodyObject(this, collisionPosition, collisionSize, [this](GameObject* Other, CollisionSide Side){Body2CollisionEvent(Other, Side);});
+    Body2 = new GameBodyObject(this, collisionPosition, collisionSize, [this](GameObject *Other, CollisionSide Side)
+                               { Body2CollisionEvent(Other, Side); });
     BodyManager::GetInstance().Add(Body2);
 
-    RotateSprite_Timer = new GameTimer(0.030, true, true);
-    TimerManager::GetInstance().Add(RotateSprite_Timer);
 
-    Update_Gravity_Timer = new GameTimer(0.005, true, false);
-    TimerManager::GetInstance().Add(Update_Gravity_Timer);
+    OtherRotationTimer = new GameTimer(0.01, true, false);
+    TimerManager::GetInstance().Add(OtherRotationTimer);
 
+    TimeToEndTimer = new GameTimer(1.0, false, false, TimeToEndTimer);
+    TimerManager::GetInstance().Add(TimeToEndTimer);
+
+    std::random_device rd;
+
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dist(0, 4);
+
+    randomNumber1 = dist(gen);
 }
-
 
 void Player::Draw()
 {
-    if(Sprite){
-        float cx = al_get_bitmap_width(Sprite) / 2.0f;
-        float cy = al_get_bitmap_height(Sprite) / 2.0f;
 
-        float adjusted_x = Position.x + (Size.x / 2.0f);
-        float adjusted_y = Position.y + (Size.y / 2.0f);
-        float rad = Rotation * ALLEGRO_PI / 180.0f; 
-        al_draw_tinted_scaled_rotated_bitmap(
-            Sprite,
-            al_map_rgba(MainColor.r, MainColor.g, MainColor.b, MainColor.a), 
-            cx, cy,
-            adjusted_x, adjusted_y,
-            Size.x / al_get_bitmap_width(Sprite), 
-            Size.y / al_get_bitmap_height(Sprite), 
-            rad, 
-            0
-        );    
-    }
+    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(Position.x + sin(OtherRotation * 0.015) * 200, Position.y + cos(OtherRotation * 0.015) * 200), Size, -OtherRotation, MainColor, 1.0f);
+    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(Position.x + Size.x/4 + sin(glm::radians(OtherRotation - 90.0f * 0)) * Size.x * 1, Position.y + Size.y/4 + cos(glm::radians(OtherRotation - 90.0f * 0))* Size.y * 1), glm::vec2(Size.x / 2, Size.y / 2 ), -OtherRotation - 90.0f * 0, MainColor, 1.0f);
+    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(Position.x + Size.x/4 + sin(glm::radians(OtherRotation - 90.0f * 1)) * Size.x * 1, Position.y + Size.y/4 + cos(glm::radians(OtherRotation - 90.0f * 1))* Size.y * 1), glm::vec2(Size.x / 2, Size.y / 2 ), -OtherRotation - 90.0f * 1, MainColor, 1.0f);
+    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(Position.x + Size.x/4 + sin(glm::radians(OtherRotation - 90.0f * 2)) * Size.x * 1, Position.y + Size.y/4 + cos(glm::radians(OtherRotation - 90.0f * 2))* Size.y * 1), glm::vec2(Size.x / 2, Size.y / 2 ), -OtherRotation - 90.0f * 2, MainColor, 1.0f);
+    //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(Position.x + Size.x/4 + sin(glm::radians(OtherRotation - 90.0f * 3)) * Size.x * 1, Position.y + Size.y/4 + cos(glm::radians(OtherRotation - 90.0f * 3))* Size.y * 1), glm::vec2(Size.x / 2, Size.y / 2 ), -OtherRotation - 90.0f * 3, MainColor, 1.0f);
+
+    //std::vector<std::pair<std::string, std::string>> shadertexture = {{"image", "gd"}};
+    // ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("quad", "sprite_sheet", shadertexture, 3, 1, Position, Size, Rotation, MainColor, 1.0f);
+
+    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", 3, randomNumber1, Position, Size, Rotation, MainColor, 1.0f);
+
+    /*
+    ResourceManager::GetInstance().RenderLine(
+        glm::vec3(Position, 0.0f),
+        glm::vec3(Position + Size, 0.0f),
+        glm::vec3(Position.x + Size.x / 2, Position.y + Size.y / 2, 0.0f),
+        glm::vec3(0.0f, 0.0f, Rotation),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        1.0f,
+        10.0f);
+
+    ResourceManager::GetInstance().RenderTriangle(
+        glm::vec3(Position.x, Position.y + Size.y, 0.0f), 
+        glm::vec3(Position.x + Size.x / 2, Position.y, 0.0f), 
+        glm::vec3(Position + Size, 0.0f), 
+        glm::vec3(Position.x + Size.x / 2, Position.y + Size.y / 2, 0.0f), 
+        glm::vec3(0.0f, 0.0f, Rotation), 
+        glm::vec3(1.0f, 0.5f, 0.5f), 
+        0.1f, 
+        5.0f);
+
+    ResourceManager::GetInstance().RenderRectangle(
+        glm::vec3(Position, 0.0f), 
+        glm::vec3(Position + Size, 0.0f), 
+        glm::vec3(Position.x + Size.x / 2, Position.y + Size.y / 2, 0.0f), 
+        glm::vec3(0.0f, 0.0f, Rotation), 
+        glm::vec3(0.0f, 1.0f, 0.0f), 
+        1.0f, 
+        1.0f);
+    */
 }
-
 
 void Player::Update(float deltaTime)
 {
-    LastPosition = Position;
+    /*
+        KeySpaceRelease = InputManager::GetInstance().IsKeyPressed(GLFW_KEY_RIGHT, KeyEventType::KeyRelease);
+        RigthClickRelease = InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyRelease);
+        KeySpaceDown = InputManager::GetInstance().IsKeyPressed(GLFW_KEY_RIGHT, KeyEventType::KeyDown);
+        RigthClickDown = InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyDown);
 
-    KeySpaceRelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_SPACE, KeyEventType::KeyRelease);
-    RigthClickRelease = InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyRelease);
-    KeySpaceDown = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_SPACE, KeyEventType::KeyDown);
-    RigthClickDown = InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyDown);
+    */
 
-    if(KeySpaceDown || RigthClickDown)
+    if(OtherRotationTimer->IsTrigger())
+    {
+       OtherRotation += 0.5;
+    }
+
+    bool KeyRightRelease = InputManager::GetInstance().IsKeyPressed(GLFW_KEY_RIGHT, KeyEventType::KeyRelease);
+    bool KeyLeftRelease = InputManager::GetInstance().IsKeyPressed(GLFW_KEY_LEFT, KeyEventType::KeyRelease);
+    bool KeyUpRelease = InputManager::GetInstance().IsKeyPressed(GLFW_KEY_UP, KeyEventType::KeyRelease);
+    bool KeyDownRelease = InputManager::GetInstance().IsKeyPressed(GLFW_KEY_DOWN, KeyEventType::KeyRelease);
+
+    bool KeySpaceDown = InputManager::GetInstance().IsKeyPressed(GLFW_KEY_SPACE, KeyEventType::KeyDown);
+    bool KeySpaceRelease = InputManager::GetInstance().IsKeyPressed(GLFW_KEY_SPACE, KeyEventType::KeyRelease);
+
+    bool RigthClickDown = InputManager::GetInstance().IsMouseButtonPressed(GLFW_MOUSE_BUTTON_1, KeyEventType::KeyDown);
+    bool RigthClickRelease = InputManager::GetInstance().IsMouseButtonPressed(GLFW_MOUSE_BUTTON_1, KeyEventType::KeyRelease);
+
+
+    bool MainJumpControlDown = (KeySpaceDown || RigthClickDown), MainJumpControlRelease = (KeySpaceRelease || RigthClickRelease);
+
+
+    if(MainJumpControlDown)
     {
         ReleaseJumping = true;
     }
 
-    if(!KeySpaceRelease && !RigthClickRelease)
+    if(!MainJumpControlRelease)
     {
         ReleaseJumping = false;
     }
     
-    if(CurrentPlayerMode == PlayerMode::Normal)
+
+    if(MainJumpControlRelease && OnGroundOrBlock)
     {
-        if( (KeySpaceRelease || RigthClickRelease) && OnGroundOrBlock)
-        {
-            Direction.y = -4.6;
-            ReleaseJumping = false;
-        }
+        Velocity.y = -1750.0f;
+        ReleaseJumping = false;
+    }
 
-        if(OnGroundOrBlock)
+    if(!OnGroundOrBlock)
+    {
+        AngularVelocity = 300.0f;
+    }
+    else
+    {
+        auto currentRot = glm::mod(Rotation, 90.0f);
+        if(5 < currentRot && currentRot < 85)
         {
-            if(!RotateSprite_Timer->IsPause())
+            if(currentRot >= 45)
             {
-                if(Rotation % 90 >= 45)
-                {
-                    Rotation = Rotation - Rotation % 90 + 90;
-                }
-                else
-                {
-                    Rotation = Rotation - Rotation % 90;
-                }
-
-                RotateSprite_Timer->Pause();
-                RotateSprite_Timer->Reset();
-            }
-        }
-        else
-        {
-            if(RotateSprite_Timer->IsPause())
-            {
-                RotateSprite_Timer->Play();
+                AngularVelocity = 500.0f;
             }
             else
             {
-                if(RotateSprite_Timer->IsTrigger())
-                {
-                    Rotation += 11;
-                }
-            }
-        }
-
-
-        Rotation = Rotation % 360;
-
-
-        if(Update_Gravity_Timer->IsTrigger())
-        {
-            Direction.y += 0.1;
-        }
-
-        if(Direction.y > 6.0)
-        {
-            Direction.y = 6.0;
-        }
-
-
-    }
-    else if(CurrentPlayerMode == PlayerMode::Ship)
-    {
-        if(KeySpaceRelease || RigthClickRelease)
-        {
-            Direction.y -= 0.003;
-
-            if(RotateSprite_Timer->IsTrigger())
-            {
-                Rotation -= 3;
-            }
-
-            if(Direction.y < -3)
-            {
-                Direction.y = -3;
+                AngularVelocity = -500.0f;
             }
         }
         else
         {
-            if(Update_Gravity_Timer->IsTrigger())
+            AngularVelocity = 0;
+            if(currentRot >= 45)
             {
-                Direction.y += 0.04;
+                Rotation = Rotation - currentRot + 90;
+            }
+            else
+            {
+                Rotation = Rotation - currentRot;
             }
 
-            if(RotateSprite_Timer->IsTrigger())
-            {
-                Rotation += 2.5;
-            }
-
-            if(Direction.y > 3)
-            {
-                Direction.y = 3; // TARABAJAR CON VELOCITY MEJOR X, Y
-            }
         }
-
-        
-        if(Rotation < -45)
-        {
-            Rotation = -45;
-        }
-        else if(Rotation > 45)
-        {
-            Rotation = 45;
-        }
-
-
-        if(OnGroundOrBlock)
-        {
-            Rotation = 0;
-            if(!RotateSprite_Timer->IsPause())
-            {
-                RotateSprite_Timer->Reset();
-                RotateSprite_Timer->Pause();
-            }
-        }
-        else
-        {
-            if(RotateSprite_Timer->IsPause())
-            {
-                RotateSprite_Timer->Play();
-            }
-        }
-
 
     }
 
 
-    OnGroundOrBlock = false;
-
-    if(Position.y > 825 - Size.y )
+    
+    if(Velocity.y >= 0 && Position.y + Size.y > 0.0f)
     {
-        Position.y = 825 - Size.y;
         OnGroundOrBlock = true;
-        Direction.y = 0;
+        Position.y = 0.0f - Size.y;
+        Velocity.y = 0.0f;
+    }
+    else
+    {
+        OnGroundOrBlock = false;
     }
 
-    
-    UpdatePosition(deltaTime);
-    Body1->SetPosition(Position);
-    
-    WAND_VEC2 collisionSize = {GetSize().x * 0.4f, GetSize().y * 0.4f};
-    WAND_VEC2 collisionPosition = {
-        Position.x + (GetSize().x - collisionSize.x) / 2,
-        Position.y + (GetSize().y - collisionSize.y) / 2
-    };
-    Body2->SetPosition(collisionPosition);
+
+
+    //SET MAX VEL.Y
+
+
+    /* CONTROLS
+    if (KeyRightRelease)
+    {
+        Velocity.x = 400.0f;
+    }
+    else if (KeyLeftRelease)
+    {
+        Velocity.x = -400.0f;
+    }
+    else
+    {
+        Velocity.x = 0;
+    }
+
+    */
+
+
+    if(TimeToEndTimer && TimeToEndTimer->IsTrigger())
+    {
+        //std::cout << Position.x << " " << Position.y << std::endl;
+    }
+
+
+
+
+
+
 }
 
+void Player::SetUniqueName(const std::string &name)
+{
+    this->UniqueName = name;
+}
 
+const std::string&  Player::GetUniqueName() const
+{
+    return this->UniqueName;
+}
 
 void Player::Body1CollisionEvent(GameObject *Other, CollisionSide Side)
 {
 
-    /*
-    if (Other->GetObjectName() == "Ground")
-    {
-        OnGroundOrBlock = true;
-        Position.y = Other->GetPosition().y - Size.y;
-        Direction.y = 0;
-    }
-    */
-
-
-    if (Other->GetObjectName() == "SolidBlock")
+    IF_GET_TYPE(current, SolidBlock, Other)
     {
         switch (Side) {
             case CollisionSide::TOP:
                 if(CurrentPlayerMode == PlayerMode::Ship)
                 {
-                    if(Direction.y <= 0 && Position.y + 4 > Other->GetPosition().y + Other->GetSize().y)
+                    if(Velocity.y <= 0 && Position.y + 4 > current->GetPosition().y + current->GetSize().y)
                     {
                         OnGroundOrBlock = true;
-                        Position.y = Other->GetPosition().y + Other->GetSize().y;
-                        Direction.y = 0;  
+                        Position.y = current->GetPosition().y + current->GetSize().y;
+                        Velocity.y = 0;  
                 
                     }
                 }
                 break;
 
             case CollisionSide::BOTTOM:
-                if(Direction.y >= 0 && Position.y + Size.y < Other->GetPosition().y + 4)
+                if(CurrentPlayerMode == PlayerMode::Normal)
                 {
-                    OnGroundOrBlock = true;
-                    Position.y = Other->GetPosition().y - Size.y;
-                    Direction.y = 0;  
-             
+                    if((Velocity.y >= 0 && Position.y + Size.y < current->GetPosition().y + current->GetSize().y * 0.30) ||
+                        (Position.x + Size.x > current->GetPosition().x && current->GetPosition().x + current->GetSize().x < Position.x))
+                    {
+                        OnGroundOrBlock = true;
+                        Position.y = current->GetPosition().y - Size.y;
+                        Velocity.y = 0;  
+                    
+                    }
+                }
+                if(CurrentPlayerMode == PlayerMode::Ship)
+                {
+                    if(Velocity.y >= 0 && Position.y + Size.y < current->GetPosition().y)
+                    {
+                        OnGroundOrBlock = true;
+                        Position.y = current->GetPosition().y - Size.y;
+                        Velocity.y = 0;  
+                    
+                    }
                 }
                 break;
 
@@ -276,27 +291,24 @@ void Player::Body1CollisionEvent(GameObject *Other, CollisionSide Side)
         }
     }
 
-
-
-    if (Other->GetObjectName() == "Orb" && ReleaseJumping)
+    
+    IF_GET_TYPE(current, Orb, Other)
     {
-        Orb* orb = static_cast<Orb*>(Other);
-
-        if(orb && !orb->IsUsed())
+        if(!current->IsUsed() && ReleaseJumping)
         {
             ReleaseJumping = false;
 
             OnGroundOrBlock = false;
-            orb->SetUsed();
+            current->SetUsed();
 
-            switch (orb->GetOrbType())
+            switch (current->GetOrbType())
             {
             case OrbType::Green:
-                Direction.y = -4.6;
+                Velocity.y = -1750;
                 break;
 
             case OrbType::Blue:
-                Direction.y = -3.2;
+                Velocity.y = -1200;
                 break;
 
             default:
@@ -305,30 +317,27 @@ void Player::Body1CollisionEvent(GameObject *Other, CollisionSide Side)
         }
     }
 
-
-    if(Other->GetObjectName() == "Spike")
+    IF_GET_TYPE(current, Spike, Other)
     {
         this->Destroy();
+        SoundManager::GetInstance().Play("Dead", 0.5f, false);
     }
 
 }
-
 
 void Player::Body2CollisionEvent(GameObject *Other, CollisionSide Side)
 {
-
-    if (Other->GetObjectName() == "SolidBlock")
+    IF_GET_TYPE(current, SolidBlock, Other)
     {
         this->Destroy();
+        SoundManager::GetInstance().Play("Dead", 0.5f, false);
     }
 
 
 }
 
-
-
-
 Player::~Player()
 {
-
+    OtherRotationTimer->Destroy();
+    TimeToEndTimer->Destroy();
 }

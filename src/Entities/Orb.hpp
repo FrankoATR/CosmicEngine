@@ -25,7 +25,7 @@ private:
     GameTimer* RotateSprite_Timer;
 
 public:
-    Orb(OrbType Type, WAND_VEC2 Position, WAND_VEC2 Size, ALLEGRO_BITMAP *Sprite, short int LayerId);
+    Orb(OrbType Type, glm::vec2 Position, glm::vec2 Size, short int LayerId);
     ~Orb();
     void Init() override;
     void Draw() override;

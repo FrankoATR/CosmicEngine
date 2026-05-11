@@ -1,15 +1,15 @@
 #include "GameScene.hpp"
-#include "../Managers/ResourceManager.hpp"
-#include "../Managers/BodyManager.hpp"
-#include "../Managers/ObjectManager.hpp"
+#include "../Managers/Resource/ResourceManager.hpp"
+#include "../Managers/Body/BodyManager.hpp"
+#include "../Managers/Object/ObjectManager.hpp"
 #include "../Managers/GameManager.hpp"
-#include "../Managers/EventManager.hpp"
-#include "../Managers/MusicManager.hpp"
-#include "../Managers/SoundManager.hpp"
-#include "../Managers/CameraManager.hpp"
-#include "../Managers/InputManager.hpp"
-#include "../Managers/TimerManager.hpp"
-#include "../Managers/UIManager.hpp"
+#include "../Managers/Event/EventManager.hpp"
+#include "../Managers/Audio/Music/MusicManager.hpp"
+#include "../Managers/Audio/Sound/SoundManager.hpp"
+#include "../Managers/Camera/CameraManager.hpp"
+#include "../Managers/Input/InputManager.hpp"
+#include "../Managers/Timer/TimerManager.hpp"
+#include "../Managers/UI/UIManager.hpp"
 
 #include <iostream>
 
@@ -23,6 +23,20 @@ namespace WandEngine
     }
 
 
+
+    bool GameScene::IsProgressLoadingSceneComplete()
+    {
+        //return GetProgressLoadingScene() >= 1.0f;
+        return true;
+    }
+
+    std::string GameScene::GetName()
+    {
+        return Name;
+    }
+
+
+/*
     void GameScene::SetProgressLoadingScene(float Progress)
     {
         std::lock_guard<std::mutex> lock(progressMutex);
@@ -39,17 +53,6 @@ namespace WandEngine
         std::lock_guard<std::mutex> lock(progressMutex);
         return ProgressLoadingScene;
     }
-
-    bool GameScene::IsProgressLoadingSceneComplete()
-    {
-        return GetProgressLoadingScene() >= 1.0f;
-    }
-
-    std::string GameScene::GetName()
-    {
-        return Name;
-    }
-
 
     void GameScene::StartLoadingThread()
     {
@@ -72,27 +75,35 @@ namespace WandEngine
 
     void GameScene::UpdateLoadingScene(double deltaTime)
     {
-        WAND_SIZE pos = GameManager::GetInstance().GetWindowsSize();
-        CameraManager::GetInstance().FocusPosition(WAND_VEC2(pos.width/2, pos.height/2));
+        glm::vec2 pos = GameManager::GetInstance().GetWindowsSize();
+        CameraManager::GetInstance().FocusPosition(glm::vec2(pos.x/2, pos.y/2));
     }
 
     void GameScene::DrawLoadingScene()
     {
-        int W_width = WandEngine::GameManager::GetInstance().GetWindowsSize().width;
-        al_draw_filled_rectangle(50, W_width / 2 - 10, 50 + 800 * GetProgressLoadingScene(), W_width / 2 + 10, al_map_rgb(0, 255, 0));
+        int W_width = WandEngine::GameManager::GetInstance().GetWindowsSize().x;
+        //al_draw_filled_rectangle(50, W_width / 2 - 10, 50 + 800 * GetProgressLoadingScene(), W_width / 2 + 10, al_map_rgb(0, 255, 0));
+    }
+*/
+
+    void GameScene::Draw()
+    {
+
     }
 
     void GameScene::UpdateManagers(double deltaTime)
     {
-        Update(deltaTime);
         UIManager::GetInstance().Update(deltaTime);
-        BodyManager::GetInstance().Update();
         ObjectManager::GetInstance().Update(deltaTime);
+        BodyManager::GetInstance().Update();
+        Update(deltaTime);
 
     }
 
-    void GameScene::Draw()
+    void GameScene::DrawManagers()
     {
+        this->Draw();
+        
         ObjectManager::GetInstance().Draw();
 
         if (ShowBodys)
@@ -107,7 +118,7 @@ namespace WandEngine
 
         if (ShowCamera)
         {
-            CameraManager::GetInstance().Draw();
+            //CameraManager::GetInstance().Draw();
         }
 
         UIManager::GetInstance().Draw();
@@ -142,10 +153,12 @@ namespace WandEngine
         UIManager::GetInstance().Clear();
         InputManager::GetInstance().ResetMouseSettings();
 
+        /*
         if (loadingThread.joinable())
         {
             loadingThread.join();
         }
+        */
 
         #ifndef NDEBUG
             std::cout << "SCENE **" << GetName() << "** CLEARED" << std::endl;

@@ -1,6 +1,6 @@
 #include "GameObject.hpp"
-#include "../Managers/ObjectManager.hpp"
-#include "../Managers/TimerManager.hpp"
+#include "../Managers/Object/ObjectManager.hpp"
+#include "../Managers/Timer/TimerManager.hpp"
 #include <math.h>
 
 #include <iostream>
@@ -9,108 +9,115 @@ namespace WandEngine
 {
     GameObject::GameObject(GameObject *Other)
     {
-        ObjectType = Object::DynamicEntity;
-        ObjectName = Other->GetObjectName();
-        Sprite = Other->GetSprite();
+        ClassName = Other->GetClassName();
         Size = Other->GetSize();
         Position = Other->GetPosition();
+        Rotation = Other->GetRotation();
+        Velocity = glm::vec2(0.0f);
+        MaxVelocity = glm::vec2(3000.0f);
+        MinVelocity = glm::vec2(-3000.0f);
+        AngularVelocity = 0.0f;
+        Acceleration = glm::vec2(0.0f);
         LastPosition = Other->GetPosition();
         LayerId = Other->GetLayerId();
         MainColor = Other->GetColor();
         AliveInGameManager = true;
         Visible = true;
         InsideGridArea = true;
-        VelocityForDuration = 0;
+        VelocityForDuration = 0.0f;
         MovementTimer = nullptr;
     }
 
-    GameObject::GameObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId) : 
-        ObjectType(ObjectType), 
-        ObjectName(ObjectName), 
-        Sprite(Sprite), 
+    GameObject::GameObject(std::string ClassName, glm::vec2 Position, glm::vec2 Size, float Rotation, short int LayerId) : 
+        ClassName(ClassName), 
         Size(Size), 
         Position(Position), 
+        Rotation(Rotation),
+        Velocity(glm::vec2(0.0f)),
+        MaxVelocity(glm::vec2(3000.0f)),
+        MinVelocity(glm::vec2(-3000.0f)),
+        AngularVelocity(0.0f),
+        Acceleration(glm::vec2(0.0f)),
         LastPosition(Position), 
         LayerId(LayerId),
-        MainColor(WAND_COLOR(255, 255, 255, 255)),
-        VelocityForDuration(0.0f), 
-        MovementTimer(nullptr)
+        MainColor(glm::vec3(1.0f)),
+        VelocityForDuration(0.0f),
+        MovementTimer(nullptr),
+        AliveInGameManager(true),
+        Visible(true),
+        InsideGridArea(true)
     {
-        this->AliveInGameManager = true;
-        this->Visible = true;
-        this->InsideGridArea = true;
+
     }
 
     void GameObject::Init()
     {
+
     }
 
     void GameObject::Draw()
     {
-        if (Sprite)
-        {
-            // al_draw_tinted_scaled_rotated_bitmap_region(Sprite, 0, 0, 16, 16, al_map_rgba(255,255,255, 0.5), 0, 0, Position.x, Position.y, 6, 6, 0, NULL );
-            al_draw_tinted_scaled_rotated_bitmap(Sprite, al_map_rgba(255, 255, 255, 255), 0, 0, Position.x, Position.y, Size.x / al_get_bitmap_width(Sprite), Size.y / al_get_bitmap_height(Sprite), 0, 0);
-            // al_draw_bitmap(Sprite, Position.x, Position.y, NULL);
-        }
+
     }
 
     void GameObject::Update(float deltaTime)
     {
-        this->LastPosition = this->Position;
+
     }
 
-    void GameObject::SetPosition(WAND_VEC2 NewPosition)
+    void GameObject::SetPosition(glm::vec2 NewPosition)
     {
         this->LastPosition = this->Position;
         this->Position = NewPosition;
     }
 
-    WAND_VEC2 GameObject::GetPosition() const
+    glm::vec2 GameObject::GetPosition() const
     {
         return this->Position;
     }
 
     void GameObject::UpdatePosition(float DeltaTime)
     {
-        Position.x += Direction.x * Velocity.x * DeltaTime;
-        Position.y += Direction.y * Velocity.y * DeltaTime;
+        Velocity += Acceleration * DeltaTime;
+
+        Velocity = glm::clamp(Velocity, MinVelocity, MaxVelocity);
+
+        Position += Velocity * DeltaTime;
+        Rotation += AngularVelocity * DeltaTime;
+
+        Rotation = glm::mod(Rotation, 360.0f);
+        if (Rotation < 0.0f) Rotation += 360.0f;
     }
 
 
-    void GameObject::SetSize(WAND_VEC2 NewSize)
+    void GameObject::SetSize(glm::vec2 NewSize)
     {
         this->Size = NewSize;
     }
 
-    WAND_VEC2 GameObject::GetSize() const
+    glm::vec2 GameObject::GetSize() const
     {
         return this->Size;
     }
 
-    std::string GameObject::GetObjectName() const
+    std::string GameObject::GetClassName() const
     {
-        return this->ObjectName;
+        return this->ClassName;
     }
 
-    void GameObject::SetObjectName(std::string NewName)
+    void GameObject::SetClassName(std::string NewName)
     {
-        this->ObjectName = NewName;
+        this->ClassName = NewName;
     }
 
-    void GameObject::SetObjectId(int NewObjectId)
+    void GameObject::SetID(int NewObjectId)
     {
-        this->ObjectId = NewObjectId;
+        this->ID = NewObjectId;
     }
 
-    int GameObject::GetObjectId() const
+    int GameObject::GetID() const
     {
-        return this->ObjectId;
-    }
-
-    Object GameObject::GetObjectType() const
-    {
-        return this->ObjectType;
+        return this->ID;
     }
 
     void GameObject::SetLayerId(short int NewLayerId)
@@ -124,29 +131,13 @@ namespace WandEngine
         return this->LayerId;
     }
 
-    void GameObject::SetSprite(ALLEGRO_BITMAP *NewSprite)
+
+    void GameObject::UpdateLastPosition()
     {
-        this->Sprite = NewSprite;
+        LastPosition = Position;
     }
 
-    ALLEGRO_BITMAP *GameObject::GetSprite() const
-    {
-        return this->Sprite;
-    }
-
-    void GameObject::SetToLastPosition()
-    {
-        if (this->Position.x != this->LastPosition.x)
-        {
-            this->Position.x = this->LastPosition.x;
-        }
-        if (this->Position.y != this->LastPosition.y)
-        {
-            this->Position.y = this->LastPosition.y;
-        }
-    }
-
-    WAND_VEC2 GameObject::GetLastPosition() const
+    glm::vec2 GameObject::GetLastPosition() const
     {
         return this->LastPosition;
     }
@@ -161,53 +152,72 @@ namespace WandEngine
         this->Visible = Visible;
     }
 
-    bool GameObject::GetVisible()
+    bool GameObject::GetVisible() const
     {
         return this->Visible;
     }
 
-    void GameObject::SetColor(WAND_COLOR NewColor)
+    void GameObject::SetColor(glm::vec3 NewColor)
     {
         this->MainColor = NewColor;
     }
     
-    WAND_COLOR GameObject::GetColor() const
+    glm::vec3 GameObject::GetColor() const
     {
         return this->MainColor;
     }
     
-
-    void GameObject::SetDirection(WAND_VEC2 NewDirection)
+    glm::vec2 GameObject::GetDirection() const
     {
-        this->Direction = NewDirection;
+        return glm::vec2 ((glm::length(Velocity) != 0.0f) ? glm::normalize(Velocity) : glm::vec2(0.0f));
     }
 
-    WAND_VEC2 GameObject::GetDirection() const
-    {
-        return this->Direction;
-    }
-
-    void GameObject::SetRotation(short int NewRotation)
+    void GameObject::SetRotation(float NewRotation)
     {
         this->Rotation = NewRotation;
     }
 
-    short int GameObject::GetRotation() const
+    float GameObject::GetRotation() const
     {
         return this->Rotation;
     }
 
-    void GameObject::SetVelocity(WAND_VEC2 NewVelocity)
+    void GameObject::SetVelocity(glm::vec2 NewVelocity)
     {
         this->Velocity = NewVelocity;
     }
 
-    WAND_VEC2 GameObject::GetVelocity() const
+    glm::vec2 GameObject::GetVelocity() const
     {
         return this->Velocity;
     }
 
-    bool GameObject::ReachPositionInTime(WAND_VEC2 NewPosition, double Duration, double DeltaTime)
+
+    void GameObject::SetMaxVelocity(glm::vec2 NewMaxVelocity)
+    {
+        MaxVelocity = NewMaxVelocity;
+    }
+
+    glm::vec2 GameObject::GetMaxVelocity() const
+    {
+        return MaxVelocity;
+    }
+
+
+    void GameObject::SetMinVelocity(glm::vec2 NewMinVelocity)
+    {
+        MinVelocity = NewMinVelocity;
+    }
+
+    glm::vec2 GameObject::GetMinVelocity() const
+    {
+        return MinVelocity;
+    }
+
+
+
+    /*
+    bool GameObject::ReachPositionInTime(glm::vec2 NewPosition, double Duration, double DeltaTime)
     {
         if (VelocityForDuration == 0.0f)
         {
@@ -231,7 +241,7 @@ namespace WandEngine
         }
     }
 
-    bool GameObject::MoveForDirection(WAND_VEC2 NewDirection, double Duration, double DeltaTime)
+    bool GameObject::MoveForDirection(glm::vec2 NewDirection, double Duration, double DeltaTime)
     {
         if (!MovementTimer)
         {
@@ -265,13 +275,15 @@ namespace WandEngine
         // float directionX = cos(radians);
         // float directionY = sin(radians);
     }
+    */
+
 
     void GameObject::SetInsideGridArea(bool InsideGridArea)
     {
         this->InsideGridArea = InsideGridArea;
     }
 
-    bool GameObject::GetInsideGridArea()
+    bool GameObject::GetInsideGridArea() const
     {
         return this->InsideGridArea;
     }

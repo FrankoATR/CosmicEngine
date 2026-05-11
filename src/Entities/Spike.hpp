@@ -9,9 +9,10 @@ class Spike : public GameObject
 {
 private:
     GameBodyObject* Body;
-
+    int randomNumber1;
+    
 public:
-    Spike(WAND_VEC2 Position, WAND_VEC2 Size, ALLEGRO_BITMAP *Sprite, short int LayerId);
+    Spike(glm::vec2 Position, glm::vec2 Size, short int LayerId);
     void Init() override;
     void Draw() override;
     void Update(float deltaTime) override;

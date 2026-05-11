@@ -1,12 +1,11 @@
 #ifndef UITEXT_HPP
 #define UITEXT_HPP
 
+#include <glm/glm.hpp>
 #include "../UIElement.hpp"
 #include <functional>
 #include <string>
-#include <iostream>
-#include <allegro5/allegro5.h>
-#include <allegro5/allegro_font.h>
+
 
 namespace WandEngine
 {
@@ -15,20 +14,21 @@ namespace WandEngine
     {
     private:
         std::string text;
-        ALLEGRO_FONT *font;
-        WAND_COLOR textColor;
+        int *font;
+        glm::vec3 textColor;
+        float Transparency;
 
     public:
-        UIText(const std::string &text, ALLEGRO_FONT *font, WAND_VEC2 Position, WAND_SIZE Size, bool visible, UIElement* parent);
+        UIText(const std::string &text, int *font, glm::vec2 Position, glm::vec2 Size, bool visible, UIElement* parent);
         virtual ~UIText();
 
         void Update(float deltaTime) override;
         void Draw() override;
 
         void SetText(const std::string &text);
-        void SetFont(ALLEGRO_FONT *font);
+        void SetFont(int *font);
 
-        void SetTextColor(WAND_COLOR color);
+        void SetTextColor(glm::vec3 color);
     };
 
 }

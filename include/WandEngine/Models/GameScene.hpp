@@ -6,7 +6,6 @@
 #include <queue>
 #include <functional>
 #include <thread>
-#include "../Interfaces/Definitions.hpp"
 
 namespace WandEngine
 {
@@ -15,8 +14,8 @@ namespace WandEngine
     private:
         float ProgressLoadingScene;
         std::string Name;
-        std::thread loadingThread;
-        std::mutex progressMutex;
+        //std::thread loadingThread;
+        //std::mutex progressMutex;
 
         bool ShowBodys;
         bool ShowGrid;
@@ -27,28 +26,29 @@ namespace WandEngine
         virtual ~GameScene();
 
         virtual void Init() = 0;
+        virtual void Draw();
         virtual void Update(double deltaTime) = 0;
         virtual void LoadResources() = 0;
 
-        virtual void UpdateLoadingScene(double deltaTime); // Utilizar en caso de animaciones en la pantalla de carga
-        virtual void DrawLoadingScene();
+        //virtual void UpdateLoadingScene(double deltaTime); // Utilizar en caso de animaciones en la pantalla de carga
+        //virtual void DrawLoadingScene();
 
         void UpdateManagers(double deltaTime);
-        void Draw();
+        void DrawManagers();
 
-        void SetProgressLoadingScene(float Progress);
-        float GetProgressLoadingScene();
+        //void SetProgressLoadingScene(float Progress);
+        //float GetProgressLoadingScene();
         bool IsProgressLoadingSceneComplete();
 
         std::string GetName();
         void Clear();
 
-        void AddMainThreadTask(std::function<void()> task);
-        void ExecuteMainThreadTasks();
+        //void AddMainThreadTask(std::function<void()> task);
+        //void ExecuteMainThreadTasks();
 
-        void StartLoadingThread();
-        bool IsLoadingThreadJoinable() const;
-        void JoinLoadingThread();
+        //void StartLoadingThread();
+        //bool IsLoadingThreadJoinable() const;
+        //void JoinLoadingThread();
 
         void ToogleShowBodys();
         void ToogleShowGrid();

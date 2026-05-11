@@ -1,13 +1,13 @@
 #include "UIText.hpp"
-#include "../../Managers/InputManager.hpp"
-#include "../../Managers/CameraManager.hpp"
-#include <allegro5/allegro_font.h>
+#include "../../Managers/Input/InputManager.hpp"
+#include "../../Managers/Camera/CameraManager.hpp"
+#include <iostream>
 
 namespace WandEngine
 {
 
-    UIText::UIText(const std::string &text, ALLEGRO_FONT *font, WAND_VEC2 Position, WAND_SIZE Size, bool visible, UIElement *parent) : 
-        text(text), font(font), UIElement(Position, Size, visible, parent, UIElementType::Label), textColor(WAND_COLOR(255, 255, 255))
+    UIText::UIText(const std::string &text, int *font, glm::vec2 Position, glm::vec2 Size, bool visible, UIElement *parent) : 
+        text(text), font(font), UIElement(Position, Size, visible, parent, UIElementType::Label), textColor(glm::vec3(1.0f))
     {
     }
 
@@ -29,13 +29,12 @@ namespace WandEngine
 
         if (font)
         {
-            int textWidth = al_get_text_width(font, text.c_str());
-            int textHeight = al_get_font_line_height(font);
+            int textWidth = 1;
+            int textHeight = 2;
 
-            float textX = GlobalPosition.x + (Size.width - textWidth) / 2;
-            float textY = GlobalPosition.y + (Size.height - textHeight) / 2;
+            float textX = GlobalPosition.x + (Size.x - textWidth) / 2;
+            float textY = GlobalPosition.y + (Size.y - textHeight) / 2;
 
-            al_draw_text(font, al_map_rgb(textColor.r, textColor.g, textColor.b), textX, textY, 0, text.c_str());
         }
 
         UIElement::Draw();
@@ -47,12 +46,12 @@ namespace WandEngine
         this->text = text;
     }
 
-    void UIText::SetFont(ALLEGRO_FONT *font)
+    void UIText::SetFont(int *font)
     {
         this->font = font;
     }
 
-    void UIText::SetTextColor(WAND_COLOR color)
+    void UIText::SetTextColor(glm::vec3 color)
     {
         textColor = color;
     }

@@ -1,119 +1,168 @@
-# WandAllegroEngine
+# WandEngine
 
 ## Fecha efectiva
 
-**27 de diciembre de 2024**
+**8 de febrero de 2025**
 
 ## Descripción general
 
-En esta etapa el cambio dominante pasa al ciclo de escena y al modelo de movimiento del runtime. La base del framework deja de concentrar toda la preparación dentro de `Init()` y empieza a separar de forma visible la carga de recursos, la pantalla de carga y la inicialización final de la escena, con un flujo más claro entre `LoadResources()`, el hilo de carga y la entrada efectiva al update principal.
+En esta etapa la base del proyecto cambia de forma mucho más radical que en las versiones anteriores. El framework deja de apoyarse en Allegro como capa unificada para ventana, render, entrada, audio y recursos, y pasa a reconstruirse alrededor de una pila propia basada en OpenGL y librerías especializadas por responsabilidad.
 
-Sobre esa reorganización del ciclo también amplié el modelo base de movimiento para trabajar con velocidad vectorial en lugar de una única magnitud escalar. Esa decisión ya se refleja en cámara, fondos, jugador y escena principal, donde el template empieza a comportarse menos como una demo fija y más como una base jugable con fullscreen adaptado a la resolución real, transición de carga y modos de movimiento más específicos.
+El cambio visible no es solo una sustitución de APIs: es una reestructuración casi desde cero del engine. Desaparecen del árbol local las cabeceras de `allegro5/`, se eliminan managers antiguos acoplados a esa base y aparecen nuevos módulos organizados por dominio para cámara, entrada, audio, recursos, escenas, cuerpos, luces, objetos y UI. En paralelo se incorpora una ruta de render explícita con shaders, texturas, VAO/VBO, matrices de proyección y soporte inicial para modelos y cámaras 3D.
+
+La consecuencia técnica de esta versión es que el proyecto deja de comportarse como una plantilla dependiente de un framework establecido y pasa a perfilarse como un engine propio, donde la ventana, el contexto gráfico, la gestión del pipeline, la carga de recursos y los subsistemas auxiliares quedan bajo control directo del repositorio.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- separar explícitamente la carga de recursos de la inicialización operativa de cada escena;
-- refinar cámara, pantalla de carga y arranque de ventana para un flujo visual más consistente;
-- extender el modelo base de movimiento hacia velocidades vectoriales y usarlo en modos de jugador y elementos del escenario.
+- sustituir la dependencia monolítica de Allegro por una base propia construida sobre OpenGL y librerías independientes;
+- reorganizar el engine en módulos más especializados para render, recursos, entrada, audio, cámara, escenas y objetos;
+- abrir el framework a un pipeline gráfico más explícito y extensible, incluyendo soporte visible para 2D, 3D, shaders, texturas, mallas y modelos.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `include/WandEngine/Models/GameScene.*`, donde el contrato visible de escena incorpora `LoadResources()` y reajusta el manejo de la pantalla de carga y del hilo de carga.
-- `include/WandEngine/Managers/SceneManager.*`, donde el cambio de escena ya coordina de forma más explícita carga de recursos, activación del hilo de carga y reemplazo diferido de escenas.
-- `include/WandEngine/Managers/CameraManager.*`, donde la cámara expone tamaño, punto de foco y reinicio más claros para soportar carga y seguimiento vertical dentro del juego.
-- `include/WandEngine/Models/GameObject.*`, donde la velocidad pasa a representarse con `WAND_VEC2` y el desplazamiento deja de depender de un único escalar.
-- `src/Scenes/MainScene.*`, donde la escena principal se reorganiza para cargar recursos por separado, controlar música por nivel, centrar la cámara durante carga y añadir desplazamiento vertical progresivo.
-- `src/Entities/Player.*`, `Background.*`, `Ground.*` y `Spike.*`, donde el ejemplo adapta colisiones y movimiento al nuevo modelo vectorial y al soporte de modos de jugador.
-- `src/main.cpp` y `include/WandEngine/Managers/GameManager.cpp`, donde el arranque visible del programa pasa a usar tamaño de pantalla del sistema y fullscreen por ventana como configuración efectiva.
+- `CMakeLists.txt`, donde la build deja atrás el enlace con Allegro y pasa a declarar una pila explícita con `glad`, `GLFW`, `glm`, `Assimp`, `FMOD`, `ImGui`, `stb_image`, `enet` y `sqlite3`, además del nuevo nombre lógico del proyecto `WandEngine`.
+- `include/allegro5/`, que desaparece del árbol local, marcando la salida visible del framework gráfico anterior.
+- `include/WandEngine/Managers/`, que deja de concentrarse en archivos planos como `InputManager.hpp` o `SceneManager.hpp` y pasa a organizarse por dominios internos como `Audio/`, `Camera/`, `Body/`, `Event/`, `Input/`, `Light/`, `Object/`, `Resource/`, `Scene/`, `Timer/` y `UI/`.
+- `include/WandEngine/Models/`, donde aparecen bloques nuevos para `Camera/`, `Mesh/`, `Model/`, `Shader/`, `Texture/` y `Light/`, mientras se conservan modelos base del runtime como `GameObject`, `GameBodyObject`, `GameScene` y `GameTimer`.
+- `include/WandEngine/Models/Shader/Shader.*`, `Texture/GameTexture2D.*`, `Mesh/Mesh.*` y `Model/Model.*`, que materializan la nueva base de render y carga de assets gráficos.
+- `include/WandEngine/Managers/Resource/ResourceManager.*`, que se convierte en un punto de unión entre recursos GPU, shaders, texturas, spritesheets y primitivas dibujadas directamente con OpenGL.
+- `include/WandEngine/Managers/GameManager.*`, `Input/InputManager.*`, `Camera/CameraManager.*` y `Scene/SceneManager.*`, donde queda la nueva columna vertebral del runtime sin dependencia de Allegro.
+- `src/Scenes/MainScene.*` y `src/main.cpp`, donde el juego de ejemplo ya consume la nueva base mediante macros de includes y managers desacoplados del stack anterior.
 
 ## Arquitectura o sistemas principales
 
-### Separación entre carga de recursos e inicialización
+### Migración del bootstrap gráfico a OpenGL
 
-`GameScene` cambia su contrato visible y deja de asumir que toda la preparación ocurre dentro de `Init()`. A partir de esta etapa, cada escena expone `LoadResources()` como punto explícito para cargar bitmaps, fuentes, audio y demás dependencias previas a la ejecución efectiva.
+La sustitución de Allegro se hace visible desde el punto de entrada del runtime. `GameManager` pasa a crear la ventana y el contexto con `GLFW`, inicializa funciones de OpenGL a través de `GLAD`, configura una versión Core Profile 3.3, activa blending por hardware y controla directamente `glViewport`, `glClearColor` y el ciclo de intercambio de buffers.
 
-`SceneManager` se alinea con ese cambio y ahora dispara la secuencia visible en este orden:
+Con ello el engine deja de depender de una API de alto nivel que encapsulaba render y ventana, y pasa a controlar de forma explícita:
 
-- creación o reemplazo de la escena;
-- carga inicial de recursos mediante `LoadResources()`;
-- inicio del hilo de carga con `StartLoadingThread()`;
-- transición desde `DrawLoadingScene()` y `UpdateLoadingScene()` hasta el update operativo normal.
+- creación del contexto gráfico;
+- versión del pipeline disponible;
+- sincronización vertical;
+- relación entre update fijo y render desacoplado;
+- redimensionamiento del framebuffer;
+- mantenimiento de aspect ratio 16:9 dentro del viewport.
 
-Con ello el framework deja una separación más clara entre preparar contenido y ejecutar la lógica viva de la escena.
+Esa decisión es importante porque desplaza el motor desde un modelo consumido hacia un modelo implementado: la capa gráfica ya no viene resuelta por un framework externo, sino que empieza a quedar definida por clases del propio proyecto.
 
-### Pantalla de carga y cámara más controladas
+### Pipeline de render propio y explícito
 
-La cámara pasa a participar explícitamente en el flujo de carga. `GameScene::UpdateLoadingScene()` y la implementación específica de `MainScene` recentran el foco durante la carga, evitando arrastres del estado anterior mientras la escena todavía no entra a su ciclo normal.
+La incorporación de `Shader`, `GameTexture2D` y el nuevo `ResourceManager` marca el cambio técnico más profundo de la versión. En lugar de limitarse a cargar y dibujar bitmaps mediante una API cerrada, el engine ahora expone directamente los elementos centrales del pipeline moderno:
 
-Además, `CameraManager` amplía su contrato visible con:
+- compilación y enlace de vertex, fragment y geometry shaders;
+- subida de uniforms para matrices, vectores, colores y samplers;
+- administración de texturas 2D con `glTexImage2D` y parámetros de wrapping y filtering;
+- generación y reutilización de `VAO` y `VBO` para sprites y primitivas;
+- proyecciones y transformaciones mediante matrices `glm::mat4`.
 
-- lectura del tamaño de cámara;
-- lectura del punto de foco efectivo;
-- `Reset()` para recomponer el estado inicial según el tamaño de ventana.
+Esto trae una ventaja estructural importante frente al enfoque anterior: el render ya no está atado a la forma en que Allegro decide representar sprites o primitivas. A partir de aquí, el proyecto puede definir su propio contrato visual, sus propios shaders, su propia composición de recursos GPU y su propia evolución hacia efectos, batching, iluminación o postproceso sin cambiar de framework base.
 
-Sobre esa base, `MainScene` introduce un seguimiento más estable del jugador, donde la cámara ya no se limita a seguir un punto fijo horizontal, sino que ajusta gradualmente su componente vertical con apoyo de un timer específico.
+### Recursos desacoplados por tipo y por subsistema
 
-### Movimiento base con velocidad vectorial
+La migración también cambia la forma en que se entienden los recursos del engine. `ResourceManager` ya no actúa solo como contenedor de imágenes o fuentes, sino como un coordinador de recursos gráficos nativos del pipeline:
 
-`GameObject` abandona la velocidad escalar única y pasa a trabajar con `WAND_VEC2 Velocity`. Desde esta etapa, `UpdatePosition()` usa velocidad y dirección por eje, lo que deja una base más útil para objetos cuyo desplazamiento horizontal y vertical no comparten la misma magnitud ni la misma semántica.
+- texturas cargadas como `GameTexture2D`;
+- spritesheets con cálculo explícito de UV;
+- shaders registrados por clave;
+- geometría base asociada a VAO;
+- primitivas dibujadas con `GL_LINES`, `GL_LINE_LOOP` u otras rutas de OpenGL.
 
-Ese ajuste visible se aprovecha de inmediato en:
+Desde el punto de vista de diseño, esto es una mejora clara frente al enfoque anterior porque separa el concepto de recurso de la librería que lo consume. La textura deja de ser “una imagen de Allegro” y pasa a ser un recurso propio del engine con ciclo de vida, formato y binding controlados por el runtime.
 
-- `Player`, cuyo desplazamiento ya distingue mejor avance horizontal y respuesta vertical;
-- `Background`, que mantiene desplazamiento lateral autónomo mientras el jugador sigue activo;
-- futuros modos de movimiento que no encajan bien en una sola velocidad global.
+### Apertura explícita a 3D
 
-### Modos de jugador y control de vuelo
+La nueva estructura introduce piezas que no existían en la etapa Allegro: `Camera3D`, `Mesh`, `Model`, `Light`, `Shader` y `Texture`. Además, `CameraManager` ya distingue entre `CAMERA_2D` y `CAMERA_3D`, devuelve tanto view matrix como projection matrix y redirige entrada de mouse y teclado hacia una cámara tridimensional cuando corresponde.
 
-`Player` deja de estar restringido al comportamiento base del cubo y empieza a modelar modos concretos mediante `PlayerMode`. En esta etapa ya queda visible un comportamiento diferenciado entre:
+También queda visible la incorporación de `Assimp` dentro de la build y de clases `Mesh` y `Model` con vértices, normales, coordenadas UV, tangentes, bitangentes e información para huesos. Aunque el juego de ejemplo visible siga siendo mayormente 2D, la infraestructura del engine ya no está pensada solo para sprites: queda preparada para consumir modelos, mallas y cámaras de escena más complejas.
 
-- `Normal`, con salto puntual, gravedad acumulativa y rotación por cuartos de vuelta;
-- `Ship`, con empuje sostenido, caída progresiva, rotación acotada y resolución distinta respecto a los bloques.
+Esta es una diferencia importante a favor de OpenGL y de una pila modular. En lugar de depender de lo que un framework 2D permita o no permita extender, el motor pasa a apoyarse en una API gráfica de propósito general que puede sostener tanto el modo 2D actual como un crecimiento gradual hacia 3D real dentro del mismo proyecto.
 
-Esa ampliación no solo afecta la lógica de input, sino también la forma en que se interpretan las colisiones superior e inferior contra `SolidBlock`.
+### Librerías independientes en lugar de framework monolítico
 
-### Escena principal más desacoplada y progresiva
+Otro cambio estructural fuerte es la sustitución de una sola dependencia grande por varias librerías especializadas:
 
-`MainScene` redistribuye sus responsabilidades para alinearse con el nuevo flujo del framework. La escena ahora:
+- `GLFW` para creación de ventana, contexto y eventos básicos;
+- `GLAD` para carga de funciones OpenGL;
+- `glm` para álgebra lineal, matrices y vectores;
+- `stb_image` para carga de imágenes;
+- `Assimp` para importación de modelos;
+- `FMOD` para audio y reproducción multimedia;
+- `ImGui` para tooling e interfaz de depuración;
+- `enet` y `sqlite3` como piezas auxiliares visibles en la configuración del build.
 
-- carga recursos y audio desde `LoadResources()`;
-- deja `Init()` como cierre liviano de la carga;
-- fija música según el nivel activo sin duplicar esa selección en la lógica de update;
-- crea timers específicos para respawn y movimiento vertical de cámara;
-- usa una pantalla de carga centrada antes de entrar al juego.
+Técnicamente, esta decisión tiene varias ventajas frente al uso de Allegro como capa integral:
 
-Con ello la escena principal queda más cerca de un patrón reutilizable para niveles futuros que de una inicialización monolítica única.
+- reduce el acoplamiento entre subsistemas que evolucionan a ritmos distintos;
+- permite sustituir o mejorar una parte concreta del stack sin reescribir todo el engine;
+- acerca el proyecto a prácticas comunes de motores propios y pipelines gráficos modernos;
+- deja más control sobre rendimiento, formato de recursos, render pass, input y audio;
+- evita que el modelo mental del framework quede restringido por una sola biblioteca generalista.
 
-### Arranque ajustado a la resolución real
+En otras palabras, el proyecto ya no delega la arquitectura principal a una librería “todo en uno”, sino que compone su propio runtime a partir de piezas especializadas que puede conectar y adaptar según sus necesidades.
 
-`main.cpp` y `GameManager` terminan de orientar la ejecución a fullscreen por ventana usando el tamaño real de la pantalla del sistema en lugar de una resolución fija de desarrollo. Ese cambio reduce la dependencia de medidas hardcodeadas en el arranque inicial y alinea mejor cámara, ventana y escena desde el primer frame.
+### Reorganización modular del engine
+
+La reestructuración de carpetas también es relevante desde el punto de vista del diseño. Los managers dejan de existir como una capa plana de archivos heredados y pasan a agruparse por dominio interno. Ese cambio hace visible una intención de arquitectura más estable:
+
+- audio separado entre música y sonido;
+- input separado de cámara;
+- escena separada de objetos y cuerpos;
+- recursos gráficos separados de modelos de render;
+- UI separada del resto del runtime.
+
+Además, el propio código del juego consume estos módulos mediante macros de include y aliases de managers, lo que sugiere una transición hacia una API pública más controlada del engine.
+
+### Escena de ejemplo adaptada al nuevo runtime
+
+`MainScene` ya no se apoya en Allegro para cargar sprites, leer entrada o dibujar overlays. La escena actual usa:
+
+- texturas y spritesheets cargados por el nuevo `ResourceManager`;
+- entrada de teclado y mouse gestionada por `GLFW` a través de `InputManager`;
+- panel de control y depuración montado con `ImGui`;
+- audio reproducido por los nuevos managers basados en `FMOD`;
+- cámara 2D con matrices ortográficas derivadas del nuevo `CameraManager`.
+
+Aunque todavía se conservan elementos del gameplay anterior, la forma en que la escena los consume ya pertenece claramente a otro motor. Esa continuidad de entidades y escenas sobre una base técnica distinta es precisamente lo que hace visible que esta versión reutiliza módulos conceptuales previos, pero los reconstruye sobre un stack propio.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- la escena principal ya separa carga de recursos, transición de carga y ejecución de gameplay dentro del ciclo de escenas del engine;
-- el jugador, la cámara y los fondos ya usan el nuevo modelo de velocidad vectorial y timers especializados para producir seguimiento, vuelo y desplazamiento más controlados.
+- el engine ya controla directamente el contexto OpenGL, el ciclo fijo de update, el render desacoplado y el viewport desde `GameManager`;
+- los recursos gráficos, la cámara, la entrada, el audio y la UI ya se articulan como subsistemas independientes que la escena consume sin depender de la API anterior de Allegro.
 
-Con ello dejé una base más útil para seguir construyendo escenas con carga explícita, transición visual y modos de movimiento más expresivos sin tener que reescribir el flujo principal del runtime.
+Con ello dejé una base mucho más adecuada para evolucionar hacia un engine propio. La ventaja principal de esta etapa no es únicamente que el proyecto use OpenGL, sino que el control del pipeline, de la composición del stack y de la arquitectura del runtime pasa a estar en el repositorio y no en un framework externo ya definido.
 
 ## Dependencias externas visibles
 
-No aparecen dependencias externas nuevas respecto a la etapa anterior. Se mantiene el mismo entorno visible basado en CMake, Allegro y las bibliotecas auxiliares ya declaradas por el proyecto.
+En esta etapa el cambio de dependencias es uno de los rasgos más visibles de la versión. Sale del árbol local la dependencia de `allegro5` y pasan a quedar integradas o declaradas en build varias librerías independientes:
+
+- `GLFW`;
+- `GLAD`;
+- `glm`;
+- `Assimp`;
+- `FMOD`;
+- `ImGui`;
+- `stb_image`;
+- `enet`;
+- `sqlite3`.
+
+El valor técnico de esta transición es que cada una cubre un problema concreto del engine sin imponer una capa única para todo el runtime. Eso vuelve más clara la frontera entre ventana, render, matemáticas, audio, importación de modelos, tooling y persistencia.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **27 de diciembre de 2024** queda delimitada por estos movimientos:
+La etapa efectiva al **8 de febrero de 2025** queda delimitada por estos movimientos:
 
-- separé la carga de recursos del resto de la inicialización de escena mediante `LoadResources()` y ajusté `SceneManager` a ese nuevo ciclo;
-- reforcé la pantalla de carga y el control de cámara para mantener un foco estable antes de entrar al gameplay;
-- cambié `GameObject` a un modelo de velocidad vectorial con `WAND_VEC2 Velocity`;
-- amplié `Player` con modos de movimiento diferenciados, incluyendo una lógica visible para `Ship` además del modo `Normal`;
-- añadí timers específicos para movimiento vertical de cámara y reajusté la escena principal alrededor de ese seguimiento;
-- adapté el arranque del programa a la resolución real de pantalla y al uso efectivo de fullscreen por ventana.
+- reemplacé la base Allegro del proyecto por una arquitectura nueva apoyada en OpenGL y librerías independientes;
+- eliminé del árbol local la dependencia visible de `allegro5` y reorganicé el engine en módulos por dominio;
+- migré el arranque del runtime a `GLFW` + `GLAD`, con control directo de contexto, viewport, frame pacing y swap buffers;
+- incorporé un pipeline propio de render con shaders, texturas, VAO/VBO, matrices de proyección y dibujado explícito de sprites y primitivas;
+- abrí la estructura del engine hacia 3D mediante cámaras dedicadas, modelos, mallas, luces y soporte de importación con `Assimp`;
+- sustituí los subsistemas integrados del framework anterior por librerías especializadas como `FMOD`, `ImGui`, `glm` y `stb_image`.
 
-Con esta etapa dejé el framework más preparado para escenas que cargan contenido de forma explícita y para entidades cuyo comportamiento ya requiere movimiento, cámara y transición de estado más finos que en la versión anterior.
+Con esta etapa dejé el proyecto en un punto de inflexión técnico: ya no se trata de una plantilla sobre un framework ajeno, sino del arranque visible de un engine propio que reutiliza conceptos previos, pero redefine desde su base la ventana, el render, la carga de recursos, la cámara, la entrada y el audio.

@@ -1,4 +1,5 @@
 #include <WandEngine/Managers/GameManager.hpp>
+#include <glm/glm.hpp>
 #include <iostream>
 #include "Scenes/MainScene.hpp"
 
@@ -6,13 +7,11 @@ using namespace WandEngine;
 
 int main(){
 
-	int ScreenWidth = GetSystemMetrics(SM_CXSCREEN);
-	int ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
-
-	if(GameManager::GetInstance().Init()){
-		//GameManager::GetInstance().SetWindows_Size(WAND_SIZE(1600, 900));
-		GameManager::GetInstance().SetWindows_Size(WAND_SIZE(ScreenWidth, ScreenHeight));
-		//GameManager::GetInstance().SetWindows_WindowsMode();
+	int screenWidth = 960;
+	int screenHeight = 540;
+	//int screenWidth = 1920;
+	//int screenHeight = 1080;
+	if(GameManager::GetInstance().Init(screenWidth, screenHeight)){
 		GameManager::GetInstance().SetFirstScene(new MainScene(0, 1));
 		GameManager::GetInstance().Update();
 		GameManager::GetInstance().Clear();

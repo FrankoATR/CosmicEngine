@@ -1,37 +1,42 @@
 #ifndef UIELEMENT_HPP
 #define UIELEMENT_HPP
 
+#include <glm/glm.hpp>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <allegro5/allegro.h>
-#include "../Interfaces/Definitions.hpp"
 
 namespace WandEngine
 {
+
+    enum class UIElementType
+    {
+        Button,
+        Label,
+        Image
+    };
 
     class UIElement
     {
     protected:
         UIElementType ElementType;
 
-        WAND_VEC2 Position;
-        WAND_VEC2 GlobalPosition;
-        WAND_SIZE Size;
+        glm::vec2 Position;
+        glm::vec2 GlobalPosition;
+        glm::vec2 Size;
         bool visible;
 
         UIElement *parent;
         std::vector<UIElement*> children;
 
     public:
-        UIElement(WAND_VEC2 Position, WAND_SIZE Size, bool visible, UIElement* parent, UIElementType ElementType);
+        UIElement(glm::vec2 Position, glm::vec2 Size, bool visible, UIElement* parent, UIElementType ElementType);
         virtual ~UIElement();
 
         virtual void Update(float deltaTime);
         virtual void Draw();
 
-        void SetPosition(WAND_VEC2 NewPosition);
-        void SetSize(WAND_SIZE NewSize);
+        void SetPosition(glm::vec2 NewPosition);
+        void SetSize(glm::vec2 NewSize);
         void SetVisible(bool visible);
         bool IsVisible() const;
 
@@ -44,8 +49,8 @@ namespace WandEngine
 
         bool MouseHover();
         
-        WAND_VEC2 GetPosition() const;
-        WAND_SIZE GetSize() const;
+        glm::vec2 GetPosition() const;
+        glm::vec2 GetSize() const;
         UIElementType GetType() const;
     };
 

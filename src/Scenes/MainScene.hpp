@@ -2,31 +2,43 @@
 #define MAINSCENE_HPP
 
 #include <WandEngine/Models/GameScene.hpp>
-#include <WandEngine/Managers/TimerManager.hpp>
-#include <WandEngine/Models/UIElements/UIText.hpp>
-#include "../Entities/Player.hpp"
+#include <WandEngine/Models/GameObject.hpp>
 
 using namespace WandEngine;
+
+class Player;
 
 class MainScene : public GameScene
 {
 private:
-    GameTimer* Respawn_Timer;
-    GameTimer* CameraMovement_Timer;
-    int Current_Level;
-    int Current_Attempts;
-    std::string current_music;
+    int CurrentLevel;
 
-    UIText* Attempts_Label;
+    Player* player;
+    int focusObjID;
+    float ostVolume;
+    int fpsSliderValue;
+    int ticksSliderValue;
+    bool vsynEnable;
+
+    bool showPanel;
+
+    glm::vec2 cameraVelocity;
+
+    std::string currentMusic;
+
+    glm::vec2 mouseInitialPosForArea;
+    glm::vec2 mouseFinalPosForArea;
+    bool mouseKeyDownForArea;
 
 public:
     MainScene(int Level, int Attempts);
     
     void Init() override;
+    void Draw() override;
     void Update(double deltaTime) override;
     void LoadResources() override;
-    void UpdateLoadingScene(double deltaTime) override;
     void LoadMap();
+
 };
 
 

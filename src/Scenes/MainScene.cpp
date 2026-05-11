@@ -1,169 +1,278 @@
 #include "MainScene.hpp"
-#include <WandEngine/Managers/ResourceManager.hpp>
-#include <WandEngine/Managers/SceneManager.hpp>
-#include <WandEngine/Managers/ObjectManager.hpp>
-#include <WandEngine/Managers/CameraManager.hpp>
-#include <WandEngine/Managers/BodyManager.hpp>
-#include <WandEngine/Managers/InputManager.hpp>
-#include <WandEngine/Managers/MusicManager.hpp>
-#include <WandEngine/Managers/SoundManager.hpp>
-#include <WandEngine/Managers/UIManager.hpp>
-#include <WandEngine/Managers/GameManager.hpp>
-#include <WandEngine/Collisions/GameGridCollisions.hpp>
 
-#include "../Utilities/Paths.hpp"
-#include "../Entities/Ground.hpp"
-#include "../Entities/Background.hpp"
+#include "../Entities/Player.hpp"
 #include "../Entities/SolidBlock.hpp"
 #include "../Entities/Spike.hpp"
 #include "../Entities/Orb.hpp"
-#include "../Entities/EndLevel.hpp"
 
 
+#include "../Utilities/Paths.hpp"
+
+#include <WandEngine/Interfaces/Definitions.hpp>
+#include <imgui/imgui.h>
+
+#include GAMEMANAGE_HEADER
+#include INPUTMANAGER_HEADER
+#include CAMERAMANAGER_HEADER
+#include RESOURCEMANAGER_HEADER
+#include OBJECTMANAGER_HEADER
+#include BODYMANAGER_HEADER
+#include GAMEGRIDCOLLISIONS_HEADER
+#include MUSICMANAGER_HEADER
+#include SOUNDMANAGER_HEADER
+#include SCENEMANAGER_HEADER
 
 MainScene::MainScene(int Level, int Attempts) : GameScene("MainScene")
 {
-    this->Current_Level = (Level % 3);
-    this->Current_Attempts = Attempts;
-    this->current_music = "";
+    CurrentLevel = Level;
+    currentMusic = "Electrodynamix";
+    player = nullptr;
+    ostVolume = 0.5f;
+    fpsSliderValue = 60;
+    ticksSliderValue = 20;
+    vsynEnable = false;
+    focusObjID = -1;
+    mouseInitialPosForArea = glm::vec2(0.0f);
+    mouseFinalPosForArea = glm::vec2(0.0f);
+    mouseKeyDownForArea = false;
+    cameraVelocity = glm::vec2(0.0f, 0.0f);
+    showPanel = true;
 }
 
 
 void MainScene::LoadResources()
 {
-    ResourceManager::GetInstance().loadFont("ThaleahFat", FONT_1_PATH, 75);
 
-    ResourceManager::GetInstance().loadBitmap("BG1", BG_1_IMAGE_PATH);
-    ResourceManager::GetInstance().loadBitmap("GS1", GS_1_IMAGE_PATH);
-
-    ResourceManager::GetInstance().loadBitmap("BG2", BG_2_IMAGE_PATH);
-    ResourceManager::GetInstance().loadBitmap("GS2", GS_2_IMAGE_PATH);
-
-    ResourceManager::GetInstance().loadBitmap("BG3", BG_3_IMAGE_PATH);
-    ResourceManager::GetInstance().loadBitmap("GS3", GS_3_IMAGE_PATH);
-
-
-    ResourceManager::GetInstance().loadSpriteSheet("MISC", MISC_1_IMAGE_PATH, 6, 6);
-
-    MusicManager::GetInstance().Load("Practice", TRACK0_PATH);
-    MusicManager::GetInstance().Load("Electrodynamix", TRACK1_PATH);
-    MusicManager::GetInstance().Load("Cycles", TRACK2_PATH);
-
-    SoundManager::GetInstance().Load("Dead", SOUND1_PATH);
-    SoundManager::GetInstance().Load("EndLevel", SOUND2_PATH);
-    SceneManager::GetInstance().SetBackBufferColor(WAND_COLOR(0.0f, 0.0f, 0.0f));
-
-    LoadMap();
-    MusicManager::GetInstance().Play(current_music, 0.4, false);
 
 }
 
 void MainScene::Init()
 {
+    CAM_MN.SetCameraMode(CameraMode::CAMERA_2D);
+    CAM_MN.SetFocusPosition(glm::vec2(0.0f));
+
+    //RS_MN.loadShader("sprite", SHADER_SPRITE_VS, SHADER_SPRITE_FS);
+    //RS_MN.loadShader("sprite_sheet", SHADER_SPRITESHEET_VS, SHADER_SPRITESHEET_FS);
+
+    //RS_MN.loadTexture("t1", TEXTURE_FIRSTBLOCK, true);
+    //RS_MN.loadTexture("t2", TEXTURE_FACE, true);
+    RS_MN.loadTextureSheet("gd", TEXTURESHEET_GD, true, 6, 6, 0);
+
     
 
+    BOD_MN.SetNewGridArea(new GameGridCollisions(glm::vec2(-1000, -10 * 100), 25, 200, 100));
+    
+    LoadMap();
 
 
-    SetProgressLoadingScene(1.0);
-        
+    MSC_MN.Load("Electrodynamix", MUSIC_GD_ELECTRODYNAMIX);
+    MSC_MN.Load("Cycles", MUSIC_GD_CYCLES);
+    MSC_MN.Load("Practice", MUSIC_GD_PRACTICE);
+
+    SND_MN.Load("Dead", MUSIC_GD_DEAD);
+
+    MSC_MN.Play(currentMusic, ostVolume, false);
+
+    //SetProgressLoadingScene(1.0);
 };
+
+void MainScene::Draw()
+{
+
+    if(showPanel)
+    {
+        ImGui::SetNextWindowPos(ImVec2(10, 10));
+
+        if (ImGui::Begin("Static Transparent Window", nullptr, 
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoTitleBar |
+            ImGuiWindowFlags_NoBackground |
+            ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
+            ImGui::Text("Press ESC to exit");
+            ImGui::Text("Press F11 to switch window/fullscreen");
+            ImGui::Text("Press F3 to hidden panel");
+            ImGui::Text("Press 1, 2 or 3 to select level");
+            ImGui::Text("Press R to reset");
+            ImGui::Text("Press H to show hitboxs");
+            ImGui::SliderFloat("Volume", &ostVolume, 0.0f, 2.0f);
+            ImGui::SliderInt("FPS", &fpsSliderValue, 15, 240);
+            ImGui::Checkbox("VSync", &vsynEnable);
+            ImGui::SliderInt("Ticks", &ticksSliderValue, 0, 200);
+    
+            ImGui::PopStyleColor();
+        }
+        ImGui::End();
+    }
+
+/*
+    RS_MN.RenderRectangle(
+        glm::vec3(INP_MN.GetMousePosition() - glm::vec2(100.0f), 0.0f), 
+        glm::vec3(INP_MN.GetMousePosition() + glm::vec2(100.0f), 0.0f)
+        );
+
+    if(mouseKeyDownForArea)
+    {
+        RS_MN.RenderRectangle(
+            glm::vec3(mouseInitialPosForArea, 0.0f), 
+            glm::vec3(INP_MN.GetMousePosition() , 0.0f)
+            );
+    }
+*/
+
+}
 
 void MainScene::Update(double deltaTime)
 {
-    GameObject* player = ObjectManager::GetInstance().FindByUniqueName("Player");
-    GameObject* end = ObjectManager::GetInstance().FindByUniqueName("EndLevel");
-    if(player)
+
+    MSC_MN.SetVolume(currentMusic, ostVolume);
+    GM_MN.SetGameTicks(ticksSliderValue);
+
+    if(vsynEnable)
     {
-        WAND_VEC2 camera_pos = {player->GetPosition().x + 300, CameraManager::GetInstance().GetFocusPosition().y};
-        if(player->GetPosition().y < CameraManager::GetInstance().GetPosition().y + 325)
-        {
-            if(CameraMovement_Timer->IsTrigger())
-            {
-                camera_pos.y -= 2;
-            }
-        }
-
-        if(player->GetPosition().y > CameraManager::GetInstance().GetPosition().y + CameraManager::GetInstance().GetSize().height - 325)
-        {
-            if(CameraMovement_Timer->IsTrigger())
-            {
-                camera_pos.y += 2;
-            }
-        }
-
-        CameraManager::GetInstance().FocusPosition(camera_pos);
+        GM_MN.EnableVsync();
     }
     else
     {
-        if(Respawn_Timer->IsPause())
-        {
-            if(!end)
-            {
-                Respawn_Timer->SetWaitTime(4.0);
-            }
-            else
-            {
-                SoundManager::GetInstance().Play("Dead", 1.0, false);
-            }
-
-            Respawn_Timer->Play();
-            Respawn_Timer->Reset();
-            MusicManager::GetInstance().Stop();
-        }
-
-        if(Respawn_Timer->IsTrigger() && !Respawn_Timer->IsPause())
-        {
-            if(!end)
-            {
-                Current_Level++;
-                Current_Attempts = 0;
-            }
-            
-            SceneManager::GetInstance().ReplaceScene(new MainScene(Current_Level, Current_Attempts+1));
-
-        }
+        GM_MN.DisableVsync();
     }
 
-    if(Attempts_Label)
+    if(!GM_MN.IsVSyncEnable())
     {
-        if(Current_Level == 2 && !end)
+        GM_MN.SetTargetFPS(fpsSliderValue);
+    }
+
+
+    if(player)
+    {
+
+        glm::vec2 cameraPos = {player->GetPosition().x + 350.0f, CAM_MN.GetFocusPosition().y};
+        
+        if(player->GetPosition().y < CAM_MN.GetPosition().y + CAM_MN.GetBaseWindowSize().y * 0.3)
         {
-            Attempts_Label->SetText("GAME OVER - GAME COMPLETED");
-            Attempts_Label->SetPosition(WAND_VEC2(600,500));
-            Attempts_Label->SetTextColor(WAND_COLOR(255,0,200,255));
+            cameraVelocity.y = -1000.0f;
+        }
+        else if(player->GetPosition().y > CAM_MN.GetPosition().y + CAM_MN.GetBaseWindowSize().y * 0.7)
+        {
+            cameraVelocity.y = 1000.0f;
         }
         else
         {
-            Attempts_Label->SetText("Attempt " + std::to_string(Current_Attempts));
+            cameraVelocity.y = 0;
         }
-    }
 
-    if(InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_R, KeyEventType::KeyDown))
+
+        cameraPos.y += cameraVelocity.y * deltaTime;
+
+        CAM_MN.SetFocusPosition(cameraPos);
+
+        //CAM_MN.SetFocusObject(player); //agregarle offset
+    }
+    else
     {
-        SceneManager::GetInstance().ReplaceScene(new MainScene(Current_Level, Current_Attempts+1));
+        auto objs = OBJ_MN.GetAll();;
+        for(auto &obj : objs)
+        {
+            obj->Destroy();
+        }
+        LoadMap();
+        MSC_MN.StopAll();
+        MSC_MN.Play(currentMusic, ostVolume, false);
     }
 
-    if(InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_H, KeyEventType::KeyDown))
+
+    if(INP_MN.IsKeyPressed(GLFW_KEY_ESCAPE, KeyDown))
+    {
+        GM_MN.EndProgram();
+    }
+
+
+
+    if(INP_MN.IsKeyPressed(GLFW_KEY_F3, KeyDown))
+    {
+        showPanel = !showPanel;
+    }
+    if(INP_MN.IsKeyPressed(GLFW_KEY_H, KeyDown))
     {
         ToogleShowBodys();
     }
 
-    if(InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_ESCAPE, KeyEventType::KeyDown))
+    if(INP_MN.IsKeyPressed(GLFW_KEY_1, KeyDown))
     {
-        SceneManager::GetInstance().PopScene();
+        CurrentLevel = 0;
+        currentMusic = "Electrodynamix";
+        player->Destroy();
     }
+    if(INP_MN.IsKeyPressed(GLFW_KEY_2, KeyDown))
+    {
+        CurrentLevel = 1;
+        currentMusic = "Cycles";
+        player->Destroy();
+    }
+    if(INP_MN.IsKeyPressed(GLFW_KEY_3, KeyDown))
+    {
+        CurrentLevel = 2;
+        currentMusic = "Practice";
+        player->Destroy();
+    }
+
+    if(INP_MN.IsKeyPressed(GLFW_KEY_F11, KeyDown))
+    {
+        if(GM_MN.IsFullScreen())
+            GM_MN.SetWindows_WindowsMode(960, 540);
+        else
+            GM_MN.SetWindows_FullScreenMode();
+    }
+
+
+
+
+    if(INP_MN.IsMouseButtonPressed(GLFW_MOUSE_BUTTON_1, KeyDown))
+    {
+        mouseInitialPosForArea = INP_MN.GetMousePosition();
+        mouseKeyDownForArea  = true;
+    }
+    if(INP_MN.IsMouseButtonPressed(GLFW_MOUSE_BUTTON_1, KeyUp))
+    {
+        mouseFinalPosForArea = INP_MN.GetMousePosition();
+        mouseKeyDownForArea  = false;
+
+        auto objs = OBJ_MN.FindByArea(mouseInitialPosForArea, mouseFinalPosForArea);
+        for(auto &obj : objs)
+        {
+            //obj->Destroy();
+        }
+
+    }
+
+
+    if(INP_MN.IsKeyPressed(GLFW_KEY_0, KeyDown))
+    {
+        //SCN_MN.ReplaceScene(new MainScene(0, 1));
+    }
+
+
+    if(INP_MN.IsKeyPressed(GLFW_KEY_R, KeyDown))
+    {
+        player->Destroy();
+    }
+
+
+/*
+    if(InputManager::GetInstance().IsKeyPressed(GLFW_KEY_LEFT_CONTROL, KeyEventType::KeyDown))
+        CameraManager::GetInstance().MovementSpeed = 5.0f;
+    else
+        CameraManager::GetInstance().MovementSpeed = 2.5f;
+*/
 
 }
 
-void MainScene::UpdateLoadingScene(double deltaTime)
-{
-    WAND_SIZE pos = GameManager::GetInstance().GetWindowsSize();
-    CameraManager::GetInstance().FocusPosition(WAND_VEC2(pos.width/2, pos.height/2));
-    if(InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_ESCAPE, KeyEventType::KeyDown))
-    {
-        std::cout << "ESCAPE" << std::endl;
-    }
-}
+
+
+
 
 
 
@@ -172,22 +281,23 @@ void MainScene::LoadMap()
 
     srand(time(NULL));
 
-    Respawn_Timer = new GameTimer(1.0, true, true);
-    TimerManager::GetInstance().Add(Respawn_Timer);
+    //Respawn_Timer = new GameTimer(1.0, true, true);
+    //TimerManager::GetInstance().Add(Respawn_Timer);
 
-    CameraMovement_Timer = new GameTimer(0.001, true, false);
-    TimerManager::GetInstance().Add(CameraMovement_Timer);
+    //CameraMovement_Timer = new GameTimer(0.001, true, false);
+    //TimerManager::GetInstance().Add(CameraMovement_Timer);
 
-    Attempts_Label = new UIText("Attempt", ResourceManager::GetInstance().getFont("ThaleahFat"), WAND_VEC2(100, 50), WAND_SIZE(300, 100), true, nullptr);
-    UIManager::GetInstance().AddElement(Attempts_Label);
+    //Attempts_Label = new UIText("Attempt", ResourceManager::GetInstance().getFont("ThaleahFat"), WAND_VEC2(100, 50), WAND_SIZE(300, 100), true, nullptr);
+    //UIManager::GetInstance().AddElement(Attempts_Label);
 
     //ToogleShowGrid();
     //ToogleShowCamera();
-    BodyManager::GetInstance().SetNewGridArea(new GameGridCollisions(WAND_VEC2(-1000, -650 * 15), 20, 52, 650));
 
-    int StandarSizeEntities = 100;
+    float StandarSizeEntities = 100.0f;
+    int map_H = 10;
+    int map_W = 150;
 
-    int map0[10][150] =
+    int map0[map_H][map_W] =
     {
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -201,7 +311,7 @@ void MainScene::LoadMap()
         {-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,2,2,2,1,2,2,1,0,0,0,0,0,2,2,0,0,0,0,0,0,0,1,2,2,2,2,2,0,0,0,0, 0,0,0,0,1,2,2,0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,2,1,2,2,2,1,2,1,2,2,2,1,0,0,0,0,2, 2,2,0,0,0,0,0,0,1,0,0,0,0,2,2,2,2,1,0,0,0,0,0,0,0,1,2,1,1,1,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,1}
     };
 
-    int map1[10][150] =
+    int map1[map_H][map_W] =
     {
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -216,7 +326,7 @@ void MainScene::LoadMap()
     };
 
 
-    int map2[10][150] =
+    int map2[map_H][map_W] =
     {
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2},
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,1},
@@ -230,18 +340,10 @@ void MainScene::LoadMap()
         {-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,2,2,1,2,2,1,1,2,2,0,0,0,0,1,2,0,0,0,0,0,0,0,0,0,1,0,2,2,2, 2,1,0,0,0,0,1,0,0,0,2,2,2,2,0,4,0,0,1,0,0,1,0,0,0,0,0,0,2,2,2,0,0,0,0,0,1,0,0,2,2,2,0,0,1,1,0,0,0,0, 2,0,0,0,0,2,0,0,1,2,0,0,1,1,2,0,0,0,0,0,0,0,0,0,0,0,0,2,1,2,2,2,2,2,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2}
     };
 
-    int map[10][150];
+    int map[map_H][map_W];
 
-    WAND_COLOR p_c(255, 255, 255, 255);
-    WAND_COLOR bg_c(255, 255, 255, 255);
-    WAND_COLOR g_c(255, 255, 255, 255);
-    WAND_COLOR spike_c(255, 255, 255, 255);
-    WAND_COLOR block_c(255, 255, 255, 255);
 
-    std::string bg_name = "BG1";
-    std::string g_name = "GS1";
-
-    if(Current_Level == 0)
+    if(CurrentLevel == 0)
     {
         for (int i = 0; i < 10; ++i) {
             for (int j = 0; j < 150; ++j) {
@@ -249,34 +351,19 @@ void MainScene::LoadMap()
             }
         }
 
-        p_c = WAND_COLOR(255, 200, 255, 255);
-        bg_c = WAND_COLOR(200, 20, 100, 255);
-        g_c = WAND_COLOR(255, 30, 20, 255);
-        spike_c = WAND_COLOR(0, 255, 0, 255);
-        block_c = WAND_COLOR(0, 255, 0, 255);
-
-        bg_name = "BG1";
-        g_name = "GS1";
-        current_music = "Electrodynamix";
+        currentMusic = "Electrodynamix";
     }
-    else if(Current_Level == 1)
+    if(CurrentLevel == 1)
     {
         for (int i = 0; i < 10; ++i) {
             for (int j = 0; j < 150; ++j) {
                 map[i][j] = map1[i][j];
             }
         }
-        p_c = WAND_COLOR(20, 200, 255, 255);
-        bg_c = WAND_COLOR(20, 20, 100, 255);
-        g_c = WAND_COLOR(150, 30, 200, 255);
-        spike_c = WAND_COLOR(255, 255, 255, 255);
-        block_c = WAND_COLOR(255, 255, 255, 255);
 
-        bg_name = "BG3";
-        g_name = "GS2";
-        current_music = "Cycles";
+        currentMusic = "Cycles";
     }
-    else if(Current_Level == 2)
+    if(CurrentLevel == 2)
     {
         for (int i = 0; i < 10; ++i) {
             for (int j = 0; j < 150; ++j) {
@@ -284,31 +371,10 @@ void MainScene::LoadMap()
             }
         }
 
-        p_c = WAND_COLOR(20, 0, 100, 255);
-        bg_c = WAND_COLOR(20, 200, 100, 255);
-        g_c = WAND_COLOR(255, 255, 200, 255);
-        spike_c = WAND_COLOR(100, 255, 100, 255);
-        block_c = WAND_COLOR(100, 255, 100, 255);
-
-        bg_name = "BG2";
-        g_name = "GS3";
-        current_music = "Practice";
+        currentMusic = "Practice";
     }
 
 
-    for(short unsigned int i = 0; i < 40; i++)
-    {
-        Ground* g1 = new Ground(WAND_VEC2(-800 + 450 * i, 825), WAND_VEC2(450, 450), ResourceManager::GetInstance().getBitmap(g_name), -1);
-        g1->SetColor(g_c);
-        ObjectManager::GetInstance().Add(g1);
-    }
-
-    for(short unsigned int i = 0; i < 10; i++)
-    {
-        Background* bg1 = new Background(WAND_VEC2(-1000 + 1080 * i*2, -1080), WAND_VEC2(1080*2, 1080*2), ResourceManager::GetInstance().getBitmap(bg_name), -2);
-        bg1->SetColor(bg_c);
-        ObjectManager::GetInstance().Add(bg1);
-    }
 
     float load = 0;
 
@@ -316,44 +382,38 @@ void MainScene::LoadMap()
     {
         for(short unsigned int j = 0; j < 150; j++)
         {
+            glm::vec2 pos = {StandarSizeEntities * j + StandarSizeEntities * 5, StandarSizeEntities*i - map_H * StandarSizeEntities};
+
             if(map[i][j] == -1)
             {
-                Player* player = new Player(PlayerMode::Normal, WAND_VEC2(StandarSizeEntities * j, 825 - StandarSizeEntities*10 + StandarSizeEntities*i ), WAND_VEC2(StandarSizeEntities, StandarSizeEntities), ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("MISC", 3, 5), 0);
-                player->SetColor(p_c);
-                ObjectManager::GetInstance().Add(player);
-            }
-
-            if(map[i][j] == -2)
-            {
-                EndLevel* end = new EndLevel(WAND_VEC2(StandarSizeEntities * j, 825 - StandarSizeEntities*10 + StandarSizeEntities*i ), WAND_VEC2(StandarSizeEntities, StandarSizeEntities), ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("MISC", 0, 5), 10);
-                ObjectManager::GetInstance().Add(end);
+                Player* tmp = new Player("MAIN", PlayerMode::Normal, pos, glm::vec2(StandarSizeEntities), 0.0f, 0);
+                OBJ_MN.Add(tmp);
+                tmp->makeReference(&player);
             }
 
             if(map[i][j] == 1)
             {
-                SolidBlock* b1 = new SolidBlock(WAND_VEC2(StandarSizeEntities * j, 825 - StandarSizeEntities*10 + StandarSizeEntities*i ), WAND_VEC2(StandarSizeEntities, StandarSizeEntities), ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("MISC", 2, 1), 2);
-                b1->SetColor(block_c);
-                ObjectManager::GetInstance().Add(b1);
+                SolidBlock* tmp = new SolidBlock(pos, glm::vec2(StandarSizeEntities), -1);
+                OBJ_MN.Add(tmp);
             }
 
             if(map[i][j] == 2)
             {
-                Spike* s1 = new Spike(WAND_VEC2(StandarSizeEntities * j, 825 - StandarSizeEntities*10 + StandarSizeEntities*i ), WAND_VEC2(StandarSizeEntities, StandarSizeEntities), ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("MISC", 4, rand()%3), 2);
-                s1->SetColor(spike_c);
-                ObjectManager::GetInstance().Add(s1);
+                Spike* tmp = new Spike(pos, glm::vec2(StandarSizeEntities), -1);
+                OBJ_MN.Add(tmp);
             }
 
             if(map[i][j] == 3)
             {
-                Orb* o1 = new Orb(OrbType::Green, WAND_VEC2(StandarSizeEntities * j, 825 - StandarSizeEntities*10 + StandarSizeEntities*i ), WAND_VEC2(StandarSizeEntities, StandarSizeEntities), ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("MISC", 5, 0), 2);
-                ObjectManager::GetInstance().Add(o1);
+                Orb* tmp = new Orb(OrbType::Green, pos, glm::vec2(StandarSizeEntities), -1);
+                OBJ_MN.Add(tmp);
             }
+
             if(map[i][j] == 4)
             {
-                Orb* o2 = new Orb(OrbType::Blue, WAND_VEC2(StandarSizeEntities * j, 825 - StandarSizeEntities*10 + StandarSizeEntities*i ), WAND_VEC2(StandarSizeEntities, StandarSizeEntities), ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("MISC", 5, 1), 2);
-                ObjectManager::GetInstance().Add(o2);
+                Orb* tmp = new Orb(OrbType::Blue, pos, glm::vec2(StandarSizeEntities), -1);
+                OBJ_MN.Add(tmp);
             }
         }
     }
 }
-

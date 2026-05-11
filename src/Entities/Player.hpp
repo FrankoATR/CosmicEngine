@@ -2,7 +2,7 @@
 #define PLAYER_HPP
 
 #include <WandEngine/Models/GameObject.hpp>
-#include <WandEngine/Managers/TimerManager.hpp>
+#include <random>
 
 using namespace WandEngine;
 
@@ -20,6 +20,7 @@ enum class PlayerMode
 class Player : public GameObject
 {
 private:
+    std::string UniqueName;
     bool OnGroundOrBlock;
     float Gravity;
     GameTimer* RotateSprite_Timer;
@@ -34,13 +35,24 @@ private:
 
     PlayerMode CurrentPlayerMode;
 
+    std::random_device rd;
+    float OtherRotation;
+    GameTimer* OtherRotationTimer;
+    GameTimer* TimeToEndTimer;
+
+    int randomNumber1;
+
 public:
-    Player(PlayerMode mode, WAND_VEC2 Position, WAND_VEC2 Size, ALLEGRO_BITMAP *Sprite, short int LayerId);
+    Player(std::string UniqueName, PlayerMode mode, glm::vec2 Position, glm::vec2 Size, float Rotation, short int LayerId);
     ~Player();
 
     void Init() override;
     void Draw() override;
     void Update(float deltaTime) override;
+
+    void SetUniqueName(const std::string & name);
+    const std::string& GetUniqueName() const;
+
     void Body1CollisionEvent(GameObject *Other, CollisionSide Side);
     void Body2CollisionEvent(GameObject *Other, CollisionSide Side);
 

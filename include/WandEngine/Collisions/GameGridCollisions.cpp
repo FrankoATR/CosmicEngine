@@ -1,10 +1,15 @@
 #include "GameGridCollisions.hpp"
 #include "../Models/GameObject.hpp"
 #include "../Models/GameBodyObject.hpp"
+#include "../Managers/Resource/ResourceManager.hpp"
+
+#include <iostream>
+#include <algorithm>
+
 namespace WandEngine
 {
 
-    GameGridCollisions::GameGridCollisions(WAND_VEC2 GridPosition, int Arrows, int Columns, int CellSize) : GridPosition(GridPosition), Arrows(Arrows), Columns(Columns), CellSize(CellSize), EntitiesOnGrid(0)
+    GameGridCollisions::GameGridCollisions(glm::vec2 GridPosition, int Arrows, int Columns, int CellSize) : GridPosition(GridPosition), Arrows(Arrows), Columns(Columns), CellSize(CellSize), EntitiesOnGrid(0)
     {
         Cells.resize(Arrows);
         for (int i = 0; i < Arrows; i++)
@@ -14,18 +19,18 @@ namespace WandEngine
             {
                 //std::cout << "CREATE INDEX: [" << i << "][" << j << "]" << std::endl;
                 //std::cout << "AT POSITION: (" << GridPosition.x + j * CellSize << ", " << GridPosition.y + i * CellSize << ")" << std::endl;
-                Cells[i][j] = Cell(WAND_VEC2(GridPosition.x + j * CellSize, GridPosition.y + i * CellSize));
+                Cells[i][j] = Cell(glm::vec2(GridPosition.x + j * CellSize, GridPosition.y + i * CellSize));
             }
         }
-        GridSize = WAND_SIZE(Columns * CellSize, Arrows * CellSize);
+        GridSize = glm::vec2(Columns * CellSize, Arrows * CellSize);
     }
 
-    WAND_VEC2 GameGridCollisions::GetPosition()
+    glm::vec2 GameGridCollisions::GetPosition()
     {
         return this->GridPosition;
     }
 
-    void GameGridCollisions::SetPosition(WAND_VEC2 NewsPosition)
+    void GameGridCollisions::SetPosition(glm::vec2 NewsPosition)
     {
         this->GridPosition = NewsPosition;
     }
@@ -35,11 +40,13 @@ namespace WandEngine
 
         for (int i = 0; i <= Arrows; i++)
         {
-            al_draw_line(GridPosition.x, GridPosition.y + i * CellSize, GridPosition.x + Columns * CellSize, GridPosition.y + i * CellSize, al_map_rgba(255, 255, 255, 255), 1);
+            //al_draw_line(GridPosition.x, GridPosition.y + i * CellSize, GridPosition.x + Columns * CellSize, GridPosition.y + i * CellSize, al_map_rgba(255, 255, 255, 255), 1);
+            ResourceManager::GetInstance().RenderLine(glm::vec3(GridPosition.x, GridPosition.y + i * CellSize, 0.0f), glm::vec3(GridPosition.x + Columns * CellSize, GridPosition.y + i * CellSize, 0.0f), glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f), 0.5f, 2.0f);
         }
         for (int j = 0; j <= Columns; j++)
         {
-            al_draw_line(GridPosition.x + j * CellSize, GridPosition.y, GridPosition.x + j * CellSize, GridPosition.y + Arrows * CellSize, al_map_rgba(255, 255, 255, 255), 1);
+            //al_draw_line(GridPosition.x + j * CellSize, GridPosition.y, GridPosition.x + j * CellSize, GridPosition.y + Arrows * CellSize, al_map_rgba(255, 255, 255, 255), 1);
+            ResourceManager::GetInstance().RenderLine(glm::vec3(GridPosition.x + j * CellSize, GridPosition.y, 0.0f), glm::vec3(GridPosition.x + j * CellSize, GridPosition.y + Arrows * CellSize, 0.0f), glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f), 0.5f, 2.0f);
         }
     }
 
@@ -64,12 +71,14 @@ namespace WandEngine
     {
 
         Cell *cell = GetCellByPositionAndSize(obj->GetPosition(), obj->GetSize());
+
         if (!cell)
         {
             obj->GetParent()->SetInsideGridArea(false);
-            //obj->GetParent()->Destroy();
+
             return;
         }
+
         obj->GetParent()->SetInsideGridArea(true);
         cell->objects.push_back(obj);
         EntitiesOnGrid++;
@@ -100,12 +109,12 @@ namespace WandEngine
         EntitiesOnGrid = 0;
     }
 
-    Cell *GameGridCollisions::GetCellByPositionAndSize(WAND_VEC2 position, WAND_VEC2 size)
+    Cell *GameGridCollisions::GetCellByPositionAndSize(glm::vec2 position, glm::vec2 size)
     {
         int relX = position.x - GridPosition.x;
         int relY = position.y - GridPosition.y;
 
-        if(relX < 0 || relY < 0 || relX + size.x > GridSize.width || relY + size.y > GridSize.height)
+        if(relX < 0 || relY < 0 || relX + size.x > GridSize.x || relY + size.y > GridSize.y)
         {
             return nullptr;
         }

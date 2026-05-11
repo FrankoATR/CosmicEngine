@@ -1,63 +1,40 @@
 #include "Orb.hpp"
 #include "Player.hpp"
 
-#include <WandEngine/Managers/InputManager.hpp>
-#include <WandEngine/Managers/TimerManager.hpp>
-#include <WandEngine/Managers/ObjectManager.hpp>
-#include <WandEngine/Managers/BodyManager.hpp>
+#include <WandEngine/Managers/Input/InputManager.hpp>
+#include <WandEngine/Managers/Object/ObjectManager.hpp>
+#include <WandEngine/Managers/Body/BodyManager.hpp>
+#include <WandEngine/Managers/Camera/CameraManager.hpp>
+#include <WandEngine/Managers/Resource/ResourceManager.hpp>
+#include <WandEngine/Managers/Timer/TimerManager.hpp>
 
-Orb::Orb(OrbType Type, WAND_VEC2 Position, WAND_VEC2 Size, ALLEGRO_BITMAP *Sprite, short int LayerId) :
-GameObject(Object::StaticEntity, Position, Size, "Orb", Sprite, LayerId), Type(Type), Used(false)
+Orb::Orb(OrbType Type, glm::vec2 Position, glm::vec2 Size, short int LayerId) :
+GameObject("Orb", Position, Size, 0.0f, LayerId), Type(Type), Used(false)
 {
-
+    AngularVelocity = 500.0f;
 }
 
 
 void Orb::Init()
 {
-    Body = new GameBodyObject(this, Position, GetSize(), [this](GameObject* Other, CollisionSide Side){BodyCollisionEvent(Other, Side);});
+    Body = new GameBodyObject(this, glm::vec2(0.0f), GetSize(), [this](GameObject* Other, CollisionSide Side){BodyCollisionEvent(Other, Side);});
     BodyManager::GetInstance().Add(Body);
 
-    RotateSprite_Timer = new GameTimer(0.030, true, false);
-    TimerManager::GetInstance().Add(RotateSprite_Timer);
+    //RotateSprite_Timer = new GameTimer(0.030, true, false);
+    //TimerManager::GetInstance().Add(RotateSprite_Timer);
 }
 
 
 void Orb::Draw()
 {
-    if(Sprite){
-        float cx = al_get_bitmap_width(Sprite) / 2.0f;
-        float cy = al_get_bitmap_height(Sprite) / 2.0f;
+    int idx = Type == OrbType::Green ? 0 : 1;
 
-        float adjusted_x = Position.x + (Size.x / 2.0f);
-        float adjusted_y = Position.y + (Size.y / 2.0f);
-        float rad = Rotation * ALLEGRO_PI / 180.0f; 
-        al_draw_tinted_scaled_rotated_bitmap(
-            Sprite,
-            al_map_rgba(MainColor.r, MainColor.g, MainColor.b, MainColor.a), 
-            cx, cy,
-            adjusted_x, adjusted_y,
-            Size.x / al_get_bitmap_width(Sprite), 
-            Size.y / al_get_bitmap_height(Sprite), 
-            rad, 
-            0
-        );    
-    }
+    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", 5, idx, Position, Size, Rotation, MainColor, 1.0f);
 }
 
 
 void Orb::Update(float deltaTime)
 {
-    GameObject* player = ObjectManager::GetInstance().FindByUniqueName("Player");
-    if(!player)
-    {
-        Used = false;
-    }
-
-    if(RotateSprite_Timer->IsTrigger())
-    {
-        Rotation += 10;
-    }
 
 }
 
@@ -90,5 +67,5 @@ OrbType Orb::GetOrbType()
 
 Orb::~Orb()
 {
-    RotateSprite_Timer->End();
+    //RotateSprite_Timer->Destroy();
 }
