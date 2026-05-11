@@ -1,44 +1,45 @@
 #ifndef GAMESCENE_HPP
 #define GAMESCENE_HPP
 
-#include <allegro5/allegro5.h>
-#include <allegro5/allegro_native_dialog.h>
-#include <allegro5/allegro_primitives.h>
-#include <allegro5/allegro_font.h>
-#include <allegro5/allegro_ttf.h>
-#include <allegro5/allegro_image.h>
-#include <allegro5/allegro_audio.h>
-#include <allegro5/allegro_acodec.h>
-#include <iostream>
-
-#include "../Managers/GameManager.hpp"
+#include <string>
+#include <mutex>
+#include <queue>
+#include <functional>
+#include <thread>
 
 class GameScene
 {
 private:
     float ProgressLoadingScene;
     std::string Name;
+    std::thread loadingThread;
+    std::mutex progressMutex;
+    std::queue<std::function<void()>> mainThreadTasks;
+    std::mutex taskMutex;
 
 public:
-    ALLEGRO_THREAD *loadingThread = nullptr;
-    
     GameScene(std::string Name);
+    virtual ~GameScene();
 
     virtual void Init() = 0;
     virtual void Update(double deltaTime) = 0;
 
-    virtual void UpdateLoadingScene();
+    virtual void UpdateLoadingScene(); //Utilizar en caso de animaciones en la pantalla de carga
+    virtual void DrawLoadingScene();
 
     void SetProgressLoadingScene(float Progress);
     float GetProgressLoadingScene();
-    bool IsProgressLoadinSceneComplete();
+    bool IsProgressLoadingSceneComplete();
 
     std::string GetName();
-
     void Clear();
 
-    ~GameScene();
-};
+    void AddMainThreadTask(std::function<void()> task);
+    void ExecuteMainThreadTasks();
 
+    void StartLoadingThread();
+    bool IsLoadingThreadJoinable() const;
+    void JoinLoadingThread();
+};
 
 #endif // GAMESCENE_HPP

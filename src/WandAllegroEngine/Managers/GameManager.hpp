@@ -29,10 +29,8 @@ namespace WandEngine
 
     private:
         bool redraw;
-        bool ShowBodys;
         double lastTime, currentTime, deltaTime;
 
-        ALLEGRO_COLOR BackBufferColor;
         ALLEGRO_DISPLAY *Window;
         ALLEGRO_TIMER *FPS;
 
@@ -47,11 +45,7 @@ namespace WandEngine
     public:
 
         ALLEGRO_EVENT_QUEUE *event_queue;
-
         ALLEGRO_EVENT Event;
-
-        std::map<int, bool> keyState;
-
 
         static GameManager &GetInstance()
         {
@@ -59,9 +53,6 @@ namespace WandEngine
             return instance;
         }
 
-        void ToggleShowBody();
-
-        void SetBackBufferColor(ALLEGRO_COLOR color);
         void SetFirstScene(GameScene *scene);
 
         void SetWindows_Size(Size ScreenSize);

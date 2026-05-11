@@ -14,56 +14,55 @@ GameInScene::GameInScene() : GameScene("GameInScene")
 
 }
 
-void GameInScene::UpdateLoadingScene(){
-    al_clear_to_color(al_map_rgb(0, 0, 0));
-    //al_draw_filled_rectangle(50, Game->ScreenSize.Height / 2 - 10, 50 + 300 * GetProgressLoadingScene(), Game->ScreenSize.Height / 2 + 10, al_map_rgb(0, 255, 0));
-    al_flip_display();
-}
-
-
 void GameInScene::Init()
 {
 
-/*
-    for (int key = ALLEGRO_KEY_A; key <= ALLEGRO_KEY_PAD_EQUALS; key++) {
-        Game->keyState[key] = false;
-    }
-*/
+    AddMainThreadTask([this]()
+    {
+        WandEngine::ResourceManager::GetInstance().loadSpriteSheet("Player", CHARACTERS_IMAGE_PATH, 2, 7);
+        WandEngine::ResourceManager::GetInstance().loadSpriteSheet("SpriteSheet", DUNGUEON1_IMAGE_PATH, 4, 4);
+        WandEngine::ResourceManager::GetInstance().loadFont("Font", RETRO_FONT_PATH, 50);
+    });
+
+    SetProgressLoadingScene(0.1f);
 
 
-    WandEngine::ResourceManager::GetInstance().loadSpriteSheet("Player", CHARACTERS_IMAGE_PATH, 2, 7);
-    WandEngine::ResourceManager::GetInstance().loadSpriteSheet("SpriteSheet", DUNGUEON1_IMAGE_PATH, 4, 4);
-    WandEngine::ResourceManager::GetInstance().loadFont("Font", RETRO_FONT_PATH, 50);
+    AddMainThreadTask([this]()
+    {
+        GameObject* player = new LinkObject(DynamicEntity, Vec2(100, 100), Vec2(64, 64), "Player", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 1), 1, 20, WandEngine::ResourceManager::GetInstance().getFont("Font"));
+        WandEngine::ObjectManager::GetInstance().Add(player);
+    });
+
+    SetProgressLoadingScene(0.2f);
 
 
-    GameObject* player = new LinkObject(DynamicEntity, Vec2(100, 100), Vec2(64, 64), "Player", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 1), 1, 20, WandEngine::ResourceManager::GetInstance().getFont("Font"));
-    WandEngine::ObjectManager::GetInstance().Add(player);
+    AddMainThreadTask([this]()
+    {
+        float load = 1.0;
+        for(int i=0; i < 50; i++)
+            for(int j=0; j < 30; j++){
+                GameObject* tmp = new MapTileObject(DynamicEntity, Vec2(32*i, 32*j), Vec2(32, 32), "Tile", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
+                WandEngine::ObjectManager::GetInstance().Add(tmp);
+                load++;
+                SetProgressLoadingScene((load/(50.0f*30.0f)));
+            }
+    });
+
 
     /*
-    
-    float load = 1.0;
-    for(int i=0; i < 10; i++)
-        for(int j=0; j < 10; j++){
-            GameObject* tmp = new MapTileObject(DynamicEntity, Vec2(64*i, 64*j), Vec2(64, 64), "Tile", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
-            WandEngine::ObjectManager::GetInstance().Add(tmp);
-            load++;
-            //SetProgressLoadingScene((load/(50.0f*30.0f)));
+        for(int i = 0; i < 100; i++)
+        {
+                int x = rand()%1920;
+                int y = rand()%1080; 
+                GameObject* tmp = new MapTileObject(DynamicEntity, Vec2(x, y), Vec2(64, 64), "Tile", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
+                WandEngine::ObjectManager::GetInstance().Add(tmp);
         }
-
-    
     */
-
-    for(int i = 0; i < 100; i++)
-    {
-            int x = rand()%1920;
-            int y = rand()%1080; 
-            GameObject* tmp = new MapTileObject(DynamicEntity, Vec2(x, y), Vec2(64, 64), "Tile", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
-            WandEngine::ObjectManager::GetInstance().Add(tmp);
-    }
     
-    SetProgressLoadingScene(1.0f);
 
-    WandEngine::GameManager::GetInstance().SetBackBufferColor(al_map_rgb(155, 141, 30));
+    WandEngine::SceneManager::GetInstance().SetBackBufferColor(al_map_rgb(155, 141, 30));
+
+    SetProgressLoadingScene(1.0f);
     
     std::cout << "\n\nSCENE CREATED: " << GetName() << std::endl << std::endl;
 
@@ -105,7 +104,7 @@ void GameInScene::Update(double deltaTime)
 
     if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_H, WandEngine::KeyDown))
     {
-        WandEngine::GameManager::GetInstance().ToggleShowBody();
+        //WandEngine::GameManager::GetInstance().ToggleShowBody();
     }
 
 }

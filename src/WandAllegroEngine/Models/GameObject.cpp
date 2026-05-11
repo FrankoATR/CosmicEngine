@@ -120,5 +120,5 @@ bool GameObject::GetAliveInGameManager()
 
 GameObject::~GameObject()
 {
-    std::cout << "Object destroyed: " << GetObjectName() << std::endl;
+    //std::cout << "Object destroyed: " << GetObjectName() << std::endl;
 }

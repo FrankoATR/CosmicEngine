@@ -8,26 +8,31 @@
 class GameEvent;
 class GameObject;
 
-class EventManager
+namespace WandEngine
 {
-private:
-    EventManager() = default;
-    ~EventManager();
-    EventManager(const EventManager &) = delete;
-    EventManager &operator=(const EventManager &) = delete;
 
-    std::vector<GameEvent *> gameEvents;
-
-public:
-    static EventManager &GetInstance()
+    class EventManager
     {
-        static EventManager instance;
-        return instance;
-    }
-    void Add(GameEvent *GameEvent);
-    void Remove(GameEvent *GameEvent);
-    void Clear();
-    void Notify(GameObject *obj, const std::string &event);
-};
+    private:
+        EventManager() = default;
+        ~EventManager();
+        EventManager(const EventManager &) = delete;
+        EventManager &operator=(const EventManager &) = delete;
+
+        std::vector<GameEvent *> gameEvents;
+
+    public:
+        static EventManager &GetInstance()
+        {
+            static EventManager instance;
+            return instance;
+        }
+        void Add(GameEvent *GameEvent);
+        void Remove(GameEvent *GameEvent);
+        void Clear();
+        void Notify(GameObject *obj, const std::string &event);
+    };
+    
+}
 
 #endif // EVENTMANAGER_HPP

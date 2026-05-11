@@ -2,37 +2,42 @@
 #include "../Interfaces/GameEvent.hpp"
 #include "../Models/GameObject.hpp"
 
-void EventManager::Add(GameEvent *GameEvent)
+namespace WandEngine
 {
-    gameEvents.push_back(GameEvent);
-}
 
-void EventManager::Remove(GameEvent *GameEvent)
-{
-    gameEvents.erase(std::remove(gameEvents.begin(), gameEvents.end(), GameEvent), gameEvents.end());
-}
-
-void EventManager::Notify(GameObject *obj, const std::string &event)
-{
-    for (GameEvent *GameEvent : gameEvents)
+    void EventManager::Add(GameEvent *GameEvent)
     {
-        GameEvent->OnNotify(obj, event);
+        gameEvents.push_back(GameEvent);
     }
-}
 
-void EventManager::Clear()
-{
-    for (GameEvent *event : gameEvents)
+    void EventManager::Remove(GameEvent *GameEvent)
     {
-        delete event;
+        gameEvents.erase(std::remove(gameEvents.begin(), gameEvents.end(), GameEvent), gameEvents.end());
     }
-    gameEvents.clear();
 
-    std::cout << "Event manager clear" << std::endl;
-}
+    void EventManager::Notify(GameObject *obj, const std::string &event)
+    {
+        for (GameEvent *GameEvent : gameEvents)
+        {
+            GameEvent->OnNotify(obj, event);
+        }
+    }
 
-EventManager::~EventManager()
-{
-    Clear();
-    std::cout << "Event manager destroyed" << std::endl;
+    void EventManager::Clear()
+    {
+        for (GameEvent *event : gameEvents)
+        {
+            delete event;
+        }
+        gameEvents.clear();
+
+        std::cout << "Event manager clear" << std::endl;
+    }
+
+    EventManager::~EventManager()
+    {
+        Clear();
+        std::cout << "Event manager destroyed" << std::endl;
+    }
+    
 }

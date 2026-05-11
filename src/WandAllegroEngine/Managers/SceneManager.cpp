@@ -1,153 +1,153 @@
 #include "SceneManager.hpp"
+#include "ObjectManager.hpp"
+#include "BodyManager.hpp"
 #include "../Models/GameScene.hpp"
 
-static void *InitLoadingScene_ThreadFunc(ALLEGRO_THREAD *thread, void *arg)
+namespace WandEngine
 {
-    GameScene *scene = (GameScene *)arg;
-    std::cout << "THREAD 1" << std::endl;
-    scene->Init();
-    std::cout << "THREAD 2" << std::endl;
-    return nullptr;
-}
 
-void WandEngine::SceneManager::ChangeScene()
-{
-    if (sceneChanged && nextScene)
+    SceneManager::SceneManager()
+    {
+		this->BackBufferColor = al_map_rgb(0, 0, 0);
+    }
+
+    void SceneManager::StartSceneLoading(GameScene *scene)
+    {
+        scene->StartLoadingThread();
+    }
+
+    void SceneManager::PushScene(GameScene *scene)
+    {
+        sceneStack.push_back(scene);
+        StartSceneLoading(scene);
+    }
+
+    void SceneManager::ReplaceScene(GameScene *scene)
     {
         if (!sceneStack.empty())
         {
+            if (sceneStack.back()->IsLoadingThreadJoinable())
+            {
+                sceneStack.back()->JoinLoadingThread();
+            }
             sceneStack.back()->Clear();
-            al_destroy_thread(sceneStack.back()->loadingThread);
-            delete sceneStack.back();
             sceneStack.pop_back();
         }
-        sceneStack.push_back(nextScene);
-        // sceneStack.back()->loadingThread = al_create_thread(InitLoadingScene_ThreadFunc, sceneStack.back());
-        // al_start_thread(sceneStack.back()->loadingThread);
-        sceneStack.back()->Init();
-        sceneChanged = false;
-    }
-}
 
-void WandEngine::SceneManager::PushScene(GameScene *scene)
-{
-    if (sceneStack.empty())
-    {
         sceneStack.push_back(scene);
-        // sceneStack.back()->loadingThread = al_create_thread(InitLoadingScene_ThreadFunc, sceneStack.back());
-        // al_start_thread(sceneStack.back()->loadingThread);
-        sceneStack.back()->Init();
-        sceneChanged = false;
+        StartSceneLoading(scene);
     }
-    else
-    {
-        nextScene = scene;
-        sceneChanged = true;
-    }
-}
 
-void WandEngine::SceneManager::ReplaceScene(GameScene *scene)
-{
-    if (sceneStack.empty())
+    void SceneManager::PopScene()
     {
-        sceneStack.back()->Clear();
-        delete sceneStack.back();
-        sceneStack.pop_back();
-        sceneStack.push_back(scene);
-        // sceneStack.back()->loadingThread = al_create_thread(InitLoadingScene_ThreadFunc, sceneStack.back());
-        // al_start_thread(sceneStack.back()->loadingThread);
-        sceneStack.back()->Init();
-        sceneChanged = false;
-    }
-    else
-    {
-        nextScene = scene;
-        sceneChanged = true;
-    }
-}
-
-void WandEngine::SceneManager::PopScene()
-{
-    if (!sceneStack.empty())
-    {
-        sceneStack.back()->Clear();
-        delete sceneStack.back();
-        sceneStack.pop_back();
         if (!sceneStack.empty())
         {
-            // sceneStack.back()->loadingThread = al_create_thread(InitLoadingScene_ThreadFunc, sceneStack.back());
-            // al_start_thread(sceneStack.back()->loadingThread);
-            sceneStack.back()->Init();
-        }
-    }
-}
-
-void WandEngine::SceneManager::Update(double deltaTime)
-{
-    if (sceneChanged)
-    {
-        ChangeScene();
-    }
-    if (!sceneStack.empty())
-    {
-        sceneStack.back()->Update(deltaTime);
-
-        /*
-        if(sceneStack.back()->IsProgressLoadinSceneComplete()){
-            sceneStack.back()->Update(deltaTime);
-        }
-        else{
-            sceneStack.back()->UpdateLoadingScene();
-        }
-        */
-    }
-}
-
-bool WandEngine::SceneManager::IsSceneLoaded()
-{
-    if (!sceneStack.empty())
-    {
-        if (sceneStack.back()->IsProgressLoadinSceneComplete())
-        {
-            if (sceneStack.back()->loadingThread)
+            if (sceneStack.back()->IsLoadingThreadJoinable())
             {
-                al_join_thread(sceneStack.back()->loadingThread, nullptr);
-                al_destroy_thread(sceneStack.back()->loadingThread);
-                sceneStack.back()->loadingThread = nullptr;
+                sceneStack.back()->JoinLoadingThread();
             }
-            return true;
-        }
-        else
-        {
-            false;
+            sceneStack.back()->Clear();
+            sceneStack.pop_back();
+
+            if (sceneStack.empty())
+            {
+                isRunning = false;
+            }
         }
     }
-    return false;
-}
 
-bool WandEngine::SceneManager::Running() const
-{
-    return isRunning && !sceneStack.empty();
-}
-
-bool WandEngine::SceneManager::Empty()
-{
-    return sceneStack.empty();
-}
-
-void WandEngine::SceneManager::Clear()
-{
-    for (const auto &scene : sceneStack)
+    void SceneManager::Update(double deltaTime)
     {
-        scene->Clear();
-        delete scene;
-    }
-    sceneStack.clear();
-    std::cout << "Scene manager clear" << std::endl;
-}
+        if (!sceneStack.empty())
+        {
+            GameScene *currentScene = sceneStack.back();
 
-WandEngine::SceneManager::~SceneManager()
-{
-    Clear();
-    std::cout << "Scene manager destroyed" << std::endl;
+            if (currentScene->IsProgressLoadingSceneComplete())
+            {
+                if (currentScene->IsLoadingThreadJoinable())
+                {
+                    currentScene->JoinLoadingThread();
+                }
+
+                currentScene->ExecuteMainThreadTasks();
+                currentScene->Update(deltaTime);
+                ObjectManager::GetInstance().Update(deltaTime);
+                BodyManager::GetInstance().Update();
+            }
+            else
+            {
+                currentScene->ExecuteMainThreadTasks();
+                currentScene->UpdateLoadingScene();
+            }
+        }
+    }
+
+    void SceneManager::Draw()
+    {
+        if (!sceneStack.empty())
+        {
+            GameScene *currentScene = sceneStack.back();
+
+            al_clear_to_color(BackBufferColor);
+
+            if (currentScene->IsProgressLoadingSceneComplete())
+            {
+                WandEngine::ObjectManager::GetInstance().Draw();
+                //WandEngine::BodyManager::GetInstance().Draw();
+            }
+            else
+            {
+                currentScene->DrawLoadingScene();
+            }
+
+            al_flip_display();
+
+        }
+    }
+
+    bool SceneManager::IsSceneLoaded() const
+    {
+        if (!sceneStack.empty())
+        {
+            return sceneStack.back()->IsProgressLoadingSceneComplete();
+        }
+        return false;
+    }
+
+    bool SceneManager::Running() const
+    {
+        return isRunning;
+    }
+
+    bool SceneManager::Empty() const
+    {
+        return sceneStack.empty();
+    }
+
+    void SceneManager::SetBackBufferColor(ALLEGRO_COLOR color)
+    {
+        this->BackBufferColor = color;
+    }
+
+
+    void SceneManager::Clear()
+    {
+        while (!sceneStack.empty())
+        {
+            if (sceneStack.back()->IsLoadingThreadJoinable())
+            {
+                sceneStack.back()->JoinLoadingThread();
+            }
+            sceneStack.back()->Clear();
+            sceneStack.pop_back();
+        }
+        isRunning = false;
+        std::cout << "Scene manager cleared" << std::endl;
+    }
+
+    SceneManager::~SceneManager()
+    {
+        Clear();
+        std::cout << "Scene manager destroyed" << std::endl;
+    }
 }

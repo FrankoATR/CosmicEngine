@@ -13,8 +13,6 @@ public:
     void Init() override;
     void Update(double deltaTime) override;
 
-    void UpdateLoadingScene() override;
-
     ~MainScene();
 };
 

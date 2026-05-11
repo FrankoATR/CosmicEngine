@@ -2,29 +2,29 @@
 
 ## Fecha efectiva
 
-**3 de noviembre de 2024**
+**4 de noviembre de 2024**
 
 ## Descripción general
 
-La etapa efectiva al 3 de noviembre avanza sobre la centralización del runtime y desplaza el manejo de entrada hacia un servicio dedicado. A partir de esta revisión, teclado, mouse y joystick dejan de interpretarse desde estados locales mantenidos por las escenas o por `GameManager`, y pasan a procesarse mediante `InputManager` sobre la cola global de eventos.
+La etapa efectiva al 4 de noviembre avanza sobre la centralización del runtime y desplaza tanto la entrada como el ciclo de dibujo y actualización de escena hacia servicios específicos del framework. A partir de esta revisión, teclado, mouse y joystick pasan a procesarse mediante `InputManager`, mientras que la presentación y el ciclo activo de escena se concentran en `SceneManager`.
 
-En paralelo, `GameManager` adopta también un acceso singleton y las escenas, entidades y objetos dejan de construirse alrededor de un puntero explícito al manager principal. El resultado visible es una reducción de acoplamiento entre lógica de juego, administración de escenas y lectura de input.
+En paralelo, `GameManager` adopta un papel más acotado como coordinador de infraestructura, y `GameScene` incorpora un modelo explícito de carga asíncrona con hilo propio, progreso sincronizado y tareas diferidas para el hilo principal. El resultado visible es una reducción adicional del acoplamiento entre loop principal, escenas y subsistemas del motor.
 
 ## Objetivo técnico
 
 Esta revisión queda centrada en tres frentes:
 
-- separar la captura y consulta de entrada del resto del loop principal;
+- separar la captura de entrada, la actualización de escena y el dibujo del loop principal básico;
 - eliminar dependencias directas a una instancia inyectada de `GameManager` en escenas y entidades;
-- consolidar el acceso al estado global del runtime mediante managers singleton.
+- trasladar la carga de escenas a un flujo asíncrono controlado por el propio framework.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la revisión anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Managers/`, donde aparece `InputManager` y `GameManager` cambia de una instancia administrada externamente a un singleton del motor.
-- `src/WandAllegroEngine/Models/`, donde `GameObject` y `GameScene` abandonan la necesidad de recibir o conservar una referencia directa a `GameManager`.
-- `src/Scenes/` y `src/Entities/`, donde constructores y flujo de actualización migran al nuevo acceso global para input, ventana y escena activa.
+- `src/WandAllegroEngine/Managers/`, donde `InputManager` se incorpora como servicio de entrada, `GameManager` se reduce al ciclo base del runtime y `SceneManager` asume actualización, dibujo y color de fondo.
+- `src/WandAllegroEngine/Models/`, donde `GameScene` incorpora primitives de carga asíncrona y `GameObject` abandona la necesidad de conservar una referencia directa a `GameManager`.
+- `src/Scenes/` y `src/Entities/`, donde la capa de uso migra al nuevo acceso global para input y escena activa.
 - `src/main.cpp`, donde el arranque deja de crear manualmente el manager del juego y pasa a operar sobre `WandEngine::GameManager::GetInstance()`.
 
 ## Arquitectura o sistemas principales
@@ -40,41 +40,62 @@ La diferencia visible respecto a la revisión anterior se concentra en estos pun
 
 Con este ajuste, escenas y entidades dejan de depender del mapa `keyState` y del análisis directo de `ALLEGRO_EVENT` para responder al input.
 
-### `GameManager` como servicio global
+### `GameManager` como coordinador mínimo
 
-La revisión convierte `GameManager` en singleton y reduce aún más su interfaz pública a responsabilidades de infraestructura:
+La revisión convierte `GameManager` en singleton y reduce su superficie a responsabilidades de infraestructura y loop base:
 
 - `main.cpp` deja de construir `new GameManager(...)` y usa `WandEngine::GameManager::GetInstance()`;
 - el tamaño de pantalla se establece a través de `SetWindows_Size()` después de `Init()`;
-- el loop principal invoca `InputManager::Update()` y consume la cola con `al_get_next_event()`;
+- el loop principal invoca `InputManager::Update()`, consume la cola con `al_get_next_event()` y delega el trabajo de escena a `SceneManager`;
+- desaparecen de su interfaz visible el control directo de color de fondo, el mapa `keyState` y el dibujo o actualización directa de objetos y cuerpos;
 - la limpieza final se concentra en `Clear()` y ya no depende de destrucción manual del objeto principal.
 
-Este cambio alinea al manager principal con el patrón ya adoptado por escenas, objetos, cuerpos, recursos y eventos.
+Con ello, `GameManager` deja de ser el punto que decide y ejecuta toda la lógica visual de runtime, y pasa a coordinar la infraestructura sobre la que operan los demás managers.
+
+### `SceneManager` como controlador del ciclo de escena
+
+`SceneManager` amplía su rol y pasa a controlar el ciclo operativo de la escena activa:
+
+- inicia la carga de cada escena mediante `StartSceneLoading()`;
+- ejecuta `Update()` solo cuando la carga ha finalizado;
+- ejecuta `UpdateLoadingScene()` y `DrawLoadingScene()` mientras la escena permanece en fase de carga;
+- asume el dibujo general del frame a través de `Draw()`;
+- incorpora `SetBackBufferColor()` y mantiene el color de limpieza fuera de `GameManager`.
+
+Este ajuste desplaza el corazón del flujo de escena desde el loop principal hacia un manager especializado que ya no solo administra la pila, sino también su tránsito entre carga y ejecución.
+
+### Carga asíncrona de escenas
+
+`GameScene` incorpora una base explícita para carga concurrente:
+
+- cada escena dispone ahora de `std::thread loadingThread`;
+- el progreso de carga queda protegido por `std::mutex` y se consulta mediante `IsProgressLoadingSceneComplete()`;
+- aparecen `AddMainThreadTask()` y `ExecuteMainThreadTasks()` para diferir trabajo que debe ejecutarse en el hilo principal;
+- `StartLoadingThread()`, `IsLoadingThreadJoinable()` y `JoinLoadingThread()` formalizan el ciclo de vida del hilo de carga;
+- `DrawLoadingScene()` se agrega como punto dedicado para representar el estado visual de carga.
+
+El framework pasa así de una carga implícita y secuencial a un esquema preparado para inicialización concurrente con coordinación explícita entre hilo de carga e hilo principal.
 
 ### Desacoplamiento de escenas y objetos
 
 `GameScene` y `GameObject` eliminan la dependencia constructiva respecto a `GameManager`:
 
 - `GameScene` pasa a construirse solo con el nombre de la escena;
-- `MainScene` y `GameInScene` dejan de recibir `GameManager*` en sus constructores;
+- las implementaciones concretas de escena dejan de recibir `GameManager*` en sus constructores;
 - `GameObject` y las entidades derivadas dejan de almacenar o recibir el puntero `Game`;
-- operaciones antes resueltas mediante esa referencia, como cambiar el color de fondo o alternar la visualización de cuerpos, se atienden ahora a través de `WandEngine::GameManager::GetInstance()`.
+- operaciones antes resueltas mediante esa referencia pasan a redistribuirse entre managers globales especializados según su responsabilidad.
 
 La consecuencia directa es que escenas y entidades quedan ligadas al runtime por interfaz global compartida, no por inyección explícita del manager principal.
 
-## Escenas y flujo visible
+## Integración del framework
 
-### `MainScene`
+Las implementaciones visibles del framework ya utilizan el nuevo modelo en tres frentes:
 
-La escena principal reemplaza la lectura directa de eventos por consultas a `InputManager` para `Escape`, `Space`, `H`, `P`, `O`, `U` e `I`. También adapta la creación de objetos al nuevo esquema sin puntero `Game` y cambia el nombre visible del enemigo creado en escena a `Emerson`.
+- el control interactivo se resuelve mediante consultas directas a `InputManager` en lugar de inspeccionar eventos crudos o estados locales replicados;
+- el ciclo de actualización y dibujo queda canalizado por `SceneManager` en lugar de ejecutarse de forma dispersa desde el loop principal;
+- la carga de escena dispone de primitives explícitas para progreso, dibujo de carga y ejecución diferida en el hilo principal.
 
-### `GameInScene`
-
-La escena de juego replica la migración completa hacia `InputManager` y hacia `GameManager::GetInstance()` para el color de fondo y la alternancia de depuración de cuerpos. La creación de jugador y tiles conserva la lógica de poblamiento disperso, pero ya no depende de un manager inyectado en el constructor.
-
-### `LinkObject`
-
-La entidad del jugador sustituye el uso de `keyState` por consultas de tipo `KeyRelease` y `KeyDown` en `InputManager`. Además, la acción asociada a `Q` restaura el tamaño a `64 x 64` y emite el evento `Reset Size`, mientras que la colisión ofensiva pasa a comprobar el nombre `Emerson` en lugar de `Enemy`.
+Con ello, la capa de uso del motor pasa a consumir los servicios del framework desde interfaces unificadas y deja de depender de referencias manuales al manager principal o de un loop central sobrecargado de responsabilidades.
 
 ## Dependencias externas visibles
 
@@ -83,14 +104,15 @@ La entidad del jugador sustituye el uso de `keyState` por consultas de tipo `Key
 
 ## Resumen técnico de la versión
 
-La revisión efectiva al **3 de noviembre de 2024** queda delimitada por estos movimientos:
+La revisión efectiva al **4 noviembre de 2024** queda delimitada por estos movimientos:
 
 - se incorpora `InputManager` como servicio singleton para teclado, mouse y joystick;
 - `GameManager` pasa a exponerse mediante `GetInstance()` y deja de instanciarse manualmente desde `main.cpp`;
-- el loop principal procesa entrada mediante `InputManager::ProcessEvent()` en lugar de delegar ese estado a escenas;
+- el loop principal procesa entrada mediante `InputManager::ProcessEvent()` y delega el ciclo de escena en `SceneManager`;
+- `SceneManager` asume actualización, dibujo, color de fondo y transición entre carga y ejecución de escenas;
+- `GameScene` incorpora hilo de carga, progreso sincronizado, cola de tareas para el hilo principal y dibujo específico de pantalla de carga;
 - `GameScene`, `GameObject` y sus derivados eliminan la dependencia constructiva respecto a `GameManager*`;
-- `MainScene` y `GameInScene` migran su control interactivo a consultas directas sobre `InputManager`;
-- operaciones de infraestructura, como el color de fondo, el cambio de modo de ventana y la visualización de cuerpos, pasan a invocarse desde `WandEngine::GameManager::GetInstance()`;
-- `LinkObject` ajusta su comportamiento visible de input y su lógica de colisión para el enemigo nombrado `Emerson`.
+- las implementaciones construidas sobre el motor migran su control interactivo a consultas directas sobre `InputManager`;
+- responsabilidades antes concentradas en `GameManager` se redistribuyen entre managers globales especializados.
 
-La etapa deja al proyecto más orientado a un runtime gobernado por servicios globales especializados, con menor dependencia entre escenas, entidades y la instancia principal del juego.
+La etapa deja al proyecto más orientado a un runtime gobernado por servicios globales especializados, con menor dependencia entre escenas, entidades y la instancia principal del juego, y con una base más clara para carga asíncrona de escenas dentro del propio framework.
