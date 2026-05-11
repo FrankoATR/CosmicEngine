@@ -1,0 +1,66 @@
+#ifndef GAMEMANAGER_HPP
+#define GAMEMANAGER_HPP
+
+#include <allegro5/allegro5.h>
+#include <allegro5/allegro_native_dialog.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <iostream>
+#include <windows.h>
+#include <map>
+#include "../Interfaces/Definitions.hpp"
+
+namespace WandEngine
+{
+
+    class GameScene;
+
+    class GameManager
+    {
+
+    private:
+        bool redraw;
+        double lastTime, currentTime, deltaTime;
+
+        ALLEGRO_DISPLAY *Window;
+        ALLEGRO_TIMER *FPS;
+
+        WAND_SIZE ScreenSize;
+
+        GameManager();
+        ~GameManager();
+
+        GameManager(const GameManager &) = delete;
+        GameManager &operator=(const GameManager &) = delete;
+
+    public:
+        ALLEGRO_EVENT_QUEUE *event_queue;
+        ALLEGRO_EVENT Event;
+
+        static GameManager &GetInstance()
+        {
+            static GameManager instance;
+            return instance;
+        }
+
+        void SetFirstScene(GameScene *scene);
+
+        void SetWindows_Size(WAND_SIZE ScreenSize);
+        void SetWindows_FullScreenMode();
+        void SetWindows_WindowsMode();
+        WAND_SIZE GetWindowsSize();
+
+        bool IsFullScreen();
+
+        bool Init();
+        void Update();
+        void Clear();
+    };
+
+}
+
+#endif // GAMEMANAGER_HPP

@@ -1,33 +1,23 @@
-#define BG_FOREST_IMAGE_PATH "assets/img/backgrounds/bg2.jpg"
-#define BG_SPACE_IMAGE_PATH "assets/img/backgrounds/bg1.png"
-#define LINK_IMAGE_PATH "assets/img/blocks/white1.png"
+#define BG_1_IMAGE_PATH "assets/GD/Backgrounds/game_bg_01_001-hd.png"
+#define BG_2_IMAGE_PATH "assets/GD/Backgrounds/game_bg_02_001-hd.png"
+#define BG_3_IMAGE_PATH "assets/GD/Backgrounds/game_bg_03_001-hd.png"
+#define BG_4_IMAGE_PATH "assets/GD/Backgrounds/game_bg_04_001-hd.png"
+#define BG_5_IMAGE_PATH "assets/GD/Backgrounds/game_bg_05_001-hd.png"
 
-#define CHARACTERS_IMAGE_PATH "assets/img/entities/Dungeon_Character_2.png"
-#define DUNGUEON_IMAGE_PATH "assets/img/entities/Dungeon_Tileset.png"
+#define GS_1_IMAGE_PATH "assets/GD/Grounds/groundSquare_01_001-hd.png"
+#define GS_2_IMAGE_PATH "assets/GD/Grounds/groundSquare_02_001-hd.png"
+#define GS_3_IMAGE_PATH "assets/GD/Grounds/groundSquare_03_001-hd.png"
+#define GS_4_IMAGE_PATH "assets/GD/Grounds/groundSquare_04_001-hd.png"
+#define GS_5_IMAGE_PATH "assets/GD/Grounds/groundSquare_05_001-hd.png"
 
-#define DUNGUEON1_IMAGE_PATH "assets/img/blocks/SpriteSheet-Dungueon.png"
+#define MISC_1_IMAGE_PATH "assets/GD/Misc.png"
 
-#define BLOCKS_SPRITES_PATH "assets/sprites/smb_blocks.png"
-#define MARIO_SPRITES_PATH "assets/sprites/smb_m1.png"
-#define POKEMONTILES_SPRITES_PATH "assets/sprites/pokemon-tiles.png"
-
-#define POKEMONBUILDING_SPRITES_PATH "assets/sprites/pokemon-building-1.png"
-
-
-#define POKEMONTILES_SPRITES_PATH "assets/sprites/pokemon-tiles.png"
+#define TRACK0_PATH "assets/music/StayInsideMe.mp3"
+#define TRACK1_PATH "assets/music/Electrodynamix.wav"
+#define TRACK2_PATH "assets/music/Cycles.mp3"
+#define SOUND1_PATH "assets/sounds/Explode.mp3"
+#define SOUND2_PATH "assets/sounds/EndLevel.mp3"
 
 
-#define CURSOR_SPRITE_PATH "assets/img/cursors/cursor.png"
 
-#define BUTTON1_SPRITE_PATH "assets/img/buttons/button1.png"
-
-#define RETRO_FONT_PATH "assets/fonts/ThaleahFat.ttf"
-
-#define TRACK1_PATH "assets/music/Ludum Dare 38 - Track 5.wav"
-
-#define SOUND1_PATH "assets/sounds/Chomp High.mp3"
-#define SOUND2_PATH "assets/sounds/01. Game Start.mp3"
-#define SOUND3_PATH "assets/sounds/Death.mp3"
-#define SOUND4_PATH "assets/sounds/Intermission2.mp3"
-#define SOUND5_PATH "assets/sounds/Froot.mp3"
-#define SOUND6_PATH "assets/sounds/Power.mp3"
+#define FONT_1_PATH "assets/fonts/ThaleahFat.ttf"

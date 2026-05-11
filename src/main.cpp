@@ -1,4 +1,4 @@
-#include "WandAllegroEngine/Managers/GameManager.hpp"
+#include <WandEngine/Managers/GameManager.hpp>
 #include "Scenes/MainScene.hpp"
 
 using namespace WandEngine;

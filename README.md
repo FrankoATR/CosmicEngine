@@ -2,97 +2,107 @@
 
 ## Fecha efectiva
 
-**20 de noviembre de 2024**
+**23 de diciembre de 2024**
 
 ## Descripción general
 
-En esta etapa consolidé varias piezas base del runtime para que objetos, timers e input trabajen con reglas más consistentes. El cambio principal ya no está solo en disponer de temporización reutilizable, sino en que el modelo base de objetos empieza a exponer movimiento parametrizado por dirección, velocidad y duración, mientras la temporización corrige mejor su relación con el estado de pausa.
+En esta etapa reorganicé la base del proyecto para separar con mayor claridad el framework, las dependencias embebidas y el código específico del juego. El cambio más visible es el traslado del engine hacia un árbol público bajo `include/WandEngine/`, dejando de usar `src/WandAllegroEngine/` como ubicación principal de los componentes del motor.
 
-Sobre esa misma base endurecí el tratamiento de objetos que salen del área válida del grid, ajusté detalles de limpieza entre managers y terminé de alinear parte de la API de entrada con tipos fuertemente tipados del framework.
+Sobre esa reestructuración también incorporé una configuración formal con CMake, de modo que la compilación ya no dependa únicamente de tareas manuales o comandos ad hoc y el proyecto pueda describir de forma explícita sus fuentes, bibliotecas enlazadas, salida binaria e icono del ejecutable.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- ampliar el modelo base de objetos con movimiento utilitario reutilizable;
-- refinar la semántica temporal de `GameTimer` cuando el timer nace en pausa;
-- endurecer ciclo de vida, limpieza y tipado de entrada dentro del runtime.
+- reubicar el framework en una estructura de carpetas más coherente para consumo e inclusión de cabeceras;
+- formalizar el proceso de compilación y enlace mediante CMake;
+- alinear el código del juego y las dependencias locales con esa nueva organización del repositorio.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Models/`, donde `GameObject` amplía de forma visible su contrato con dirección, velocidad, rotación y helpers de movimiento basados en tiempo.
-- `src/WandAllegroEngine/Models/GameTimer.*`, donde la temporización afina su comportamiento de arranque en pausa y expone lectura de tiempo transcurrido.
-- `src/WandAllegroEngine/Collisions/`, `src/WandAllegroEngine/Managers/` e `src/WandAllegroEngine/Interfaces/`, donde se endurecen reglas de destrucción fuera del grid, limpieza de recursos y uso de `enum class` para eventos de entrada.
+- `include/WandEngine/`, donde ahora queda concentrado el código del framework en sus bloques de `Managers`, `Models`, `Collisions` e `Interfaces`, junto con las bibliotecas de Allegro usadas por el motor.
+- `src/`, donde pasan a quedar únicamente el punto de entrada y el código específico del juego, distribuido en `Scenes/`, `Entities/`, `Events/` y `Utilities/`.
+- `include/sqlite/`, donde se incorpora la dependencia embebida de SQLite como parte del árbol local del proyecto.
+- `CMakeLists.txt`, que pasa a describir la construcción completa del ejecutable, incluyendo archivos del engine, archivos del juego, bibliotecas enlazadas, nombre final de salida y recurso de icono.
 
 ## Arquitectura o sistemas principales
 
-### Movimiento utilitario en GameObject
+### Framework reubicado como árbol público
 
-`GameObject` deja de limitarse a posición y tamaño básicos y pasa a exponer una base de movimiento reutilizable dentro del propio modelo. La ampliación visible incluye:
+El cambio estructural principal es que el engine deja de vivir bajo `src/WandAllegroEngine/` y pasa a organizarse dentro de `include/WandEngine/`. Desde esta etapa, el framework queda distribuido como un árbol más cercano a una librería reutilizable, donde cabeceras e implementaciones del motor conviven en una estructura pública y homogénea.
 
-- `Direction` y `ViewDirection` como vectores de estado;
-- `Velocity` y `Rotation` como parte del contrato del objeto;
-- `SetDirection()` y `GetDirection()`;
-- `SetRotation()` y `GetRotation()`;
-- `SetVelocity()` y `GetVelocity()`;
-- `UpdatePosition(float Velocity, double DeltaTime)`;
-- `ReachPositionInTime(WAND_VEC2 NewPosition, double Duration, double DeltaTime)`;
-- `MoveForDirection(WAND_VEC2 NewDirection, double Duration, double DeltaTime)`.
+La organización visible del engine queda compuesta por:
 
-Con ello el framework ya puede encapsular desplazamiento continuo y desplazamiento acotado por duración sin obligar a cada entidad a recalcular siempre su propia lógica vectorial desde cero.
+- `include/WandEngine/Managers/`;
+- `include/WandEngine/Models/`;
+- `include/WandEngine/Collisions/`;
+- `include/WandEngine/Interfaces/`.
 
-### Temporización más consistente bajo pausa
+Ese ajuste también cambia la forma en que el código del juego consume el engine, pasando a usar includes del tipo `<WandEngine/...>` desde `main.cpp` y las escenas activas.
 
-`GameTimer` conserva la corrección previa de arranque diferido, pero ahora la inicialización de `LastTimeTrigger` ocurre solo cuando el timer deja de estar pausado. Ese ajuste evita que un timer nacido en pausa consuma tiempo lógico antes de activarse realmente.
+### Separación entre motor, juego y dependencias
 
-Además, el modelo expone `GetElapsedTime()`, lo que deja una lectura explícita del punto temporal interno usado por el timer para coordinar su siguiente disparo.
+Con la reestructuración anterior, `src/` queda reservado para el código concreto del juego y ya no para mezclar ahí también la implementación del motor. El árbol visible pasa a distinguir:
 
-Con esto la infraestructura temporal queda mejor alineada con casos donde el timer se crea antes de empezar a correr, como cooldowns retenidos o movimientos activados bajo una condición posterior.
+- framework bajo `include/WandEngine/`;
+- dependencias embebidas bajo `include/sqlite/`;
+- punto de entrada y contenido del juego bajo `src/`.
 
-### Movimiento con duración apoyado en timers
+Dentro de `src/`, además, el código visible se reorganiza alrededor de entidades y escenas nuevas como `Player`, `Ground`, `SolidBlock`, `Spike` y `Background`, mientras desaparecen varias piezas de ejemplo anteriores ligadas a etapas previas del framework.
 
-El propio `GameObject` pasa a poder apoyarse en un `MovementTimer` interno para resolver desplazamientos durante una duración fija. La semántica visible es que el modelo puede iniciar un movimiento orientado, mantenerlo activo mientras el timer no termina y cerrarlo cuando la duración se cumple.
+### Incorporación formal de CMake
 
-Esto no reemplaza todavía toda la lógica específica de entidades, pero sí deja en el nivel base del framework una ruta reutilizable para mover objetos por tiempo en lugar de solo por frame o por entrada directa.
+`CMakeLists.txt` entra como descripción explícita del proceso de build del proyecto. La configuración visible define:
 
-### Endurecimiento del ciclo de vida espacial
+- versión mínima de CMake;
+- nombre del proyecto;
+- nombre final del ejecutable;
+- archivo de icono del binario;
+- conjunto de fuentes del juego;
+- conjunto de fuentes del engine;
+- bibliotecas a enlazar;
+- directorio de salida del ejecutable.
 
-`GameGridCollisions` cambia la consecuencia visible de salir del área válida: el objeto deja de volver a la última posición y pasa a destruirse directamente cuando su cuerpo ya no cabe dentro del grid activo.
+Con ello la construcción deja de depender solo de tareas externas del editor y pasa a quedar versionada dentro del propio repositorio.
 
-En paralelo, la verificación de colisión evita procesar pares cuyo objeto padre ya no está vivo. Con ello la capa de colisiones deja una semántica más estricta para objetos fuera de rango y reduce trabajo sobre entidades ya marcadas para destrucción.
+### Ensamblado del engine y del juego
 
-### Ajustes de robustez en managers e input
+La configuración de CMake no solo crea el target principal, sino que además declara de forma explícita qué archivos del framework forman parte del binario. En esta etapa el engine ya se integra al ejecutable a partir de rutas dentro de `include/WandEngine/`, mientras el contenido específico del juego se agrega desde `src/Scenes/` y `src/Entities/`.
 
-En `BodyManager::Clear()` la grilla activa ahora también se destruye y la referencia se nulifica, evitando que el manager conserve memoria o punteros residuales después de limpiar una escena.
+También queda visible el enlace con:
 
-Además, `Definitions.hpp` convierte `KeyEventType` en `enum class`, e `InputManager` adapta sus comparaciones a ese tipado fuerte. Junto con ello se corrigen varias llamadas de Allegro para usar valores nulos y banderas explícitas en lugar de literales heredados.
+- Allegro monolítico distribuido junto al proyecto;
+- `ole32` y `uuid` para el entorno Windows;
+- `sqlite3` como dependencia local integrada al build.
 
-En `GameScene::Clear()` también se reordena la liberación para vaciar primero música y sonido antes del resto de managers visuales y espaciales.
+### Reorientación del ejemplo principal del proyecto
+
+Aunque el foco de esta documentación sigue siendo el framework, la reestructuración también deja claro que el proyecto base cambia de orientación y reorganiza sus assets, entidades y escena principal alrededor de un prototipo distinto. Eso se refleja en rutas de recursos nuevas, en el `CMakeLists.txt` y en la escena principal actual, que consumen la nueva estructura del engine desde includes públicos.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- el modelo base de objetos ya puede servir como punto común para movimiento dirigido, movimiento por duración y temporización de desplazamientos;
-- el runtime maneja con reglas más estrictas la salida del área activa, la limpieza de grillas y el uso tipado de entrada dentro de managers y utilidades visuales.
+- el código del juego ya consume el motor mediante rutas públicas bajo `include/WandEngine/` en lugar de depender de una estructura interna incrustada dentro de `src/`;
+- la compilación del proyecto queda definida desde CMake con una separación explícita entre fuentes del engine, fuentes del juego, dependencias y salida binaria.
 
-Con ello dejé una base más útil para movimientos programados, proyectiles, comportamientos dirigidos y limpieza segura de recursos espaciales, con una semántica temporal y de entrada más consistente dentro del motor.
+Con ello dejé una base más útil para seguir evolucionando el framework como una unidad separable del juego de ejemplo y para reconstruir el proyecto con un flujo de build más claro y repetible.
 
 ## Dependencias externas visibles
 
-No incorporé dependencias externas visibles nuevas en esta etapa.
+En esta etapa queda visible de forma explícita la incorporación de CMake como sistema de build del proyecto y la integración local de `sqlite3` dentro del árbol de dependencias embebidas. También se mantiene el enlace con la biblioteca monolítica de Allegro distribuida junto al repositorio.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **20 de noviembre de 2024** queda delimitada por estos movimientos:
+La etapa efectiva al **23 de diciembre de 2024** queda delimitada por estos movimientos:
 
-- amplié `GameObject` con dirección, velocidad, rotación y helpers visibles para movimiento continuo o acotado por duración;
-- incorporé soporte interno de movimiento temporal en el propio modelo base mediante `MovementTimer`;
-- ajusté `GameTimer` para que su referencia inicial se fije solo al comenzar realmente cuando nace en pausa y añadí `GetElapsedTime()`;
-- endurecí `GameGridCollisions` para destruir objetos que salen del área válida y evitar colisiones sobre entidades ya no vivas;
-- completé la limpieza de `BodyManager` destruyendo la grilla activa y nulificando su referencia;
-- convertí `KeyEventType` en `enum class` y alineé `InputManager` con ese tipado fuerte.
+- reubiqué el framework desde `src/WandAllegroEngine/` hacia un árbol público bajo `include/WandEngine/`;
+- separé con mayor claridad engine, código del juego y dependencias embebidas dentro del repositorio;
+- incorporé `CMakeLists.txt` como configuración formal de compilación y enlace del proyecto;
+- declaré desde CMake las fuentes del engine, las fuentes del juego, el nombre final del ejecutable, el icono y el directorio de salida;
+- integré de forma explícita el enlace con Allegro, `sqlite3`, `ole32` y `uuid` dentro del nuevo flujo de build;
+- reorganicé el contenido específico del juego para consumir el engine desde includes públicos y una estructura de carpetas más clara.
 
-Con esta etapa dejé el framework más preparado para movimiento dirigido, control temporal más preciso y manejo espacial más estricto dentro del runtime.
+Con esta etapa dejé el proyecto en una forma más ordenada para distribución, compilación y evolución separada entre el framework y el juego de ejemplo.
