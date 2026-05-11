@@ -110,13 +110,12 @@ void LinkObject::OnCollision(GameObject *other)
 
             if (!IsTPActive)
             {
-                EventManager::GetInstance().TriggerEvent<GameObject *, GameObject *>("ChangePosition", this, other);
+                //EventManager::GetInstance().TriggerEvent<GameObject *, GameObject *>("ChangePosition", this, other);
             }
         }
         if (other->GetObjectName() == "Tile")
         {
-            DestructorMode ? other->Destroy() : SetToLastPosition();
-            EventManager::GetInstance().TriggerEvent("OnTileDestroy");
+            SetToLastPosition();
         }
     }
     else{

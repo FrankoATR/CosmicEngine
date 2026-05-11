@@ -30,7 +30,7 @@ void MapTileObject::Update(float deltaTime){
 void MapTileObject::OnCollision(GameObject* other){
 
     if(other->GetObjectName() == "Player"){
-        other->SetSize(WAND_VEC2(other->GetSize().x*1.01f, other->GetSize().y*1.01f));
+        
     }
 
 

@@ -2,7 +2,6 @@
 #define GAMEINSCENE_HPP
 
 #include "../WandAllegroEngine/Models/GameScene.hpp"
-#include "../Utilities/Paths.hpp"
 
 using namespace WandEngine;
 

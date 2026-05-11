@@ -37,6 +37,8 @@ namespace WandEngine
         void Draw();
         void FocusObject(GameObject *Obj);
         void FocusPosition(WAND_VEC2 NewPosition);
+        WAND_VEC2 GetFocusPosition();
+
         void Reset();
     };
 

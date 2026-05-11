@@ -6,6 +6,8 @@
 
 #define BLOCKS_SPRITES_PATH "assets/sprites/smb_blocks.png"
 #define MARIO_SPRITES_PATH "assets/sprites/smb_m1.png"
+#define POKEMONTILES_SPRITES_PATH "assets/sprites/pokemon-tiles.png"
+
 
 #define BUTTON1_SPRITE_PATH "assets/img/buttons/button1.png"
 

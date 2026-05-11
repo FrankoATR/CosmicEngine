@@ -14,6 +14,7 @@
 #include "../WandAllegroEngine/Models/UIElements/UIButton.hpp"
 
 #include "GameInScene.hpp"
+#include "GameEditorScene.hpp"
 #include "../Entities/BackgroundObject.hpp"
 #include "../Utilities/Paths.hpp"
 #include "../Entities/LinkObject.hpp"
@@ -21,6 +22,7 @@
 #include "../Entities/CustomEnemy.hpp"
 #include "../Events/Logger.hpp"
 
+#include "../Utilities/DataManager.hpp"
 
 MainScene::MainScene() : GameScene("MainScene"), CurrentMousePosition(InputManager::GetInstance().GetMousePosition()), LastMousePosition(InputManager::GetInstance().GetMousePosition())
 {
@@ -48,37 +50,35 @@ void MainScene::Init()
         SoundManager::GetInstance().Load("Intro", SOUND2_PATH);
         SoundManager::GetInstance().Load("PacmanDeath", SOUND3_PATH);
         
-        });
 
     SetProgressLoadingScene(0.2f);
 
-    AddMainThreadTask([this]()
-                      {
+
         GameObject *bg = new BackgroundObject(Object::StaticEntity, WAND_VEC2(0, 0), WAND_VEC2(1920, 1080), "BG", ResourceManager::GetInstance().getBitmap("Background2"), 0);
         ObjectManager::GetInstance().Add(bg);
 
-        GameObject *player = new LinkObject(Object::DynamicEntity, WAND_VEC2(400, 300), WAND_VEC2(64, 64), "Player", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Mario Sprites", 0, 0), 1, 20, ResourceManager::GetInstance().getFont("Font"));
+        int posX = 100;
+        int posY = 100;
+        DataManager::GetInstance().LoadData(posX, posY);
+        GameObject *player = new LinkObject(Object::DynamicEntity, WAND_VEC2(posX, posY), WAND_VEC2(64, 64), "Player", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Mario Sprites", 0, 0), 1, 20, ResourceManager::GetInstance().getFont("Font"));
         ObjectManager::GetInstance().Add(player);
 
         GameObject *enemy = new CustomEnemy(Object::DynamicEntity, WAND_VEC2(600, 600), WAND_VEC2(64, 64), "Emerson", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Mario Sprites", 0, 2), 1, 20, ResourceManager::GetInstance().getFont("Font"));
-        ObjectManager::GetInstance().Add(enemy); });
+        ObjectManager::GetInstance().Add(enemy); 
 
     SetProgressLoadingScene(0.3f);
 
-    AddMainThreadTask([this]()
-                      {
+
         for (int i = 0; i < 10; i++)
         {
-            GameObject* tmp = new MapTileObject(Object::DynamicEntity, WAND_VEC2(rand()%(int)GameManager::GetInstance().GetWindowsSize().width, rand()%(int)GameManager::GetInstance().GetWindowsSize().height), WAND_VEC2(32, 32), "Tile", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Blocks Sprites", rand()%5, rand()%3), 3);
+            GameObject* tmp = new MapTileObject(Object::DynamicEntity, WAND_VEC2(rand()%(int)GameManager::GetInstance().GetWindowsSize().width, rand()%(int)GameManager::GetInstance().GetWindowsSize().height), WAND_VEC2(64, 64), "Tile", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Blocks Sprites", rand()%5, rand()%3), 3);
             ObjectManager::GetInstance().Add(tmp);
-        } }
-    );
+        }
+
 
     SetProgressLoadingScene(0.5f);
 
     // new LinkObject(DynamicEntity, WAND_VEC2(300, 200), WAND_VEC2(64, 64), "Enemy", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 1), 3, 20, ResourceManager::GetInstance().getFont("Font"));
-
-    AddMainThreadTask([this](){
 
         EventManager::GetInstance().RegisterEvent("OnEnemyDestroy", std::function<void()>([]()
                                                                                         {
@@ -103,17 +103,13 @@ void MainScene::Init()
                 obj2->SetObjectName(tmp3);
                 std::cout << "Positions Changed" << std::endl; }));
 
-    });
 
 
 
-    AddMainThreadTask([this]()
-                    {
         UIButton* button1 = new UIButton(ResourceManager::GetInstance().getBitmap("Button1"), "Game Over", ResourceManager::GetInstance().getFont("ButtonFont"), WAND_VEC2(0, 0), WAND_SIZE(150, 75), true, NULL);
 
         button1->SetOnClick([](){
             SoundManager::GetInstance().Play("PacmanDeath", 1.0f, false);
-
         });
 
         UIManager::GetInstance().AddElement(button1);
@@ -137,7 +133,45 @@ void MainScene::Init()
         });
 
         UIManager::GetInstance().AddElement(button3);
-    });
+
+
+        UIButton* button4 = new UIButton(ResourceManager::GetInstance().getBitmap("Button1"), "Save Game", ResourceManager::GetInstance().getFont("ButtonFont"), WAND_VEC2(0, 100), WAND_SIZE(150, 75), true, NULL);
+
+        button4->SetOnClick([this](){
+                GameObject* player = ObjectManager::GetInstance().FindByUniqueName("Player");
+                if (player)
+                {
+                    DataManager::GetInstance().SaveData(player->GetPosition().x, player->GetPosition().y);
+                }
+        });
+
+        UIManager::GetInstance().AddElement(button4);
+
+
+        UIButton* button5 = new UIButton(ResourceManager::GetInstance().getBitmap("Button1"), "Load Game", ResourceManager::GetInstance().getFont("ButtonFont"), WAND_VEC2(0, 200), WAND_SIZE(150, 75), true, NULL);
+
+        button5->SetOnClick([this](){
+            int posX = 100;
+            int posY = 100;
+            DataManager::GetInstance().LoadData(posX, posY);
+            GameObject* player = ObjectManager::GetInstance().FindByUniqueName("Player");
+            if (player)
+            {
+                player->SetPosition(WAND_VEC2(posX, posY));
+            }
+        });
+
+        UIManager::GetInstance().AddElement(button5);
+
+
+        UIButton* button6 = new UIButton(ResourceManager::GetInstance().getBitmap("Button1"), "EDITOR", ResourceManager::GetInstance().getFont("ButtonFont"), WAND_VEC2(0, 300), WAND_SIZE(150, 75), true, NULL);
+
+        button6->SetOnClick([this](){
+            SceneManager::GetInstance().ReplaceScene(new GameEditorScene);
+        });
+
+        UIManager::GetInstance().AddElement(button6);
+
 
 
     SceneManager::GetInstance().SetBackBufferColor(WAND_COLOR(155.0f, 0.0f, 33.0f, 0.0f));
@@ -147,6 +181,8 @@ void MainScene::Init()
 
     std::cout << "\n\nSCENE CREATED: " << GetName() << std::endl
               << std::endl;
+
+                  });
 }
 
 void MainScene::Update(double deltaTime)

@@ -12,6 +12,7 @@
 #include "../WandAllegroEngine/Managers/CameraManager.hpp"
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
 
+#include "../Utilities/Paths.hpp"
 
 int destroyedTiles = 0;
 

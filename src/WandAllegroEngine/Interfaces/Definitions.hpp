@@ -1,6 +1,8 @@
 #ifndef DEFINITIONS_HPP
 #define DEFINITIONS_HPP
 
+#include <nlohmann/json.hpp>
+
 namespace WandEngine
 {
 
@@ -15,7 +17,7 @@ namespace WandEngine
     struct WAND_VEC2
     {
         float x, y;
-        WAND_VEC2() = delete;
+        WAND_VEC2() : x(0.0f), y(0.0f) {}
         WAND_VEC2(float x, float y) : x(x), y(y) {}
     };
 
@@ -46,6 +48,25 @@ namespace WandEngine
         KeyRelease
     };
 
+}
+
+
+namespace nlohmann
+{
+    template <>
+    struct adl_serializer<WandEngine::WAND_VEC2>
+    {
+        static void to_json(json& j, const WandEngine::WAND_VEC2& vec)
+        {
+            j = json{{"x", vec.x}, {"y", vec.y}};
+        }
+
+        static void from_json(const json& j, WandEngine::WAND_VEC2& vec)
+        {
+            vec.x = j.at("x").get<float>();
+            vec.y = j.at("y").get<float>();
+        }
+    };
 }
 
 #endif // DEFINITIONS_HPP

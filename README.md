@@ -2,102 +2,96 @@
 
 ## Fecha efectiva
 
-**9 de noviembre de 2024**
+**12 de noviembre de 2024**
 
 ## Descripción general
 
-En esta etapa incorporé una capa de interfaz propia al framework y la integré al ciclo normal de actualización y dibujo de las escenas. A partir de este punto el motor ya no depende únicamente de objetos del mundo para renderizar y responder a entrada, sino que también puede administrar elementos de UI con posición, tamaño, jerarquía y comportamiento interactivo.
+En esta etapa empecé a mover el framework hacia una base de persistencia y serialización propia para datos simples del runtime. El cambio más visible es que los tipos espaciales compartidos dejan de ser solamente estructuras de uso interno y pasan a quedar preparados para representarse en JSON, lo que abre una ruta directa para guardar y reconstruir estado sin depender de conversiones externas dispersas.
 
-En paralelo separé el manejo de efectos de sonido respecto a la música persistente y ajusté la coordinación entre escena, cámara e input para que la interacción visual y sonora quede organizada desde subsistemas específicos.
+Junto con eso añadí una utilidad específica para lectura y escritura de datos en disco, reforcé algunos puntos de la API base de cámara y objetos, y dejé reservado el espacio estructural para futuros managers orientados a temporización, agenda de tareas y animación de sprites.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- incorporar una base de interfaz reutilizable dentro del framework;
-- separar sonido puntual y música continua en servicios distintos;
-- trasladar más control del ciclo de frame y depuración visual hacia la escena activa.
+- preparar serialización y persistencia básica para datos del runtime;
+- ampliar la API base de cámara y objetos para consumo más seguro desde otras capas;
+- dejar estructurada la siguiente expansión de managers especializados del framework.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Models/`, donde aparece `UIElement` como base para elementos de interfaz y se agrega `UIElements/UIButton` como primer control interactivo concreto.
-- `src/WandAllegroEngine/Managers/`, donde `UIManager` entra en uso efectivo, `SoundManager` se incorpora como servicio nuevo y `SceneManager` redistribuye el control de actualización, dibujo y reemplazo de escenas.
-- `src/WandAllegroEngine/Interfaces/` y las capas de input, cámara, objetos, cuerpos y colisiones, donde la nomenclatura compartida de tipos pasa a usar prefijos `WAND_` de forma consistente.
+- `src/WandAllegroEngine/Interfaces/`, donde `Definitions.hpp` deja preparada la serialización JSON de `WAND_VEC2` y ajusta su construcción por defecto para soportar esa ruta de datos.
+- `src/Utilities/`, donde aparecen `DataManager` y `GameData` como base de persistencia y representación serializable de datos del juego.
+- `src/WandAllegroEngine/Managers/`, donde se amplía la interfaz de cámara y se agregan los archivos base de `TimerManager`, `ScheduleManager` y `SpriteAnimationManager` como preparación estructural de siguientes subsistemas.
 
 ## Arquitectura o sistemas principales
 
-### Capa base de interfaz
+### Serialización de tipos base
 
-Incorporé `UIElement` como clase base para construir interfaz dentro del framework. Su implementación visible resuelve:
+`Definitions.hpp` deja de limitarse a definir estructuras compartidas y pasa a incluir la especialización `adl_serializer` de `nlohmann::json` para `WAND_VEC2`. Con ello el vector base del framework ya puede transformarse de forma directa a una representación JSON con claves `x` e `y`, y reconstruirse desde esa misma estructura.
 
-- posición y tamaño mediante `WAND_VEC2` y `WAND_SIZE`;
-- visibilidad por elemento;
-- relación padre e hijos para componer UI jerárquica;
-- actualización y dibujo encadenados sobre la jerarquía;
-- detección de `MouseHover()` sobre el área ocupada.
+Para sostener esa ruta también incorporé un constructor por defecto en `WAND_VEC2`, lo que permite que el tipo pueda existir como destino válido durante procesos de deserialización y carga de datos.
 
-Sobre esa base también agregué `UIButton` como primer control concreto, con sprite, texto, fuente, callback de clic y estados básicos de interacción para hover y presión del mouse.
+### Persistencia básica de runtime
 
-### Manager de UI integrado al frame
+`DataManager` entra como utilidad dedicada para guardar y recuperar datos simples del estado del juego. Su interfaz visible queda concentrada en:
 
-`UIManager` entra como singleton efectivo para registrar, actualizar, dibujar y limpiar elementos de interfaz. Además conserva un estado global `MouseHoverAny` para saber si algún elemento está capturando la atención del cursor durante el frame.
+- `LoadData(int &PositionX, int &PositionY)`;
+- `SaveData(int PositionX, int PositionY)`.
 
-Con esto la UI deja de ser una responsabilidad dispersa de escenas o entidades concretas y pasa a contar con un punto central de administración dentro del framework.
+La implementación usa archivos JSON sobre una carpeta `saves` ubicada junto al ejecutable, crea el directorio cuando hace falta y elimina el archivo si detecta un contenido inválido. Con esto queda establecida una primera base para persistencia local desde el propio framework.
 
-### Audio dividido entre música y efectos
+### Estructura serializable de datos
 
-Agregué `SoundManager` como servicio específico para efectos de sonido basados en `ALLEGRO_SAMPLE` y `ALLEGRO_SAMPLE_INSTANCE`. Su interfaz visible cubre:
+Además de la utilidad de guardado, agregué `GameData` como estructura de datos con serialización visible basada en `nlohmann::json`. En su estado actual conserva el campo `Type` y deja preparada la incorporación posterior de colecciones de entidades.
 
-- `Load()`;
-- `Play()`;
-- `Stop()`;
-- `StopAll()`;
-- `SetVolume()`;
-- `Clear()`.
+Aunque todavía no es una capa completa de guardado de escenas u objetos, sí establece el contrato inicial para representar datos del motor en una forma intercambiable y persistible.
 
-Al mismo tiempo normalicé `MusicManager` para usar la misma convención de nombres (`Load`, `Play`, `Pause`, `Resume`, `Stop`) y ajusté su inicialización para coexistir mejor con otros servicios de audio cuando Allegro ya se encuentra instalado.
+### Ajustes de API en cámara y objetos
 
-### Escena como orquestador de managers
+`CameraManager` amplía su interfaz con `GetFocusPosition()`, permitiendo consultar el punto central actualmente enfocado en lugar de operar únicamente sobre el desplazamiento bruto de cámara.
 
-`GameScene` asume más control directo sobre el frame del runtime mediante dos puntos nuevos:
+En paralelo, `GameObject` vuelve const-correct varios accesores visibles:
 
-- `UpdateManagers(double deltaTime)`;
-- `Draw()`.
+- `GetPosition()`;
+- `GetSize()`;
+- `GetObjectName()`;
+- `GetObjectType()`;
+- `GetObjectId()`;
+- `GetLayerId()`;
+- `GetSprite()`;
+- `GetAliveInGameManager()`.
 
-Desde ahí la escena coordina su propia lógica, la actualización de UI, cuerpos y objetos, y también el dibujo opcional de cuerpos y cámara mediante banderas de depuración (`ShowBodys`, `ShowGrid`, `ShowCamera`).
+Con esto la API base de objetos queda más clara para lectura desde otras capas sin sugerir mutación implícita del estado.
 
-En la misma línea, `SceneManager` deja preparado el reemplazo diferido de escena mediante `NextScene`, delega el frame visible en `GameScene::Draw()` y cierra la ejecución cuando ya no existe una escena activa.
+### Preparación de managers futuros
 
-### Input y cámara aplicados a interfaz
-
-La nueva capa UI obligó a ajustar la lectura espacial de entrada. `InputManager` ahora expone `GetMousePosition()` y devuelve la posición del cursor compensada con la posición actual de cámara, mientras `CameraManager` agrega `GetPosition()` para volver accesible esa referencia.
-
-Además, la base tipada compartida se termina de consolidar con el reemplazo visible de `Vec2` y `Size` por `WAND_VEC2` y `WAND_SIZE` en managers, modelos y colisiones.
+Dentro de `src/WandAllegroEngine/Managers/` dejé creados los archivos base de `TimerManager`, `ScheduleManager` y `SpriteAnimationManager`. En esta etapa todavía funcionan como estructura reservada y no como subsistemas operativos, pero marcan la dirección inmediata de expansión del framework hacia temporización, agenda interna y animación desacoplada.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- la escena activa puede actualizar y dibujar objetos del mundo, depuración visual y elementos de interfaz desde un mismo punto de control;
-- el audio queda separado entre música persistente y sonidos de evento, evitando mezclar ambas responsabilidades en un solo manager.
+- los tipos espaciales compartidos ya pueden cruzar la frontera entre memoria y archivo en una forma serializable estándar;
+- la base de objetos y cámara expone lecturas más estables para utilidades, herramientas y futuras capas de edición o persistencia.
 
-Con ello dejé una base más útil para construir menús, overlays, controles interactivos y retroalimentación sonora sin forzar esa lógica dentro de las entidades del mundo.
+Con ello dejé una base más útil para avanzar hacia guardado de estado, herramientas auxiliares y subsistemas temporales sin volver a redefinir contratos de datos en cada capa del motor.
 
 ## Dependencias externas visibles
 
-No incorporé dependencias externas visibles nuevas en esta etapa.
+No incorporé dependencias externas visibles nuevas en esta etapa, pero `nlohmann::json` pasa a quedar integrado de forma explícita en la serialización de tipos base y estructuras de datos auxiliares.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **9 de noviembre de 2024** queda delimitada por estos movimientos:
+La etapa efectiva al **12 de noviembre de 2024** queda delimitada por estos movimientos:
 
-- incorporé `UIElement` y `UIButton` como primera base visible para construir interfaz interactiva dentro del framework;
-- integré `UIManager` al ciclo de actualización, dibujo y limpieza de escena;
-- añadí `SoundManager` como servicio separado para efectos de sonido y alineé `MusicManager` con una interfaz más uniforme;
-- trasladé a `GameScene` el control directo de actualización de managers, dibujo del frame y banderas de depuración visual;
-- reorganicé `SceneManager` para reemplazar escenas de forma diferida y cerrar correctamente el runtime cuando no queda ninguna activa;
-- consolidé el uso de `WAND_VEC2` y `WAND_SIZE` como convención tipada visible en input, cámara, objetos, cuerpos y colisiones.
+- preparé `WAND_VEC2` para serialización JSON directa y añadí su constructor por defecto para soportar carga de datos;
+- incorporé `DataManager` como utilidad visible para guardar y recuperar estado simple en archivos JSON locales;
+- agregué `GameData` como estructura serializable inicial para datos del juego;
+- amplié `CameraManager` con `GetFocusPosition()` para consultar el centro actual de enfoque;
+- volví const-correct la lectura pública de `GameObject` en varios accesores base;
+- dejé creada la estructura inicial de `TimerManager`, `ScheduleManager` y `SpriteAnimationManager` como preparación de la siguiente expansión del framework.
 
-Con esta etapa dejé el framework mejor preparado para construir interfaz, respuesta sonora y control de frame desde una arquitectura más clara y separada por responsabilidades.
+Con esta etapa dejé el framework más cerca de una infraestructura de persistencia y herramientas, con contratos de datos más utilizables y una base más clara para subsistemas especializados posteriores.

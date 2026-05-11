@@ -13,7 +13,7 @@ namespace WandEngine
 
 	class GameObject;
 
-	class GameBodyObject // En caso de hacer solo colisiones sin Gameobject, hacer otra clase llamada "Wall" y heredar de gameobject
+	class GameBodyObject
 	{
 
 	private:

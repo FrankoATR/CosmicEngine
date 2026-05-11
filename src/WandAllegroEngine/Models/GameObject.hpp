@@ -39,28 +39,28 @@ namespace WandEngine
         virtual void OnCollision(GameObject *other);
 
         void SetPosition(WAND_VEC2 NewPosition);
-        WAND_VEC2 GetPosition();
+        WAND_VEC2 GetPosition() const;
 
         void SetSize(WAND_VEC2 NewSize);
-        WAND_VEC2 GetSize();
+        WAND_VEC2 GetSize() const;
 
-        std::string GetObjectName();
+        std::string GetObjectName() const;
         void SetObjectName(std::string NewName);
 
-        Object GetObjectType();
+        Object GetObjectType() const;
 
         void SetObjectId(int NewObjectId);
-        int GetObjectId();
+        int GetObjectId() const;
 
         void SetLayerId(short int NewLayerId);
-        short int GetLayerId();
+        short int GetLayerId() const;
 
         void SetSprite(ALLEGRO_BITMAP *NewSprite);
-        ALLEGRO_BITMAP *GetSprite();
+        ALLEGRO_BITMAP *GetSprite() const;
 
         void SetToLastPosition();
         void Destroy();
-        bool GetAliveInGameManager();
+        bool GetAliveInGameManager() const;
 
         virtual ~GameObject();
     };

@@ -60,4 +60,10 @@ namespace WandEngine
         Transform();
     }
 
+    WAND_VEC2 CameraManager::GetFocusPosition()
+    {
+        return WAND_VEC2(this->Position.x + (Size.width / 2), this->Position.y + (Size.height / 2));
+    }
+
+
 }

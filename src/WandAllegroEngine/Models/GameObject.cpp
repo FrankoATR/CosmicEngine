@@ -40,7 +40,7 @@ namespace WandEngine
         this->Position = NewPosition;
     }
 
-    WAND_VEC2 GameObject::GetPosition()
+    WAND_VEC2 GameObject::GetPosition() const
     {
         return this->Position;
     }
@@ -50,12 +50,12 @@ namespace WandEngine
         this->Size = NewSize;
     }
 
-    WAND_VEC2 GameObject::GetSize()
+    WAND_VEC2 GameObject::GetSize() const
     {
         return this->Size;
     }
 
-    std::string GameObject::GetObjectName()
+    std::string GameObject::GetObjectName() const
     {
         return this->ObjectName;
     }
@@ -70,12 +70,12 @@ namespace WandEngine
         this->ObjectId = NewObjectId;
     }
 
-    int GameObject::GetObjectId()
+    int GameObject::GetObjectId() const
     {
         return this->ObjectId;
     }
 
-    Object GameObject::GetObjectType()
+    Object GameObject::GetObjectType() const
     {
         return this->ObjectType;
     }
@@ -86,7 +86,7 @@ namespace WandEngine
         WandEngine::ObjectManager::GetInstance().SortByLayer();
     }
 
-    short int GameObject::GetLayerId()
+    short int GameObject::GetLayerId() const
     {
         return this->LayerId;
     }
@@ -96,7 +96,7 @@ namespace WandEngine
         this->Sprite = NewSprite;
     }
 
-    ALLEGRO_BITMAP *GameObject::GetSprite()
+    ALLEGRO_BITMAP *GameObject::GetSprite() const
     {
         return this->Sprite;
     }
@@ -118,14 +118,14 @@ namespace WandEngine
         this->AliveInGameManager = false;
     }
 
-    bool GameObject::GetAliveInGameManager()
+    bool GameObject::GetAliveInGameManager() const
     {
         return this->AliveInGameManager;
     }
 
     GameObject::~GameObject()
     {
-        // std::cout << "Object destroyed: " << GetObjectName() << std::endl;
+        // std::cout << "Object destroyed: " << GetObjectName() << std::endl; const
     }
 
 }
