@@ -1,6 +1,7 @@
 #include "MainScene.hpp"
 #include "../WandAllegroEngine/Managers/EventManager.hpp"
 #include "../WandAllegroEngine/Managers/ResourceManager.hpp"
+#include "../WandAllegroEngine/Managers/ObjectManager.hpp"
 #include "../WandAllegroEngine/Managers/SceneManager.hpp"
 
 #include "GameInScene.hpp"
@@ -39,16 +40,16 @@ void MainScene::Init()
 
 
     GameObject* bg = new BackgroundObject(Game, StaticEntity, Vec2(0, 0), Vec2(1920, 1080), "BG", WandEngine::ResourceManager::GetInstance().getBitmap("Background2"), 0);
-    Game->gameObjectManager->Add(bg);
+    WandEngine::ObjectManager::GetInstance().Add(bg);
 
     SetProgressLoadingScene(0.4f);
 
 
     GameObject* player = new LinkObject(Game, DynamicEntity, Vec2(400, 300), Vec2(64, 64), "Player", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 4), 1, 20, WandEngine::ResourceManager::GetInstance().getFont("Font"));
-    Game->gameObjectManager->Add(player);
+    WandEngine::ObjectManager::GetInstance().Add(player);
 
     GameObject* enemy = new CustomEnemy(Game, DynamicEntity, Vec2(600, 600), Vec2(64, 64), "Enemy", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 0, 2), 1, 20, WandEngine::ResourceManager::GetInstance().getFont("Font"));
-    Game->gameObjectManager->Add(enemy);
+    WandEngine::ObjectManager::GetInstance().Add(enemy);
 
     SetProgressLoadingScene(0.6f);
 

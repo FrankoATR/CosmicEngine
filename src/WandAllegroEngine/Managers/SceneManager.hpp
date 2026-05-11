@@ -5,7 +5,6 @@
 
 class GameScene;
 
-
 namespace WandEngine
 {
 
@@ -36,6 +35,7 @@ namespace WandEngine
         void PopScene();
         void Update(double deltaTime);
 
+        bool Empty();
         void Clear();
 
         bool IsSceneLoaded();

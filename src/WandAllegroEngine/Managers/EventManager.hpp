@@ -8,22 +8,26 @@
 class GameEvent;
 class GameObject;
 
-class EventManager {
+class EventManager
+{
 private:
     EventManager() = default;
-    EventManager(const EventManager&) = delete;
-    EventManager& operator=(const EventManager&) = delete;
+    ~EventManager();
+    EventManager(const EventManager &) = delete;
+    EventManager &operator=(const EventManager &) = delete;
 
-    std::vector<GameEvent*> gameEvents;
+    std::vector<GameEvent *> gameEvents;
 
 public:
-    static EventManager& GetInstance() {
+    static EventManager &GetInstance()
+    {
         static EventManager instance;
         return instance;
     }
-    void Add(GameEvent* GameEvent);
-    void Remove(GameEvent* GameEvent);
-    void Notify(GameObject* obj, const std::string& event);
+    void Add(GameEvent *GameEvent);
+    void Remove(GameEvent *GameEvent);
+    void Clear();
+    void Notify(GameObject *obj, const std::string &event);
 };
 
 #endif // EVENTMANAGER_HPP

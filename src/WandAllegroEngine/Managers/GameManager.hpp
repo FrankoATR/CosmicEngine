@@ -13,14 +13,13 @@
 #include <windows.h>
 #include <map>
 
-#include "GameObjectManager.hpp"
-#include "GameBodyManager.hpp"
-
 struct Size {
     int Width;
     int Height;
     Size(int Width, int Height) : Width(Width), Height(Height){}
 };
+
+class GameScene;
 
 class GameManager {
 
@@ -34,8 +33,6 @@ public:
 
     ALLEGRO_DISPLAY* Window;
     ALLEGRO_EVENT_QUEUE* event_queue;
-    GameObjectManager* gameObjectManager;
-    GameBodyManager* gameBodyManager;
 
     ALLEGRO_TIMER* FPS;
     ALLEGRO_EVENT Event;
@@ -51,6 +48,7 @@ public:
     void ToggleShowBody();
 
     void SetBackBufferColor(ALLEGRO_COLOR color);
+    void SetFirstScene(GameScene* scene);
 
     void SetWindows_Size(Size ScreenSize);
     void SetWindows_FullScreenMode();

@@ -1,4 +1,5 @@
 #include "WandAllegroEngine/Managers/GameManager.hpp"
+#include "Scenes/MainScene.hpp"
 
 int main(){
 
@@ -9,6 +10,7 @@ int main(){
 	GameManager* Game = new GameManager(Size(ScreenWidth, ScreenHeight));
 
 	if(Game->Init()){
+		Game->SetFirstScene(new MainScene(Game));
 		Game->Update();
 	}
 	

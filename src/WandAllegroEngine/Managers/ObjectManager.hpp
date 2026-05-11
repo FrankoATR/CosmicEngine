@@ -1,0 +1,41 @@
+#ifndef OBJECTMANAGER_HPP
+#define OBJECTMANAGER_HPP
+
+#include <algorithm>
+#include <list>
+#include <vector>
+
+class GameObject;
+
+namespace WandEngine
+{
+
+    class ObjectManager
+    {
+    private:
+        std::vector<GameObject *> actors;
+        int nextEntityId;
+
+        ObjectManager();
+        ~ObjectManager();
+        ObjectManager(const ObjectManager &) = delete;
+        ObjectManager &operator=(const ObjectManager &) = delete;
+
+    public:
+        static ObjectManager &GetInstance()
+        {
+            static ObjectManager instance;
+            return instance;
+        }
+
+        void Update(float deltaTime);
+        void Draw();
+        void Add(GameObject *actor);
+        void Remove(int entityId);
+        void SortByLayer();
+        void Clear();
+    };
+
+}
+
+#endif // OBJECTMANAGER_HPP

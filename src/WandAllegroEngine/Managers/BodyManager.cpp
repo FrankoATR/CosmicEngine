@@ -1,7 +1,7 @@
-#include "GameBodyManager.hpp"
+#include "BodyManager.hpp"
 #include "../Models/GameObject.hpp"
 
-GameBodyManager::GameBodyManager()
+WandEngine::BodyManager::BodyManager()
 {
 
     std::vector<GameGridCollisions> gameGrids;
@@ -15,12 +15,12 @@ GameBodyManager::GameBodyManager()
     // gameGridCollisions.push_back(GameGridCollisions(Vec2(500, 700), 5, 2, 100));
 }
 
-GameBodyManager::~GameBodyManager()
+WandEngine::BodyManager::~BodyManager()
 {
     Clear();
 }
 
-void GameBodyManager::Update()
+void WandEngine::BodyManager::Update()
 {
     std::vector<int> toRemove;
 
@@ -72,7 +72,7 @@ void GameBodyManager::Update()
     // gameGridCollisions->UpdatePositions();
 }
 
-bool GameBodyManager::RectToRectCollisionBody(GameBodyObject *body1, GameBodyObject *body2)
+bool WandEngine::BodyManager::RectToRectCollisionBody(GameBodyObject *body1, GameBodyObject *body2)
 {
     return (body1->GetPosition().x < body2->GetPosition().x + body2->GetSize().x &&
             body1->GetPosition().x + body1->GetSize().x > body2->GetPosition().x &&
@@ -80,7 +80,7 @@ bool GameBodyManager::RectToRectCollisionBody(GameBodyObject *body1, GameBodyObj
             body1->GetPosition().y + body1->GetSize().y > body2->GetPosition().y);
 }
 
-void GameBodyManager::Draw()
+void WandEngine::BodyManager::Draw()
 {
     for (auto &grid : gameGridCollisions)
     {
@@ -92,7 +92,7 @@ void GameBodyManager::Draw()
     }
 }
 
-void GameBodyManager::Add(GameObject *obj, Vec2 Position, Vec2 Size)
+void WandEngine::BodyManager::Add(GameObject *obj, Vec2 Position, Vec2 Size)
 {
     if (obj)
     {
@@ -102,7 +102,7 @@ void GameBodyManager::Add(GameObject *obj, Vec2 Position, Vec2 Size)
     }
 }
 
-void GameBodyManager::Remove(int entityId)
+void WandEngine::BodyManager::Remove(int entityId)
 {
     auto it = std::find_if(bodys.begin(), bodys.end(), [entityId](GameBodyObject *body)
                            { return body->GetObjectId() == entityId; });
@@ -113,7 +113,7 @@ void GameBodyManager::Remove(int entityId)
     }
 }
 
-void GameBodyManager::Clear()
+void WandEngine::BodyManager::Clear()
 {
     for (auto &grid : gameGridCollisions)
     {

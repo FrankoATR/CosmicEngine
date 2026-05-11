@@ -2,71 +2,72 @@
 
 ## Fecha efectiva
 
-**2 de noviembre de 2024**
+**3 de noviembre de 2024**
 
 ## Descripción general
 
-La etapa efectiva al 2 de noviembre desplaza parte de la infraestructura del motor hacia un esquema de acceso global controlado para escenas y recursos, y acompaña ese cambio con una migración visible de cabeceras desde `.h` hacia `.hpp`. En paralelo, la base del proyecto incorpora un canal explícito de eventos entre objetos y observadores, además de una reorganización menor en el tratamiento de colisiones y en la cobertura espacial del grid.
+La etapa efectiva al 3 de noviembre profundiza la reestructuración iniciada en la iteración anterior y extiende el esquema singleton a la administración de objetos y cuerpos. Con ello, `GameManager` deja de conservar managers de gameplay como estado propio y queda más concentrado en el ciclo principal, la ventana y el procesamiento de eventos de Allegro.
 
-El resultado inmediato es una separación más marcada entre los managers mantenidos como estado propio de `GameManager` y aquellos que pasan a resolverse como instancias únicas compartidas durante la ejecución.
+La revisión también desplaza la selección de la escena inicial fuera de `Update()`, refuerza la limpieza de servicios compartidos al cerrar escenas y completa la liberación explícita del registro de eventos.
 
 ## Objetivo técnico
 
-Esta revisión queda orientada a tres frentes concretos:
+Esta revisión queda centrada en tres frentes:
 
-- consolidar la transición de interfaces públicas hacia cabeceras `.hpp`;
-- desacoplar la gestión de escenas y recursos del ciclo de vida manual de `GameManager`;
-- habilitar una vía simple de notificación entre entidades y consumidores de eventos del runtime.
+- unificar los managers principales del runtime bajo acceso global controlado;
+- extraer del loop principal la responsabilidad de decidir la escena inicial;
+- alinear la limpieza de escenas, objetos, cuerpos y eventos con el nuevo ciclo de vida compartido.
 
 ## Estructura del proyecto
 
-La diferencia visible respecto a la versión anterior se concentra en estos puntos:
+La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Managers/`, donde desaparecen `GameSceneManager` y `GameEventManager`, y pasan a coexistir `SceneManager`, `ResourceManager` y `EventManager` bajo nuevas cabeceras `.hpp`.
-- `src/WandAllegroEngine/Interfaces/`, que incorpora `GameEvent` como contrato base para receptores de notificaciones.
-- `src/Events/`, donde aparece `Logger` como implementación concreta del nuevo mecanismo de eventos.
-- `src/Entities/`, `src/Scenes/`, `src/Utilities/`, `src/WandAllegroEngine/Models/` y `src/WandAllegroEngine/Collisions/`, donde la interfaz pública migra desde `.h` hacia `.hpp`.
+- `src/WandAllegroEngine/Managers/`, donde `GameBodyManager` y `GameObjectManager` son retirados y sustituidos por `BodyManager` y `ObjectManager`.
+- `src/WandAllegroEngine/Models/`, donde `GameObject` y `GameScene` pasan a depender del nuevo esquema de managers globales.
+- `src/Scenes/` y `src/Entities/`, donde las altas de objetos y cuerpos dejan de resolverse a través de miembros de `GameManager`.
+- `src/main.cpp`, donde el arranque define de forma explícita la primera escena antes de entrar al loop principal.
 
 ## Arquitectura o sistemas principales
 
-### Escenas y recursos
+### Managers de objetos y cuerpos
 
-`GameManager` deja de administrar punteros propios a `ResourceManager` y `GameSceneManager`. En su lugar:
+La modificación dominante de esta etapa consiste en que `ObjectManager` y `BodyManager` reemplazan a `GameObjectManager` y `GameBodyManager` no solo en nombre, sino también en modo de acceso:
 
-- el flujo de escenas se resuelve mediante `WandEngine::SceneManager::GetInstance()`;
-- la carga y consulta de recursos se canaliza mediante `WandEngine::ResourceManager::GetInstance()`;
-- el constructor y la liberación final de `GameManager` reducen su responsabilidad a objetos, cuerpos, ventana y subsistemas de Allegro.
+- ambos managers pasan a exponer `GetInstance()`;
+- `GameManager` elimina sus punteros a managers de objetos y cuerpos;
+- escenas, entidades y modelos comienzan a operar directamente sobre `WandEngine::ObjectManager::GetInstance()` y `WandEngine::BodyManager::GetInstance()`.
 
-Este ajuste reubica la persistencia de escenas y recursos fuera del ciclo de vida directo del objeto principal del juego.
+El efecto técnico es una homogeneización del runtime: escenas, recursos, eventos, objetos y cuerpos ya no se distribuyen entre servicios globales y servicios retenidos por `GameManager`, sino que convergen en un mismo patrón de acceso compartido.
 
-### Sistema de eventos
+### Arranque y control de la escena inicial
 
-Se incorpora una capa mínima de publicación de eventos compuesta por tres piezas visibles:
+`GameManager::Update()` deja de crear internamente `MainScene`. En su lugar:
 
-- `GameEvent`, como interfaz base con `OnNotify(GameObject*, const std::string&)`;
-- `EventManager`, como registro singleton de observadores;
-- `Logger`, como consumidor concreto agregado desde `MainScene`.
+- `main.cpp` incluye ahora la escena inicial de manera explícita;
+- `GameManager` incorpora `SetFirstScene(GameScene* scene)`;
+- `SceneManager` agrega `Empty()` para permitir que la primera carga se haga solo cuando la pila aún no contiene escenas.
 
-En el estado actual, `LinkObject` emite notificaciones al desplazarse y al destruir enemigos. Con ello aparece una ruta explícita para reaccionar a acciones de gameplay sin incrustar toda la lógica en la entidad emisora.
+Con este cambio, la preparación del estado inicial deja de estar incrustada en el loop principal y queda definida antes de iniciar la ejecución continua del juego.
 
-### Colisiones y partición espacial
+### Limpieza de runtime compartido
 
-La revisión introduce dos variaciones funcionales en este frente:
+La revisión refuerza la liberación de memoria y la limpieza de estado en servicios ya compartidos:
 
-- `GameBodyManager` expande la grilla principal desde `9 x 12` hacia `10 x 18`, manteniendo celdas de tamaño `100`;
-- `GameGridCollisions::Check_cells_collisions()` deja de disparar la notificación inversa sobre el segundo objeto, por lo que el procesamiento efectivo de la colisión queda iniciado solo desde el primer cuerpo evaluado en cada comparación.
+- `EventManager` incorpora `Clear()` y destructor propio para destruir observadores registrados;
+- `GameScene::Clear()` vacía explícitamente `BodyManager`, `ObjectManager` y `ResourceManager`;
+- los destructores de `ObjectManager` y `BodyManager` consolidan la liberación de entidades y cuerpos desde su propio ámbito.
 
-La primera modificación amplía el área operativa cubierta por el grid. La segunda altera la simetría observada anteriormente en los callbacks de colisión.
+Este ajuste reduce la dependencia de liberaciones dispersas y hace más coherente el cierre de una escena con el vaciado del estado global asociado a ella.
 
 ## Escenas y flujo visible
 
 ### `MainScene`
 
-La escena principal adopta el acceso singleton a recursos y a la gestión de escenas, y registra `Logger` en `EventManager`. El comportamiento interactivo preserva la transición hacia `GameInScene`, el cierre por `Escape`, el cambio de modo de ventana y la alternancia de visualización de cuerpos, pero ahora sobre la nueva infraestructura compartida.
+La escena principal conserva el comportamiento jugable inmediato de la iteración anterior, pero queda adaptada por completo al uso de `ObjectManager` como servicio global para registrar fondo, jugador y enemigo. El alta de `Logger` se mantiene en `EventManager`, ahora con limpieza explícita del contenedor al finalizar el ciclo de vida del manager.
 
 ### `GameInScene`
 
-La escena de juego replica el cambio de acceso a recursos y escenas mediante singletons y mantiene la generación dispersa de tiles ya presente en la iteración anterior. El ajuste principal de esta etapa se concentra en la adaptación de dependencias y cabeceras al nuevo esquema estructural.
+La escena de juego replica el cambio de acceso a `ObjectManager` para poblar jugador y tiles. La lógica visible de poblamiento aleatorio no se altera en esta etapa; el cambio se concentra en el desplazamiento de dependencias hacia los managers globales.
 
 ## Dependencias externas visibles
 
@@ -75,15 +76,14 @@ La escena de juego replica el cambio de acceso a recursos y escenas mediante sin
 
 ## Resumen técnico de la versión
 
-La revisión efectiva al **2 de noviembre de 2024** queda delimitada por estos movimientos:
+La revisión efectiva al **3 de noviembre de 2024** queda delimitada por estos movimientos:
 
-- la interfaz pública del proyecto migra de forma amplia desde archivos `.h` hacia `.hpp`;
-- `SceneManager` sustituye el uso directo de `GameSceneManager` y pasa a exponerse como singleton;
-- `ResourceManager` pasa a resolverse como singleton y deja de ser liberado manualmente por `GameManager`;
-- se incorpora `EventManager` como registro central de observadores y `GameEvent` como interfaz base;
-- `MainScene` registra `Logger` y `LinkObject` comienza a emitir eventos visibles del runtime;
-- la grilla principal de cuerpos incrementa su cobertura a `10 x 18` celdas;
-- la evaluación de colisiones deja de invocar el callback inverso sobre el segundo objeto del par;
-- el punto de entrada y las escenas se alinean con la nueva convención de cabeceras y managers.
+- `BodyManager` y `ObjectManager` sustituyen a `GameBodyManager` y `GameObjectManager` como servicios singleton del runtime;
+- `GameManager` elimina los punteros propios a managers de objetos y cuerpos;
+- `main.cpp` pasa a fijar la escena inicial mediante `SetFirstScene(new MainScene(Game))` antes de llamar `Update()`;
+- `SceneManager` incorpora `Empty()` para controlar la carga inicial de la pila de escenas;
+- `GameScene::Clear()` vacía cuerpos, objetos y recursos desde el nuevo esquema compartido;
+- `EventManager` agrega limpieza explícita y destructor para liberar observadores registrados;
+- escenas y entidades sustituyen el acceso a managers retenidos por `GameManager` por llamadas directas a `ObjectManager` y `BodyManager`.
 
-La etapa deja al proyecto con una base más cercana a un runtime compartido por servicios globales, aunque todavía en un estado transicional en el que conviven archivos eliminados del esquema anterior y nuevas incorporaciones pendientes de consolidación en el historial.
+La etapa deja al proyecto más cerca de una arquitectura en la que `GameManager` coordina el loop y la infraestructura de ventana, mientras que el estado jugable y sus servicios auxiliares quedan concentrados en managers globales con ciclo de vida propio.

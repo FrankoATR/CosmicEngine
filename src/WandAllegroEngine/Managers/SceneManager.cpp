@@ -1,7 +1,6 @@
 #include "SceneManager.hpp"
 #include "../Models/GameScene.hpp"
 
-
 static void *InitLoadingScene_ThreadFunc(ALLEGRO_THREAD *thread, void *arg)
 {
     GameScene *scene = (GameScene *)arg;
@@ -10,7 +9,6 @@ static void *InitLoadingScene_ThreadFunc(ALLEGRO_THREAD *thread, void *arg)
     std::cout << "THREAD 2" << std::endl;
     return nullptr;
 }
-
 
 void WandEngine::SceneManager::ChangeScene()
 {
@@ -48,7 +46,6 @@ void WandEngine::SceneManager::PushScene(GameScene *scene)
     }
 }
 
-
 void WandEngine::SceneManager::ReplaceScene(GameScene *scene)
 {
     if (sceneStack.empty())
@@ -68,8 +65,6 @@ void WandEngine::SceneManager::ReplaceScene(GameScene *scene)
         sceneChanged = true;
     }
 }
-
-
 
 void WandEngine::SceneManager::PopScene()
 {
@@ -135,23 +130,24 @@ bool WandEngine::SceneManager::Running() const
     return isRunning && !sceneStack.empty();
 }
 
+bool WandEngine::SceneManager::Empty()
+{
+    return sceneStack.empty();
+}
 
-
-void WandEngine::SceneManager::Clear(){
-    for (const auto& scene : sceneStack)
+void WandEngine::SceneManager::Clear()
+{
+    for (const auto &scene : sceneStack)
     {
         scene->Clear();
         delete scene;
     }
     sceneStack.clear();
     std::cout << "Scene manager clear" << std::endl;
-
 }
-
 
 WandEngine::SceneManager::~SceneManager()
 {
     Clear();
     std::cout << "Scene manager destroyed" << std::endl;
-
 }

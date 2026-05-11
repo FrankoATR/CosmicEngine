@@ -1,5 +1,7 @@
 #include "GameScene.hpp"
 #include "../Managers/ResourceManager.hpp"
+#include "../Managers/BodyManager.hpp"
+#include "../Managers/ObjectManager.hpp"
 
 GameScene::GameScene(GameManager* Game, std::string Name) : Game(Game), ProgressLoadingScene(0.0f), Name(Name)
 {
@@ -39,8 +41,8 @@ std::string GameScene::GetName(){
 
 
 void GameScene::Clear(){
-    this->Game->gameBodyManager->Clear();
-    this->Game->gameObjectManager->Clear();
+    WandEngine::BodyManager::GetInstance().Clear();
+    WandEngine::ObjectManager::GetInstance().Clear();
     WandEngine::ResourceManager::GetInstance().clear();
     std::cout << "Scene Clear: " << GetName() << std::endl;
 

@@ -4,6 +4,7 @@
 #include "../Entities/LinkObject.hpp"
 
 #include "../WandAllegroEngine/Managers/ResourceManager.hpp"
+#include "../WandAllegroEngine/Managers/ObjectManager.hpp"
 #include "../WandAllegroEngine/Managers/SceneManager.hpp"
 
 GameInScene::GameInScene(GameManager* Game) : GameScene(Game, "GameInScene")
@@ -31,7 +32,7 @@ void GameInScene::Init()
 
 
     GameObject* player = new LinkObject(Game, DynamicEntity, Vec2(100, 100), Vec2(64, 64), "Player", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 1), 1, 20, WandEngine::ResourceManager::GetInstance().getFont("Font"));
-    Game->gameObjectManager->Add(player);
+    WandEngine::ObjectManager::GetInstance().Add(player);
 
     /*
     
@@ -39,7 +40,7 @@ void GameInScene::Init()
     for(int i=0; i < 10; i++)
         for(int j=0; j < 10; j++){
             GameObject* tmp = new MapTileObject(Game, DynamicEntity, Vec2(64*i, 64*j), Vec2(64, 64), "Tile", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
-            Game->gameObjectManager->Add(tmp);
+            WandEngine::ObjectManager::GetInstance().Add(tmp);
             load++;
             //SetProgressLoadingScene((load/(50.0f*30.0f)));
         }
@@ -52,7 +53,7 @@ void GameInScene::Init()
             int x = rand()%1920;
             int y = rand()%1080; 
             GameObject* tmp = new MapTileObject(Game, DynamicEntity, Vec2(x, y), Vec2(64, 64), "Tile", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
-            Game->gameObjectManager->Add(tmp);
+            WandEngine::ObjectManager::GetInstance().Add(tmp);
     }
     
     SetProgressLoadingScene(1.0f);

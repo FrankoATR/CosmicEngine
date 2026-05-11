@@ -1,17 +1,17 @@
-#include "GameObjectManager.hpp"
+#include "ObjectManager.hpp"
 #include "../Models/GameObject.hpp"
 
-GameObjectManager::GameObjectManager() : nextEntityId(0)
+WandEngine::ObjectManager::ObjectManager() : nextEntityId(0)
 {
 
 }
 
-GameObjectManager::~GameObjectManager()
+WandEngine::ObjectManager::~ObjectManager()
 {
     Clear();
 }
 
-void GameObjectManager::Update(float deltaTime)
+void WandEngine::ObjectManager::Update(float deltaTime)
 {
     std::vector<int> toRemove;
 
@@ -26,7 +26,7 @@ void GameObjectManager::Update(float deltaTime)
     }
 }
 
-void GameObjectManager::Draw()
+void WandEngine::ObjectManager::Draw()
 {
     for (auto actor : actors)
     {
@@ -34,7 +34,7 @@ void GameObjectManager::Draw()
     }
 }
 
-void GameObjectManager::Add(GameObject *actor)
+void WandEngine::ObjectManager::Add(GameObject *actor)
 {
     actor->SetObjectId(nextEntityId++);
     actor->Init();
@@ -43,7 +43,7 @@ void GameObjectManager::Add(GameObject *actor)
     SortByLayer();
 }
 
-void GameObjectManager::Remove(int entityId)
+void WandEngine::ObjectManager::Remove(int entityId)
 {
     auto it = std::find_if(actors.begin(), actors.end(), [entityId](GameObject *obj)
                            { return obj->GetObjectId() == entityId; });
@@ -54,14 +54,15 @@ void GameObjectManager::Remove(int entityId)
     }
 }
 
-void GameObjectManager::SortByLayer(){
+void WandEngine::ObjectManager::SortByLayer()
+{
     std::sort(actors.begin(), actors.end(), [](GameObject *a, GameObject *b)
               { return a->GetLayerId() < b->GetLayerId(); });
 }
 
-void GameObjectManager::Clear()
+void WandEngine::ObjectManager::Clear()
 {
-    for (const auto& actor : actors)
+    for (const auto &actor : actors)
     {
         delete actor;
     }

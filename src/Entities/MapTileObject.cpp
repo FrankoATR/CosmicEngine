@@ -1,4 +1,6 @@
 #include "MapTileObject.hpp"
+#include "../WandAllegroEngine/Managers/BodyManager.hpp"
+
 #include <iostream>
 
 MapTileObject::MapTileObject(GameManager* Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId) : 
@@ -9,7 +11,7 @@ GameObject(Game, ObjectType, Position, Size, ObjectName, Sprite, LayerId)
 
 
 void MapTileObject::Init(){
-    Game->gameBodyManager->Add(this, GetPosition(), GetSize());
+    WandEngine::BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
 }
 
 

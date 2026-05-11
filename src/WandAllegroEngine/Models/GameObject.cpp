@@ -1,4 +1,6 @@
 #include "GameObject.hpp"
+#include "../Managers/ObjectManager.hpp"
+
 #include <iostream>
 
 GameObject::GameObject(GameManager *Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId) : Game(Game), ObjectType(ObjectType), ObjectName(ObjectName), Sprite(Sprite), Size(Size), Position(Position), LastPosition(Position), LayerId(LayerId)
@@ -76,7 +78,7 @@ Object GameObject::GetObjectType()
 void GameObject::SetLayerId(short int NewLayerId)
 {
     this->LayerId = NewLayerId;
-    Game->gameObjectManager->SortByLayer();
+    WandEngine::ObjectManager::GetInstance().SortByLayer();
 }
 
 short int GameObject::GetLayerId()
@@ -118,5 +120,5 @@ bool GameObject::GetAliveInGameManager()
 
 GameObject::~GameObject()
 {
-    std::cout << "DESTROY OBJ: " << GetObjectName() << std::endl;
+    std::cout << "Object destroyed: " << GetObjectName() << std::endl;
 }

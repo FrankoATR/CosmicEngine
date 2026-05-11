@@ -1,5 +1,6 @@
 #include "LinkObject.hpp"
 #include "../WandAllegroEngine/Managers/EventManager.hpp"
+#include "../WandAllegroEngine/Managers/BodyManager.hpp"
 
 LinkObject::LinkObject(GameManager* Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font) : 
 GameObject(Game, ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP)
@@ -10,7 +11,7 @@ GameObject(Game, ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP
 
 
 void LinkObject::Init(){
-    Game->gameBodyManager->Add(this, GetPosition(), GetSize());
+    WandEngine::BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
 }
 
 

@@ -1,4 +1,5 @@
 #include "CustomEnemy.hpp"
+#include "../WandAllegroEngine/Managers/BodyManager.hpp"
 
 CustomEnemy::CustomEnemy(GameManager* Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font) : 
 GameObject(Game, ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP), TimeToChangeDirection(1.0f), TimeUntilRecibeDamage(1.0f), ActualDirection(RIGHT)
@@ -8,7 +9,7 @@ GameObject(Game, ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP
 
 
 void CustomEnemy::Init(){
-    Game->gameBodyManager->Add(this, GetPosition(), GetSize());
+    WandEngine::BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
 }
 
 
