@@ -21,7 +21,6 @@ namespace WandEngine
     private:
         InputManager();
         ~InputManager();
-
         InputManager(const InputManager &) = delete;
         InputManager &operator=(const InputManager &) = delete;
 
@@ -43,22 +42,18 @@ namespace WandEngine
         static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
     public:
-        static InputManager &GetInstance()
-        {
-            static InputManager instance;
-            return instance;
-        }
+        static InputManager &GetInstance();
 
         void Init(GLFWwindow* window);
+        void Shutdown();
         void Update(GLFWwindow* window);
-        void Clear();
 
         bool IsKeyPressed(int keycode, KeyEventType eventType) const;
         bool IsMouseButtonPressed(int button, KeyEventType eventType) const;
         bool IsJoystickButtonPressed(int button) const;
 
         glm::vec2 GetMousePosition() const;
-        glm::vec2 GetAbsoluteMousePosition() const;
+        glm::vec2 GetMousePosition_UI() const;
 
         void SetDisableMouse(bool value);
         bool GetIsDisableMouse();

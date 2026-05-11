@@ -5,22 +5,42 @@
 #include "../Body/BodyManager.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 namespace WandEngine
 {
-
-    CameraManager::CameraManager() 
-        : mode(CameraMode::CAMERA_2D)
+    CameraManager &CameraManager::GetInstance()
     {
-        Reset();
-        camera3D = new Camera3D(glm::vec3(0.0f, 0.0f, 3.0f));
-        activeMouseInput = true;
-        position2D = glm::vec2(0.0f);
-        baseWindowSize = glm::vec2(1920.0f, 1080.0f);
-        Zoom = 1.0f;
+        static CameraManager instance;
+        return instance;
     }
 
-    glm::vec2 CameraManager::GetBaseWindowSize()
+    CameraManager::CameraManager()
+    {
+        std::cout << "Camera manager created" << std::endl;
+    }
+
+    CameraManager::~CameraManager()
+    {
+        delete camera3D;
+        std::cout << "Camera manager destroyed" << std::endl;
+    }
+
+
+    void CameraManager::Init(glm::vec2 baseSize)
+    {
+        this->mode = CameraMode::CAMERA_2D;
+        this->camera3D = new Camera3D(glm::vec3(0.0f, 0.0f, 3.0f));
+        this->activeMouseInput = true;
+        this->position2D = glm::vec2(0.0f);
+        this->baseWindowSize = baseSize;
+        this->Zoom = 1.0f;
+        Reset();
+        std::cout << "Camera manager initialized" << std::endl;
+    }
+
+
+    glm::vec2 CameraManager::GetBaseWindowSize() const
     {
         return baseWindowSize;
     }
@@ -67,7 +87,7 @@ namespace WandEngine
         return mode;
     }
 
-    glm::mat4 CameraManager::GetViewMatrix()
+    glm::mat4 CameraManager::GetViewMatrix() const
     {
         if (mode == CameraMode::CAMERA_3D)
         {
@@ -79,7 +99,7 @@ namespace WandEngine
         }
     }
 
-    glm::mat4 CameraManager::GetProjectionMatrix()
+    glm::mat4 CameraManager::GetProjectionMatrix() const
     {
         glm::vec2 cam_area = GetCameraOrthoArea();
 
@@ -103,6 +123,18 @@ namespace WandEngine
             //return glm::ortho(position2D.x - orthoWidth * 0.5f, position2D.x + orthoWidth * 0.5f, position2D.y + orthoHeight * 0.5f, position2D.y - orthoHeight * 0.5f,  -1.0f, 1.0f);
         }
     }
+
+    glm::mat4 CameraManager::Get_UI_ProjectionMatrix() const
+    {
+        glm::vec2 base = GetBaseWindowSize();
+
+        return glm::ortho(
+            0.0f, base.x,
+            base.y, 0.0f,
+            -1.0f, 1.0f
+        );
+    }
+
 
     void CameraManager::ProcessKeyboard(Camera_Movement direction, float deltaTime)
     {
@@ -163,12 +195,12 @@ namespace WandEngine
     }
 
 
-    void CameraManager::SetFocusObject(GameObject *Obj)
+    void CameraManager::SetFocusObject(GameObject *Obj, float xoffset, float yoffset)
     {
         if (mode == CameraMode::CAMERA_2D)
         {
-            position2D.x = (Obj->GetPosition().x + Obj->GetSize().x / 2);
-            position2D.y = (Obj->GetPosition().y + Obj->GetSize().y / 2);
+            position2D.x = (Obj->GetPosition().x + Obj->GetSize().x / 2 + xoffset);
+            position2D.y = (Obj->GetPosition().y + Obj->GetSize().y / 2 + yoffset);
         }
     }
 
@@ -205,9 +237,5 @@ namespace WandEngine
     }
 
 
-    CameraManager::~CameraManager()
-    {
-        delete camera3D;
-    }
 
 }

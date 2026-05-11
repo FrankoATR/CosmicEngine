@@ -4,22 +4,50 @@
 namespace WandEngine
 {
 
-    TimerManager::TimerManager(){
-        
+    TimerManager &TimerManager::GetInstance()
+    {
+        static TimerManager instance;
+        return instance;
     }
 
-    void TimerManager::Add(GameTimer *NewTimer){
+    TimerManager::TimerManager()
+    {
+        std::cout << "Timer manager created" << std::endl;
+    }
+
+
+    TimerManager::~TimerManager()
+    {
+        Shutdown();
+        std::cout << "Timer manager destroyed" << std::endl;
+    }
+
+    void TimerManager::Init()
+    {
+        std::cout << "Timer manager initialized" << std::endl;
+    }
+
+    
+    void TimerManager::Shutdown()
+    {
+        
+    }
+    
+
+    void TimerManager::Add(GameTimer *NewTimer)
+    {
         Timers.push_back(NewTimer);
     }
 
-    void TimerManager::Update(double deltaTime){
-        for (auto it = Timers.begin(); it != Timers.end(); )
+    void TimerManager::Update(double deltaTime)
+    {
+        for (auto it = Timers.begin(); it != Timers.end();)
         {
             (*it)->Update(deltaTime);
 
             if (!(*it)->IsAlive())
             {
-                GameTimer* tmp = (*it);
+                GameTimer *tmp = (*it);
                 it = Timers.erase(it);
                 delete tmp;
             }
@@ -30,24 +58,17 @@ namespace WandEngine
         }
     }
 
-
-    void TimerManager::Clear(){
-        while(!Timers.empty())
+    void TimerManager::Clear()
+    {
+        while (!Timers.empty())
         {
             delete Timers.back();
             Timers.pop_back();
         }
 
-        #ifndef NDEBUG
-            std::cout << "Timer manager cleared" << std::endl;
-		#endif
+        std::cout << "Timer manager cleared" << std::endl;
     }
 
-    TimerManager::~TimerManager()
-    {
-        #ifndef NDEBUG
-            std::cout << "Timer manager destroyed" << std::endl;
-		#endif
-    }
+
 
 }

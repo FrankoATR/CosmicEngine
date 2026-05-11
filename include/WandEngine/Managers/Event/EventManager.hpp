@@ -21,11 +21,9 @@ namespace WandEngine
         std::unordered_map<std::string, IEvent*> eventCallbacks;
 
     public:
-        static EventManager &GetInstance()
-        {
-            static EventManager instance;
-            return instance;
-        }
+        static EventManager &GetInstance();
+        
+        void Init();
 
         template <typename... Args>
         void RegisterEvent(const std::string &eventName, std::function<void(Args...)> callback)
@@ -75,6 +73,7 @@ namespace WandEngine
                 std::cerr << "Evento no encontrado: " << eventName << std::endl;
             }
         }
+
 
         void RemoveEvent(const std::string &eventName);
 

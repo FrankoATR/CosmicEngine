@@ -4,6 +4,16 @@
 
 namespace WandEngine
 {
+    EventManager &EventManager::GetInstance()
+    {
+        static EventManager instance;
+        return instance;
+    }
+
+    void Init()
+    {
+        std::cout << "Event manager created" << std::endl;
+    }
 
     void EventManager::RemoveEvent(const std::string &eventName)
     {

@@ -1,15 +1,38 @@
 #include "BodyManager.hpp"
+#include "../../Models/GameBodyObject.hpp"
 #include "../../Models/GameObject.hpp"
+
 #include "../../Collisions/GameGridCollisions.hpp"
 #include <algorithm>
+#include <iostream>
 
 namespace WandEngine
 {
+    BodyManager &BodyManager::GetInstance()
+    {
+        static BodyManager instance;
+        return instance;
+    }
 
-    BodyManager::BodyManager() : nextEntityId(0)
+    BodyManager::BodyManager()
+    {
+        std::cout << "Body manager created" << std::endl;
+    }
+
+    BodyManager::~BodyManager()
+    {
+        std::cout << "Body manager destroyed" << std::endl;
+    }
+
+
+    void BodyManager::Init()
     {
         this->GridArea = nullptr;
+        this->nextEntityId = 0;
+        std::cout << "Body manager initialized" << std::endl;
     }
+
+
 
     void BodyManager::SetNewGridArea(GameGridCollisions * NewGridArea)
     {
@@ -99,7 +122,7 @@ namespace WandEngine
         else
         {
             delete body;
-            std::cerr << "Body deleted prematuredly" << std::endl;
+            std::cerr << "Body needs to have a parent" << std::endl;
         }
     }
 
@@ -155,15 +178,8 @@ namespace WandEngine
 
         nextEntityId = 0;
 
-        #ifndef NDEBUG
-            std::cout << "Body manager cleared" << std::endl;
-		#endif
+        std::cout << "Body manager cleared" << std::endl;
     }
 
-    BodyManager::~BodyManager()
-    {
-        #ifndef NDEBUG
-            std::cout << "Body manager destroyed" << std::endl;
-		#endif
-    }
+
 }

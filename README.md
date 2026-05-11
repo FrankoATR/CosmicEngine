@@ -2,122 +2,109 @@
 
 ## Fecha efectiva
 
-**6 de abril de 2025**
+**12 de abril de 2025**
 
 ## Descripción general
 
-En esta etapa el cambio dominante deja de ser la expansión del framework y pasa a ser una depuración fuerte del core. El motor retira varias capas experimentales que habían aparecido poco antes, especialmente la persistencia estructurada con base de datos y la ruta dedicada de texto, y vuelve a una API más directa en recursos, shaders, texturas y modelo base de objetos.
+En esta etapa el cambio dominante ya no es la depuración del core, sino su recomposición sobre una API más ambiciosa y coherente. El framework vuelve a crecer alrededor de un `ResourceManager` mucho más expresivo, reincorpora texto y persistencia declarativa al núcleo, y formaliza una capa de UI propia integrada al ciclo principal del engine.
 
-La evidencia visible de esta versión se concentra sobre todo en tres decisiones: desaparecen por completo `DataBaseManager` y `TextFont`; `ResourceManager`, `Shader` y `GameTexture2D` revierten hacia una interfaz más manual y menos abstracta; y `GameObject` junto con `GameScene` recortan hooks que habían ampliado el contrato del runtime en fechas anteriores.
+La evidencia visible de esta versión se concentra sobre todo en cuatro decisiones: `ResourceManager` pasa a centralizar sprites, formas, texto y buffers con soporte de múltiples vistas; `Shader` recupera helpers de alto nivel y unifica la proyección mediante `ViewType`; `UIManager`, `UIButton` y `UIText` vuelven a ser parte explícita del framework; y `DataBaseManager` junto con `GameObject` reabren la ruta de serialización por clase dentro del core.
 
-Con ello el proyecto no gana un subsistema nuevo, pero sí reduce complejidad interna. El framework queda más pequeño, más directo y menos cargado de capas todavía no estabilizadas.
+Con ello el proyecto no solo recupera capacidad perdida respecto a días anteriores, sino que reorganiza esa capacidad bajo contratos públicos más consistentes. El framework queda otra vez más amplio, pero también más alineado entre render, UI, runtime y persistencia.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- retirar subsistemas experimentales que todavía no estaban consolidados dentro del motor;
-- simplificar la API gráfica de recursos, shaders y texturas hacia un uso más explícito y manual;
-- reducir el contrato base de objetos y escenas para volver a una semántica más contenida del runtime.
+- consolidar un pipeline gráfico único capaz de atender render 2D, UI y distintas proyecciones desde una misma base de recursos;
+- reincorporar subsistemas transversales del framework, especialmente texto, UI y persistencia estructurada;
+- estandarizar los managers y contratos base del runtime para que el uso del engine sea más uniforme.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `include/WandEngine/Managers/DataBase/`, que desaparece del árbol del framework, eliminando la capa de serialización y persistencia declarativa basada en SQLite.
-- `include/WandEngine/Models/TextFont/`, que también desaparece, retirando la ruta de render de texto apoyada en FreeType desde el propio core.
-- `include/WandEngine/Managers/Resource/ResourceManager.*`, donde se abandona la separación entre recursos estáticos y dinámicos, se eliminan las claves internas `WAND_*` y se vuelve a una interfaz de recursos más simple.
-- `include/WandEngine/Models/Shader.*` y `include/WandEngine/Models/Texture/GameTexture2D.*`, donde se revierten helpers de alto nivel y se recupera un manejo más manual de compilación, uniforms y carga de texturas.
-- `include/WandEngine/Models/GameObject.*` y `include/WandEngine/Models/GameScene.*`, donde se recortan métodos como `GetAllValues()`, `Reset()` y parte del endurecimiento previo del contrato base.
-- `include/WandEngine/Interfaces/Definitions.hpp`, donde desaparecen aliases visibles ligados a UI y base de datos, reduciendo la superficie de atajos globales del framework.
+- `include/WandEngine/Managers/Resource/ResourceManager.*`, donde reaparece una infraestructura amplia con VAO estáticos, buffers dinámicos, fuentes tipográficas, medición de texto y helpers de render sobre múltiples vistas.
+- `include/WandEngine/Models/Shader.*`, donde vuelve una API de mayor nivel con `ViewType`, `SetModel()`, `SetProjection()` y un uso más expresivo de uniforms y compilación.
+- `include/WandEngine/Models/TextFont/`, que regresa al árbol del framework para sostener la carga de glifos y el render de texto desde el propio engine.
+- `include/WandEngine/Managers/UI/` y `include/WandEngine/Models/UIElements/`, donde se formaliza otra vez una capa de UI con manager dedicado y elementos como `UIButton` y `UIText`.
+- `include/WandEngine/Managers/DataBase/` y `include/WandEngine/Models/GameObject.*`, donde reaparecen la serialización por clase, `GetAllValues()`, `Reset()` y el contrato para reconstrucción de objetos desde persistencia.
+- `include/WandEngine/Managers/GameManager.*` y `include/WandEngine/Interfaces/Definitions.hpp`, donde se estabiliza la ergonomía del framework con singleton managers, drag-and-drop, aspecto base y aliases globales para UI y base de datos.
 
 ## Arquitectura o sistemas principales
 
-### Retirada de persistencia estructurada
+### ResourceManager como hub de render del framework
 
-El cambio técnico más fuerte de esta etapa es la eliminación completa de `DataBaseManager`. Con ello sale del framework toda la capa que intentaba formalizar:
+El cambio técnico más fuerte de esta etapa está en `ResourceManager`. El manager vuelve a convertirse en el centro real del pipeline gráfico del engine y deja de limitarse a texturas y shaders básicos. En esta versión concentra:
 
-- serialización por clase;
-- constructores de reconstrucción desde filas SQL;
-- guardado y carga por tipo del runtime;
-- helpers de consulta acoplados a un flujo interno de persistencia.
+- VAO estáticos y buffers dinámicos diferenciados;
+- render de sprites, spritesheets y primitivas geométricas;
+- carga y render de texto mediante `TextFont`;
+- helpers como `MeasureText()` y `RenderText()`;
+- selección de vista mediante `ViewType` para reutilizar la misma infraestructura entre mundo, proyección y UI.
 
-La consecuencia arquitectónica es clara: el motor deja de tratar la persistencia como responsabilidad del core y vuelve a un estado donde esa preocupación queda fuera de su contrato principal.
+Eso redefine el alcance del subsistema: ya no es solo un repositorio de recursos, sino una capa integrada de render con semántica propia del framework.
 
-### Retirada del render de texto como responsabilidad del core
+### Proyección unificada con ViewType
 
-La eliminación de `TextFont` va en la misma dirección. El framework abandona la ruta que había empezado a integrar glifos ASCII, texturas por carácter y render de texto dentro del propio `ResourceManager`.
+`Shader` recupera una API más rica y reaparece `ViewType` como enum central del pipeline. Con `SetProjection()` y `SetModel()`, el framework vuelve a encapsular transformaciones y elección de matrices dentro del propio shader wrapper, en lugar de dejar toda esa responsabilidad dispersa por fuera.
 
-No se sustituye por un sistema nuevo: simplemente se retira del núcleo. Eso reduce dependencias conceptuales dentro del motor y evita mantener una capa todavía inmadura junto al resto del pipeline gráfico.
+La implicación arquitectónica es importante porque ordena el render alrededor de una misma convención de vistas. Un sprite, una forma o un texto pueden pasar por el mismo esquema de proyección sin duplicar lógica por subsistema.
 
-### Reversión hacia un ResourceManager más simple
+### Texto y UI otra vez dentro del core
 
-`ResourceManager` también cambia de tono. La versión anterior estaba caminando hacia una infraestructura más sofisticada, con registros separados para VAO estáticos y buffers dinámicos, claves internas reservadas y helpers genéricos de limpieza. En esta etapa, buena parte de esa sofisticación se desarma.
+La vuelta de `TextFont` no llega aislada. Está acompañada por la reaparición de `UIManager`, `UIButton` y `UIText`, lo que convierte al texto en un servicio transversal y no solo en una utilidad auxiliar. El framework vuelve a ofrecer una capa de interfaz propia, con actualización y dibujo integrados al ciclo de escena.
 
-El resultado es un manager más directo, más manual y con menos estructura auxiliar. Se recuperan rutas como:
+En términos de diseño, esto vuelve a acercar el engine a una plataforma más completa para herramientas y HUDs. La UI deja de ser responsabilidad externa y pasa a formar parte explícita del contrato del motor.
 
-- `loadVAO` en lugar de variantes especializadas para geometría estática o dinámica;
-- `loadShader`, `loadTexture` y `loadTextureSheet` con una semántica más inmediata;
-- limpieza de recursos mediante bucles explícitos en lugar de utilidades genéricas como `ClearMap()`.
+### Persistencia declarativa y GameObject extendido
 
-Eso reduce abstracción, pero también vuelve más visible y predecible el comportamiento de bajo nivel del subsistema.
+`DataBaseManager` también regresa con un enfoque estructurado: registro de serialización por clase, columnas declaradas, callbacks de reconstrucción y rutas de guardado y carga por tipo. Eso vuelve a insertar la persistencia en el corazón del framework.
 
-### Shader y textura con menos helpers de alto nivel
+Para sostenerlo, `GameObject` retoma un contrato más amplio. Reaparecen `GetAllValues()`, `Reset()` y `Draw() const`, además de una semántica más preparada para clonación, referencias y restauración de estado. El modelo base vuelve a exponer la información que la persistencia necesita sin delegarla a lógica externa al objeto.
 
-La simplificación también alcanza a `Shader` y `GameTexture2D`. `Shader` vuelve a una forma más clásica: constructor vacío, compilación explícita y setters de uniforms con nomenclatura simple. Desaparecen helpers como `SetModel()`, `SetProjection()`, `Use()`, `EndUse()` y `GetID()` como parte del contrato refinado más reciente.
+Con ello el runtime recupera una ambición que en la etapa previa se había retirado: el motor vuelve a describir, guardar y reconstruir parte de su estado como responsabilidad interna.
 
-`GameTexture2D`, por su parte, deja de cargar imágenes desde el constructor y vuelve a un esquema donde otra capa carga datos y llama a `Generate(width, height, data)`. Eso desplaza responsabilidad fuera del objeto y reduce el encapsulamiento que se había intentado ganar en fechas anteriores.
+### Managers más uniformes y framework más ergonómico
 
-La lectura técnica de ambos cambios es la misma: el framework prefiere aquí una API menos ambiciosa y más explícita en lugar de empujar más inteligencia a las abstracciones base.
+El ensanchamiento del core también viene acompañado por una estandarización de managers y atajos públicos. `GameManager` incorpora soporte para archivos soltados sobre la ventana y control explícito del aspecto base, mientras `Definitions.hpp` vuelve a exponer aliases para UI y base de datos junto a los demás managers del engine.
 
-### Contratos base más contenidos para objetos y escenas
+No es el cambio más vistoso, pero sí uno importante para uso diario: el framework queda más homogéneo en cómo inicializa, centraliza y expone sus subsistemas.
 
-`GameObject` y `GameScene` también se simplifican. Salen del contrato base varios puntos que ampliaban el alcance del runtime más allá de lo estrictamente necesario:
+### Mesh y Model como soporte, no como eje dominante
 
-- `GetAllValues()` desaparece junto con la idea de serialización desde el modelo base;
-- `Draw()` deja de ser `const`;
-- `Reset()` sale del contrato base de `GameScene`;
-- el orden de actualización de managers vuelve a priorizar primero subsistemas internos y luego la lógica de escena en un flujo más contenido.
+`Mesh` y `Model` siguen presentes dentro del stack del engine y forman parte del soporte general para geometría y carga de assets 3D. Sin embargo, en esta fecha no son el centro del cambio arquitectónico. El peso real del delta está en la recomposición de recursos, vistas, UI, texto y persistencia.
 
-Esto sugiere una decisión de diseño bastante clara: antes de seguir agregando responsabilidades al núcleo, el framework reduce su superficie a aquello que ya considera estable.
-
-### Recorte de utilidades y ergonomía no esenciales
-
-Varios detalles menores acompañan esa misma simplificación:
-
-- desaparece `RS_MNX()` como helper inline de acceso al singleton de recursos;
-- `CameraManager` elimina offsets en `SetFocusObject()` y vuelve a un enfoque más simple;
-- `MusicManager` retira `SetPosition()`;
-- `GameManager` elimina la ruta de `DropCallback()` y el manejo de archivos soltados sobre la ventana.
-
-Cada ajuste por separado es pequeño, pero en conjunto refuerzan el mismo patrón: el framework reduce puntos de entrada accesorios y conserva una base más austera.
+Eso conviene dejarlo explícito para no sobredocumentar un área que aquí actúa más como continuidad del framework que como novedad dominante.
 
 ## Integración del framework
 
-Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
+Las implementaciones visibles del framework ya aprovechan estas capacidades en tres sentidos:
 
-- el core del motor queda menos acoplado a subsistemas todavía experimentales como persistencia estructurada o render de texto;
-- la capa gráfica vuelve a una interfaz más explícita, donde buena parte de la lógica queda en llamadas manuales y no en helpers de alto nivel.
+- el render vuelve a apoyarse en una infraestructura unificada capaz de atender mundo, proyección y UI bajo una misma convención;
+- la capa de interfaz y texto ya puede vivir dentro del motor sin depender de soluciones externas ad hoc;
+- la persistencia vuelve a disponer de contratos explícitos entre `DataBaseManager` y `GameObject` para guardar y reconstruir objetos del runtime.
 
-Con ello dejé una base de engine más pequeña y más conservadora que la de días anteriores. La mejora principal de esta etapa no está en añadir capacidad, sino en retirar complejidad que todavía no estaba suficientemente asentada.
+Con ello dejé una base de engine bastante más completa que la del 6 de abril. La mejora principal de esta etapa no está en un subsistema aislado, sino en cómo varias capas del framework vuelven a conectarse entre sí bajo una API más consistente.
 
 ## Dependencias externas visibles
 
-No aparecen dependencias nuevas visibles en esta etapa. Al contrario, el cambio principal es de contracción del uso interno de varias de ellas:
+No aparece un cambio de stack principal, pero sí una ampliación clara de cómo el framework usa dependencias ya presentes:
 
-- `sqlite3` deja de sostener una capa propia del framework al eliminarse `DataBaseManager`;
-- FreeType deja de estar representada en el core al desaparecer `TextFont`;
-- OpenGL sigue siendo la base del render, pero con una envoltura menos rica y más manual en `Shader`, `GameTexture2D` y `ResourceManager`.
+- OpenGL sigue siendo la base del render, ahora con una envoltura más rica en `ResourceManager` y `Shader`;
+- FreeType vuelve a tener presencia directa en el core a través de `TextFont` y del render de texto;
+- `sqlite3` vuelve a sostener una capa propia del framework mediante `DataBaseManager` y la serialización declarativa por clase;
+- Assimp y el stack de modelos siguen integrados, aunque en esta fecha actúan como soporte y no como eje principal del cambio.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **6 de abril de 2025** queda delimitada por estos movimientos:
+La etapa efectiva al **12 de abril de 2025** queda delimitada por estos movimientos:
 
-- eliminé `DataBaseManager` y retiré del core la persistencia declarativa de objetos;
-- eliminé `TextFont` y saqué del núcleo la ruta propia de render de texto;
-- simplifiqué `ResourceManager` al volver a una API más directa y menos estructurada para VAO, shaders y texturas;
-- revertí `Shader` y `GameTexture2D` hacia un manejo más manual de compilación, uniforms y carga de imágenes;
-- recorté el contrato base de `GameObject` y `GameScene`, retirando hooks de serialización y reinicio;
-- eliminé varias utilidades accesorias del framework como offsets de cámara, reposicionamiento musical, drop callback y aliases globales ligados a subsistemas retirados.
+- reconstruí `ResourceManager` como hub central de sprites, formas, texto y buffers con soporte de múltiples vistas;
+- restauré una API de shader más rica con `ViewType`, `SetModel()` y `SetProjection()`;
+- reincorporé `TextFont` y el render de texto al núcleo del framework;
+- formalicé otra vez una capa de UI con `UIManager`, `UIButton` y `UIText` integrada al ciclo del motor;
+- reintroduje `DataBaseManager` y devolví a `GameObject` los contratos necesarios para serialización y restauración de estado;
+- amplié la ergonomía del engine con drag-and-drop, aspecto base y aliases globales para subsistemas que vuelven a ser parte del core.
 
-Con esta etapa dejé el framework en una versión más contenida y defensiva: menos alcance funcional en el core, menos abstracciones experimentales y una API más simple sobre la cual seguir iterando después.
+Con esta etapa dejé el framework en una versión claramente más completa y más integrada: un core otra vez amplio, con más servicios internos y con una arquitectura pública mejor alineada entre render, UI, runtime y persistencia.

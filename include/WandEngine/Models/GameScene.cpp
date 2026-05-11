@@ -22,7 +22,10 @@ namespace WandEngine
         this->ShowCamera = false;
     }
 
+    void GameScene::Reset()
+    {
 
+    }
 
     bool GameScene::IsProgressLoadingSceneComplete()
     {
@@ -93,10 +96,10 @@ namespace WandEngine
 
     void GameScene::UpdateManagers(double deltaTime)
     {
-        UIManager::GetInstance().Update(deltaTime);
+        Update(deltaTime);
         ObjectManager::GetInstance().Update(deltaTime);
         BodyManager::GetInstance().Update();
-        Update(deltaTime);
+        UIManager::GetInstance().Update(deltaTime);
 
     }
 

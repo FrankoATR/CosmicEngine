@@ -7,10 +7,13 @@
 #include "Audio/Music/MusicManager.hpp"
 #include "Audio/Sound/SoundManager.hpp"
 #include "Timer/TimerManager.hpp"
+#include "UI/UIManager.hpp"
+#include "Object/ObjectManager.hpp"
+#include "Body/BodyManager.hpp"
+#include "Database/DatabaseManager.hpp"
+#include "Network/NetworkManager.hpp"
 
 #include <iostream>
-#include <thread>
-#include <chrono>
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -18,13 +21,29 @@
 
 namespace WandEngine
 {
-
-	GameManager::GameManager() : window(nullptr), fullScreenMode(false), VSyncEnable(false), targetFPS(60), gameticks(20.0f)
+	GameManager &GameManager::GetInstance()
 	{
+		static GameManager instance;
+		return instance;
+	}
+	
+	GameManager::GameManager()
+	{
+		std::cout << "Game manager created" << std::endl;
 	}
 
-	bool GameManager::Init(int screenWidth, int screenHeight)
+	bool GameManager::Init(int screenWidth, int screenHeight, int baseScreenWidth, int baseScreenHeight)
 	{
+		window = nullptr;
+		fullScreenMode = false;
+		VSyncEnable = false;
+		targetFPS = 60;
+		gameticks = 20.0f;
+        fpsTimer = 0.0;
+        frameCount = 0;
+        currentFPS = 0;
+
+		SetBaseAspectSize(baseScreenWidth, baseScreenHeight);
 
 		glfwInit();
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -36,7 +55,6 @@ namespace WandEngine
 
 		const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
-		
 		window = glfwCreateWindow(screenWidth, screenHeight, "WANDENGINE", nullptr, nullptr);
 
 		if (window == nullptr)
@@ -60,7 +78,28 @@ namespace WandEngine
 
 		glViewport(0, 0, screenWidth, screenHeight);
 		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+		glfwSetDropCallback(window, DropCallback);
 
+
+		InitManagers();
+
+
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO &io = ImGui::GetIO();
+		(void)io;
+		ImGui::StyleColorsDark();
+		ImGui_ImplGlfw_InitForOpenGL(window, true);
+		ImGui_ImplOpenGL3_Init("#version 330");
+
+		std::cout << "Game manager initialized" << std::endl;
+		return true;
+	}
+
+
+	bool GameManager::InitManagers() const
+	{
+		
 		if (!MusicManager::GetInstance().Init())
 		{
 			std::cerr << "FAILED TO INITIALIZE MUSICMANAGER" << std::endl;
@@ -74,14 +113,16 @@ namespace WandEngine
 		}
 
 		InputManager::GetInstance().Init(window);
+		UIManager::GetInstance().Init();
+		TimerManager::GetInstance().Init();
+		SceneManager::GetInstance().Init();
+		ResourceManager::GetInstance().Init();
+		ObjectManager::GetInstance().Init();
+		BodyManager::GetInstance().Init();
+		DataBaseManager::GetInstance().Init();
+		CameraManager::GetInstance().Init(baseAspectSize);
 
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO &io = ImGui::GetIO();
-		(void)io;
-		ImGui::StyleColorsDark();
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init("#version 330");
+		NetworkManager::GetInstance().Init();
 
 		return true;
 	}
@@ -90,7 +131,7 @@ namespace WandEngine
 	void GameManager::Update()
 	{
 		const double fixedDeltaTime = 1.0 / 144.0;
-		
+
 		double accumulator = 0.0;
 		double lastTime = glfwGetTime();
 		double lastRenderTimer = lastTime;
@@ -101,7 +142,7 @@ namespace WandEngine
 			double frameTime = currentTime - lastTime;
 			lastTime = currentTime;
 			accumulator += frameTime;
-	
+
 			while (accumulator >= fixedDeltaTime)
 			{
 				InputManager::GetInstance().Update(window);
@@ -111,10 +152,10 @@ namespace WandEngine
 				SceneManager::GetInstance().Update(fixedDeltaTime * (gameticks / 20.0f));
 				accumulator -= fixedDeltaTime;
 			}
-	
+
 			double targetFrameTime = 1.0 / targetFPS;
 
-			if(currentTime - lastRenderTimer >= targetFrameTime || VSyncEnable)
+			if (currentTime - lastRenderTimer >= targetFrameTime || VSyncEnable)
 			{
 				glm::vec3 BackbufferColor(SceneManager::GetInstance().GetBackgroundColor());
 				glClearColor(BackbufferColor.r, BackbufferColor.g, BackbufferColor.b, 1.0f);
@@ -126,6 +167,7 @@ namespace WandEngine
 				ImGui::NewFrame();
 
 				SceneManager::GetInstance().Draw();
+				frameCount++;
 
 				ImGui::Render();
 				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -134,42 +176,72 @@ namespace WandEngine
 				lastRenderTimer = glfwGetTime();
 			}
 
-			glfwPollEvents();
+			fpsTimer += frameTime;
 
+			if (fpsTimer >= 1.0)
+			{
+				currentFPS = frameCount;
+				frameCount = 0;
+				fpsTimer = 0.0;
+			}
+
+			glfwPollEvents();
 		}
 	}
-	
 
 	void GameManager::framebuffer_size_callback(GLFWwindow *window, int width, int height)
 	{
 		float currentAspect = (float)width / (float)height;
 		int newWidth = width;
 		int newHeight = height;
-		
-		if(currentAspect > (16.0f/9.0f))
+
+		glm::vec2 baseAspect = GameManager::GetInstance().GetBaseAspectSize();
+
+		if (currentAspect > (baseAspect.x / baseAspect.y))
 		{
-			newWidth = (int)(height * (16.0f/9.0f));
+			newWidth = (int)(height * (baseAspect.x / baseAspect.y));
 		}
 		else
 		{
-			newHeight = (int)(width / (16.0f/9.0f));
+			newHeight = (int)(width / (baseAspect.x / baseAspect.y));
 		}
 
 		int offsetX = (width - newWidth) / 2;
 		int offsetY = (height - newHeight) / 2;
-		glfwSetWindowAspectRatio(window, 16, 9);
+		glfwSetWindowAspectRatio(window, baseAspect.x, baseAspect.y);
 
 		glViewport(offsetX, offsetY, newWidth, newHeight);
-		
 	}
+
+	void GameManager::DropCallback(GLFWwindow *window, int count, const char **paths)
+	{
+		for (int i = 0; i < count; i++)
+		{
+			GameManager::GetInstance().PushDroppedFile(paths[i]);
+		}
+	}
+
+	std::vector<std::string> GameManager::GetDroppedFiles()
+	{
+		std::vector<std::string> tmp = droppedfiles;
+		droppedfiles.clear();
+		return tmp;
+	}
+
+	void GameManager::PushDroppedFile(std::string filepath)
+	{
+		droppedfiles.push_back(filepath);
+	}
+
 
 	void GameManager::SetTargetFPS(double targetFPS)
 	{
 		this->targetFPS = targetFPS;
 	}
 
-	int GameManager::GetCurrentFPS()
+	int GameManager::GetCurrentFPS() const 
 	{
+		return this->currentFPS;
 	}
 
 	void GameManager::SetGameTicks(float gameTicks)
@@ -177,11 +249,10 @@ namespace WandEngine
 		this->gameticks = gameTicks;
 	}
 
-	float GameManager::GetCurrenGameTicks()
+	float GameManager::GetCurrenGameTicks() const
 	{
 		return gameticks;
 	}
-
 
 	void GameManager::EnableVsync()
 	{
@@ -212,21 +283,31 @@ namespace WandEngine
 	{
 	}
 
-	GLFWwindow *GameManager::GetWindow()
+	GLFWwindow *GameManager::GetWindow() const
 	{
 		return window;
 	}
 
-	glm::vec2 GameManager::GetWindowsSize()
+	glm::vec2 GameManager::GetWindowsSize() const
 	{
 		int w, h;
 		glfwGetFramebufferSize(window, &w, &h);
 		return glm::vec2(w, h);
 	}
 
-	bool GameManager::IsFullScreen()
+	void GameManager::SetBaseAspectSize(int baseAspectWidth, int baseAspectHeight)
 	{
-		return fullScreenMode;
+		this->baseAspectSize = glm::vec2(static_cast<float>(baseAspectWidth), static_cast<float>(baseAspectHeight));
+	}
+
+	glm::vec2 GameManager::GetBaseAspectSize() const
+	{
+		return this->baseAspectSize;
+	}
+
+	bool GameManager::IsFullScreen() const
+	{
+		return this->fullScreenMode;
 	}
 
 	void GameManager::SetWindows_FullScreenMode()
@@ -258,30 +339,33 @@ namespace WandEngine
 		glfwSetWindowShouldClose(window, true);
 	}
 
-	void GameManager::Clear()
+	void GameManager::Shutdown()
 	{
 
 		glfwTerminate();
 
-		InputManager::GetInstance().Clear();
 		SceneManager::GetInstance().Clear();
 
 		MusicManager::GetInstance().Shutdown();
 		SoundManager::GetInstance().Shutdown();
 
+		InputManager::GetInstance().Shutdown();
+		UIManager::GetInstance().Shutdown();
+		TimerManager::GetInstance().Shutdown();
+		SceneManager::GetInstance().Shutdown();
+		DataBaseManager::GetInstance().Shutdown();
+
+		NetworkManager::GetInstance().Shutdown();
+
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 
-#ifndef NDEBUG
-		std::cout << "Game cleared" << std::endl;
-#endif
+		std::cout << "Game manager Shutdown" << std::endl;
 	}
 
 	GameManager::~GameManager()
 	{
-#ifndef NDEBUG
-		std::cout << "Game destroyed" << std::endl;
-#endif
+		std::cout << "Game manager destroyed" << std::endl;
 	}
 }

@@ -31,6 +31,7 @@ namespace WandEngine {
         void Stop(const std::string& key);
         void StopAll();
         void SetVolume(const std::string& key, float volume);
+        void SetPosition(const std::string& key, unsigned int milliseconds);
         void Clear();
         void Shutdown();
 

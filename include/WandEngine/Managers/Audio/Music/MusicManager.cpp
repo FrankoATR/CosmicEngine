@@ -4,18 +4,20 @@
 namespace WandEngine
 {
 
-    MusicManager::MusicManager() : system(nullptr)
+    MusicManager::MusicManager()
     {
-
+        std::cout << "Music manager created" << std::endl;
     }
 
     MusicManager::~MusicManager()
     {
-        Shutdown();
+        std::cout << "Music manager destroyed" << std::endl;
     }
 
     bool MusicManager::Init()
     {
+        system = nullptr;
+
         if (FMOD_System_Create(&system, FMOD_VERSION) != FMOD_OK)
         {
             std::cerr << "Failed to create FMOD system in MusicManager." << std::endl;
@@ -26,6 +28,8 @@ namespace WandEngine
             std::cerr << "Failed to initialize FMOD system in MusicManager." << std::endl;
             return false;
         }
+
+        std::cout << "Music manager initialized" << std::endl;
         return true;
     }
 
@@ -94,6 +98,16 @@ namespace WandEngine
             FMOD_Channel_SetVolume(it->second, volume);
         }
     }
+
+    void MusicManager::SetPosition(const std::string& key, unsigned int milliseconds)
+    {
+        auto it = channels.find(key);
+        if (it != channels.end() && it->second)
+        {
+            FMOD_Channel_SetPosition(it->second, milliseconds, FMOD_TIMEUNIT_MS);
+        }
+    }
+
 
     void MusicManager::Clear()
     {

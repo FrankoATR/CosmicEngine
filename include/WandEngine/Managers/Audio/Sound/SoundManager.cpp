@@ -4,17 +4,20 @@
 namespace WandEngine
 {
 
-    SoundManager::SoundManager() : system(nullptr)
+    SoundManager::SoundManager()
     {
+        std::cout << "Sound manager created" << std::endl;
     }
 
     SoundManager::~SoundManager()
     {
-        Shutdown();
+        std::cout << "Sound manager destroyed" << std::endl;
     }
 
     bool SoundManager::Init()
     {
+        system = nullptr;
+
         if (FMOD_System_Create(&system, FMOD_VERSION) != FMOD_OK)
         {
             std::cerr << "Failed to create FMOD system in soundManager." << std::endl;
@@ -25,6 +28,8 @@ namespace WandEngine
             std::cerr << "Failed to initialize FMOD system in soundManager." << std::endl;
             return false;
         }
+
+        std::cout << "Sound manager initialized" << std::endl;
         return true;
     }
 

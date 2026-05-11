@@ -5,13 +5,15 @@
     if (Type* var = static_cast<Type*>(target)) \
         if (var->GetClassName() == std::string(#Type))
 
-#include <iostream>
-
-#include "GameBodyObject.hpp"
-#include "GameTimer.hpp"
+#include <sqlite/sqlite3.h>
+#include <algorithm>
+#include <glm/glm.hpp>
+#include <string>
 
 namespace WandEngine
 {
+
+    class GameTimer;
 
     class GameObject
     {
@@ -45,16 +47,16 @@ namespace WandEngine
         glm::vec3 MainColor;
         float Transparency;
 
+/*
         GameObject &operator=(GameObject *other) // PROBAR AL REVES EN EL O1
         {
             if (this != other)
             {
-                std::cout << "Copiando desde " << other << " a " << this << std::endl;
                 other->pointer_copies.push_back(&other);
             }
             return *this;
         }
-
+*/
 
 
     public:
@@ -63,9 +65,9 @@ namespace WandEngine
 
 
         GameObject() = delete;
-        GameObject(GameObject *Other);
+        //GameObject(GameObject *Other);
         GameObject(std::string ClassName, glm::vec2 Position, glm::vec2 Size, float Rotation, short int LayerId);
-        virtual void Draw();
+        virtual void Draw() const;
         virtual void Init();
         virtual void Update(float deltaTime);
 
@@ -118,10 +120,16 @@ namespace WandEngine
         void Destroy();
         bool GetAliveInGameManager() const;
 
-        GameObject *Clone() const
-        {
-            return new GameObject(*this);
+        virtual GameObject *Clone() const;
+
+/*
+        template <typename Derived>
+        Derived* Clone() const {
+            static_assert(std::is_base_of<GameObject, Derived>::value, 
+                          "Clone Error");
+            return new Derived(static_cast<const Derived&>(*this));
         }
+*/
 
         template<typename TDerived>
         TDerived* makeReference(TDerived** outPtr) {
@@ -129,6 +137,24 @@ namespace WandEngine
             *outPtr = static_cast<TDerived*>(this);
             return static_cast<TDerived*>(this);
         }
+
+        template<typename TDerived>
+        void unRerence(TDerived** outPtr)
+        {
+            auto it = std::find_if(pointer_copies.begin(), pointer_copies.end(), [outPtr](GameObject** copie) {
+                return copie && *copie == reinterpret_cast<GameObject*>(*outPtr);
+            });
+
+            if(it != pointer_copies.end())
+            {
+                *outPtr = nullptr;
+                pointer_copies.erase(it);
+            }
+        }
+
+        virtual void Reset();
+
+        virtual std::vector<std::string> GetAllValues() const;
 
         virtual ~GameObject();
     };

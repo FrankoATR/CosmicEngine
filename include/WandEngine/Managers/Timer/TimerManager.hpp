@@ -21,12 +21,10 @@ namespace WandEngine
         TimerManager &operator=(const TimerManager &) = delete;
 
     public:
-        static TimerManager &GetInstance()
-        {
-            static TimerManager instance;
-            return instance;
-        }
-
+        static TimerManager &GetInstance();
+        
+        void Init();
+        void Shutdown();
         void Add(GameTimer *NewTimer);
         void Update(double deltaTime);
         void Clear();

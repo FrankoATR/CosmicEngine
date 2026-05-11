@@ -13,27 +13,26 @@ namespace WandEngine
     class ObjectManager
     {
     private:
-        std::vector<GameObject *> objects;
-        std::vector<int> toDelete;
-
-        int nextEntityId;
-
         ObjectManager();
         ~ObjectManager();
         ObjectManager(const ObjectManager &) = delete;
         ObjectManager &operator=(const ObjectManager &) = delete;
 
+        std::vector<GameObject *> objects;
+        std::vector<int> toDelete;
+
+        int nextEntityId;
+
     public:
-        static ObjectManager &GetInstance()
-        {
-            static ObjectManager instance;
-            return instance;
-        }
+        static ObjectManager &GetInstance();
+
+        void Init();
 
         void Update(float deltaTime);
         void Draw();
         void Add(GameObject *actor);
         void Remove(int EntityId);
+
         GameObject *FindById(int EntityId);
         std::vector<GameObject *> FindByClassName(std::string className);
         std::vector<GameObject *> FindByPosition(glm::vec2 Position);

@@ -8,8 +8,26 @@
 
 namespace WandEngine
 {
-    ObjectManager::ObjectManager() : nextEntityId(0)
+    ObjectManager &ObjectManager::GetInstance()
     {
+        static ObjectManager instance;
+        return instance;
+    }
+
+    ObjectManager::ObjectManager()
+    {
+        std::cout << "Object manager created" << std::endl;
+    }
+
+    ObjectManager::~ObjectManager()
+    {
+        std::cout << "Object manager destroyed" << std::endl;
+    }
+
+    void ObjectManager::Init()
+    {
+        this->nextEntityId = 0;
+        std::cout << "Object manager initialized" << std::endl;
     }
 
     void ObjectManager::Update(float deltaTime)
@@ -33,12 +51,10 @@ namespace WandEngine
                     actor->SetVisible(false);
                 }
 
-                if (actor->GetInsideGridArea())
-                {
-                    actor->UpdateLastPosition();
-                    actor->Update(deltaTime);
-                    actor->UpdatePosition(deltaTime);
-                }
+                actor->UpdateLastPosition();
+                actor->Update(deltaTime);
+                actor->UpdatePosition(deltaTime);
+                
             }
             else
             {
@@ -79,7 +95,10 @@ namespace WandEngine
             GameObject* tmp = *it;
             for(auto **copies : tmp->pointer_copies)
             {
-                (*copies) = nullptr;
+                if(*copies == tmp)
+                {
+                    (*copies) = nullptr;
+                }
             }
             objects.erase(it);
             delete tmp;
@@ -221,16 +240,8 @@ namespace WandEngine
 
         nextEntityId = 0;
         
-        #ifndef NDEBUG
-            std::cout << "Object manager cleared" << std::endl;
-		#endif
+        std::cout << "Object manager cleared" << std::endl;
     }
 
-    ObjectManager::~ObjectManager()
-    {
-        #ifndef NDEBUG
-            std::cout << "Object manager destroyed" << std::endl;
-		#endif
-    }
 
 }

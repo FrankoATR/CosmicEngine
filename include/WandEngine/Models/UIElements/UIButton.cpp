@@ -1,15 +1,20 @@
 #include "UIButton.hpp"
 #include "../../Managers/Input/InputManager.hpp"
 #include "../../Managers/Camera/CameraManager.hpp"
+#include "../../Managers/Resource/ResourceManager.hpp"
 
 #include <iostream>
 
 namespace WandEngine
 {
 
-    UIButton::UIButton(unsigned int *Sprite, const std::string &text, int *font, glm::vec2 Position, glm::vec2 Size, bool visible, UIElement *parent) : 
-        Sprite(Sprite), text(text), font(font), UIElement(Position, Size, visible, parent, UIElementType::Button), textColor(glm::vec3(255, 255, 255)), isPressed(false)
+    UIButton::UIButton(const std::string &text, const std::string &font, const std::string &texture, glm::vec2 Position, glm::vec2 Size, bool ReleaseMode, bool visible, UIElement *parent) : 
+        text(text), font(font), texture(texture), UIElement(Position, Size, visible, parent, UIElementType::Button), textColor(glm::vec3(1.0f, 1.0f, 1.0f)), isPressed(false),
+        clickOnArea(false), onClick(nullptr), ReleaseMode(ReleaseMode), cachedText(text)
     {
+        auto tmp = ResourceManager::GetInstance().MeasureText(text, font, glm::vec3(1.0f));
+        cachedSize.x = Position.x + (Size.x - tmp.x) / 2;
+        cachedSize.y = Position.y + (Size.y - tmp.y) / 2;
     }
 
     UIButton::~UIButton()
@@ -30,40 +35,43 @@ namespace WandEngine
             return;
         }
 
+        glm::vec3 color = glm::vec3(1.0f);
 
+        if (MouseHover()) color = glm::vec3(0.0f, 1.0f, 0.0f);   //aplicar callbacks 
 
-        if (Sprite)
+        //if (isPressed) color = glm::vec3(1.0f, 0.0f, 0.0f); //aplicar callbacks 
+
+        if(!texture.empty())
         {
-            
+            ResourceManager::GetInstance().Render2DSprite(texture, Position, Size, 0.0f, glm::vec3(1.0f), 1.0f, ViewType::UI);
         }
-
-        if (font)
+        else
         {
-            int textWidth = 1;
-            int textHeight = 2;
-
-            float textX = GlobalPosition.x + (Size.x - textWidth) / 2;
-            float textY = GlobalPosition.y + (Size.y - textHeight) / 2;
-
-            if (isPressed)
-            {
-                //al_draw_text(font, al_map_rgb(80, 80, 80), textX, textY, 0, text.c_str());
-            }
-            else if (MouseHover())
-            {
-                //al_draw_text(font, al_map_rgb(120, 120, 120), textX, textY, 0, text.c_str());
-            }
-            else
-            {
-                //al_draw_text(font, al_map_rgb(255, 255, 255), textX, textY, 0, text.c_str());
-            }
+            ResourceManager::GetInstance().RenderRectangle(
+                glm::vec3(Position, 0.0f), 
+                glm::vec3(Position + Size, 0.0f), 
+                glm::vec3(Position.x + Size.x / 2, Position.y + Size.y / 2, 0.0f), 
+                glm::vec3(0.0f, 0.0f, 0.0f), 
+                color,
+                1.0f, 
+                1.0f,
+                false,
+                ViewType::UI
+            );
         }
-
-        if (MouseHover())
+        
+        if(!text.empty() && !font.empty())
         {
-            //al_draw_rectangle(GlobalPosition.x, GlobalPosition.y, GlobalPosition.x + Size.width, GlobalPosition.y + Size.height, al_map_rgb(255, 255, 255), 2.0f);
-        }
+            if (text != cachedText)
+            {
+                cachedText = text;
+                auto tmp = ResourceManager::GetInstance().MeasureText(text, font, glm::vec3(1.0f));
+                cachedSize.x = Position.x + (Size.x - tmp.x) / 2;
+                cachedSize.y = Position.y + (Size.y - tmp.y) / 2;
+            }
 
+            ResourceManager::GetInstance().RenderText(text, font, glm::vec3(cachedSize.x, cachedSize.y, 1.0f), glm::vec3(1.0f), glm::vec3(), glm::vec3(0.0f), color, 1.0f, ViewType::UI);
+        }
 
         UIElement::Draw();
     }
@@ -78,7 +86,7 @@ namespace WandEngine
         this->text = text;
     }
 
-    void UIButton::SetFont(int *font)
+    void UIButton::SetFont(const std::string &font)
     {
         this->font = font;
     }
@@ -90,13 +98,45 @@ namespace WandEngine
 
     void UIButton::HandleInput()
     {
-        bool wasPressed = isPressed;
-        isPressed = MouseHover() && InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyDown);
-
-        if (wasPressed && !isPressed && onClick)
+        bool MD = InputManager::GetInstance().IsMouseButtonPressed(0, KeyEventType::KeyDown);
+        bool isHovering = MouseHover();
+    
+        isPressed = false;
+    
+        if (MD && isHovering)
         {
-            onClick();
+            clickOnArea = true;
         }
+    
+        if (ReleaseMode)
+        {
+            bool MR = InputManager::GetInstance().IsMouseButtonPressed(0, KeyEventType::KeyRelease);
+
+            if (MR && isHovering && clickOnArea && onClick)
+            {
+                isPressed = true;
+                onClick();
+            }
+    
+            if (!MR || !isHovering)
+            {
+                clickOnArea = false;
+            }
+        }
+        else
+        {
+            if (MD && isHovering && clickOnArea && onClick)
+            {
+                isPressed = true;
+                onClick();
+            }
+
+        }
+
     }
+    
+    
+    
+    
 
 }

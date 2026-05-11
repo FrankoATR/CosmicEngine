@@ -14,26 +14,23 @@ namespace WandEngine
     class BodyManager
     {
     private:
-        std::vector<GameBodyObject *> bodys;
-        std::vector<int> toDelete;
-        GameGridCollisions *GridArea;
-        int nextEntityId;
-
         BodyManager();
         ~BodyManager();
         BodyManager(const BodyManager &) = delete;
         BodyManager &operator=(const BodyManager &) = delete;
 
+        std::vector<GameBodyObject *> bodys;
+        std::vector<int> toDelete;
+        GameGridCollisions *GridArea;
+        int nextEntityId;
+
     public:
-        static BodyManager &GetInstance()
-        {
-            static BodyManager instance;
-            return instance;
-        }
+        static BodyManager &GetInstance();
 
         glm::vec2 GetGridPosition();
         void SetGridPosition(glm::vec2 NewPosition);
 
+        void Init();
         void Update();
         void Draw();
         void Add(GameBodyObject *body);

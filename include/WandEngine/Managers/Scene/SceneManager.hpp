@@ -12,29 +12,28 @@ namespace WandEngine
     class SceneManager
     {
     private:
-        std::vector<GameScene *> sceneStack;
-        bool isRunning;
-        glm::vec3 BackgroundColor;
-        GameScene* NextScene;
-        
         SceneManager();
         ~SceneManager();
         SceneManager(const SceneManager &) = delete;
         SceneManager &operator=(const SceneManager &) = delete;
 
+        std::vector<GameScene *> sceneStack;
+        bool isRunning;
+        glm::vec3 BackgroundColor;
+        GameScene* NextScene;
+        
     public:
-        static SceneManager &GetInstance()
-        {
-            static SceneManager instance;
-            return instance;
-        }
+        static SceneManager &GetInstance();
+        
+        void Init();
+        void Shutdown();
+        void Update(double deltaTime);
+        void Draw();
 
         void PushScene(GameScene *scene);
         void ReplaceScene(GameScene *scene);
         void PopScene();
 
-        void Update(double deltaTime);
-        void Draw();
 
         bool Empty() const;
         void Clear();

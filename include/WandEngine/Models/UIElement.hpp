@@ -21,7 +21,6 @@ namespace WandEngine
         UIElementType ElementType;
 
         glm::vec2 Position;
-        glm::vec2 GlobalPosition;
         glm::vec2 Size;
         bool visible;
 

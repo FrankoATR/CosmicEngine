@@ -1,10 +1,12 @@
 #ifndef GAMEMANAGER_HPP
 #define GAMEMANAGER_HPP
 
-#define GLFW_INCLUDE_NONE 
+#define GLFW_INCLUDE_NONE
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <vector>
+#include <string>
 
 namespace WandEngine
 {
@@ -14,36 +16,46 @@ namespace WandEngine
 
     class GameManager
     {
-
     private:
+        GameManager();
+        ~GameManager();
+        GameManager(const GameManager &) = delete;
+        GameManager &operator=(const GameManager &) = delete;
+
         bool fullScreenMode, VSyncEnable;
         float gameticks;
         double targetFPS;
-        GameTimer* FPSTimer;
+        GameTimer *FPSTimer;
 
-        GLFWwindow* window;
+        GLFWwindow *window;
 
-        GameManager();
-        ~GameManager();
+        std::vector<std::string> droppedfiles;
 
-        GameManager(const GameManager &) = delete;
-        GameManager &operator=(const GameManager &) = delete;
-        static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+        glm::vec2 baseAspectSize;
+
+        double fpsTimer;
+        int frameCount;
+        int currentFPS;
+
+        static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+        static void DropCallback(GLFWwindow *window, int count, const char **paths); // Deberia hacer un metodo para cada setcallback?
 
     public:
+        static GameManager &GetInstance();
 
+        bool Init(int screenWidth, int screenHeight, int baseScreenWidth, int baseScreenHeight);
+        void Update();
+        void Shutdown();
 
-        static GameManager &GetInstance()
-        {
-            static GameManager instance;
-            return instance;
-        }
+        void EndProgram();
+
+        bool InitManagers() const;
 
         void SetTargetFPS(double targetFPS);
-        int GetCurrentFPS();
+        int GetCurrentFPS() const;
 
         void SetGameTicks(float gameTicks);
-        float GetCurrenGameTicks();
+        float GetCurrenGameTicks() const;
 
         void EnableVsync();
         void DisableVsync();
@@ -55,17 +67,17 @@ namespace WandEngine
         void SetWindows_FullScreenMode();
         void SetWindows_WindowsMode(int width, int height);
 
-        GLFWwindow* GetWindow();
+        std::vector<std::string> GetDroppedFiles();
+        void PushDroppedFile(std::string filepath);
 
-        glm::vec2 GetWindowsSize();
+        GLFWwindow *GetWindow() const;
 
-        bool IsFullScreen();
+        glm::vec2 GetWindowsSize() const;
 
-        void EndProgram();
+        void SetBaseAspectSize(int baseAspectWidth, int baseAspectHeight);
+        glm::vec2 GetBaseAspectSize() const;
 
-        bool Init(int screenWidth, int screenHeight);
-        void Update();
-        void Clear();
+        bool IsFullScreen() const;
     };
 
 }

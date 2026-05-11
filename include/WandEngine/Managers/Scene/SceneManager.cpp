@@ -5,13 +5,38 @@
 
 namespace WandEngine
 {
+    
+    SceneManager &SceneManager::GetInstance()
+    {
+        static SceneManager instance;
+        return instance;
+    }
 
     SceneManager::SceneManager()
+    {
+        std::cout << "Scene manager created" << std::endl;
+    }
+
+    SceneManager::~SceneManager()
+    {
+        Shutdown();
+        std::cout << "Scene manager destroyed" << std::endl;
+    }
+
+    void SceneManager::Init()
     {
         this->BackgroundColor = glm::vec3(0.10f, 0.12f, 0.13f);
         this->isRunning = true;
         this->NextScene = nullptr;
+
+        std::cout << "Scene manager initialized" << std::endl;
     }
+
+    void SceneManager::Shutdown()
+    {
+
+    }
+
 
     void SceneManager::PushScene(GameScene *scene)
     {
@@ -115,15 +140,8 @@ namespace WandEngine
 
         isRunning = false;
 
-        #ifndef NDEBUG
-                std::cout << "Scene manager cleared" << std::endl;
-        #endif
+        std::cout << "Scene manager cleared" << std::endl;
     }
 
-    SceneManager::~SceneManager()
-    {
-        #ifndef NDEBUG
-                std::cout << "Scene manager destroyed" << std::endl;
-        #endif
-    }
+
 }

@@ -2,6 +2,8 @@
 #define UIMANAGER_HPP
 
 #include "../../Models/UIElement.hpp"
+#include "../../Models/UIElements/UIButton.hpp"
+#include "../../Models/UIElements/UIText.hpp"
 #include <vector>
 
 namespace WandEngine
@@ -12,21 +14,17 @@ namespace WandEngine
     private:
         UIManager();
         ~UIManager();
-
         UIManager(const UIManager &) = delete;
         UIManager &operator=(const UIManager &) = delete;
 
         std::vector<UIElement* > elements;
-
         bool MouseHoverAny;
 
     public:
-        static UIManager &GetInstance()
-        {
-            static UIManager instance;
-            return instance;
-        }
+        static UIManager &GetInstance();
 
+        void Init();
+        void Shutdown();
         void Update(float deltaTime);
         void Draw();
 

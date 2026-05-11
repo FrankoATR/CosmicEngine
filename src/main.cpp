@@ -7,28 +7,24 @@ using namespace WandEngine;
 
 int main(){
 
+	std::cout << "********************************PROGRAM START********************************" << std::endl;
+
 	int screenWidth = 960;
 	int screenHeight = 540;
-	//int screenWidth = 1920;
-	//int screenHeight = 1080;
-	if(GameManager::GetInstance().Init(screenWidth, screenHeight)){
-		GameManager::GetInstance().SetFirstScene(new MainScene(0, 1));
+
+	int baseScreenWidth = 1920;
+	int baseScreenHeight = 1080;
+
+	if(GameManager::GetInstance().Init(screenWidth, screenHeight, baseScreenWidth, baseScreenHeight)){
+		GameManager::GetInstance().SetFirstScene(new MainScene);
 		GameManager::GetInstance().Update();
-		GameManager::GetInstance().Clear();
+		GameManager::GetInstance().Shutdown();
 	}
 	else{
-		#ifndef NDEBUG
-			std::cerr << "ERROR" << std::endl;
-		#endif
+		std::cerr << "********************************ERROR********************************" << std::endl;
 	}
 
-	#ifndef NDEBUG
-		std::cout << "END PROGRAM SUCCESFULLY MAIN" << std::endl;
-	#endif
-
-
-
-
+	std::cout << "********************************END PROGRAM SUCCESSFULLY********************************" << std::endl;
 
 	return 0;
 }

@@ -5,11 +5,36 @@
 namespace WandEngine
 {
 
-    UIManager::UIManager()
+    UIManager &UIManager::GetInstance()
     {
-        this->MouseHoverAny = false;
+        static UIManager instance;
+        return instance;
     }
 
+    UIManager::UIManager()
+    {
+        std::cout << "UI manager created" << std::endl;
+    }
+
+    UIManager::~UIManager()
+    {
+        Shutdown();
+        std::cout << "UI manager destroyed" << std::endl;
+    }
+
+
+    void UIManager::Init()
+    {
+        this->MouseHoverAny = false;
+        std::cout << "UI manager initialized" << std::endl;
+    }
+
+    
+    void UIManager::Shutdown()
+    {
+        
+    }
+    
 
     void UIManager::Update(float deltaTime)
     {
@@ -56,17 +81,9 @@ namespace WandEngine
             elements.pop_back();
         }
 
-        #ifndef NDEBUG
-            std::cout << "UI manager cleared" << std::endl;
-		#endif
+        std::cout << "UI manager cleared" << std::endl;
         
     }
 
-    UIManager::~UIManager()
-    {
-        #ifndef NDEBUG
-            std::cout << "UI manager destroyed" << std::endl;
-		#endif
-    }
 
 }

@@ -18,7 +18,11 @@ namespace WandEngine
     class CameraManager
     {
     private:
-
+        CameraManager();
+        ~CameraManager();
+        CameraManager(const CameraManager &) = delete;
+        CameraManager &operator=(const CameraManager &) = delete;
+        
         glm::vec2 baseWindowSize;
 
         bool activeMouseInput;
@@ -27,35 +31,28 @@ namespace WandEngine
         glm::vec2 position2D;
         float Zoom;
 
-        CameraManager();
-        ~CameraManager();
-
-        CameraManager(const CameraManager &) = delete;
-        CameraManager &operator=(const CameraManager &) = delete;
-
         glm::vec2 GetGridPosition() const;
         void SetGridPosition(glm::vec2 NewPosition);
 
         glm::vec2 GetCameraOrthoArea() const;
 
     public:
-        static CameraManager &GetInstance()
-        {
-            static CameraManager instance;
-            return instance;
-        }
+        static CameraManager &GetInstance();
 
-        glm::vec2 GetBaseWindowSize();
+        void Init(glm::vec2 baseSize);
+
+        glm::vec2 GetBaseWindowSize() const;
 
         void SetCameraMode(CameraMode newMode);
         CameraMode GetCameraMode() const;
 
-        glm::mat4 GetViewMatrix();
-        glm::mat4 GetProjectionMatrix();
+        glm::mat4 GetViewMatrix() const;
+        glm::mat4 GetProjectionMatrix() const;
+        glm::mat4 Get_UI_ProjectionMatrix() const;
 
         // Métodos 2D
         glm::vec2 GetPosition() const;
-        void SetFocusObject(GameObject *Obj);
+        void SetFocusObject(GameObject *Obj, float xoffset = 0.0f, float yoffset = 0.0f);
         void SetFocusPosition(glm::vec2 NewPosition);
         glm::vec2 GetFocusPosition() const;
         bool IsObjectInsideCameraArea(GameObject *Obj) const;

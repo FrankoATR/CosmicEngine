@@ -7,15 +7,39 @@
 
 namespace WandEngine
 {
-
-    InputManager::InputManager() : MouseSprite(nullptr), MouseSpriteOffSet(glm::vec2(0, 0)), MouseSpriteSize(glm::vec2(32, 32)), disableMouse(false)
+    InputManager &InputManager::GetInstance()
     {
+        static InputManager instance;
+        return instance;
+    }
+
+    InputManager::InputManager()
+    {
+        std::cout << "Input manager created" << std::endl;
+    }
+
+    InputManager::~InputManager()
+    {
+        std::cout << "Input manager destroyed" << std::endl;
     }
 
     void InputManager::Init(GLFWwindow *window)
     {
+        MouseSprite = nullptr;
+        MouseSpriteOffSet = glm::vec2(0.0f);
+        MouseSpriteSize = glm::vec2(32.0f);
+        disableMouse = false;
+
         glfwSetCursorPosCallback(window, MouseCallback);
         glfwSetScrollCallback(window, ScrollCallback);
+
+        std::cout << "Input manager initialized" << std::endl;
+    }
+
+    
+    void InputManager::Shutdown()
+    {
+        ResetMouseSettings();
     }
 
     void InputManager::Update(GLFWwindow *window)
@@ -123,14 +147,18 @@ namespace WandEngine
         return glm::vec2(CameraPos.x + xpos * (baseWin.x/ winSize.x), CameraPos.y + ypos * (baseWin.y / winSize.y));
     }
 
-    glm::vec2 InputManager::GetAbsoluteMousePosition() const
+    glm::vec2 InputManager::GetMousePosition_UI() const
     {
         double x, y;
         glfwGetCursorPos(GameManager::GetInstance().GetWindow(), &x, &y);
-        float xpos = static_cast<float>(x);
-        float ypos = static_cast<float>(y);
-
-        return glm::vec2(x, y);
+        
+        glm::vec2 screenSize = GameManager::GetInstance().GetWindowsSize();
+        glm::vec2 baseSize = CameraManager::GetInstance().GetBaseWindowSize();
+    
+        float scaledX = static_cast<float>(x) * (baseSize.x / screenSize.x);
+        float scaledY = static_cast<float>(y) * (baseSize.y / screenSize.y);
+    
+        return glm::vec2(scaledX, scaledY);
     }
 
     void InputManager::SetDisableMouse(bool value)
@@ -162,9 +190,7 @@ namespace WandEngine
         this->MouseSpriteOffSet = glm::vec2(0, 0);
         this->MouseSpriteSize = glm::vec2(32, 32);
 
-#ifndef NDEBUG
         std::cout << "Input manager settings reseted" << std::endl;
-#endif
     }
 
     void InputManager::SetMouseSprite(unsigned int *NewMouseSprite)
@@ -190,22 +216,6 @@ namespace WandEngine
         if (MouseSprite)
         {
         }
-    }
-
-    void InputManager::Clear()
-    {
-        ResetMouseSettings();
-
-#ifndef NDEBUG
-        std::cout << "Input manager cleared" << std::endl;
-#endif
-    }
-
-    InputManager::~InputManager()
-    {
-#ifndef NDEBUG
-        std::cout << "Input manager destroyed" << std::endl;
-#endif
     }
 
 }

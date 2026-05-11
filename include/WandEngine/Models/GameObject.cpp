@@ -1,12 +1,17 @@
 #include "GameObject.hpp"
+#include "GameTimer.hpp"
+
 #include "../Managers/Object/ObjectManager.hpp"
 #include "../Managers/Timer/TimerManager.hpp"
-#include <math.h>
+#include "../Managers/DataBase/DataBaseManager.hpp"
 
+#include <sstream>
+#include <math.h>
 #include <iostream>
 
 namespace WandEngine
 {
+/*
     GameObject::GameObject(GameObject *Other)
     {
         ClassName = Other->GetClassName();
@@ -27,6 +32,7 @@ namespace WandEngine
         VelocityForDuration = 0.0f;
         MovementTimer = nullptr;
     }
+*/
 
     GameObject::GameObject(std::string ClassName, glm::vec2 Position, glm::vec2 Size, float Rotation, short int LayerId) : 
         ClassName(ClassName), 
@@ -49,13 +55,13 @@ namespace WandEngine
     {
 
     }
-
-    void GameObject::Init()
+    
+    void GameObject::Draw() const
     {
 
     }
 
-    void GameObject::Draw()
+    void GameObject::Init()
     {
 
     }
@@ -292,6 +298,24 @@ namespace WandEngine
     {
         return this->AliveInGameManager;
     }
+
+    GameObject* GameObject::Clone() const
+    {
+        return new GameObject(*this);
+    }
+
+
+    void GameObject::Reset()
+    {
+
+    }
+
+
+    std::vector<std::string> GameObject::GetAllValues() const
+    {
+        return {};
+    }
+
 
     GameObject::~GameObject()
     {
