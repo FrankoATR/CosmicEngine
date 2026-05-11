@@ -11,6 +11,7 @@
 #include <WandEngine/Interfaces/Definitions.hpp>
 #include <imgui/imgui.h>
 #include <sstream>
+#include <filesystem>
 
 #include GAMEMANAGE_HEADER
 #include INPUTMANAGER_HEADER
@@ -27,10 +28,9 @@
 
 
 
-MainScene::MainScene(int Level, int Attempts) : GameScene("MainScene")
+MainScene::MainScene() : GameScene("MainScene")
 {
-    CurrentLevel = Level;
-    currentMusic = "Electrodynamix";
+    currentMusic = "";
     player = nullptr;
     ostVolume = 0.5f;
     fpsSliderValue = 60;
@@ -57,14 +57,14 @@ void MainScene::Init()
     CAM_MN.SetCameraMode(CameraMode::CAMERA_2D);
     CAM_MN.SetFocusPosition(glm::vec2(-200.0f, -400.0f));
 
-    //RS_MN.loadShader("sprite", SHADER_SPRITE_VS, SHADER_SPRITE_FS);
-    //RS_MN.loadShader("sprite_sheet", SHADER_SPRITESHEET_VS, SHADER_SPRITESHEET_FS);
+    //RS_MN.LoadShader("sprite", SHADER_SPRITE_VS, SHADER_SPRITE_FS);
+    //RS_MN.LoadShader("sprite_sheet", SHADER_SPRITESHEET_VS, SHADER_SPRITESHEET_FS);
 
-    RS_MN.loadTexture("bg1", TEXTURE_GD_BG1, false);
-    RS_MN.loadTexture("g1", TEXTURE_GD_G1, true);
-    RS_MN.loadTexture("g2", TEXTURE_GD_G2, true);
-    RS_MN.loadTexture("line", TEXTURE_GD_LINE, true);
-    RS_MN.loadTextureSheet("gd", TEXTURESHEET_GD, true, 6, 6, 0);
+    RS_MN.LoadTexture("bg1", TEXTURE_GD_BG1, false);
+    RS_MN.LoadTexture("g1", TEXTURE_GD_G1, true);
+    RS_MN.LoadTexture("g2", TEXTURE_GD_G2, true);
+    RS_MN.LoadTexture("line", TEXTURE_GD_LINE, true);
+    RS_MN.LoadTextureSheet("gd", TEXTURESHEET_GD, true, 6, 6, 0);
 
     //UI_MN.AddElement(new UIButton("BUTTON", nullptr, glm::vec2(1500.0f, 20.0f), glm::vec2(50.0f), true, nullptr));
 
@@ -93,42 +93,17 @@ void MainScene::Reset()
         obj->Destroy();
     }
 
-    std::string levelnmamedb = "lvl_0";
 
     MSC_MN.Clear();
 
-
-
-    if(droppedlevelfilepath != "")
+    if(fileName != "")
     {
-        levelnmamedb = droppedlevelfilepath;
+        DB_MN.OpenDatabaseForLoading("levels/"+fileName);
     }
     else
     {
-        if(CurrentLevel == 0)
-        {
-            MSC_MN.Load("music", MUSIC_GD_ELECTRODYNAMIX);
-            levelnmamedb = "lvl_0";
-        }
-        if(CurrentLevel == 1)
-        {
-            MSC_MN.Load("music", MUSIC_GD_CYCLES);
-            levelnmamedb = "lvl_1";
-        }
-        if(CurrentLevel == 2)
-        {
-            MSC_MN.Load("music", MUSIC_GD_PRACTICE);
-            levelnmamedb = "lvl_2";
-        }
-        if(CurrentLevel == 3)
-        {
-            levelnmamedb = "lvl_3";
-            MSC_MN.Load("music", MUSIC_IMPOSSIBLE_GAME);
-        }
+        DB_MN.OpenDatabaseForLoading("levels/lvl_mylevel");
     }
-
-
-    DB_MN.OpenDatabaseForLoading(levelnmamedb);
 
     std::string sql = "SELECT name FROM sqlite_master WHERE type='table';";
 
@@ -168,11 +143,6 @@ void MainScene::Reset()
     DB_MN.CloseDatabase();
 
 
-    if(droppedmusicfilepath != "")
-    {
-        MSC_MN.Clear();
-        MSC_MN.Load("music", droppedmusicfilepath);
-    }
     
     player = new Player("MAIN", PlayerMode::Normal, glm::vec2(0.0f), glm::vec2(100.0f), 0.0f, 0);
     OBJ_MN.Add(player);
@@ -235,7 +205,24 @@ void MainScene::Draw()
             ImGui::Text("Press ESC to exit");
             ImGui::Text("Press F11 to switch window/fullscreen");
             ImGui::Text("Press F3 to show/hide panel");
-            ImGui::Text("Press 1, 2, 3 or 4 to select level");
+            ImGui::Text("Select level:");
+            std::string directoryPath = "levels";
+            if (!std::filesystem::exists(directoryPath) || !std::filesystem::is_directory(directoryPath)) {
+                std::cerr << "Error: La ruta especificada no es un directorio válido." << std::endl;
+                return;
+            }
+        
+            for (const auto& entry : std::filesystem::directory_iterator(directoryPath)) {
+                if (std::filesystem::is_regular_file(entry.path())) {
+                    std::string name = entry.path().filename().string();
+
+                    if (ImGui::Button(name.c_str())) {  
+                        fileName = name;
+                        Reset();
+                    }
+                }
+            }
+
             ImGui::Text("Press R to reset");
             ImGui::Text("Press H to show/hide hitboxs");
             ImGui::SliderFloat("Volume", &ostVolume, 0.0f, 2.0f);
@@ -284,6 +271,68 @@ void MainScene::Update(double deltaTime)
     {
         GM_MN.SetTargetFPS(fpsSliderValue);
     }
+
+
+
+
+    auto files = GM_MN.GetDroppedFiles();
+    if(!files.empty())
+    {
+        std::cout << files.back() << std::endl;
+        size_t dotPos = files.back().find_last_of(".");
+
+        if (dotPos != std::string::npos) {
+            std::string extension = files.back().substr(dotPos + 1);
+            size_t lastSlash = files.back().find_last_of("/\\");
+            currentMusic = (lastSlash == std::string::npos) ? files.back() : files.back().substr(lastSlash + 1);
+            
+            if (extension == "mp3")
+            {
+                droppedmusicfilepath = files.back();
+                std::string destination = "assets/engine/audio/music/" + currentMusic;
+
+                try {
+                    std::filesystem::path srcPath = std::filesystem::absolute(droppedmusicfilepath);
+                    std::filesystem::path destPath = std::filesystem::absolute(destination);
+    
+                    if (srcPath == destPath) {
+                        std::cerr << "Error: El archivo de origen y destino son el mismo. No se copiará." << std::endl;
+                    }
+                    else
+                    {
+                        if (std::filesystem::exists(destination))
+                        {
+                            std::cout << "El archivo ya existe. Eliminando..." << std::endl;
+                            std::filesystem::remove(destination);
+                        }
+
+                        std::filesystem::copy_file(droppedmusicfilepath, destination, std::filesystem::copy_options::overwrite_existing);
+                    }
+    
+
+                    MSC_MN.Clear();
+                    MSC_MN.StopAll();
+                    MSC_MN.Load("music", destination);
+                    MSC_MN.Play("music", ostVolume, false);
+
+                } catch (const std::exception& e) {
+                    std::cerr << "Error al copiar el archivo: " << e.what() << std::endl;
+                }
+            } 
+        }
+        else
+        {
+            droppedlevelfilepath = files.back();
+            size_t lastSlash = droppedlevelfilepath.find_last_of("/\\");
+            fileName = (lastSlash == std::string::npos) ? droppedlevelfilepath : droppedlevelfilepath.substr(lastSlash + 1);
+            Reset();
+        }
+
+    }
+
+
+
+
 
 
     if(EditorMode)
@@ -335,12 +384,14 @@ void MainScene::Update(double deltaTime)
             {
                 DB_MN.OpenDatabaseForSaving(("lvl_" + std::to_string(CurrentLevel)));
             }
+
+            DataBaseManager::GetInstance().ExecuteSQL("BEGIN TRANSACTION;");
+
             SolidBlock::SaveToDB();
             Spike::SaveToDB();
             Orb::SaveToDB();
 
             DataBaseManager::GetInstance().CreateTable("Music", "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT");
-            DataBaseManager::GetInstance().ExecuteSQL("BEGIN TRANSACTION;");
         
             std::ostringstream values;
             values << "'" << droppedmusicfilepath << "'";
@@ -462,36 +513,6 @@ void MainScene::Update(double deltaTime)
     }
     else
     {
-        auto files = GM_MN.GetDroppedFiles();
-        if(!files.empty())
-        {
-            std::cout << files.back() << std::endl;
-            size_t dotPos = files.back().find_last_of(".");
-
-            if (dotPos != std::string::npos) {
-                std::string extension = files.back().substr(dotPos + 1);
-    
-                if (extension == "mp3")
-                {
-                    droppedmusicfilepath = files.back();
-                    std::cout << "mp3" << std::endl;
-                    MSC_MN.Clear();
-                    MSC_MN.StopAll();
-                    MSC_MN.Load("music", droppedmusicfilepath);
-                    MSC_MN.Play("music", ostVolume, false);
-                } 
-            }
-            else
-            {
-                droppedlevelfilepath = files.back();
-                size_t lastSlash = droppedlevelfilepath.find_last_of("/\\");
-                fileName = (lastSlash == std::string::npos) ? droppedlevelfilepath : droppedlevelfilepath.substr(lastSlash + 1);
-            
-                std::cout << "db" << std::endl;
-            }
-
-            Reset();
-        }
 
         if (selectedObject) selectedObject->Destroy();
         
@@ -528,46 +549,6 @@ void MainScene::Update(double deltaTime)
         }
 
 
-        if(INP_MN.IsKeyPressed(GLFW_KEY_1, KeyDown))
-        {
-            CurrentLevel = 0;
-            currentMusic = "Electrodynamix";
-            droppedlevelfilepath = "";
-            droppedmusicfilepath = "";
-            fileName = "";
-            Reset();
-        }
-
-        if(INP_MN.IsKeyPressed(GLFW_KEY_2, KeyDown))
-        {
-            CurrentLevel = 1;
-            currentMusic = "Cycles";
-            droppedlevelfilepath = "";
-            droppedmusicfilepath = "";
-            fileName = "";
-            Reset();
-        }
-        if(INP_MN.IsKeyPressed(GLFW_KEY_3, KeyDown))
-        {
-            CurrentLevel = 2;
-            currentMusic = "Practice";
-            droppedlevelfilepath = "";
-            droppedmusicfilepath = "";
-            fileName = "";
-            Reset();
-
-
-        }
-        if(INP_MN.IsKeyPressed(GLFW_KEY_4, KeyDown))
-        {
-            CurrentLevel = 3;
-            currentMusic = "FireAura";
-            droppedlevelfilepath = "";
-            droppedmusicfilepath = "";
-            fileName = "";
-            Reset();
-        }
-
         if(INP_MN.IsKeyPressed(GLFW_KEY_R, KeyDown))
         {
             Reset();
@@ -602,21 +583,22 @@ void MainScene::Update(double deltaTime)
         {
             if(fileName != "")
             {
-                DB_MN.OpenDatabaseForSaving(fileName);
+                DB_MN.OpenDatabaseForSaving("levels/"+fileName);
             }
             else
             {
-                DB_MN.OpenDatabaseForSaving(("lvl_" + std::to_string(CurrentLevel)));
+                DB_MN.OpenDatabaseForSaving(("levels/lvl_mylevel"));
             }
+            DataBaseManager::GetInstance().ExecuteSQL("BEGIN TRANSACTION;");
+
             SolidBlock::SaveToDB();
             Spike::SaveToDB();
             Orb::SaveToDB();
 
             DataBaseManager::GetInstance().CreateTable("Music", "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT");
-            DataBaseManager::GetInstance().ExecuteSQL("BEGIN TRANSACTION;");
         
             std::ostringstream values;
-            values << "'" << droppedmusicfilepath << "'";
+            values << "'" << "assets/engine/audio/music/" + currentMusic << "'";
             
             DataBaseManager::GetInstance().InsertData("Music", "path", values.str());
             

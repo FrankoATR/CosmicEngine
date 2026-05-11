@@ -37,13 +37,13 @@ void SolidBlock::Update(float deltaTime)
 
 void SolidBlock::BodyCollisionEvent(GameObject *Other, CollisionSide Side)
 {
+
 }
 
 
 void SolidBlock::SaveToDB()
 {
     DataBaseManager::GetInstance().CreateTable("SolidBlock", "id INTEGER PRIMARY KEY AUTOINCREMENT, PositionX REAL, PositionY REAL, BlockID INTEGER");
-    DataBaseManager::GetInstance().ExecuteSQL("BEGIN TRANSACTION;");
 
     for(GameObject*  obj : ObjectManager::GetInstance().FindByClassName("SolidBlock"))
     {
@@ -54,19 +54,15 @@ void SolidBlock::SaveToDB()
         DataBaseManager::GetInstance().InsertData("SolidBlock", "PositionX, PositionY, BlockID", values.str());
     }
     
-    DataBaseManager::GetInstance().ExecuteSQL("COMMIT;");
 }
 
 
 void SolidBlock::LoadFrom()
 {
-    std::string sql = "SELECT id, PositionX, PositionY, BlockID FROM SolidBlock;";
-    
     auto callback = [](void* data, int argc, char** argv, char** colNames) -> int {
-        int id = std::stoi(argv[0]);
-        float posX = std::stof(argv[1]);
-        float posY = std::stof(argv[2]);
-        int type = std::stoi(argv[3]);
+        float posX = std::stof(argv[0]);
+        float posY = std::stof(argv[1]);
+        int type = std::stoi(argv[2]);
 
         SolidBlock* block = new SolidBlock(type, glm::vec2(posX, posY), glm::vec2(100.0f), 0);
         ObjectManager::GetInstance().Add(block);
@@ -74,7 +70,7 @@ void SolidBlock::LoadFrom()
         return 0;
     };
 
-    DataBaseManager::GetInstance().ExecuteQuery(sql, callback, nullptr);
+    DataBaseManager::GetInstance().ConsultTable("SolidBlock", "PositionX, PositionY, BlockID", callback);
 }
 
 

@@ -141,6 +141,12 @@ void DataBaseManager::CreateTable(const std::string &tableName, const std::strin
     ExecuteSQL(sql);
 }
 
+void DataBaseManager::ConsultTable(const std::string &tableName, const std::string &columns, int (*callback)(void *, int, char **, char **))
+{
+    std::string sql = "SELECT " + columns + " FROM " + tableName + ";";
+    ExecuteQuery(sql, callback, nullptr);
+}
+
 void DataBaseManager::SaveObjectsData()
 {
     for(auto *obj : ObjectManager::GetInstance().GetAll())

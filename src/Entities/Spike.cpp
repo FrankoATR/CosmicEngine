@@ -86,7 +86,6 @@ void Spike::BodyCollisionEvent(GameObject *Other, CollisionSide Side)
 void Spike::SaveToDB()
 {
     DataBaseManager::GetInstance().CreateTable("Spike", "id INTEGER PRIMARY KEY AUTOINCREMENT, PositionX REAL, PositionY REAL, SpikeType INTEGER, Rotation REAL");
-    DataBaseManager::GetInstance().ExecuteSQL("BEGIN TRANSACTION;");
 
     for(GameObject* obj : ObjectManager::GetInstance().FindByClassName("Spike"))
     {
@@ -97,20 +96,16 @@ void Spike::SaveToDB()
         DataBaseManager::GetInstance().InsertData("Spike", "PositionX, PositionY, SpikeType, Rotation", values.str());
     }
     
-    DataBaseManager::GetInstance().ExecuteSQL("COMMIT;");
 }
 
 
 void Spike::LoadFrom()
 {
-    std::string sql = "SELECT id, PositionX, PositionY, SpikeType, Rotation FROM Spike;";
-    
     auto callback = [](void* data, int argc, char** argv, char** colNames) -> int {
-        int id = std::stoi(argv[0]);
-        float posX = std::stof(argv[1]);
-        float posY = std::stof(argv[2]);
-        int type = std::stoi(argv[3]);
-        float rotation = std::stof(argv[4]);
+        float posX = std::stof(argv[0]);
+        float posY = std::stof(argv[1]);
+        int type = std::stoi(argv[2]);
+        float rotation = std::stof(argv[3]);
 
         Spike* spike = new Spike(static_cast<SpikeType>(type), glm::vec2(posX, posY), glm::vec2(100.0f), 0);
         spike->SetRotation(rotation);
@@ -119,7 +114,7 @@ void Spike::LoadFrom()
         return 0;
     };
 
-    DataBaseManager::GetInstance().ExecuteQuery(sql, callback, nullptr);
+    DataBaseManager::GetInstance().ConsultTable("Spike", "PositionX, PositionY, SpikeType, Rotation", callback);
 }
 
 

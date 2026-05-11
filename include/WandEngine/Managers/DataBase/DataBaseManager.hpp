@@ -33,6 +33,7 @@ namespace WandEngine
         void ExecuteQuery(const std::string& sql, int (*callback)(void*, int, char**, char**), void* data);
 
         void CreateTable(const std::string &tableName, const std::string &columns);
+        void ConsultTable(const std::string &tableName, const std::string &columns, int (*callback)(void *, int, char **, char **));
 
 
         void ClearDatabase();

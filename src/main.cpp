@@ -12,7 +12,7 @@ int main(){
 	//int screenWidth = 1920;
 	//int screenHeight = 1080;
 	if(GameManager::GetInstance().Init(screenWidth, screenHeight)){
-		GameManager::GetInstance().SetFirstScene(new MainScene(0, 1));
+		GameManager::GetInstance().SetFirstScene(new MainScene);
 		GameManager::GetInstance().Update();
 		GameManager::GetInstance().Clear();
 	}

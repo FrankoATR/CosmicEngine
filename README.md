@@ -2,149 +2,126 @@
 
 ## Fecha efectiva
 
-**11 de febrero de 2025**
+**31 de marzo de 2025**
 
 ## Descripción general
 
-En esta etapa el cambio dominante deja de ser la migración de backend gráfico y pasa a ser la consolidación del motor nuevo como framework de trabajo. La base OpenGL ya no solo sirve para abrir ventana, renderizar y ejecutar el loop principal, sino que empieza a incorporar servicios internos para persistencia estructurada, administración más robusta del ciclo de vida de objetos y soporte de tooling dentro del propio runtime.
+En esta etapa el cambio dominante ya no está en los managers de escena o persistencia, sino en la infraestructura interna del render. El framework refactoriza su capa gráfica inmediata para volver más uniforme la creación y consumo de shaders, VAO y texturas, desplazando parte de la lógica matemática y del estado de render hacia abstracciones más consistentes dentro del propio engine.
 
-La evidencia visible de esta versión está en varios frentes que se cruzan entre sí: aparece un `DataBaseManager` apoyado en SQLite para guardar y reconstruir datos del mundo, `GameManager` añade ingestión de archivos soltados sobre la ventana, `GameObject` amplía su modelo base con aceleración, límites de velocidad, rotación angular, clonación operativa y referencias controladas entre objetos administrados por el motor, y además se afinan tanto la gestión de reproducción musical como la capa de importación y dibujo de modelos.
+La evidencia visible de esta versión aparece en cuatro frentes concretos: `ResourceManager` deja de depender de shaders y geometría hardcodeados como miembros sueltos y pasa a inicializar recursos por clave; `Shader` evoluciona desde una envoltura mínima de programa OpenGL hacia una API con helpers de modelo y proyección; `GameTexture2D` asume directamente la carga y recarga de imagen desde ruta; y además se incorpora una base inicial para texto mediante `TextManager` y `Text`, aunque todavía en estado embrionario.
 
-Con ello el proyecto deja de mostrar solo una reconstrucción técnica del engine y empieza a perfilar una capa de servicios internos más completa: gestionar objetos, persistir estado, recibir entradas externas y reutilizar esos mecanismos desde cualquier escena o arranque basado en el framework.
+Con ello el proyecto no cambia de backend ni de stack externo, pero sí da un paso claro hacia un framework gráfico más ordenado internamente: los recursos dejan de estar repartidos en lógica ad hoc y empiezan a quedar encapsulados detrás de contratos reutilizables.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- convertir el engine OpenGL en una base utilizable para persistencia y tooling interno;
-- enriquecer el modelo base de objetos con estado físico y semántica de referencias más útil para subsistemas del framework;
-- consolidar servicios reutilizables de runtime para guardado, carga, ingestión de archivos y reinicio controlado de escenas.
+- normalizar la API interna de recursos gráficos para que el render 2D dependa menos de inicialización manual y más de registros reutilizables;
+- mover transformaciones y proyección a una interfaz de shader más expresiva y menos repetitiva;
+- preparar una expansión futura del framework hacia render de texto sin introducir todavía una implementación completa.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `include/WandEngine/Managers/DataBase/`, donde aparece `DataBaseManager` como nueva pieza visible del framework para apertura, limpieza, consulta y persistencia de niveles apoyados en SQLite.
-- `include/WandEngine/Models/GameObject.*`, donde el modelo base añade aceleración, velocidad angular, límites mínimo y máximo de velocidad, rotación en coma flotante y manejo explícito de referencias duplicadas mediante `pointer_copies`.
-- `include/WandEngine/Managers/Object/ObjectManager.cpp`, donde la eliminación de objetos se alinea con ese nuevo sistema de referencias y con búsquedas más útiles para el editor, como selección por área o por posición del mouse.
-- `include/WandEngine/Managers/GameManager.*`, donde se añade soporte visible para archivos soltados sobre la ventana y se abre una ruta de importación/carga desde el runtime.
-- `include/WandEngine/Models/GameScene.*`, donde `Reset()` pasa a formar parte del contrato base de escena y se reorganiza el orden de actualización de managers.
-- `include/WandEngine/Models/UIElements/UIButton.*` y `include/WandEngine/Managers/UI/UIManager.*`, donde se sigue delimitando una capa de UI separada y reutilizable dentro del runtime.
-- `include/WandEngine/Managers/Audio/Music/MusicManager.*`, donde la reproducción musical gana seguimiento explícito de canales por clave, control de volumen por pista y reposicionamiento temporal dentro del stream.
-- `include/WandEngine/Models/Mesh/*` y `include/WandEngine/Models/Model/*`, donde la capa de mallas y modelos queda más acotada a importación, materiales, buffers y dibujado directo.
+- `include/WandEngine/Managers/Resource/ResourceManager.*`, donde la inicialización de recursos por defecto se reorganiza alrededor de `LoadVAO`, `LoadShaderFromCode`, `LoadShaderFromPath`, `LoadTexture` y `LoadTextureSheet`.
+- `include/WandEngine/Models/Shader/Shader.*`, donde el wrapper de programa OpenGL incorpora constructor con fuentes, `Use`, `EndUse`, `GetID`, `SetModel` y `SetProjection`.
+- `include/WandEngine/Models/Texture/GameTexture2D.*`, donde la textura pasa a construirse directamente desde una ruta de imagen y añade `SetNewImage()` para recarga explícita del recurso.
+- `include/WandEngine/Managers/Text/` y `include/WandEngine/Models/Text/`, donde aparece una base inicial para el subsistema de texto del framework.
+- `include/WandEngine/Managers/DataBase/DataBaseManager.*`, donde se añade `ConsultTable()` como helper de consulta simple sobre tablas persistidas.
+- `include/WandEngine/Models/Mesh/Mesh.cpp`, donde la capa de mallas se adapta al nuevo encapsulamiento de `Shader` usando `GetID()` en lugar de acceder al programa como estado público.
 
 ## Arquitectura o sistemas principales
 
-### Persistencia de niveles dentro del engine
+### ResourceManager como registro real de recursos gráficos
 
-La incorporación de `DataBaseManager` es el cambio más nuevo y más estructural de esta etapa. El engine ya no se limita a instanciar niveles desde arreglos hardcodeados dentro de la escena, sino que empieza a exponer una ruta interna para guardar y reconstruir contenido mediante SQLite.
+La refactorización más visible de esta etapa cae en `ResourceManager`. El manager deja de depender de miembros concretos como un `spriteVAO` fijo y shaders residentes como estado directo de la clase, y pasa a organizar sus recursos a través de mapas indexados por clave.
 
-`DataBaseManager` ya resuelve tareas visibles como:
+Ese cambio se vuelve importante porque concentra en un solo punto operaciones que antes quedaban más dispersas o acopladas a una inicialización concreta:
 
-- apertura diferenciada de base de datos para guardado y carga;
-- limpieza completa de tablas previas antes de persistir un nivel nuevo;
-- ejecución de SQL arbitrario y consultas con callback;
-- creación dinámica de tablas;
-- inserción de datos por entidad;
-- cierre con `wal_checkpoint` y optimización final.
+- creación de VAO reutilizables por nombre;
+- carga de shaders desde código o desde archivo;
+- carga de texturas y spritesheets con una ruta uniforme;
+- recuperación tipada de texturas, shaders, hojas de sprites y VAO;
+- bootstrap explícito de recursos por defecto mediante `Init()`.
 
-Sobre esa base, el framework ya deja preparado un contrato claro para que las entidades del mundo serialicen y reconstruyan su estado desde tablas persistidas. La persistencia ya no queda completamente fuera del runtime, sino que empieza a formar parte de la infraestructura visible del engine.
+Con ello el framework gana una frontera más clara entre el subsistema que registra recursos y el subsistema que los consume durante el render.
 
-### Runtime con servicios reutilizables de tooling
+### Shader como abstracción de transformaciones y proyección
 
-El cambio importante de esta etapa es que varias capacidades que antes habrían vivido fuera del motor ahora aparecen como servicios internos reutilizables. Sin depender de una escena concreta, el framework ya deja visibles operaciones como:
+`Shader` deja de ser solo un contenedor del programa OpenGL y pasa a asumir parte del trabajo repetitivo que antes quedaba incrustado en los call-sites del render. La nueva interfaz ya no se limita a compilar y subir uniforms sueltos: también encapsula helpers de más alto nivel como `SetModel()` y `SetProjection()`.
 
-- abrir una base de datos para guardado o para carga;
-- limpiar el estado persistido anterior antes de reconstruir datos nuevos;
-- ejecutar consultas con callback desde el propio runtime;
-- invalidar referencias externas cuando un objeto administrado es destruido;
-- recibir archivos soltados sobre la ventana para integrarlos al flujo del engine;
-- reiniciar escenas mediante un hook base común en `GameScene`.
+Eso tiene dos efectos prácticos dentro del engine:
 
-Eso cambia el papel del engine dentro del proyecto: ya no es solo un runtime que reproduce contenido definido en código, sino una base que empieza a incorporar infraestructura de tooling lista para ser consumida por cualquier capa superior.
+- reduce duplicación en `ResourceManager` al construir matrices de modelo para sprites, hojas de sprites y primitivas;
+- centraliza la relación entre el shader y la proyección activa del motor, en lugar de dejar esa responsabilidad repartida entre varios métodos de render.
 
-### Audio con control más fino por recurso
+Además, la clase deja de exponer su programa como dato utilizado informalmente y formaliza el acceso mediante `GetID()`, lo que vuelve más consistente la interacción con otras capas como `Mesh`.
 
-La capa de audio también se vuelve más precisa en el nivel del framework. `MusicManager` no se limita a cargar y disparar reproducción, sino que pasa a conservar un mapa de `FMOD_CHANNEL*` por clave musical. Eso habilita operaciones más específicas dentro del runtime:
+### Texturas con ciclo de vida más directo
 
-- detener una pista concreta sin afectar al resto;
-- ajustar volumen por recurso ya reproducido;
-- reposicionar la reproducción en milisegundos con `SetPosition()`;
-- mantener una separación más clara entre el registro de sonidos cargados y los canales activos en ejecución.
+`GameTexture2D` también cambia de responsabilidad. En lugar de depender de una secuencia externa donde otra capa carga bytes, configura formato y luego llama a `Generate(width, height, data)`, la textura ahora puede nacer directamente desde una ruta de imagen.
 
-No cambia la dependencia base, pero sí mejora la semántica del subsistema: la música deja de ser un disparo opaco y pasa a quedar bajo un control más administrable desde el engine.
+La mejora técnica visible es doble:
 
-### Modelo de objeto más útil para tooling y simulación
+- el recurso encapsula por sí mismo la carga inicial del archivo;
+- el framework gana `SetNewImage()` como vía explícita para recargar el contenido sin reinstanciar toda la abstracción.
 
-`GameObject` amplía su contrato de forma considerable. Además de posición, tamaño y color, el modelo base ahora expone:
+Eso simplifica tanto `LoadTexture()` como `LoadTextureSheet()` en `ResourceManager` y alinea mejor el ciclo de vida del objeto con su responsabilidad real.
 
-- `Velocity`, `Acceleration`, `MaxVelocity` y `MinVelocity`;
-- `Rotation` en `float` y `AngularVelocity`;
-- `UpdateLastPosition()` separado del propio `UpdatePosition()`;
-- clonación virtual y `Reset()` como hook reutilizable;
-- un sistema explícito de referencias externas mediante `pointer_copies`, `makeReference()` y `unRerence()`.
+### Render 2D menos repetitivo y mejor encapsulado
 
-La importancia de esto no está solo en la física. El engine gana una semántica de objeto más rica para dos problemas prácticos del framework:
+Buena parte del código nuevo en `ResourceManager` no añade efectos visuales nuevos, pero sí reduce la cantidad de lógica repetida por operación de dibujo. La composición de matrices, la selección de shader, la proyección y el binding de recursos pasan a reutilizar una interfaz más homogénea.
 
-- que distintos managers o capas superiores puedan mantener referencias vivas a objetos administrados sin desincronizarse cuando se destruyen;
-- que el runtime pueda clonar, reinstanciar o limpiar entidades sin dejar punteros colgantes dentro del motor.
+En la práctica, el render de sprites, spritesheets y primitivas queda más cerca de un contrato interno estable:
 
-`ObjectManager` se adapta a ese contrato y, al eliminar un objeto, invalida las copias registradas antes de liberar memoria. Esa decisión mejora la robustez del motor justo en el punto donde editor, escena y managers empiezan a compartir referencias sobre las mismas entidades.
+- el shader se obtiene por clave y se usa a través de `Use()` y `EndUse()`;
+- el modelo se describe con posición, tamaño y rotación en una sola operación;
+- la proyección ortográfica se solicita mediante una semántica explícita del engine;
+- el acceso a VAO y texturas se hace por registro, no por miembros especiales dispersos.
 
-### Física base más expresiva en 2D
+### Base inicial para render de texto
 
-La semántica de simulación también se vuelve más coherente en el nivel del framework. `ObjectManager::Update()` ya separa el `Update()` específico de cada actor de la integración física base vía `UpdatePosition()`, y `GameObject` resuelve internamente la suma de aceleración, el clamp de velocidad y la rotación angular.
+La aparición de `TextManager` y `Text` es importante aunque su implementación todavía sea mínima. El framework empieza a reservar una estructura propia para texto en lugar de seguir dependiendo exclusivamente de primitivas o sprites improvisados para ese problema.
 
-El resultado es una base más estable que la de versiones anteriores, porque el movimiento deja de depender de ajustes dispersos por implementación concreta y empieza a descansar más en el modelo base del motor.
+Por ahora lo visible es una base de tipos y un punto de entrada de manager, no un subsistema terminado. Aun así, la señal arquitectónica sí es clara: el engine empieza a separar el texto como dominio propio dentro de su árbol público.
 
-### Runtime preparado para ingestión externa mínima
+### Persistencia con consulta más directa
 
-`GameManager` añade soporte de `DropCallback` y una cola interna de archivos soltados sobre la ventana. Con ello el runtime queda preparado para abrir recursos externos desde el propio motor y conectarlos a flujos de carga o importación sin depender de una herramienta aparte.
+`DataBaseManager` recibe una ampliación pequeña pero coherente con el resto del enfoque: `ConsultTable()` agrega una ruta más directa para consultar columnas de una tabla sin reconstruir manualmente la sentencia cada vez.
 
-Aunque el flujo todavía es básico, el paso técnico importante es claro: el engine empieza a aceptar entradas externas del usuario como parte de su propia infraestructura de tooling.
+No es un cambio grande de subsistema, pero sí refuerza la idea de esta etapa: pequeñas responsabilidades repetidas se convierten en helpers propios del framework para reducir fricción en capas superiores.
 
-### Capa 3D más contenida en torno a importación y draw
+### Compatibilidad interna con mallas y materiales
 
-También hay una depuración visible en `Mesh` y `Model`. La infraestructura sigue apoyándose en `Assimp`, `stb_image` y OpenGL, pero el contrato queda más concentrado en lo que el framework efectivamente necesita en esta etapa:
-
-- importar nodos, mallas y materiales desde archivo;
-- convertir vértices, normales, UV y texturas a buffers utilizables por OpenGL;
-- dibujar colecciones de mallas mediante `Shader` sin capas extra de complejidad todavía no consolidadas.
-
-Ese ajuste no expande capacidades nuevas de cara al usuario final, pero sí limpia la frontera interna del engine: la capa 3D queda definida como infraestructura base de carga y render, en lugar de adelantarse a abstracciones que todavía no se usan de forma estable dentro del framework.
-
-### UI y escena con hooks más reutilizables
-
-La capa de escena también se ajusta a esta orientación de tooling. `GameScene` incorpora `Reset()` como operación virtual y reordena `UpdateManagers()` para ejecutar primero la lógica propia de la escena antes de delegar la actualización al resto de managers. En paralelo, `UIButton` se mantiene como elemento interactivo visible y `UIManager` sigue consolidándose como capa separada para controles de interfaz dentro del runtime.
-
-Aunque todavía no hay una UI de edición completa, la base ya queda preparada para mover parte del editor desde atajos de teclado hacia controles visibles del motor.
+La capa `Mesh` apenas cambia una línea, pero esa línea es sintomática del refactor. El acceso al identificador del shader deja de hacerse sobre un campo público y pasa a utilizar `GetID()`. Es un ajuste pequeño, aunque coherente con la misma dirección general de la fecha: encapsular mejor el estado gráfico y reducir el acoplamiento estructural entre capas.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- el runtime ya puede crear, actualizar, clonar, destruir, guardar y reconstruir entidades del mundo usando managers y modelos base del propio engine;
-- la capa de arranque del motor ya dispone de hooks para recibir archivos externos, reiniciar escenas y delegar servicios de persistencia sin acoplar esas tareas a un framework externo.
+- el subsistema de recursos ya puede registrar y resolver shaders, texturas, spritesheets y VAO bajo una API más estable y homogénea;
+- la capa de render ya puede delegar más lógica común a `Shader` y `GameTexture2D`, reduciendo duplicación en las rutas de dibujo del engine.
 
-Con ello dejé una base más cercana a una herramienta real de creación sobre el motor. La mejora principal de esta etapa no es tanto visual como arquitectónica: el engine deja de ser solo infraestructura de ejecución y empieza a asumir también responsabilidades de edición, persistencia y administración segura de objetos dentro del mismo flujo de trabajo.
+Con ello dejé una base gráfica más limpia internamente. La mejora principal de esta etapa no está en una capacidad nueva muy visible hacia fuera, sino en el orden interno del framework: el render empieza a descansar sobre contratos más reutilizables y menos acoplados a inicializaciones manuales.
 
 ## Dependencias externas visibles
 
-No aparecen sustituciones grandes de dependencias respecto a la etapa del 8 de febrero, pero sí se vuelve mucho más visible el papel de `sqlite3` dentro del framework. En esta versión deja de estar solo presente como biblioteca enlazada y pasa a participar de forma directa en el flujo del engine mediante `DataBaseManager` y la persistencia de entidades del nivel.
+No aparecen dependencias nuevas visibles en esta etapa. El cambio está en cómo se usan mejor las ya presentes:
 
-En paralelo, `FMOD`, `Assimp` y `stb_image` quedan algo más integrados en la semántica interna del motor: `FMOD` con control de canales por pista, y `Assimp` más `stb_image` como base concreta de la capa `Model`/`Mesh` ya simplificada alrededor de importación y draw.
+- `stb_image` queda más embebida en el ciclo de vida de `GameTexture2D`;
+- OpenGL queda algo más encapsulado detrás de `Shader`, `GameTexture2D` y `ResourceManager`;
+- `sqlite3` gana un helper adicional de consulta a través de `DataBaseManager`.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **11 de febrero de 2025** queda delimitada por estos movimientos:
+La etapa efectiva al **31 de marzo de 2025** queda delimitada por estos movimientos:
 
-- incorporé `DataBaseManager` y volví explícita la persistencia de niveles dentro del engine usando `sqlite3`;
-- reforcé la capa de runtime con servicios reutilizables para guardado, carga, ingestión de archivos y reinicio de escenas;
-- amplié `GameObject` con aceleración, velocidad angular, límites de velocidad, clonación y manejo controlado de referencias compartidas;
-- adapté `ObjectManager` para invalidar referencias externas al destruir objetos y para sostener mejor selección por mouse o por área;
-- incorporé soporte de archivos soltados sobre la ventana para cargar niveles persistidos desde el propio runtime;
-- incorporé `Reset()` al contrato base de `GameScene` y seguí separando la UI como subsistema reutilizable dentro del framework.
-- afiné `MusicManager` para controlar canales, volumen y posición de reproducción por recurso musical;
-- simplifiqué la capa `Mesh`/`Model` para dejarla concentrada en importación, materiales, buffers y dibujado directo.
+- reorganicé `ResourceManager` para registrar shaders, texturas, spritesheets y VAO mediante una API más uniforme;
+- trasladé parte de la lógica de transformación y proyección a `Shader` con `SetModel()` y `SetProjection()`;
+- volví `GameTexture2D` responsable de su propia carga y recarga de imágenes desde archivo;
+- inicié la estructura del subsistema de texto con `TextManager` y `Text`, aunque todavía sin una implementación completa;
+- añadí `ConsultTable()` a `DataBaseManager` como helper de consulta simple;
+- ajusté `Mesh` para alinearse con el nuevo encapsulamiento del shader mediante `GetID()`.
 
-Con esta etapa dejé el motor en una versión donde el backend OpenGL ya no solo sirve para correr el juego de ejemplo: también empieza a sostener herramientas internas de edición, persistencia y manipulación estructurada del contenido.
+Con esta etapa dejé el framework en una versión más coherente internamente para seguir creciendo sobre OpenGL: menos lógica de render dispersa, más encapsulamiento de recursos y una base inicial para futuras capacidades de texto dentro del propio motor.

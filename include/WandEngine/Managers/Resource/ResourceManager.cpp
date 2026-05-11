@@ -1,18 +1,22 @@
 #include "ResourceManager.hpp"
 #include "MasterShaders.hpp"
 
-#include "../Camera/CameraManager.hpp"
 #include <sstream>
 #include <fstream>
 #include <iostream>
 
-#include "stb_image.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace WandEngine
 {
 
     ResourceManager::ResourceManager()
+    {
+        Init();
+
+    }
+
+    void ResourceManager::Init()
     {
         //DefaultVAOTexture
         std::vector<std::vector<float>> vertices = { 
@@ -24,35 +28,13 @@ namespace WandEngine
             {1.0f, 0.0f, 1.0f, 0.0f}
         };
 
-        std::vector<float> flatVertices;
-        for (const auto &row : vertices)
-        {
-            flatVertices.insert(flatVertices.end(), row.begin(), row.end());
-        }
+        LoadVAO("Sprite", vertices);
 
-        unsigned int spriteVBO;
-
-        glGenVertexArrays(1, &spriteVAO);
-        glGenBuffers(1, &spriteVBO);
-
-        glBindVertexArray(spriteVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, spriteVBO);
-
-        glBufferData(GL_ARRAY_BUFFER, flatVertices.size() * sizeof(float), flatVertices.data(), GL_STATIC_DRAW);
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, vertices[0].size(), GL_FLOAT, GL_FALSE, vertices[0].size() * sizeof(float), (void *)0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-        glDeleteBuffers(1, &spriteVBO);
-
-
-        //DefaultShaders
-        shapeShader.Compile(shape_vs, shape_fs, nullptr);
-        spriteShader.Compile(sprite_vs, sprite_fs, nullptr);
-        spriteSheetShader.Compile(spriteSheet_vs, spriteSheet_fs, nullptr);
+        LoadShaderFromCode("Shape", shape_vs, shape_fs);
+        LoadShaderFromCode("Sprite", sprite_vs, sprite_fs);
+        LoadShaderFromCode("SpriteSheet", spriteSheet_vs, spriteSheet_fs);
     }
+
 
     void ResourceManager::Render2DSprite(
         const std::string &textureKey,
@@ -63,36 +45,29 @@ namespace WandEngine
         float alpha)
     {
 
-        GameTexture2D *texture = getTexture(textureKey);
+        GameTexture2D *texture = GetTexture(textureKey);
 
         if (!texture)
         {
             return;
         }
 
-        spriteShader.use();
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(position, 0.0f));
+        Shader *spriteShader = GetShader("Sprite");
 
-        model = glm::translate(model, glm::vec3(size.x * 0.5, size.y * 0.5, 0.0f));
-        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::translate(model, glm::vec3(-size.x * 0.5, -size.y * 0.5, 0.0f));
-
-        model = glm::scale(model, glm::vec3(size, 1.0f));
-
-        spriteShader.setMatrix4("model", model);
-        spriteShader.setVec3("spriteColor", color);
-        spriteShader.setMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());
+        spriteShader->Use();
+        spriteShader->SetModel("model", glm::vec3(position, 0.0f), glm::vec3(size, 0.0f), glm::vec3(0.0f, 0.0f, rotation));
+        spriteShader->SetProjection("projection", ViewType::Ortho);
+        spriteShader->SetVec3("spriteColor", color);
 
         unsigned int textureIndex = 0;
         texture->Bind(textureIndex);
-        spriteShader.setInt("image", textureIndex);
+        spriteShader->SetInt("image", textureIndex);
 
-        glBindVertexArray(spriteVAO);
+        glBindVertexArray(GetVAO("Sprite"));
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         texture->Unbind();
-        spriteShader.endUse();
+        spriteShader->EndUse();
     }
 
     void ResourceManager::Render2DSprite(
@@ -105,38 +80,29 @@ namespace WandEngine
         glm::vec3 color,
         float alpha)
     {
-        unsigned int vao = getVAO(vaoKey);
-        GameTexture2D *texture = getTexture(textureKey);
-        Shader *shader = getShader(shaderKey);
+        unsigned int vao = GetVAO(vaoKey);
+        GameTexture2D *texture = GetTexture(textureKey);
+        Shader *shader = GetShader(shaderKey);
 
         if ((vao == 0) || !texture || !shader)
         {
             return;
         }
 
-        shader->use();
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(position, 0.0f));
-
-        model = glm::translate(model, glm::vec3(size.x * 0.5, size.y * 0.5, 0.0f));
-        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::translate(model, glm::vec3(-size.x * 0.5, -size.y * 0.5, 0.0f));
-
-        model = glm::scale(model, glm::vec3(size, 1.0f));
-
-        shader->setMatrix4("model", model);
-        shader->setVec3("spriteColor", color);
-        shader->setMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());
+        shader->Use();
+        shader->SetModel("model", glm::vec3(position, 0.0f), glm::vec3(size, 0.0f), glm::vec3(0.0f, 0.0f, rotation));
+        shader->SetProjection("projection", ViewType::Ortho);
+        shader->SetVec3("spriteColor", color);
 
         unsigned int textureIndex = 0;
         texture->Bind(textureIndex);
-        shader->setInt("image", textureIndex);
+        shader->SetInt("image", textureIndex);
 
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         texture->Unbind();
-        shader->endUse();
+        shader->EndUse();
     }
 
     void ResourceManager::Render2DSpriteFromTextureSheet(
@@ -150,26 +116,21 @@ namespace WandEngine
         float alpha)
     {
 
-        Texture_Sheet *textureSheet = getTextureSheet(textureKey);
+        Texture_Sheet *textureSheet = GetTextureSheet(textureKey);
 
         if (!textureSheet)
         {
             return;
         }
 
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(position, 0.0f));
+        Shader *spriteSheetShader = GetShader("SpriteSheet");
 
-        model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f));
-        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f));
+        spriteSheetShader->Use();
+        spriteSheetShader->SetModel("model", glm::vec3(position, 0.0f), glm::vec3(size, 0.0f), glm::vec3(0.0f, 0.0f, rotation));
+        spriteSheetShader->SetProjection("projection", ViewType::Ortho);
 
-        model = glm::scale(model, glm::vec3(size, 1.0f));
+        spriteSheetShader->SetVec3("spriteColor", color);
 
-        spriteSheetShader.use();
-        spriteSheetShader.setMatrix4("model", model);
-        spriteSheetShader.setVec3("spriteColor", color);
-        spriteSheetShader.setMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());
 
         int spriteWidth = ((textureSheet->texture->GetWidth() - (textureSheet->padding * textureSheet->columns)) / textureSheet->columns);
         int spriteHeight = ((textureSheet->texture->GetHeight() - (textureSheet->padding * textureSheet->rows)) / textureSheet->rows);
@@ -182,22 +143,22 @@ namespace WandEngine
         float u_max = static_cast<float>(x + spriteWidth) / textureSheet->texture->GetWidth();
         float v_max = static_cast<float>(y + spriteHeight) / textureSheet->texture->GetHeight();
 
-        spriteSheetShader.setVec2("uvMin", glm::vec2(u_min, v_min));
-        spriteSheetShader.setVec2("uvMax", glm::vec2(u_max, v_max));
+        spriteSheetShader->SetVec2("uvMin", glm::vec2(u_min, v_min));
+        spriteSheetShader->SetVec2("uvMax", glm::vec2(u_max, v_max));
 
         unsigned int textureIndex = 0;
         textureSheet->texture->Bind(textureIndex);
-        spriteSheetShader.setInt("image", textureIndex);
+        spriteSheetShader->SetInt("image", textureIndex);
 
-        glBindVertexArray(spriteVAO);
+        glBindVertexArray(GetVAO("Sprite"));
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        spriteSheetShader.endUse();
+        spriteSheetShader->EndUse();
     }
 
-    void ResourceManager::Render2DSpriteFromTextureSheet(
+    void ResourceManager::Render2DSpriteFromTextureSheet( // normal, specular, etc...
         const std::string &vaoKey,
         const std::string &shaderKey,
         const std::vector<std::pair<std::string, std::string>> &shaderVar_textureKey,
@@ -209,33 +170,24 @@ namespace WandEngine
         glm::vec3 color,
         float alpha)
     {
-        unsigned int vao = getVAO(vaoKey);
-        Shader *shader = getShader(shaderKey);
+        unsigned int vao = GetVAO(vaoKey);
+        Shader *shader = GetShader(shaderKey);
 
         if ((vao == 0) || !shader)
         {
             return;
         }
 
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(position, 0.0f));
+        shader->Use();
+        shader->SetModel("model", glm::vec3(position, 0.0f), glm::vec3(size, 0.0f), glm::vec3(0.0f, 0.0f, rotation));
+        shader->SetProjection("projection", ViewType::Ortho);
 
-        model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f));
-        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f));
-
-        model = glm::scale(model, glm::vec3(size, 1.0f));
-
-        shader->use();
-        shader->setMatrix4("model", model);
-
-        shader->setVec3("spriteColor", color);
-        shader->setMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());
+        shader->SetVec3("spriteColor", color);
 
         unsigned int textureIndex = 0;
         for (auto pair : shaderVar_textureKey)
         {
-            Texture_Sheet *textureSheet = getTextureSheet(pair.second);
+            Texture_Sheet *textureSheet = GetTextureSheet(pair.second);
 
             if (!textureSheet)
             {
@@ -253,11 +205,11 @@ namespace WandEngine
             float u_max = static_cast<float>(x + spriteWidth) / textureSheet->texture->GetWidth();
             float v_max = static_cast<float>(y + spriteHeight) / textureSheet->texture->GetHeight();
 
-            shader->setVec2("uvMin", glm::vec2(u_min, v_min));
-            shader->setVec2("uvMax", glm::vec2(u_max, v_max));
+            shader->SetVec2("uvMin", glm::vec2(u_min, v_min));
+            shader->SetVec2("uvMax", glm::vec2(u_max, v_max));
 
             textureSheet->texture->Bind(textureIndex);
-            shader->setInt(pair.first, textureIndex);
+            shader->SetInt(pair.first, textureIndex);
             textureIndex++;
         }
 
@@ -266,7 +218,7 @@ namespace WandEngine
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        shader->endUse();
+        shader->EndUse();
     }
 
     void ResourceManager::InitShapeResources(ShapeResources &shape, const std::vector<glm::vec3> &vertices)
@@ -309,25 +261,25 @@ namespace WandEngine
     {
         InitShapeResources(shape, vertices);
 
-        glm::mat4 model(1.0f);
-        glm::mat4 projection = CameraManager::GetInstance().GetProjectionMatrix();
+        Shader *shapeShader = GetShader("Shape");
+        shapeShader->Use();
 
+        glm::mat4 model(1.0f);
         model = glm::translate(model, pivot);
         model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::translate(model, -pivot);
 
-        shapeShader.use();
-        shapeShader.setMatrix4("model", model);
-        shapeShader.setMatrix4("projection", projection);
-        shapeShader.setVec4("LineColor", glm::vec4(color, alpha));
+        shapeShader->SetMatrix4("model", model);
+        shapeShader->SetProjection("projection", ViewType::Ortho);
+        shapeShader->SetVec4("LineColor", glm::vec4(color, alpha));
 
         glLineWidth(lineWidth);
 
         glBindVertexArray(shape.VAO);
         glDrawArrays(drawMode, 0, shape.vertexCount);
-        shapeShader.endUse();
+        shapeShader->EndUse();
     }
 
     void ResourceManager::RenderLine(glm::vec3 point_1, glm::vec3 point_2, glm::vec3 pivot, glm::vec3 rotation, glm::vec3 color, float alpha, float lineWidth)
@@ -345,7 +297,7 @@ namespace WandEngine
         RenderShape(rectangleResources, {point_1, glm::vec3(point_2.x, point_1.y, 0.0f), point_2, glm::vec3(point_1.x, point_2.y, 0.0f)}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP);
     }
 
-    bool ResourceManager::loadVAO(const std::string &key, const std::vector<std::vector<float>> &vertices)
+    bool ResourceManager::LoadVAO(const std::string &key, const std::vector<std::vector<float>> &vertices)
     {
         if (vao_resources.find(key) != vao_resources.end())
         {
@@ -354,7 +306,7 @@ namespace WandEngine
 
         if (vertices.empty())
         {
-            std::cerr << "Error: Intentando cargar un VAO con datos vacíos" << std::endl;
+            std::cerr << "Error: Empty VAO data" << std::endl;
             return false;
         }
 
@@ -379,13 +331,14 @@ namespace WandEngine
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
+        glDeleteBuffers(1, &VBO);
 
         vao_resources[key] = VAO;
 
         return true;
     }
 
-    bool ResourceManager::loadShader(const std::string &key, const std::string &vs_path, const std::string &fs_path, const std::string &gs_path)
+    bool ResourceManager::LoadShaderFromPath(const std::string &key, const std::string &vs_path, const std::string &fs_path, const std::string &gs_path)
     {
         if (shader_resources.find(key) != shader_resources.end())
         {
@@ -428,53 +381,48 @@ namespace WandEngine
         const char *fShaderCode = fragmentCode.c_str();
         const char *gShaderCode = geometryCode.c_str();
 
-        Shader *shader = new Shader();
-        shader->Compile(vShaderCode, fShaderCode, !geometryCode.empty() ? gShaderCode : nullptr);
+        Shader *shader = new Shader(vShaderCode, fShaderCode, !geometryCode.empty() ? gShaderCode : nullptr);
 
         shader_resources[key] = shader;
 
         return true;
     }
 
-    bool ResourceManager::loadTexture(const std::string &key, const std::string &path, bool alpha)
+    bool ResourceManager::LoadShaderFromCode(const std::string &key, const char* vertexSource, const char* fragmentSource, const char* geometrySource)
+    {
+        if (shader_resources.find(key) != shader_resources.end())
+        {
+            return false;
+        }
+
+        Shader *shader = new Shader(vertexSource, fragmentSource, geometrySource);
+
+        shader_resources[key] = shader;
+
+        return true;
+    }
+
+    bool ResourceManager::LoadTexture(const std::string &key, const std::string &path, bool alpha)
     {
         if (texture_resources.find(key) != texture_resources.end())
         {
             return false;
         }
 
-        GameTexture2D *texture = new GameTexture2D();
-        if (alpha)
-        {
-            texture->SetInternalFormat(GL_RGBA);
-            texture->SetImageFormat(GL_RGBA);
-        }
-        int width, height, nrChannels;
-        unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
-        texture->Generate(width, height, data);
-        stbi_image_free(data);
+        GameTexture2D *texture = new GameTexture2D(path.c_str(), alpha ? GL_RGBA : GL_RGB, alpha ? GL_RGBA : GL_RGB);
 
         texture_resources[key] = texture;
         return true;
     }
 
-    bool ResourceManager::loadTextureSheet(const std::string &key, const std::string &path, bool alpha, int rows, int columns, int padding)
+    bool ResourceManager::LoadTextureSheet(const std::string &key, const std::string &path, bool alpha, int rows, int columns, int padding)
     {
         if (textures_sheet_resources.find(key) != textures_sheet_resources.end())
         {
             return false;
         }
 
-        GameTexture2D *texture = new GameTexture2D();
-        if (alpha)
-        {
-            texture->SetInternalFormat(GL_RGBA);
-            texture->SetImageFormat(GL_RGBA);
-        }
-        int width, height, nrChannels;
-        unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
-        texture->Generate(width, height, data);
-        stbi_image_free(data);
+        GameTexture2D *texture = new GameTexture2D(path.c_str(), alpha ? GL_RGBA : GL_RGB, alpha ? GL_RGBA : GL_RGB);
 
         Texture_Sheet *textures_sheet = new Texture_Sheet(texture, rows, columns, padding);
 
@@ -482,7 +430,7 @@ namespace WandEngine
         return true;
     }
 
-    bool ResourceManager::loadFont(const std::string &key, const std::string &path, int size)
+    bool ResourceManager::LoadFont(const std::string &key, const std::string &path, int size)
     {
         if (font_resources.find(key) != font_resources.end())
         {
@@ -492,7 +440,7 @@ namespace WandEngine
         return true;
     }
 
-    unsigned int ResourceManager::getVAO(const std::string &key) const
+    unsigned int ResourceManager::GetVAO(const std::string &key) const
     {
         auto it = vao_resources.find(key);
         if (it == vao_resources.end())
@@ -502,7 +450,7 @@ namespace WandEngine
         return it->second;
     }
 
-    Shader *ResourceManager::getShader(const std::string &key) const
+    Shader *ResourceManager::GetShader(const std::string &key) const
     {
         auto it = shader_resources.find(key);
         if (it == shader_resources.end())
@@ -512,7 +460,7 @@ namespace WandEngine
         return it->second;
     }
 
-    GameTexture2D *ResourceManager::getTexture(const std::string &key) const
+    GameTexture2D *ResourceManager::GetTexture(const std::string &key) const
     {
         auto it = texture_resources.find(key);
         if (it == texture_resources.end())
@@ -522,7 +470,7 @@ namespace WandEngine
         return it->second;
     }
 
-    ResourceManager::Texture_Sheet *ResourceManager::getTextureSheet(const std::string &key) const
+    ResourceManager::Texture_Sheet *ResourceManager::GetTextureSheet(const std::string &key) const
     {
         auto it = textures_sheet_resources.find(key);
         if (it == textures_sheet_resources.end())
@@ -532,7 +480,7 @@ namespace WandEngine
         return it->second;
     }
 
-    int *ResourceManager::getFont(const std::string &key) const
+    int *ResourceManager::GetFont(const std::string &key) const
     {
         auto it = font_resources.find(key);
         if (it == font_resources.end())
@@ -585,7 +533,11 @@ namespace WandEngine
         auto it_shader_r = shader_resources.begin();
         while(it_shader_r != shader_resources.end())
         {
-            if((*it_shader_r).second != nullptr)
+            if(
+                (*it_shader_r).second != nullptr
+                //&& 
+                //!( (*it_shader_r).first == "Shape" || (*it_shader_r).first == "Sprite" || (*it_shader_r).first == "SpriteSheet" ) // Change to INIT RESOURCES
+                )
             {
                 delete (*it_shader_r).second;
                 (*it_shader_r).second = nullptr;
@@ -628,18 +580,20 @@ namespace WandEngine
 
         for (auto &pair : font_resources)
         {
+
         }
         font_resources.clear();
 
-#ifndef NDEBUG
-        std::cout << "Resource manager cleared" << std::endl;
-#endif
+
+        #ifndef NDEBUG
+                std::cout << "Resource manager cleared" << std::endl;
+        #endif
     }
 
     ResourceManager::~ResourceManager()
     {
-#ifndef NDEBUG
-        std::cout << "Resource manager destroyed" << std::endl;
-#endif
+        #ifndef NDEBUG
+                std::cout << "Resource manager destroyed" << std::endl;
+        #endif
     }
 }

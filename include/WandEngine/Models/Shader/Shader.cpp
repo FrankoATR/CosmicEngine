@@ -1,5 +1,9 @@
 #include "Shader.hpp"
+
+#include "../../Managers/Camera/CameraManager.hpp"
+
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glad/glad.h>
 #include <fstream>
 #include <sstream>
@@ -8,9 +12,9 @@
 namespace WandEngine
 {
 
-    Shader::Shader()
+    Shader::Shader(const char* vertexSource, const char* fragmentSource, const char* geometrySource)
     {
-
+        Compile(vertexSource, fragmentSource, geometrySource);
     }
 
     Shader::~Shader()
@@ -32,35 +36,36 @@ namespace WandEngine
         }
     }
 
-    void Shader::Compile(const char* vertexCode, const char* fragmentCode, const char* geometryCode)
+    void Shader::Compile(const char* vertexSource, const char* fragmentSource, const char* geometrySource)
     {
         sVertex = 0, sFragment = 0, gShader = 0;
 
         sVertex = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(sVertex, 1, &vertexCode, nullptr);
+        glShaderSource(sVertex, 1, &vertexSource, nullptr);
         glCompileShader(sVertex);
-        checkCompileErrors(sVertex, "VERTEX");
+        CheckCompileErrors(sVertex, "VERTEX");
 
         sFragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(sFragment, 1, &fragmentCode, nullptr);
+        glShaderSource(sFragment, 1, &fragmentSource, nullptr);
         glCompileShader(sFragment);
-        checkCompileErrors(sFragment, "FRAGMENT");
+        CheckCompileErrors(sFragment, "FRAGMENT");
 
-        if (geometryCode != nullptr )
+        if (geometrySource != nullptr )
         {
+            std::cout << "GEO" << std::endl;
             gShader = glCreateShader(GL_GEOMETRY_SHADER);
-            glShaderSource(gShader, 1, &geometryCode, nullptr);
+            glShaderSource(gShader, 1, &geometrySource, nullptr);
             glCompileShader(gShader);
-            checkCompileErrors(gShader, "GEOMETRY");
+            CheckCompileErrors(gShader, "GEOMETRY");
         }
 
         this->ID = glCreateProgram();
         glAttachShader(this->ID, sVertex);
         glAttachShader(this->ID, sFragment);
-        if (geometryCode != nullptr )
+        if (geometrySource != nullptr )
             glAttachShader(this->ID, gShader);
         glLinkProgram(this->ID);
-        checkCompileErrors(this->ID, "PROGRAM");
+        CheckCompileErrors(this->ID, "PROGRAM");
 
 
 
@@ -68,71 +73,99 @@ namespace WandEngine
 
     }
 
-    void Shader::use()
+    void Shader::Use()
     {
         glUseProgram(ID);
     }
 
-    void Shader::endUse()
+    void Shader::EndUse()
     {
         glBindVertexArray(0);
         glUseProgram(0);
     }
 
-    void Shader::setBool(const std::string &name, bool value) const
+    unsigned int Shader::GetID()
+    {
+        return ID;
+    }
+
+    void Shader::SetModel(const std::string &name, glm::vec3 position, glm::vec3 size, glm::vec3 rotation) const
+    {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, position);
+
+        model = glm::translate(model, glm::vec3(size.x * 0.5, size.y * 0.5, size.z * 0.5f));
+
+        model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        model = glm::translate(model, glm::vec3(-size.x * 0.5, -size.y * 0.5, -size.z * 0.5f));
+
+        model = glm::scale(model, size);
+
+        SetMatrix4(name, model);
+    }
+
+    void Shader::SetProjection(const std::string &name, ViewType viewType) const
+    {
+        SetMatrix4(name, viewType == ViewType::Ortho ? CameraManager::GetInstance().GetProjectionMatrix() : CameraManager::GetInstance().GetProjectionMatrix());
+    }
+
+    void Shader::SetBool(const std::string &name, bool value) const
     {
         glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
     }
 
-    void Shader::setInt(const std::string &name, int value) const
+    void Shader::SetInt(const std::string &name, int value) const
     {
         glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
     }
 
-    void Shader::setFloat(const std::string &name, float value) const
+    void Shader::SetFloat(const std::string &name, float value) const
     {
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
     }
 
-    void Shader::setVec4(const std::string &name, glm::vec4 value) const
+    void Shader::SetVec4(const std::string &name, glm::vec4 value) const
     {
         glUniform4fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
     }
 
-    void Shader::setVec4(const std::string &name, float value1, float value2, float value3, float value4) const
+    void Shader::SetVec4(const std::string &name, float value1, float value2, float value3, float value4) const
     {
         glUniform4f(glGetUniformLocation(ID, name.c_str()), value1, value2, value3, value4);
 
     }
 
-    void Shader::setVec3(const std::string &name, glm::vec3 value) const
+    void Shader::SetVec3(const std::string &name, glm::vec3 value) const
     {
         glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
     }
 
-    void Shader::setVec3(const std::string &name, float value1, float value2, float value3) const
+    void Shader::SetVec3(const std::string &name, float value1, float value2, float value3) const
     {
         glUniform3f(glGetUniformLocation(ID, name.c_str()), value1, value2, value3);
     }
 
 
-    void Shader::setVec2(const std::string &name, glm::vec2 value) const
+    void Shader::SetVec2(const std::string &name, glm::vec2 value) const
     {
         glUniform2fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
     }
 
-    void Shader::setVec2(const std::string &name, float value1, float value2) const
+    void Shader::SetVec2(const std::string &name, float value1, float value2) const
     {
         glUniform2f(glGetUniformLocation(ID, name.c_str()), value1, value2);
     }
 
 
-    void Shader::setMatrix4(const std::string &name, glm::mat4 value) const
+    void Shader::SetMatrix4(const std::string &name, glm::mat4 value) const
     {
         glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
     }
 
-    void Shader::checkCompileErrors(unsigned int shader, std::string type)
+    void Shader::CheckCompileErrors(unsigned int shader, std::string type)
     {
         int success;
         char infoLog[1024];

@@ -23,12 +23,6 @@ namespace WandEngine
             int vertexCount = 0;
         };
 
-        unsigned int spriteVAO;
-        
-        Shader shapeShader;
-        Shader spriteShader;
-        Shader spriteSheetShader;
-
         ShapeResources lineResources, triangleResources, rectangleResources;
 
         void InitShapeResources(ShapeResources &shape, const std::vector<glm::vec3> &vertices);
@@ -54,12 +48,12 @@ namespace WandEngine
         ResourceManager(const ResourceManager &) = delete;
         ResourceManager &operator=(const ResourceManager &) = delete;
 
-        unsigned int getVAO(const std::string &key) const;
-        GameTexture2D *getTexture(const std::string &key) const;
-        Texture_Sheet *getTextureSheet(const std::string &key) const;
-        Shader *getShader(const std::string &key) const;
+        unsigned int GetVAO(const std::string &key) const;
+        GameTexture2D *GetTexture(const std::string &key) const;
+        Texture_Sheet *GetTextureSheet(const std::string &key) const;
+        Shader *GetShader(const std::string &key) const;
 
-        int *getFont(const std::string &key) const;
+        int *GetFont(const std::string &key) const;
 
     public:
         static ResourceManager &GetInstance()
@@ -67,6 +61,8 @@ namespace WandEngine
             static ResourceManager instance;
             return instance;
         }
+
+        void Init();
 
         void Render2DSprite(
             const std::string &textureKey,
@@ -151,13 +147,14 @@ namespace WandEngine
             float lineWidth = 1.0f,
             bool filled = false);
 
-        bool loadVAO(const std::string &key, const std::vector<std::vector<float>> &vertices);
-        bool loadShader(const std::string &key, const std::string &vs_path, const std::string &fs_path, const std::string &gs_path = "");
-        bool loadTexture(const std::string &key, const std::string &path, bool alpha);
-        bool loadTextureSheet(const std::string &key, const std::string &path, bool alpha, int rows, int columns, int padding);
+        bool LoadVAO(const std::string &key, const std::vector<std::vector<float>> &vertices);
+        bool LoadShaderFromPath(const std::string &key, const std::string &vs_path, const std::string &fs_path, const std::string &gs_path = "");
+        bool LoadShaderFromCode(const std::string &key, const char* vertexSource, const char* fragmentSource, const char* geometrySource = nullptr);
+        bool LoadTexture(const std::string &key, const std::string &path, bool alpha);
+        bool LoadTextureSheet(const std::string &key, const std::string &path, bool alpha, int rows, int columns, int padding);
 
 
-        bool loadFont(const std::string &key, const std::string &path, int size);
+        bool LoadFont(const std::string &key, const std::string &path, int size);
 
         void Clear();
     };

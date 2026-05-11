@@ -40,7 +40,7 @@ private:
 
 
 public:
-    MainScene(int Level, int Attempts);
+    MainScene();
     
     void Init() override;
     void Reset() override;
