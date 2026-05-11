@@ -38,6 +38,7 @@ namespace WandEngine
 
         void Init();
         void Update();
+        void Clear();
         void ProcessEvent(const ALLEGRO_EVENT &event);
 
         bool IsKeyPressed(int keycode, KeyEventType eventType) const;

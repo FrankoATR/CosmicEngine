@@ -3,14 +3,23 @@
 namespace WandEngine
 {
 	GameBodyObject::GameBodyObject(GameObject *Parent, WAND_VEC2 Position, WAND_VEC2 Size, std::function<void(GameObject*, CollisionSide)> OnCollisionEvent) : 
-		Parent(Parent), Position(Position), Size(Size), Active(true), OnCollisionEvent(OnCollisionEvent)
+		Parent(Parent), Position(Position), Size(Size), Active(true), OnCollisionEvent(OnCollisionEvent), AliveInGameManager(true)
 	{
-		// this->BodyType = BodyType;
+		if(!Parent)
+		{
+			std::cerr << "No parent found for this Body" << std::endl;
+			return;
+		}
+		if(!OnCollisionEvent)
+		{
+			std::cerr << "No OnCollisionEvent found for this Body" << std::endl;
+			return;
+		}
 	}
 
     void GameBodyObject::OnCollision(GameBodyObject *other, CollisionSide Side)
     {
-		if(OnCollisionEvent)
+		if(OnCollisionEvent && Parent)
 		{
 			OnCollisionEvent(other->GetParent(), Side);
 		}
@@ -64,6 +73,16 @@ namespace WandEngine
 	{
 		return this->Parent;
 	}
+
+    void GameBodyObject::Destroy()
+    {
+        this->AliveInGameManager = false;
+    }
+
+	bool GameBodyObject::GetAliveInGameManager() const
+    {
+        return this->AliveInGameManager;
+    }
 
 	GameBodyObject::~GameBodyObject()
 	{

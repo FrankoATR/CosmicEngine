@@ -1,9 +1,9 @@
 #include "Player.hpp"
+#include "Orb.hpp"
 
 #include <WandEngine/Managers/InputManager.hpp>
 #include <WandEngine/Managers/ObjectManager.hpp>
 #include <WandEngine/Managers/BodyManager.hpp>
-#include <WandEngine/Managers/UIManager.hpp>
 #include <WandEngine/Managers/ResourceManager.hpp>
 
 Player::Player(PlayerMode mode, WAND_VEC2 Position, WAND_VEC2 Size, ALLEGRO_BITMAP *Sprite, short int LayerId) :
@@ -12,6 +12,11 @@ GameObject(Object::DynamicEntity, Position, Size, "Player", Sprite, LayerId)
     Velocity  = 400;
     OnGroundOrBlock = false;
     Direction.x = 2.4;
+    KeySpaceDown = false;
+    RigthClickDown = false;
+    KeySpaceRelease = false;
+    RigthClickRelease = false;
+    ReleaseJumping  = false;
 }
 
 
@@ -37,8 +42,6 @@ void Player::Init()
     Update_Gravity_Timer = new GameTimer(0.005, true, false);
     TimerManager::GetInstance().Add(Update_Gravity_Timer);
 
-    Label_Info1 = new UIText("", ResourceManager::GetInstance().getFont("ThaleahFat"), WAND_VEC2(100, 0), WAND_SIZE(150, 75), true, nullptr);
-    UIManager::GetInstance().AddElement(Label_Info1);
 }
 
 
@@ -53,7 +56,7 @@ void Player::Draw()
         float rad = Rotation * ALLEGRO_PI / 180.0f; 
         al_draw_tinted_scaled_rotated_bitmap(
             Sprite,
-            al_map_rgba(0, 255, 0, 255), 
+            al_map_rgba(MainColor.r, MainColor.g, MainColor.b, MainColor.a), 
             cx, cy,
             adjusted_x, adjusted_y,
             Size.x / al_get_bitmap_width(Sprite), 
@@ -69,13 +72,26 @@ void Player::Update(float deltaTime)
 {
     LastPosition = Position;
 
-    bool KeySpaceDown = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_SPACE, KeyEventType::KeyRelease);
-    bool RigthClickDown = InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyRelease);
+    KeySpaceRelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_SPACE, KeyEventType::KeyRelease);
+    RigthClickRelease = InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyRelease);
+    KeySpaceDown = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_SPACE, KeyEventType::KeyDown);
+    RigthClickDown = InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyDown);
+
+    if(KeySpaceDown || RigthClickDown)
+    {
+        ReleaseJumping = true;
+    }
+
+    if(!KeySpaceRelease && !RigthClickRelease)
+    {
+        ReleaseJumping = false;
+    }
     
-    if( (KeySpaceDown || RigthClickDown) && OnGroundOrBlock)
+    if( (KeySpaceRelease || RigthClickRelease) && OnGroundOrBlock)
     {
         Direction.y = -4.6;
         OnGroundOrBlock = false;
+        ReleaseJumping = false;
     }
 
     if(OnGroundOrBlock)
@@ -169,6 +185,41 @@ void Player::Body1CollisionEvent(GameObject *Other, CollisionSide Side)
         }
     }
 
+
+
+    if (Other->GetObjectName() == "Orb" && ReleaseJumping)
+    {
+        Orb* orb = static_cast<Orb*>(Other);
+
+        if(orb && !orb->IsUsed())
+        {
+            ReleaseJumping = false;
+
+            OnGroundOrBlock = false;
+            orb->SetUsed();
+
+            switch (orb->GetOrbType())
+            {
+            case OrbType::Green:
+                Direction.y = -4.6;
+                break;
+
+            case OrbType::Blue:
+                Direction.y = -3.4;
+                break;
+
+            default:
+                break;
+            }
+        }
+    }
+
+
+    if(Other->GetObjectName() == "Spike")
+    {
+        this->Destroy();
+    }
+
 }
 
 
@@ -177,7 +228,7 @@ void Player::Body2CollisionEvent(GameObject *Other, CollisionSide Side)
 
     if (Other->GetObjectName() == "SolidBlock")
     {
-        Destroy();
+        this->Destroy();
     }
 
 }
@@ -187,7 +238,5 @@ void Player::Body2CollisionEvent(GameObject *Other, CollisionSide Side)
 
 Player::~Player()
 {
-    UIManager::GetInstance().RemoveElement(Label_Info1);
-    delete Label_Info1;
-    Label_Info1 = nullptr;
+
 }

@@ -16,6 +16,7 @@ namespace WandEngine
         Position = Other->GetPosition();
         LastPosition = Other->GetPosition();
         LayerId = Other->GetLayerId();
+        MainColor = Other->GetColor();
         AliveInGameManager = true;
         Visible = true;
         InsideGridArea = true;
@@ -24,7 +25,16 @@ namespace WandEngine
     }
 
     GameObject::GameObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId) : 
-        ObjectType(ObjectType), ObjectName(ObjectName), Sprite(Sprite), Size(Size), Position(Position), LastPosition(Position), LayerId(LayerId), VelocityForDuration(0.0f), MovementTimer(nullptr)
+        ObjectType(ObjectType), 
+        ObjectName(ObjectName), 
+        Sprite(Sprite), 
+        Size(Size), 
+        Position(Position), 
+        LastPosition(Position), 
+        LayerId(LayerId),
+        MainColor(WAND_COLOR(255, 255, 255, 255)),
+        VelocityForDuration(0.0f), 
+        MovementTimer(nullptr)
     {
         this->AliveInGameManager = true;
         this->Visible = true;
@@ -155,6 +165,17 @@ namespace WandEngine
     {
         return this->Visible;
     }
+
+    void GameObject::SetColor(WAND_COLOR NewColor)
+    {
+        this->MainColor = NewColor;
+    }
+    
+    WAND_COLOR GameObject::GetColor() const
+    {
+        return this->MainColor;
+    }
+    
 
     void GameObject::SetDirection(WAND_VEC2 NewDirection)
     {

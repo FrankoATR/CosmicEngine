@@ -162,12 +162,15 @@ namespace WandEngine
             al_destroy_font(pair.second);
         }
         font_resources.clear();
-        std::cout << "Resource manager cleared" << std::endl;
+        #ifndef NDEBUG
+            std::cout << "Resource manager cleared" << std::endl;
+		#endif
     }
 
     ResourceManager::~ResourceManager()
     {
-        Clear();
-        std::cout << "Resource manager destroyed" << std::endl;
+        #ifndef NDEBUG
+            std::cout << "Resource manager destroyed" << std::endl;
+		#endif
     }
 }

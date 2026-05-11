@@ -47,13 +47,13 @@ namespace WandEngine
 
         if (mixer)
         {
-            al_destroy_mixer(mixer);
+            //al_destroy_mixer(mixer);
             mixer = nullptr;
         }
 
         if (voice)
         {
-            al_destroy_voice(voice);
+            //al_destroy_voice(voice);
             voice = nullptr;
         }
 

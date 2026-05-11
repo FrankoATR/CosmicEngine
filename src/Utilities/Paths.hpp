@@ -13,7 +13,7 @@
 #define MISC_1_IMAGE_PATH "assets/GD/Misc.png"
 
 #define TRACK0_PATH "assets/music/StayInsideMe.mp3"
-#define TRACK1_PATH "assets/music/Electrodynamix.wav"
+#define TRACK1_PATH "assets/music/Electrodynamix.mp3"
 #define TRACK2_PATH "assets/music/Cycles.mp3"
 #define SOUND1_PATH "assets/sounds/Explode.mp3"
 #define SOUND2_PATH "assets/sounds/EndLevel.mp3"

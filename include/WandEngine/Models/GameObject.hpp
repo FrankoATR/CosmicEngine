@@ -40,6 +40,8 @@ namespace WandEngine
         bool InsideGridArea;
         bool AliveInGameManager;
 
+        WAND_COLOR MainColor;
+
     public:
         GameObject() = delete;
         GameObject(GameObject* Other);
@@ -75,6 +77,9 @@ namespace WandEngine
 
         void SetVisible(bool Visible);
         bool GetVisible();
+
+        void SetColor(WAND_COLOR color);
+        WAND_COLOR GetColor() const;
 
         void SetDirection(WAND_VEC2 NewDirection);
         WAND_VEC2 GetDirection() const;

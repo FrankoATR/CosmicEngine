@@ -15,18 +15,22 @@ namespace WandEngine
 
     void EventManager::Clear()
     {
-            for (auto& pair : eventCallbacks)
-            {
-                delete pair.second;
-            }
-            eventCallbacks.clear();
+        for (auto& pair : eventCallbacks)
+        {
+            delete pair.second;
+        }
+        eventCallbacks.clear();
+        
+        #ifndef NDEBUG
             std::cout << "Event manager cleared" << std::endl;
+		#endif
     }
 
     EventManager::~EventManager()
     {
-        Clear();
-        std::cout << "Event manager destroyed" << std::endl;
+        #ifndef NDEBUG
+            std::cout << "Event manager destroyed" << std::endl;
+		#endif
     }
 
 }

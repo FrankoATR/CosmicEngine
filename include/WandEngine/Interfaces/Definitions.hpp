@@ -26,6 +26,12 @@ namespace WandEngine
         WAND_SIZE(float width, float height) : width(width), height(height) {}
     };
 
+    enum class CollisionType
+    {
+        Grid,
+        QuadTree
+    }
+
     enum class GameBodyObjectType
     {
         Body_Rectangle,

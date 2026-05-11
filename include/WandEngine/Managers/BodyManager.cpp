@@ -45,7 +45,7 @@ namespace WandEngine
 
         for (const auto &body : bodys)
         {
-            if (body->GetParent()->GetAliveInGameManager())
+            if (body->GetAliveInGameManager())
             {
                 //body->SetPosition(body->GetParent()->GetPosition());
                 if (GridArea)
@@ -97,6 +97,20 @@ namespace WandEngine
         }
     }
 
+    std::vector<GameBodyObject *> BodyManager::FindAllByParent(GameObject* Parent)  // tal vez ordenarlos y buscar por binary search es mejor ?
+    {
+        std::vector<GameBodyObject *> bodys_found;
+        for (auto body : bodys)
+        {
+            if (body->GetParent() == Parent)
+            {
+                bodys_found.push_back(body);
+            }
+        }
+
+        return bodys_found;
+    }
+
     void BodyManager::Remove(int entityId)
     {
         auto it = std::find_if(bodys.begin(), bodys.end(), [entityId](GameBodyObject *body)
@@ -114,7 +128,6 @@ namespace WandEngine
         if (GridArea)
         {
             GridArea->ClearGrid();
-            std::cout << "GRID DELETE" << std::endl;
             delete GridArea;
             GridArea = nullptr;
         }
@@ -124,12 +137,16 @@ namespace WandEngine
             delete bodys.back();
             bodys.pop_back();
         }
-        std::cout << "Body manager cleared" << std::endl;
+        
+        #ifndef NDEBUG
+            std::cout << "Body manager cleared" << std::endl;
+		#endif
     }
 
     BodyManager::~BodyManager()
     {
-        Clear();
-        std::cout << "Body manager destroyed" << std::endl;
+        #ifndef NDEBUG
+            std::cout << "Body manager destroyed" << std::endl;
+		#endif
     }
 }

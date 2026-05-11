@@ -25,6 +25,8 @@ namespace WandEngine
 		WAND_VEC2 Position;
 		WAND_VEC2 Size;
 		GameObject *Parent;
+        bool AliveInGameManager;
+
 		std::function<void(GameObject*, CollisionSide)> OnCollisionEvent;
 	public:
 		GameBodyObject() = delete;
@@ -45,6 +47,9 @@ namespace WandEngine
 
 		void SetParent(GameObject *NewParent);
 		GameObject *GetParent();
+
+		void Destroy();
+        bool GetAliveInGameManager() const;
 
 		~GameBodyObject();
 	};

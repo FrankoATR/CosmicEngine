@@ -1,4 +1,5 @@
 #include "ObjectManager.hpp"
+#include "BodyManager.hpp"
 #include "../Models/GameObject.hpp"
 #include "InputManager.hpp"
 #include "CameraManager.hpp"
@@ -33,6 +34,11 @@ namespace WandEngine
             }
             else
             {
+                std::vector<GameBodyObject *> BodysToDestoy = BodyManager::GetInstance().FindAllByParent(actor);  // INEFICIENTE POR CADA DESTROY DE OBJ
+                for(auto body : BodysToDestoy)
+                {
+                    body->Destroy();
+                }
                 toRemove.push_back(actor->GetObjectId());
             }
         }
@@ -166,14 +172,17 @@ namespace WandEngine
         }
 
         nextEntityId = 0;
-
-        std::cout << "Object manager cleared" << std::endl;
+        
+        #ifndef NDEBUG
+            std::cout << "Object manager cleared" << std::endl;
+		#endif
     }
 
     ObjectManager::~ObjectManager()
     {
-        Clear();
-        std::cout << "Object manager destroyed" << std::endl;
+        #ifndef NDEBUG
+            std::cout << "Object manager destroyed" << std::endl;
+		#endif
     }
 
 }

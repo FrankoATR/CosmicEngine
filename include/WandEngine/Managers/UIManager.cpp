@@ -8,11 +8,6 @@ namespace WandEngine
         this->MouseHoverAny = false;
     }
 
-    UIManager::~UIManager()
-    {
-        Clear();
-        std::cout << "UI manager destroyed" << std::endl;
-    }
 
     void UIManager::Update(float deltaTime)
     {
@@ -58,7 +53,18 @@ namespace WandEngine
             delete elements.back();
             elements.pop_back();
         }
-        std::cout << "UI manager cleared" << std::endl;
+
+        #ifndef NDEBUG
+            std::cout << "UI manager cleared" << std::endl;
+		#endif
+        
+    }
+
+    UIManager::~UIManager()
+    {
+        #ifndef NDEBUG
+            std::cout << "UI manager destroyed" << std::endl;
+		#endif
     }
 
 }

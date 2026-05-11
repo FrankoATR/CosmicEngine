@@ -67,7 +67,7 @@ namespace WandEngine
         if (!cell)
         {
             obj->GetParent()->SetInsideGridArea(false);
-            obj->GetParent()->Destroy();
+            //obj->GetParent()->Destroy();
             return;
         }
         obj->GetParent()->SetInsideGridArea(true);

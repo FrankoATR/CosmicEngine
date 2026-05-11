@@ -10,21 +10,6 @@ namespace WandEngine
 
     }
 
-    InputManager::~InputManager()
-    {
-        ResetMouseSettings();
-
-        al_unregister_event_source(GameManager::GetInstance().event_queue, al_get_mouse_event_source());
-        al_unregister_event_source(GameManager::GetInstance().event_queue, al_get_keyboard_event_source());
-        al_unregister_event_source(GameManager::GetInstance().event_queue, al_get_joystick_event_source());
-
-        al_uninstall_keyboard();
-        al_uninstall_mouse();
-        al_uninstall_joystick();
-
-        std::cout << "Input manager destroyed" << std::endl;
-    }
-
     void InputManager::Init()
     {
         if (!al_install_keyboard())
@@ -153,6 +138,10 @@ namespace WandEngine
         }
         this->MouseSpriteOffSet = WAND_VEC2(0, 0);
         this->MouseSpriteSize = WAND_SIZE(32, 32);
+
+        #ifndef NDEBUG
+            std::cout << "Input manager settings reseted" << std::endl;
+		#endif
     }
 
 
@@ -185,6 +174,31 @@ namespace WandEngine
         {
             al_draw_tinted_scaled_rotated_bitmap(MouseSprite, al_map_rgba(255,255,255, 255), 0, 0, GetMousePosition().x, GetMousePosition().y, MouseSpriteSize.width/al_get_bitmap_width(MouseSprite), MouseSpriteSize.height/al_get_bitmap_height(MouseSprite), 0, 0 );
         }
+    }
+
+    void InputManager::Clear()
+    {
+        ResetMouseSettings();
+
+        al_unregister_event_source(GameManager::GetInstance().event_queue, al_get_mouse_event_source());
+        al_unregister_event_source(GameManager::GetInstance().event_queue, al_get_keyboard_event_source());
+        al_unregister_event_source(GameManager::GetInstance().event_queue, al_get_joystick_event_source());
+
+        al_uninstall_keyboard();
+        al_uninstall_mouse();
+        al_uninstall_joystick();
+
+        #ifndef NDEBUG
+            std::cout << "Input manager cleared" << std::endl;
+		#endif
+    }
+
+
+    InputManager::~InputManager()
+    {
+        #ifndef NDEBUG
+            std::cout << "Input manager destroyed" << std::endl;
+		#endif
     }
 
 

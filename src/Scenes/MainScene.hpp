@@ -3,6 +3,7 @@
 
 #include <WandEngine/Models/GameScene.hpp>
 #include <WandEngine/Managers/TimerManager.hpp>
+#include <WandEngine/Models/UIElements/UIText.hpp>
 #include "../Entities/Player.hpp"
 
 using namespace WandEngine;
@@ -11,12 +12,18 @@ class MainScene : public GameScene
 {
 private:
     GameTimer* Respawn_Timer;
+    int Current_Level;
+    int Current_Attempts;
+
+    UIText* Attempts_Label;
 
 public:
-    MainScene();
+    MainScene(int Level, int Attempts);
     
     void Init() override;
     void Update(double deltaTime) override;
+
+    void LoadMap();
 };
 
 

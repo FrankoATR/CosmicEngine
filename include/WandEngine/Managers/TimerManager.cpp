@@ -34,13 +34,17 @@ namespace WandEngine
             delete Timers.back();
             Timers.pop_back();
         }
-        std::cout << "Timer manager cleared" << std::endl;
+
+        #ifndef NDEBUG
+            std::cout << "Timer manager cleared" << std::endl;
+		#endif
     }
 
     TimerManager::~TimerManager()
     {
-        Clear();
-        std::cout << "Timer manager destroyed" << std::endl;
+        #ifndef NDEBUG
+            std::cout << "Timer manager destroyed" << std::endl;
+		#endif
     }
 
 }

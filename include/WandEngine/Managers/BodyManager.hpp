@@ -37,6 +37,9 @@ namespace WandEngine
         void Update();
         void Draw();
         void Add(GameBodyObject *body);
+
+        std::vector<GameBodyObject *> FindAllByParent(GameObject* Parent);
+
         void Remove(int entityId);
         void Clear();
 

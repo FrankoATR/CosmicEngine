@@ -147,19 +147,35 @@ namespace WandEngine
 
 	void GameManager::Clear()
 	{
-		al_unregister_event_source(event_queue, al_get_display_event_source(Window));
-		al_unregister_event_source(event_queue, al_get_timer_event_source(FPS));
 
-		al_destroy_timer(FPS);
+		InputManager::GetInstance().Clear();
+
+		if (event_queue)
+		{
+			if (Window)
+			{
+				al_unregister_event_source(event_queue, al_get_display_event_source(Window));
+			}
+
+			if (FPS)
+			{
+				al_unregister_event_source(event_queue, al_get_timer_event_source(FPS));
+			}
+
+			al_destroy_event_queue(event_queue);
+			event_queue = nullptr;
+		}
+
+		if (FPS)
+		{
+			al_destroy_timer(FPS);
+			FPS = nullptr;
+		}
 
 		if (Window)
 		{
 			al_destroy_display(Window);
-		}
-
-		if (event_queue)
-		{
-			al_destroy_event_queue(event_queue);
+			Window = nullptr;
 		}
 
 		al_uninstall_audio();
@@ -169,12 +185,15 @@ namespace WandEngine
 		al_shutdown_primitives_addon();
 		al_shutdown_image_addon();
 
-		std::cout << "Game cleared" << std::endl;
+		#ifndef NDEBUG
+			std::cout << "Game cleared" << std::endl;
+		#endif
 	}
 
 	GameManager::~GameManager()
 	{
-		Clear();
-		std::cout << "Game destroyed" << std::endl;
+		#ifndef NDEBUG
+			std::cout << "Game destroyed" << std::endl;
+		#endif
 	}
 }

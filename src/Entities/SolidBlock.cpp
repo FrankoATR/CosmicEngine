@@ -22,7 +22,7 @@ void SolidBlock::Init()
 void SolidBlock::Draw()
 {
     if(Sprite){
-        al_draw_tinted_scaled_rotated_bitmap(Sprite, al_map_rgba(255, 255, 255, 255), 0, 0, Position.x, Position.y, Size.x/al_get_bitmap_width(Sprite), Size.y/al_get_bitmap_height(Sprite), 0, 0 );
+        al_draw_tinted_scaled_rotated_bitmap(Sprite, al_map_rgba(MainColor.r, MainColor.g, MainColor.b, MainColor.a), 0, 0, Position.x, Position.y, Size.x/al_get_bitmap_width(Sprite), Size.y/al_get_bitmap_height(Sprite), 0, 0 );
     }
 }
 

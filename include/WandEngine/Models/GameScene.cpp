@@ -22,11 +22,6 @@ namespace WandEngine
         this->ShowCamera = false;
     }
 
-    GameScene::~GameScene()
-    {
-        Clear();
-        std::cout << "Scene destroyed: " << GetName() << std::endl;
-    }
 
     void GameScene::SetProgressLoadingScene(float Progress)
     {
@@ -53,26 +48,6 @@ namespace WandEngine
     std::string GameScene::GetName()
     {
         return Name;
-    }
-
-    void GameScene::Clear()
-    {
-        MusicManager::GetInstance().Clear();
-        SoundManager::GetInstance().Clear();
-        BodyManager::GetInstance().Clear();
-        ObjectManager::GetInstance().Clear();
-        ResourceManager::GetInstance().Clear();
-        EventManager::GetInstance().Clear();
-        TimerManager::GetInstance().Clear();
-        UIManager::GetInstance().Clear();
-        InputManager::GetInstance().ResetMouseSettings();
-
-        if (loadingThread.joinable())
-        {
-            loadingThread.join();
-        }
-
-        std::cout << "Scene Clear: " << GetName() << std::endl;
     }
 
     void GameScene::AddMainThreadTask(std::function<void()> task)
@@ -129,8 +104,9 @@ namespace WandEngine
     {
         Update(deltaTime);
         UIManager::GetInstance().Update(deltaTime);
-        ObjectManager::GetInstance().Update(deltaTime);
         BodyManager::GetInstance().Update();
+        ObjectManager::GetInstance().Update(deltaTime);
+
     }
 
     void GameScene::Draw()
@@ -169,6 +145,37 @@ namespace WandEngine
     void GameScene::ToogleShowCamera()
     {
         this->ShowCamera = !this->ShowCamera;
+    }
+
+
+    void GameScene::Clear()
+    {
+        MusicManager::GetInstance().Clear();
+        SoundManager::GetInstance().Clear();
+        BodyManager::GetInstance().Clear();
+        ObjectManager::GetInstance().Clear();
+        ResourceManager::GetInstance().Clear();
+        EventManager::GetInstance().Clear();
+        TimerManager::GetInstance().Clear();
+        UIManager::GetInstance().Clear();
+        InputManager::GetInstance().ResetMouseSettings();
+
+        if (loadingThread.joinable())
+        {
+            loadingThread.join();
+        }
+
+        #ifndef NDEBUG
+            std::cout << "SCENE **" << GetName() << "** CLEARED" << std::endl;
+		#endif
+    }
+
+
+    GameScene::~GameScene()
+    {
+        #ifndef NDEBUG
+            std::cout << "SCENE **" << GetName() << "** DESTROYED" << std::endl;
+		#endif
     }
 
 }

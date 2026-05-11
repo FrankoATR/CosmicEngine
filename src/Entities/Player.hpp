@@ -3,7 +3,6 @@
 
 #include <WandEngine/Models/GameObject.hpp>
 #include <WandEngine/Managers/TimerManager.hpp>
-#include <WandEngine/Models/UIElements/UIText.hpp>
 
 using namespace WandEngine;
 
@@ -29,7 +28,9 @@ private:
     GameBodyObject* Body2;
     GameBodyObject* Center;
 
-    UIText* Label_Info1;
+    bool KeySpaceDown, KeySpaceRelease;
+    bool RigthClickDown, RigthClickRelease;
+    bool ReleaseJumping;
 
 public:
     Player(PlayerMode mode, WAND_VEC2 Position, WAND_VEC2 Size, ALLEGRO_BITMAP *Sprite, short int LayerId);

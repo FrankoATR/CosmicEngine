@@ -163,12 +163,16 @@ namespace WandEngine
         }
 
         isRunning = false;
-        std::cout << "Scene manager cleared" << std::endl;
+        
+        #ifndef NDEBUG
+            std::cout << "Scene manager cleared" << std::endl;
+		#endif
     }
 
     SceneManager::~SceneManager()
     {
-        Clear();
-        std::cout << "Scene manager destroyed" << std::endl;
+        #ifndef NDEBUG
+            std::cout << "Scene manager destroyed" << std::endl;
+		#endif
     }
 }

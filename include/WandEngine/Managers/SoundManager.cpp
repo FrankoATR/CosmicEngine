@@ -35,24 +35,6 @@ namespace WandEngine
         }
     }
 
-    SoundManager::~SoundManager()
-    {
-        Clear();
-
-        if (mixer)
-        {
-            al_destroy_mixer(mixer);
-            mixer = nullptr;
-        }
-
-        if (al_is_audio_installed())
-        {
-            al_uninstall_audio();
-        }
-
-        std::cout << "Sound manager destroyed" << std::endl;
-    }
-
     bool SoundManager::Load(const std::string &name, const std::string &filename)
     {
         if (sounds.find(name) != sounds.end())
@@ -149,7 +131,32 @@ namespace WandEngine
         }
         sounds.clear();
 
-        std::cout << "Sound manager cleared" << std::endl;
+        #ifndef NDEBUG
+            std::cout << "Sound manager cleared" << std::endl;
+		#endif
     }
+
+
+    
+    SoundManager::~SoundManager()
+    {
+        Clear();
+
+        if (mixer)
+        {
+            //al_destroy_mixer(mixer); // Problema interno para allegro por tener que gestionar 2 mixers a la vez, optar por una clase unica AUDIOMANAGER
+            mixer = nullptr;
+        }
+
+        if (al_is_audio_installed())
+        {
+            al_uninstall_audio();
+        }
+
+        #ifndef NDEBUG
+            std::cout << "Sound manager destroyed" << std::endl;
+		#endif
+    }
+
 
 }

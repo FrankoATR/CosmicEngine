@@ -35,7 +35,7 @@ namespace WandEngine
             float textX = GlobalPosition.x + (Size.width - textWidth) / 2;
             float textY = GlobalPosition.y + (Size.height - textHeight) / 2;
 
-            al_draw_text(font, al_map_rgb(255, 255, 255), textX, textY, 0, text.c_str());
+            al_draw_text(font, al_map_rgb(textColor.r, textColor.g, textColor.b), textX, textY, 0, text.c_str());
         }
 
         UIElement::Draw();
