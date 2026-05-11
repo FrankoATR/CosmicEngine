@@ -1,4 +1,4 @@
-#include "GameBodyObject.h"
+#include "GameBodyObject.hpp"
 
 
 GameBodyObject::GameBodyObject(GameObject* Parent, Vec2 Position, Vec2 Size) : Parent(Parent), Position(Position), Size(Size), Active(true)

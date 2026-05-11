@@ -1,5 +1,5 @@
-#include "GameGridCollisions.h"
-#include "../Models/GameObject.h"
+#include "GameGridCollisions.hpp"
+#include "../Models/GameObject.hpp"
 
 GameGridCollisions::GameGridCollisions(Vec2 GridPosition, int Arrows, int Columns, int CellSize) : GridPosition(GridPosition), Arrows(Arrows), Columns(Columns), CellSize(CellSize), EntitiesOnGrid(0)
 {
@@ -112,7 +112,6 @@ void GameGridCollisions::Check_cells_collisions(Cell *cell_1, Cell *cell_2)
                 if (RectToRectCollisionBody(obj_1, obj_2))
                 {
                     obj_1->GetParent()->OnCollision(obj_2->GetParent());
-                    obj_2->GetParent()->OnCollision(obj_1->GetParent());
                 }
             }
         }

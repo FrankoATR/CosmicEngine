@@ -1,7 +1,7 @@
-#ifndef MAINSCENE_H
-#define MAINSCENE_H
+#ifndef MAINSCENE_HPP
+#define MAINSCENE_HPP
 
-#include "../WandAllegroEngine/Models/GameScene.h"
+#include "../WandAllegroEngine/Models/GameScene.hpp"
 
 class MainScene : public GameScene
 {
@@ -19,4 +19,4 @@ public:
 };
 
 
-#endif
+#endif // MAINSCENE_HPP

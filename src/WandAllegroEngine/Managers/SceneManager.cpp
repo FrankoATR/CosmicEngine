@@ -1,9 +1,6 @@
-#include "GameSceneManager.h"
-#include "../Models/GameScene.h"
+#include "SceneManager.hpp"
+#include "../Models/GameScene.hpp"
 
-GameSceneManager::GameSceneManager()
-{
-}
 
 static void *InitLoadingScene_ThreadFunc(ALLEGRO_THREAD *thread, void *arg)
 {
@@ -14,21 +11,8 @@ static void *InitLoadingScene_ThreadFunc(ALLEGRO_THREAD *thread, void *arg)
     return nullptr;
 }
 
-GameSceneManager::~GameSceneManager()
-{
-    Clear();
-}
 
-void GameSceneManager::Clear(){
-    for (const auto& scene : sceneStack)
-    {
-        scene->Clear();
-        delete scene;
-    }
-    sceneStack.clear();
-}
-
-void GameSceneManager::ChangeScene()
+void WandEngine::SceneManager::ChangeScene()
 {
     if (sceneChanged && nextScene)
     {
@@ -47,7 +31,7 @@ void GameSceneManager::ChangeScene()
     }
 }
 
-void GameSceneManager::PushScene(GameScene *scene)
+void WandEngine::SceneManager::PushScene(GameScene *scene)
 {
     if (sceneStack.empty())
     {
@@ -65,7 +49,7 @@ void GameSceneManager::PushScene(GameScene *scene)
 }
 
 
-void GameSceneManager::ReplaceScene(GameScene *scene)
+void WandEngine::SceneManager::ReplaceScene(GameScene *scene)
 {
     if (sceneStack.empty())
     {
@@ -87,7 +71,7 @@ void GameSceneManager::ReplaceScene(GameScene *scene)
 
 
 
-void GameSceneManager::PopScene()
+void WandEngine::SceneManager::PopScene()
 {
     if (!sceneStack.empty())
     {
@@ -103,7 +87,7 @@ void GameSceneManager::PopScene()
     }
 }
 
-void GameSceneManager::Update(double deltaTime)
+void WandEngine::SceneManager::Update(double deltaTime)
 {
     if (sceneChanged)
     {
@@ -124,7 +108,7 @@ void GameSceneManager::Update(double deltaTime)
     }
 }
 
-bool GameSceneManager::IsSceneLoaded()
+bool WandEngine::SceneManager::IsSceneLoaded()
 {
     if (!sceneStack.empty())
     {
@@ -146,7 +130,28 @@ bool GameSceneManager::IsSceneLoaded()
     return false;
 }
 
-bool GameSceneManager::Running() const
+bool WandEngine::SceneManager::Running() const
 {
     return isRunning && !sceneStack.empty();
+}
+
+
+
+void WandEngine::SceneManager::Clear(){
+    for (const auto& scene : sceneStack)
+    {
+        scene->Clear();
+        delete scene;
+    }
+    sceneStack.clear();
+    std::cout << "Scene manager clear" << std::endl;
+
+}
+
+
+WandEngine::SceneManager::~SceneManager()
+{
+    Clear();
+    std::cout << "Scene manager destroyed" << std::endl;
+
 }

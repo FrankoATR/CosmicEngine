@@ -1,4 +1,5 @@
-#include "GameScene.h"
+#include "GameScene.hpp"
+#include "../Managers/ResourceManager.hpp"
 
 GameScene::GameScene(GameManager* Game, std::string Name) : Game(Game), ProgressLoadingScene(0.0f), Name(Name)
 {
@@ -40,14 +41,14 @@ std::string GameScene::GetName(){
 void GameScene::Clear(){
     this->Game->gameBodyManager->Clear();
     this->Game->gameObjectManager->Clear();
-    this->Game->resourceManager->clear();
+    WandEngine::ResourceManager::GetInstance().clear();
+    std::cout << "Scene Clear: " << GetName() << std::endl;
 
 }
 
 
 GameScene::~GameScene()
 {
-    std::cout << "DESTROY SCENE: " << GetName() << std::endl;
     Clear();
-
+    std::cout << "Scene destroyed: " << GetName() << std::endl;
 }

@@ -1,4 +1,4 @@
-#include "MapTileObject.h"
+#include "MapTileObject.hpp"
 #include <iostream>
 
 MapTileObject::MapTileObject(GameManager* Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId) : 
@@ -22,6 +22,16 @@ void MapTileObject::Draw(){
 
 void MapTileObject::Update(float deltaTime){
     
+}
+
+
+void MapTileObject::OnCollision(GameObject* other){
+
+    if(other->GetObjectName() == "Player"){
+        other->SetSize(Vec2(other->GetSize().x*1.01f, other->GetSize().y*1.01f));
+    }
+
+
 }
 
 

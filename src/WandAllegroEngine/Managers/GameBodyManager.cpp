@@ -1,5 +1,5 @@
-#include "GameBodyManager.h"
-#include "../Models/GameObject.h"
+#include "GameBodyManager.hpp"
+#include "../Models/GameObject.hpp"
 
 GameBodyManager::GameBodyManager()
 {
@@ -11,7 +11,7 @@ GameBodyManager::GameBodyManager()
         // gameGridCollisions.push_back(GameGridCollisions(Vec2(0, 0), 9, 9, 100));
     }
 
-    gameGridCollisions.push_back(GameGridCollisions(Vec2(0, 0), 9, 12, 100));
+    gameGridCollisions.push_back(GameGridCollisions(Vec2(0, 0), 10, 18, 100));
     // gameGridCollisions.push_back(GameGridCollisions(Vec2(500, 700), 5, 2, 100));
 }
 

@@ -1,8 +1,8 @@
-#ifndef GAMEBODYMANAGER_H
-#define GAMEBODYMANAGER_H
+#ifndef GAMEBODYMANAGER_HPP
+#define GAMEBODYMANAGER_HPP
 
 #include <algorithm>
-#include "../Collisions/GameGridCollisions.h"
+#include "../Collisions/GameGridCollisions.hpp"
 
 class GameBodyManager {
 private:
@@ -22,4 +22,4 @@ public:
 
 };
 
-#endif
+#endif // GAMEBODYMANAGER_HPP

@@ -1,10 +1,7 @@
-#include "ResourceManager.h"
+#include "ResourceManager.hpp"
 
-ResourceManager::ResourceManager()
-{
-}
 
-bool ResourceManager::loadBitmap(const std::string &key, const std::string &path)
+bool WandEngine::ResourceManager::loadBitmap(const std::string &key, const std::string &path)
 {
     if (bitmap_resources.find(key) != bitmap_resources.end())
     {
@@ -21,7 +18,8 @@ bool ResourceManager::loadBitmap(const std::string &key, const std::string &path
     return true;
 }
 
-bool ResourceManager::loadSpriteSheet(const std::string &key, const std::string &path, int files, int columns)
+
+bool WandEngine::ResourceManager::loadSpriteSheet(const std::string &key, const std::string &path, int files, int columns)
 {
     if (spriteSheet_resources.find(key) != spriteSheet_resources.end())
     {
@@ -38,7 +36,8 @@ bool ResourceManager::loadSpriteSheet(const std::string &key, const std::string 
     return true;
 }
 
-bool ResourceManager::loadFont(const std::string &key, const std::string &path, int size)
+
+bool WandEngine::ResourceManager::loadFont(const std::string &key, const std::string &path, int size)
 {
     if (font_resources.find(key) != font_resources.end())
     {
@@ -55,7 +54,8 @@ bool ResourceManager::loadFont(const std::string &key, const std::string &path, 
     return true;
 }
 
-ALLEGRO_BITMAP *ResourceManager::getBitmap(const std::string &key) const
+
+ALLEGRO_BITMAP *WandEngine::ResourceManager::getBitmap(const std::string &key) const
 {
     auto it = bitmap_resources.find(key);
     if (it == bitmap_resources.end())
@@ -65,7 +65,8 @@ ALLEGRO_BITMAP *ResourceManager::getBitmap(const std::string &key) const
     return it->second;
 }
 
-ALLEGRO_BITMAP *ResourceManager::getBitmapRegionFromSpriteSheet(const std::string &key, int file, int column) const
+
+ALLEGRO_BITMAP *WandEngine::ResourceManager::getBitmapRegionFromSpriteSheet(const std::string &key, int file, int column) const
 {
     auto it = spriteSheet_resources.find(key);
     if (it == spriteSheet_resources.end())
@@ -78,7 +79,8 @@ ALLEGRO_BITMAP *ResourceManager::getBitmapRegionFromSpriteSheet(const std::strin
     return al_create_sub_bitmap(sprite, column * spritesWidth, file * spritesHeight, spritesWidth, spritesHeight);
 }
 
-ALLEGRO_FONT *ResourceManager::getFont(const std::string &key) const
+
+ALLEGRO_FONT *WandEngine::ResourceManager::getFont(const std::string &key) const
 {
     auto it = font_resources.find(key);
     if (it == font_resources.end())
@@ -88,7 +90,8 @@ ALLEGRO_FONT *ResourceManager::getFont(const std::string &key) const
     return it->second;
 }
 
-void ResourceManager::clear()
+
+void WandEngine::ResourceManager::clear()
 {
     for (auto &pair : bitmap_resources)
     {
@@ -110,9 +113,12 @@ void ResourceManager::clear()
         al_destroy_font(pair.second);
     }
     font_resources.clear();
+    std::cout << "Resource Manager clear" << std::endl;
 }
 
-ResourceManager::~ResourceManager()
+
+WandEngine::ResourceManager::~ResourceManager()
 {
     clear();
+    std::cout << "Resource manager destroy" << std::endl;
 }

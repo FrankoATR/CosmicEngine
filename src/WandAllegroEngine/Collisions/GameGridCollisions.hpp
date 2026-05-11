@@ -1,12 +1,12 @@
-#ifndef GAMEGRIDCOLLISIONS_H
-#define GAMEGRIDCOLLISIONS_H
+#ifndef GAMEGRIDCOLLISIONS_HPP
+#define GAMEGRIDCOLLISIONS_HPP
 
 #include <vector>
 #include <iostream>
 #include <algorithm>
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_primitives.h>
-#include "../Models/GameBodyObject.h"
+#include "../Models/GameBodyObject.hpp"
 
 class GameBodyObject;
 
@@ -46,4 +46,4 @@ class GameGridCollisions {
 
 
 
-#endif
+#endif // GAMEGRIDCOLLISIONS_HPP

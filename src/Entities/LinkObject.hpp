@@ -1,7 +1,7 @@
-#ifndef LINKOBJECT_H
-#define LINKOBJECT_H
+#ifndef LINKOBJECT_HPP
+#define LINKOBJECT_HPP
 
-#include "../WandAllegroEngine/Models/GameObject.h"
+#include "../WandAllegroEngine/Models/GameObject.hpp"
 
 class LinkObject : public GameObject
 {
@@ -10,6 +10,7 @@ private:
     //std::vector<GameObject*> inventory;
     ALLEGRO_FONT* font;
     int HP;
+    bool DestructorMode;
 
 public:
     LinkObject(GameManager* Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font);
@@ -26,4 +27,4 @@ public:
 
 
 
-#endif
+#endif // LINKOBJECT_HPP

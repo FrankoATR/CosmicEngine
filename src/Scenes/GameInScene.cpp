@@ -1,6 +1,10 @@
-#include "GameInScene.h"
-#include "MainScene.h"
-#include "../Entities/MapTileObject.h"
+#include "GameInScene.hpp"
+#include "MainScene.hpp"
+#include "../Entities/MapTileObject.hpp"
+#include "../Entities/LinkObject.hpp"
+
+#include "../WandAllegroEngine/Managers/ResourceManager.hpp"
+#include "../WandAllegroEngine/Managers/SceneManager.hpp"
 
 GameInScene::GameInScene(GameManager* Game) : GameScene(Game, "GameInScene")
 {
@@ -20,13 +24,13 @@ void GameInScene::Init()
         Game->keyState[key] = false;
     }
 
-    auto GRM = Game->resourceManager;
-    GRM->loadSpriteSheet("Player", CHARACTERS_IMAGE_PATH, 2, 7);
-    GRM->loadSpriteSheet("SpriteSheet", DUNGUEON1_IMAGE_PATH, 4, 4);
-    GRM->loadFont("Font", RETRO_FONT_PATH, 50);
+
+    WandEngine::ResourceManager::GetInstance().loadSpriteSheet("Player", CHARACTERS_IMAGE_PATH, 2, 7);
+    WandEngine::ResourceManager::GetInstance().loadSpriteSheet("SpriteSheet", DUNGUEON1_IMAGE_PATH, 4, 4);
+    WandEngine::ResourceManager::GetInstance().loadFont("Font", RETRO_FONT_PATH, 50);
 
 
-    GameObject* player = new LinkObject(Game, DynamicEntity, Vec2(100, 100), Vec2(64, 64), "Player", GRM->getBitmapRegionFromSpriteSheet("Player", 1, 1), 1, 20, GRM->getFont("Font"));
+    GameObject* player = new LinkObject(Game, DynamicEntity, Vec2(100, 100), Vec2(64, 64), "Player", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 1), 1, 20, WandEngine::ResourceManager::GetInstance().getFont("Font"));
     Game->gameObjectManager->Add(player);
 
     /*
@@ -34,7 +38,7 @@ void GameInScene::Init()
     float load = 1.0;
     for(int i=0; i < 10; i++)
         for(int j=0; j < 10; j++){
-            GameObject* tmp = new MapTileObject(Game, DynamicEntity, Vec2(64*i, 64*j), Vec2(64, 64), "Tile", GRM->getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
+            GameObject* tmp = new MapTileObject(Game, DynamicEntity, Vec2(64*i, 64*j), Vec2(64, 64), "Tile", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
             Game->gameObjectManager->Add(tmp);
             load++;
             //SetProgressLoadingScene((load/(50.0f*30.0f)));
@@ -47,7 +51,7 @@ void GameInScene::Init()
     {
             int x = rand()%1920;
             int y = rand()%1080; 
-            GameObject* tmp = new MapTileObject(Game, DynamicEntity, Vec2(x, y), Vec2(64, 64), "Tile", GRM->getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
+            GameObject* tmp = new MapTileObject(Game, DynamicEntity, Vec2(x, y), Vec2(64, 64), "Tile", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
             Game->gameObjectManager->Add(tmp);
     }
     
@@ -78,13 +82,13 @@ void GameInScene::Update(double deltaTime)
 
 
     if (Game->keyState[ALLEGRO_KEY_ESCAPE]) {
-        Game->gameSceneManager->PopScene();
+        WandEngine::SceneManager::GetInstance().PopScene();
     }
     if(Game->keyState[ALLEGRO_KEY_H] && Game->Event.type == ALLEGRO_EVENT_KEY_DOWN){
         Game->ToggleShowBody();
     }
     if(Game->keyState[ALLEGRO_KEY_SPACE]){
-        Game->gameSceneManager->ReplaceScene(new MainScene(Game));
+        WandEngine::SceneManager::GetInstance().ReplaceScene(new MainScene(Game));
     }
 
 }

@@ -1,9 +1,8 @@
-#ifndef GAMEINSCENE_H
-#define GAMEINSCENE_H
+#ifndef GAMEINSCENE_HPP
+#define GAMEINSCENE_HPP
 
-#include "../WandAllegroEngine/Models/GameScene.h"
-#include "../Utilities/Paths.h"
-#include "../Entities/LinkObject.h"
+#include "../WandAllegroEngine/Models/GameScene.hpp"
+#include "../Utilities/Paths.hpp"
 
 class GameInScene : public GameScene
 {
@@ -21,4 +20,4 @@ public:
 };
 
 
-#endif
+#endif // GAMEINSCENE_HPP

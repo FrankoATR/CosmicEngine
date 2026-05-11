@@ -1,7 +1,7 @@
-#ifndef BACKGROUNDOBJECT_H
-#define BACKGROUNDOBJECT_H
+#ifndef BACKGROUNDOBJECT_HPP
+#define BACKGROUNDOBJECT_HPP
 
-#include "../WandAllegroEngine/Models/GameObject.h"
+#include "../WandAllegroEngine/Models/GameObject.hpp"
 
 class BackgroundObject : public GameObject
 {
@@ -14,4 +14,4 @@ public:
 
 
 
-#endif
+#endif // BACKGROUNDOBJECT_HPP

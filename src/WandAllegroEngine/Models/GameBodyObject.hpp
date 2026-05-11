@@ -1,11 +1,12 @@
-#ifndef GAMEBODYOBJECT_H
-#define GAMEBODYOBJECT_H
+#ifndef GAMEBODYOBJECT_HPP
+#define GAMEBODYOBJECT_HPP
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
 #include <iostream>
+#include "../../Utilities/TypeVarsAndMethods.hpp"
 
 class GameObject;
 
@@ -53,4 +54,4 @@ public:
 	~GameBodyObject();
 };
 
-#endif
+#endif // GAMEBODYOBJECT_HPP

@@ -1,5 +1,5 @@
-#ifndef GAMEMANAGER_H
-#define GAMEMANAGER_H
+#ifndef GAMEMANAGER_HPP
+#define GAMEMANAGER_HPP
 
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_native_dialog.h>
@@ -11,11 +11,10 @@
 #include <allegro5/allegro_acodec.h>
 #include <iostream>
 #include <windows.h>
+#include <map>
 
-#include "ResourceManager.h"
-#include "GameObjectManager.h"
-#include "GameSceneManager.h"
-#include "GameBodyManager.h"
+#include "GameObjectManager.hpp"
+#include "GameBodyManager.hpp"
 
 struct Size {
     int Width;
@@ -35,9 +34,7 @@ public:
 
     ALLEGRO_DISPLAY* Window;
     ALLEGRO_EVENT_QUEUE* event_queue;
-    ResourceManager* resourceManager;
     GameObjectManager* gameObjectManager;
-    GameSceneManager* gameSceneManager;
     GameBodyManager* gameBodyManager;
 
     ALLEGRO_TIMER* FPS;
@@ -70,6 +67,4 @@ public:
 };
 
 
-
-
-#endif
+#endif // GAMEMANAGER_HPP

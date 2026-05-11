@@ -1,5 +1,5 @@
-#ifndef GAMESCENE_H
-#define GAMESCENE_H
+#ifndef GAMESCENE_HPP
+#define GAMESCENE_HPP
 
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_native_dialog.h>
@@ -11,7 +11,7 @@
 #include <allegro5/allegro_acodec.h>
 #include <iostream>
 
-#include "../Managers/GameManager.h"
+#include "../Managers/GameManager.hpp"
 
 class GameScene
 {
@@ -42,4 +42,4 @@ public:
 };
 
 
-#endif
+#endif // GAMESCENE_HPP

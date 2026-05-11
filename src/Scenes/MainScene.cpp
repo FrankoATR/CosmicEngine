@@ -1,9 +1,14 @@
-#include "MainScene.h"
-#include "GameInScene.h"
-#include "../Entities/BackgroundObject.h"
-#include "../Utilities/Paths.h"
-#include "../Entities/LinkObject.h"
-#include "../Entities/CustomEnemy.h"
+#include "MainScene.hpp"
+#include "../WandAllegroEngine/Managers/EventManager.hpp"
+#include "../WandAllegroEngine/Managers/ResourceManager.hpp"
+#include "../WandAllegroEngine/Managers/SceneManager.hpp"
+
+#include "GameInScene.hpp"
+#include "../Entities/BackgroundObject.hpp"
+#include "../Utilities/Paths.hpp"
+#include "../Entities/LinkObject.hpp"
+#include "../Entities/CustomEnemy.hpp"
+#include "../Events/Logger.hpp"
 
 MainScene::MainScene(GameManager* Game) : GameScene(Game, "MainScene")
 {
@@ -25,33 +30,39 @@ void MainScene::Init()
         Game->keyState[key] = false;
     }
 
-    Game->resourceManager->loadBitmap("Background1", BG_FOREST_IMAGE_PATH);
-    Game->resourceManager->loadBitmap("Background2", BG_SPACE_IMAGE_PATH);
-    Game->resourceManager->loadSpriteSheet("Player", CHARACTERS_IMAGE_PATH, 2, 7);
-    Game->resourceManager->loadFont("Font", RETRO_FONT_PATH, 50);
+
+    WandEngine::ResourceManager::GetInstance().loadBitmap("Background1", BG_FOREST_IMAGE_PATH);
+    WandEngine::ResourceManager::GetInstance().loadBitmap("Background2", BG_SPACE_IMAGE_PATH);
+    WandEngine::ResourceManager::GetInstance().loadSpriteSheet("Player", CHARACTERS_IMAGE_PATH, 2, 7);
+    WandEngine::ResourceManager::GetInstance().loadFont("Font", RETRO_FONT_PATH, 50);
     SetProgressLoadingScene(0.2f);
 
 
-    GameObject* bg = new BackgroundObject(Game, StaticEntity, Vec2(0, 0), Vec2(1920, 1080), "BG", Game->resourceManager->getBitmap("Background2"), 0);
+    GameObject* bg = new BackgroundObject(Game, StaticEntity, Vec2(0, 0), Vec2(1920, 1080), "BG", WandEngine::ResourceManager::GetInstance().getBitmap("Background2"), 0);
     Game->gameObjectManager->Add(bg);
 
     SetProgressLoadingScene(0.4f);
 
 
-    GameObject* player = new LinkObject(Game, DynamicEntity, Vec2(400, 300), Vec2(64, 64), "Player", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 1, 4), 1, 20, Game->resourceManager->getFont("Font"));
+    GameObject* player = new LinkObject(Game, DynamicEntity, Vec2(400, 300), Vec2(64, 64), "Player", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 4), 1, 20, WandEngine::ResourceManager::GetInstance().getFont("Font"));
     Game->gameObjectManager->Add(player);
 
-    GameObject* enemy = new CustomEnemy(Game, DynamicEntity, Vec2(600, 600), Vec2(64, 64), "Enemy", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 0, 2), 1, 20, Game->resourceManager->getFont("Font"));
+    GameObject* enemy = new CustomEnemy(Game, DynamicEntity, Vec2(600, 600), Vec2(64, 64), "Enemy", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 0, 2), 1, 20, WandEngine::ResourceManager::GetInstance().getFont("Font"));
     Game->gameObjectManager->Add(enemy);
 
     SetProgressLoadingScene(0.6f);
 
     for(int i=0; i < 5; i++){
-        //new LinkObject(Game, DynamicEntity, Vec2(100*i, 200*i), Vec2(64, 64), "Enemy", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 1, i), 3, 20, Game->resourceManager->getFont("Font"));
+        //new LinkObject(Game, DynamicEntity, Vec2(100*i, 200*i), Vec2(64, 64), "Enemy", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, i), 3, 20, WandEngine::ResourceManager::GetInstance().getFont("Font"));
     }
     SetProgressLoadingScene(0.8f);
 
-    //new LinkObject(Game, DynamicEntity, Vec2(300, 200), Vec2(64, 64), "Enemy", Game->resourceManager->getBitmapRegionFromSpriteSheet("Player", 1, 1), 3, 20, Game->resourceManager->getFont("Font"));
+    //new LinkObject(Game, DynamicEntity, Vec2(300, 200), Vec2(64, 64), "Enemy", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 1), 3, 20, WandEngine::ResourceManager::GetInstance().getFont("Font"));
+    
+    
+    EventManager::GetInstance().Add(new Logger);
+
+    
     SetProgressLoadingScene(1.0f);
 
     Game->SetBackBufferColor(al_map_rgb(155, 0, 30));
@@ -78,10 +89,10 @@ void MainScene::Update(double deltaTime)
     }
 
     if (Game->keyState[ALLEGRO_KEY_ESCAPE]) {
-        Game->gameSceneManager->PopScene();
+        WandEngine::SceneManager::GetInstance().PopScene();
     }
     if(Game->keyState[ALLEGRO_KEY_SPACE]){
-        Game->gameSceneManager->ReplaceScene(new GameInScene(Game));
+        WandEngine::SceneManager::GetInstance().ReplaceScene(new GameInScene(Game));
     }
     if(Game->keyState[ALLEGRO_KEY_H] && Game->Event.type == ALLEGRO_EVENT_KEY_DOWN){
         Game->ToggleShowBody();

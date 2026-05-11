@@ -2,130 +2,88 @@
 
 ## Fecha efectiva
 
-**31 de octubre de 2024**
+**2 de noviembre de 2024**
 
 ## Descripción general
 
-La etapa efectiva al 31 de octubre reorganiza la activación de objetos del framework alrededor de una fase explícita de inicialización posterior al registro. A partir de este ajuste, la creación de cuerpos de colisión deja de resolverse en los constructores concretos y pasa a ejecutarse cuando el objeto ya ha sido incorporado al `GameObjectManager` y dispone de un identificador válido.
+La etapa efectiva al 2 de noviembre desplaza parte de la infraestructura del motor hacia un esquema de acceso global controlado para escenas y recursos, y acompaña ese cambio con una migración visible de cabeceras desde `.h` hacia `.hpp`. En paralelo, la base del proyecto incorpora un canal explícito de eventos entre objetos y observadores, además de una reorganización menor en el tratamiento de colisiones y en la cobertura espacial del grid.
 
-El resultado inmediato es un flujo más coherente entre alta de entidades, asignación de IDs, construcción de cuerpos y sincronización con el sistema de colisiones. Sobre esa base también se ajustan el contenido de escenas concretas, el comportamiento de colisión y la distribución espacial de tiles en la escena de juego.
+El resultado inmediato es una separación más marcada entre los managers mantenidos como estado propio de `GameManager` y aquellos que pasan a resolverse como instancias únicas compartidas durante la ejecución.
 
 ## Objetivo técnico
 
-Esta iteración persigue tres objetivos concretos:
+Esta revisión queda orientada a tres frentes concretos:
 
-- estabilizar el punto en el que cada entidad dinámica crea su cuerpo de colisión;
-- hacer que el manager de objetos controle de forma explícita la activación inicial de cada instancia registrada;
-- ajustar el contenido y comportamiento de las escenas para aprovechar ese nuevo ciclo de alta.
+- consolidar la transición de interfaces públicas hacia cabeceras `.hpp`;
+- desacoplar la gestión de escenas y recursos del ciclo de vida manual de `GameManager`;
+- habilitar una vía simple de notificación entre entidades y consumidores de eventos del runtime.
 
 ## Estructura del proyecto
 
-La estructura general no cambia, pero la revisión se concentra en estos puntos:
+La diferencia visible respecto a la versión anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Models/`, donde se agrega una fase de inicialización virtual en la jerarquía base de objetos.
-- `src/WandAllegroEngine/Managers/`, donde se redefine el punto de creación de cuerpos y el orden de alta de objetos.
-- `src/Entities/`, donde varias entidades trasladan la creación de cuerpos desde el constructor hacia `Init()`.
-- `src/Scenes/`, donde cambia el contenido instanciado y la distribución de objetos en `GameInScene`.
-- `src/WandAllegroEngine/Collisions/`, donde se amplía el recorrido efectivo de celdas para detección de colisiones.
+- `src/WandAllegroEngine/Managers/`, donde desaparecen `GameSceneManager` y `GameEventManager`, y pasan a coexistir `SceneManager`, `ResourceManager` y `EventManager` bajo nuevas cabeceras `.hpp`.
+- `src/WandAllegroEngine/Interfaces/`, que incorpora `GameEvent` como contrato base para receptores de notificaciones.
+- `src/Events/`, donde aparece `Logger` como implementación concreta del nuevo mecanismo de eventos.
+- `src/Entities/`, `src/Scenes/`, `src/Utilities/`, `src/WandAllegroEngine/Models/` y `src/WandAllegroEngine/Collisions/`, donde la interfaz pública migra desde `.h` hacia `.hpp`.
 
 ## Arquitectura o sistemas principales
 
-### Activación de objetos
+### Escenas y recursos
 
-`GameObject` incorpora `virtual void Init()`, lo que introduce un punto formal para completar la preparación del objeto después de su registro en el manager global.
+`GameManager` deja de administrar punteros propios a `ResourceManager` y `GameSceneManager`. En su lugar:
 
-Ese cambio se apoya en `GameObjectManager::Add()`, que ahora ejecuta este flujo:
+- el flujo de escenas se resuelve mediante `WandEngine::SceneManager::GetInstance()`;
+- la carga y consulta de recursos se canaliza mediante `WandEngine::ResourceManager::GetInstance()`;
+- el constructor y la liberación final de `GameManager` reducen su responsabilidad a objetos, cuerpos, ventana y subsistemas de Allegro.
 
-1. asigna el identificador del objeto;
-2. llama `Init()`;
-3. inserta la instancia en la colección administrada;
-4. ordena por capa.
+Este ajuste reubica la persistencia de escenas y recursos fuera del ciclo de vida directo del objeto principal del juego.
 
-Con este ajuste, la activación deja de depender de efectos secundarios en el constructor y pasa a quedar asociada al momento real de incorporación al sistema.
+### Sistema de eventos
 
-Además, `GameObjectManager` deja inicializado `nextEntityId` desde el constructor y ya no depende de una inicialización inline en el header.
+Se incorpora una capa mínima de publicación de eventos compuesta por tres piezas visibles:
 
-### Creación de cuerpos de colisión
+- `GameEvent`, como interfaz base con `OnNotify(GameObject*, const std::string&)`;
+- `EventManager`, como registro singleton de observadores;
+- `Logger`, como consumidor concreto agregado desde `MainScene`.
 
-El cambio más importante de esta etapa afecta la creación de cuerpos.
+En el estado actual, `LinkObject` emite notificaciones al desplazarse y al destruir enemigos. Con ello aparece una ruta explícita para reaccionar a acciones de gameplay sin incrustar toda la lógica en la entidad emisora.
 
-En `LinkObject`, `MapTileObject` y `CustomEnemy`:
+### Colisiones y partición espacial
 
-- se elimina la creación inmediata del cuerpo dentro del constructor;
-- se agrega `Init() override`;
-- el cuerpo se registra desde `Init()` mediante `Game->gameBodyManager->Add(this, GetPosition(), GetSize())`.
+La revisión introduce dos variaciones funcionales en este frente:
 
-En `GameBodyManager`:
+- `GameBodyManager` expande la grilla principal desde `9 x 12` hacia `10 x 18`, manteniendo celdas de tamaño `100`;
+- `GameGridCollisions::Check_cells_collisions()` deja de disparar la notificación inversa sobre el segundo objeto, por lo que el procesamiento efectivo de la colisión queda iniciado solo desde el primer cuerpo evaluado en cada comparación.
 
-- la firma de `Add()` cambia y deja de recibir un `GameBodyObject*` preconstruido;
-- `Add()` pasa a recibir el `GameObject` y construye internamente el `GameBodyObject`;
-- el cuerpo adopta el ID del objeto ya registrado antes de incorporarse al contenedor de cuerpos.
-
-La consecuencia técnica es que el cuerpo nace cuando el objeto ya fue aceptado por `GameObjectManager`, no antes. Eso elimina la dependencia previa entre creación del objeto y existencia de un ID aún no consolidado.
-
-### Ajustes en colisiones
-
-`GameGridCollisions` modifica el recorrido usado en `Find_collision_grid()`:
-
-- el barrido deja de iniciar en índices interiores (`1 ... n-1`);
-- el análisis pasa a cubrir desde `0` hasta el borde completo de filas y columnas.
-
-Con este cambio, la detección deja de excluir las celdas periféricas del grid. La revisión de vecinos se mantiene, pero ahora se aplica también sobre los extremos de la grilla siempre que la celda solicitada exista.
-
-### Ajustes en entidades
-
-Además del traslado de la lógica de inicialización, dos entidades reciben cambios de comportamiento visibles.
-
-En `CustomEnemy`:
-
-- `Draw()` muestra ahora el tiempo en una posición distinta;
-- se agrega una segunda línea de texto con el nombre del objeto;
-- `OnCollision()` incorpora un caso explícito para `Player`, al que transfiere el sprite del enemigo.
-
-En `LinkObject` y `MapTileObject`:
-
-- el cambio principal se concentra en la fase `Init()` y en el abandono del registro de cuerpo desde el constructor.
+La primera modificación amplía el área operativa cubierta por el grid. La segunda altera la simetría observada anteriormente en los callbacks de colisión.
 
 ## Escenas y flujo visible
 
 ### `MainScene`
 
-`MainScene` mantiene la estructura general ya consolidada, pero ajusta la nomenclatura efectiva de objetos creados:
-
-- el jugador pasa a registrarse con nombre `Player`;
-- el enemigo pasa a registrarse con nombre `Enemy`.
-
-Este detalle afecta la semántica de las colisiones, porque varias comprobaciones dependen directamente del nombre del objeto.
+La escena principal adopta el acceso singleton a recursos y a la gestión de escenas, y registra `Logger` en `EventManager`. El comportamiento interactivo preserva la transición hacia `GameInScene`, el cierre por `Escape`, el cambio de modo de ventana y la alternancia de visualización de cuerpos, pero ahora sobre la nueva infraestructura compartida.
 
 ### `GameInScene`
 
-`GameInScene` concentra la mayor parte de los cambios visibles de esta etapa.
-
-- se introduce un alias local para `resourceManager` (`auto GRM = Game->resourceManager`);
-- el jugador pasa a crearse con nombre `Player`;
-- la cuadrícula regular de tiles queda desactivada en el código visible mediante comentario;
-- en su lugar, la escena genera `100` tiles en posiciones aleatorias dentro de una superficie de `1920 x 1080`;
-- los tiles se instancian con tamaño `64 x 64`;
-- se agrega un atajo con `H` para alternar la depuración de cuerpos también desde esta escena.
-
-El cambio más relevante no es solo visual. La escena deja de producir una distribución uniforme de mosaicos y pasa a poblar el espacio de forma dispersa, lo que modifica la densidad local de colisiones y el uso efectivo del grid.
+La escena de juego replica el cambio de acceso a recursos y escenas mediante singletons y mantiene la generación dispersa de tiles ya presente en la iteración anterior. El ajuste principal de esta etapa se concentra en la adaptación de dependencias y cabeceras al nuevo esquema estructural.
 
 ## Dependencias externas visibles
 
-- **Allegro 5** sigue siendo la biblioteca activa para rendering, eventos, fuentes, audio e input.
-- **`nlohmann/json`** continúa presente en `include/`.
+- **Allegro 5** continúa siendo la biblioteca activa para rendering, ventana, eventos, temporizador, imágenes, audio, fuentes e input.
+- **`nlohmann/json`** continúa presente en `include/` sin evidencia visible de integración en los archivos revisados de esta iteración.
 
 ## Resumen técnico de la versión
 
-La revisión efectiva al **31 de octubre de 2024** queda definida por estos cambios:
+La revisión efectiva al **2 de noviembre de 2024** queda delimitada por estos movimientos:
 
-- se incorpora `Init()` como fase explícita de activación en `GameObject`;
-- `GameObjectManager::Add()` pasa a disparar esa fase después de asignar el ID;
-- la creación de cuerpos se traslada desde constructores concretos hacia `Init()`;
-- `GameBodyManager` asume la construcción interna de `GameBodyObject` a partir del objeto registrado;
-- `GameGridCollisions` amplía la revisión de colisiones a toda la grilla, incluidos los bordes;
-- `GameInScene` sustituye la distribución regular de tiles por una dispersión aleatoria de cien instancias;
-- `CustomEnemy` incorpora salida visual adicional y una reacción directa al colisionar con `Player`;
-- `MainScene` y `GameInScene` normalizan la nomenclatura visible de objetos hacia `Player` y `Enemy`.
+- la interfaz pública del proyecto migra de forma amplia desde archivos `.h` hacia `.hpp`;
+- `SceneManager` sustituye el uso directo de `GameSceneManager` y pasa a exponerse como singleton;
+- `ResourceManager` pasa a resolverse como singleton y deja de ser liberado manualmente por `GameManager`;
+- se incorpora `EventManager` como registro central de observadores y `GameEvent` como interfaz base;
+- `MainScene` registra `Logger` y `LinkObject` comienza a emitir eventos visibles del runtime;
+- la grilla principal de cuerpos incrementa su cobertura a `10 x 18` celdas;
+- la evaluación de colisiones deja de invocar el callback inverso sobre el segundo objeto del par;
+- el punto de entrada y las escenas se alinean con la nueva convención de cabeceras y managers.
 
-La etapa queda, en conjunto, más alineada con un flujo en el que el manager de objetos controla la entrada real de cada entidad al runtime y en el que la inicialización dependiente del ID se ejecuta en el momento correcto.
+La etapa deja al proyecto con una base más cercana a un runtime compartido por servicios globales, aunque todavía en un estado transicional en el que conviven archivos eliminados del esquema anterior y nuevas incorporaciones pendientes de consolidación en el historial.

@@ -1,7 +1,7 @@
-#ifndef MAPTILEOBJECT_H
-#define MAPTILEOBJECT_H
+#ifndef MAPTILEOBJECT_HPP
+#define MAPTILEOBJECT_HPP
 
-#include "../WandAllegroEngine/Models/GameObject.h"
+#include "../WandAllegroEngine/Models/GameObject.hpp"
 
 class MapTileObject : public GameObject
 {
@@ -10,10 +10,11 @@ public:
     void Draw() override;
     void Init() override;
     void Update(float deltaTime) override;
+    void OnCollision(GameObject* other) override;
 
     ~MapTileObject() override;
 };
 
 
 
-#endif
+#endif // MAPTILEOBJECT_HPP

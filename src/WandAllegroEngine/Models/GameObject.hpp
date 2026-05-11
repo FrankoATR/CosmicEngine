@@ -1,5 +1,5 @@
-#ifndef GAMEOBJECT_H
-#define GAMEOBJECT_H
+#ifndef GAMEOBJECT_HPP
+#define GAMEOBJECT_HPP
 
 #include <iostream>
 #include <allegro5/allegro.h>
@@ -11,8 +11,8 @@
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
 
-#include "../Managers/GameManager.h"
-#include "GameBodyObject.h"
+#include "../Managers/GameManager.hpp"
+#include "GameBodyObject.hpp"
 
 enum Object {
     DynamicEntity,
@@ -72,4 +72,4 @@ public:
 
 
 
-#endif
+#endif // GAMEOBJECT_HPP

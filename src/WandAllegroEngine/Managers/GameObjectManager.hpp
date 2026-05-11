@@ -1,5 +1,5 @@
-#ifndef GAMEOBJECTMANAGER_H
-#define GAMEOBJECTMANAGER_H
+#ifndef GAMEOBJECTMANAGER_HPP
+#define GAMEOBJECTMANAGER_HPP
 
 #include <algorithm>
 #include <list>
@@ -24,4 +24,4 @@ public:
 
 };
 
-#endif
+#endif // GAMEOBJECTMANAGER_HPP

@@ -1,7 +1,7 @@
-#ifndef CUSTOMENEMY_H
-#define CUSTOMENEMY_H
+#ifndef CUSTOMENEMY_HPP
+#define CUSTOMENEMY_HPP
 
-#include "../WandAllegroEngine/Models/GameObject.h"
+#include "../WandAllegroEngine/Models/GameObject.hpp"
 
 class CustomEnemy : public GameObject
 {
@@ -32,4 +32,4 @@ public:
 
 
 
-#endif
+#endif // CUSTOMENEMY_HPP

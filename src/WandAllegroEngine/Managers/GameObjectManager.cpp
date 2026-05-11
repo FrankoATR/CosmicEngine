@@ -1,5 +1,5 @@
-#include "GameObjectManager.h"
-#include "../Models/GameObject.h"
+#include "GameObjectManager.hpp"
+#include "../Models/GameObject.hpp"
 
 GameObjectManager::GameObjectManager() : nextEntityId(0)
 {

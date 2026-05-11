@@ -1,9 +1,12 @@
-#include "GameManager.h"
-#include "../../Scenes/MainScene.h"
+#include "GameManager.hpp"
+#include "SceneManager.hpp"
+#include "ResourceManager.hpp"
 
-GameManager::GameManager(Size ScreenSize) : ScreenSize(ScreenSize), Window(nullptr), event_queue(nullptr),
-      resourceManager(nullptr), gameObjectManager(nullptr),
-      gameSceneManager(nullptr), gameBodyManager(nullptr),
+#include "../../Scenes/MainScene.hpp"
+
+
+GameManager::GameManager(Size ScreenSize) : ScreenSize(ScreenSize), Window(nullptr), event_queue(nullptr), gameObjectManager(nullptr),
+      gameBodyManager(nullptr),
       lastTime(0), currentTime(0), deltaTime(0) 
 {
     this->redraw = true;
@@ -57,9 +60,7 @@ bool GameManager::Init(){
     al_start_timer(FPS);
 
 
-	resourceManager = new ResourceManager();
 	gameObjectManager = new GameObjectManager();
-	gameSceneManager = new GameSceneManager();
 	gameBodyManager = new GameBodyManager();
 
     return true;
@@ -67,11 +68,11 @@ bool GameManager::Init(){
 
 void GameManager::Update(){
 
-	gameSceneManager->PushScene(new MainScene(this));
+	WandEngine::SceneManager::GetInstance().PushScene(new MainScene(this));
 	
     lastTime = al_get_time();
 
-	while(gameSceneManager->Running()){
+	while(WandEngine::SceneManager::GetInstance().Running()){
         currentTime = al_get_time();
         deltaTime = currentTime - lastTime;
         lastTime = currentTime;
@@ -80,7 +81,7 @@ void GameManager::Update(){
 
 		switch (Event.type){
 			case ALLEGRO_EVENT_DISPLAY_CLOSE:
-				gameSceneManager->Clear();
+				WandEngine::SceneManager::GetInstance().Clear();
 				break;
 
 			case ALLEGRO_EVENT_TIMER:
@@ -96,7 +97,7 @@ void GameManager::Update(){
 		}
 
 
-		gameSceneManager->Update(deltaTime);
+		WandEngine::SceneManager::GetInstance().Update(deltaTime);
 		gameObjectManager->Update(deltaTime);
 		gameBodyManager->Update();
 
@@ -104,7 +105,7 @@ void GameManager::Update(){
 		if(redraw && al_is_event_queue_empty(event_queue)){
 			redraw = false;
 
-			if(gameSceneManager->IsSceneLoaded()){
+			if(WandEngine::SceneManager::GetInstance().IsSceneLoaded()){
 				al_clear_to_color(BackBufferColor);
 
 				gameObjectManager->Draw();
@@ -191,9 +192,7 @@ void GameManager::End(){
 	al_uninstall_keyboard();
 	al_shutdown_image_addon();
 
-	delete resourceManager;
 	delete gameObjectManager;
-	delete gameSceneManager;
 	delete gameBodyManager;
 
 }
@@ -201,6 +200,6 @@ void GameManager::End(){
 
 
 GameManager::~GameManager(){
-	std::cout << "END PROGRAM SUCCESFULY" << std::endl;
 	End();
+	std::cout << "END PROGRAM SUCCESFULY" << std::endl;
 }

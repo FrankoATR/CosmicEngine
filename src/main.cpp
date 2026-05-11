@@ -1,4 +1,4 @@
-#include "WandAllegroEngine/Managers/GameManager.h"
+#include "WandAllegroEngine/Managers/GameManager.hpp"
 
 int main(){
 
