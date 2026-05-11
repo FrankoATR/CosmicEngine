@@ -1,16 +1,17 @@
 #ifndef CAMERAMANAGER_HPP
 #define CAMERAMANAGER_HPP
-#include "../../Models/Camera/3DView/Camera3D.hpp"
 
 #include "../../Utils/Configurations.hpp"
 #include <glm/glm.hpp>
+#include <glad/glad.h>
 
 namespace WandEngine
 {
 
+    class Object;
+
     #if defined(GAME_2D_CONFIGURATION)
 
-        class Object;
 
         class CameraManager
         {
@@ -49,9 +50,9 @@ namespace WandEngine
             glm::vec2 GetFocusPosition() const;
             bool IsObjectInsideCameraArea(Object *Obj);
 
-            // Métodos 3D
-            void ProcessMouseMovement(double xoffset, double yoffset);
-            void ProcessMouseScroll(double xoffset, double yoffset);
+            void Classic2DProcessKeyboard(Camera_Movement direction, float deltaTime); // Maybe unnecesary???
+            void Classic2DProcessMouseMovement(float xoffset, float yoffset); // Maybe unnecesary???
+            void Classic2DProcessMouseScroll(float xoffset, float yoffset); // Maybe unnecesary or for zoom???
 
             void SetActiveMouseInput();
             void SetInactiveMouseInput();
@@ -63,7 +64,14 @@ namespace WandEngine
 
     #elif defined(GAME_3D_CONFIGURATION)
 
-        class Object;
+        enum Camera_Movement {
+            FORWARD,
+            BACKWARD,
+            LEFT,
+            RIGHT,
+            UP,
+            DOWN
+        };
 
         class CameraManager
         {
@@ -78,6 +86,7 @@ namespace WandEngine
             bool activeMouseInput;
 
             glm::vec3 position;
+            glm::vec3 front;
             glm::vec3 frontBody;
             glm::vec3 up;
             glm::vec3 right;
@@ -100,8 +109,6 @@ namespace WandEngine
         public:
             static CameraManager &GetInstance();
             
-            glm::vec3 front;
-
             void Init(glm::vec2 baseSize);
 
             glm::vec2 GetBaseWindowSize() const;
@@ -110,13 +117,15 @@ namespace WandEngine
             glm::mat4 GetProjectionMatrix() const;
             glm::mat4 Get_UI_ProjectionMatrix() const;
 
-            // Métodos 2D
+            float GetMovementSpeed() const;
+            void SetMovementSpeed(float newMovementSpeed);
+            
             glm::vec3 GetPosition() const;
+            glm::vec3 GetViewDirection() const;
+            
             void SetFocusObject(glm::vec3 from, Object *ObjToLook, float xoffset = 0.0f, float yoffset = 0.0f);
             void SetFocusPosition(glm::vec3 from, glm::vec3 lookingAt);
-            glm::vec3 GetViewDirection() const;
 
-            // Métodos 3D
             void Classic3DProcessKeyboard(Camera_Movement direction, float deltaTime);
             void Classic3DProcessMouseMovement(float xoffset, float yoffset);
             void Classic3DProcessMouseScroll(float xoffset, float yoffset);

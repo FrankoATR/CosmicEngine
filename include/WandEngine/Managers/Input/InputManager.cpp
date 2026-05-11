@@ -2,6 +2,7 @@
 
 #include "../GameManager.hpp"
 #include "../Camera/CameraManager.hpp"
+#include "../../Utils/Log.hpp"
 
 #include <iostream>
 
@@ -15,12 +16,12 @@ namespace WandEngine
 
     InputManager::InputManager()
     {
-        std::cout << "Input manager created" << std::endl;
+        RUNTIME_INFO("Input manager created");
     }
 
     InputManager::~InputManager()
     {
-        std::cout << "Input manager destroyed" << std::endl;
+        RUNTIME_INFO("Input manager destroyed");
     }
 
     void InputManager::Init(GLFWwindow *window)
@@ -30,16 +31,7 @@ namespace WandEngine
         MouseSpriteSize = glm::vec2(32.0f);
         disableMouse = false;
 
-
-        SetMousePosition_Callback([](double x, double y){
-            CameraManager::GetInstance().Classic3DProcessMouseMovement(x, y);
-        });
-
-        SetMouseScroll_Callback([](double x, double y){
-            CameraManager::GetInstance().Classic3DProcessMouseScroll(x, y);
-        });
-
-        std::cout << "Input manager initialized" << std::endl;
+        RUNTIME_INFO("Input manager initialized");
     }
 
     
@@ -128,32 +120,6 @@ namespace WandEngine
     {
         return joystickButtonState.count(button) && joystickButtonState.at(button);
     }
-
-    void InputManager::SetMousePosition_Callback(std::function<void(double, double)> callback)
-	{
-		mousePositionCallback = callback;
-        GLFWwindow* window = GameManager::GetInstance().GetWindow();
-		glfwSetWindowUserPointer(window, this);
-		glfwSetCursorPosCallback(window, [](GLFWwindow* win, double xpos, double ypos) {
-			auto self = static_cast<InputManager*>(glfwGetWindowUserPointer(win));
-			if (self && self->mousePositionCallback) {
-				self->mousePositionCallback(xpos, ypos);
-			}
-		});
-	}
-	
-	void InputManager::SetMouseScroll_Callback(std::function<void(double, double)> callback)
-	{
-		mouseScrollCallback = callback;
-        GLFWwindow* window = GameManager::GetInstance().GetWindow();
-		glfwSetScrollCallback(window, [](GLFWwindow* win, double xoffset, double yoffset) {
-			auto self = static_cast<InputManager*>(glfwGetWindowUserPointer(win));
-			if (self && self->mouseScrollCallback) {
-				self->mouseScrollCallback(xoffset, yoffset);
-			}
-		});
-	}
-
 
 
     glm::vec2 InputManager::GetMousePosition() const

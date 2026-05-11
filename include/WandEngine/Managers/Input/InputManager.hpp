@@ -39,11 +39,6 @@ namespace WandEngine
 
         bool disableMouse;
 
-        static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
-        static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-        std::function<void(double, double)> mousePositionCallback;
-        std::function<void(double, double)> mouseScrollCallback;
-
     public:
         static InputManager &GetInstance();
 
@@ -66,9 +61,6 @@ namespace WandEngine
         void SetMouseSpriteOffSet(glm::vec2 MouseSpriteOffSet);
         void SetMouseSpriteSize(glm::vec2 MouseSpriteSize);
         void DrawMouseSprite();
-
-        void SetMousePosition_Callback(std::function<void(double xpos, double ypos)>);
-        void SetMouseScroll_Callback(std::function<void(double xoffset, double yoffset)>);
     };
 }
 

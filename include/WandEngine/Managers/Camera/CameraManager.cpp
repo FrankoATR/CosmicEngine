@@ -49,11 +49,9 @@ namespace WandEngine
 
     glm::mat4 CameraManager::Get_UI_ProjectionMatrix() const
     {
-        glm::vec2 base = GetBaseWindowSize();
-
         return glm::ortho(
-            0.0f, base.x,
-            base.y, 0.0f,
+            0.0f, baseWindowSize.x,
+            baseWindowSize.y, 0.0f,
             -1.0f, 1.0f
         );
     }
@@ -194,11 +192,26 @@ namespace WandEngine
             this->baseAspectRatio = baseWindowSize.x / baseWindowSize.y;        
         }
 
+        float CameraManager::GetMovementSpeed() const
+        {
+            return this->movementSpeed;
+        }
+
+        void CameraManager::SetMovementSpeed(float newMovementSpeed)
+        {
+            this->movementSpeed = newMovementSpeed;
+        }
+
+
         glm::vec3 CameraManager::GetPosition() const
         {
             return this->position;
         }
     
+        glm::vec3 CameraManager::GetViewDirection() const
+        {
+            return this->front;
+        }
 
         glm::mat4 CameraManager::GetViewMatrix() const
         {
@@ -207,7 +220,7 @@ namespace WandEngine
     
         glm::mat4 CameraManager::GetProjectionMatrix() const
         {
-            return glm::perspective(glm::radians(zoom), baseAspectRatio, 0.1f, 100.0f);
+            return glm::perspective(glm::radians(zoom), GameManager::GetInstance().GetWindowsSize().x / GameManager::GetInstance().GetWindowsSize().y, 0.1f, 100.0f);
         }
 
         void CameraManager::Classic3DProcessKeyboard(Camera_Movement direction, float deltaTime)

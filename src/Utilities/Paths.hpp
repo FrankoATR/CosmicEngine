@@ -28,5 +28,11 @@
 
 #define MUSIC_IMPOSSIBLE_GAME "assets/engine/audio/music/FireAura.mp3"
 
+#define MUSIC_MT_MOON "assets/engine/audio/music/1-34. Mt. Moon.mp3"
+
+#define MODEL_MONA "assets/engine/model/mona/scene.gltf"
+#define TEXTURESHEET_MINECRAFT "assets/engine/texture/minecraft.png"
+#define TEXTURE_COBBLESTONE_MINECRAFT "assets/engine/texture/cobblestone.png"
+
 
 #define FONT_THALEAHFAT "assets/engine/fonts/ThaleahFat.ttf"

@@ -11,6 +11,7 @@
 #include "Object/ObjectManager.hpp"
 #include "Body/BodyManager.hpp"
 #include "Database/DatabaseManager.hpp"
+#include "Light/LightManager.hpp"
 #include "Network/NetworkManager.hpp"
 
 #include <iostream>
@@ -83,6 +84,8 @@ namespace WandEngine
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glViewport(0, 0, screenWidth, screenHeight);
+
+		glfwSetWindowUserPointer(window, this);
 
 		
 		SetFramebufferSize_Callback([&](int width, int height){
@@ -158,6 +161,7 @@ namespace WandEngine
 		ObjectManager::GetInstance().Init();
 		BodyManager::GetInstance().Init();
 		DataBaseManager::GetInstance().Init();
+		LightManager::GetInstance().Init();
 		CameraManager::GetInstance().Init(baseAspectSize);
 
 		return true;
@@ -195,8 +199,14 @@ namespace WandEngine
 			{
 				glm::vec3 BackbufferColor(SceneManager::GetInstance().GetBackgroundColor());
 				glClearColor(BackbufferColor.r, BackbufferColor.g, BackbufferColor.b, 1.0f);
-				// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // en 3D
-				glClear(GL_COLOR_BUFFER_BIT);
+
+				#if defined(GAME_2D_CONFIGURATION)
+					glClear(GL_COLOR_BUFFER_BIT);
+				#elif defined(GAME_3D_CONFIGURATION)
+					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+				#else
+					#error "[GameManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
+				#endif
 
 				ImGui_ImplOpenGL3_NewFrame();
 				ImGui_ImplGlfw_NewFrame();
@@ -229,7 +239,6 @@ namespace WandEngine
 	void GameManager::SetFramebufferSize_Callback(std::function<void(int, int)> callback)
 	{
 		framebufferSizeCallback = callback;
-		glfwSetWindowUserPointer(window, this);
 		glfwSetFramebufferSizeCallback(window, [](GLFWwindow* win, int w, int h) {
 			auto self = static_cast<GameManager*>(glfwGetWindowUserPointer(win));
 			if (self && self->framebufferSizeCallback) {
@@ -241,11 +250,36 @@ namespace WandEngine
 	void GameManager::SetDrop_Callback(std::function<void(int, const char**)> callback)
 	{
 		dropCallback = callback;
-		glfwSetWindowUserPointer(window, this);
 		glfwSetDropCallback(window, [](GLFWwindow* win, int count, const char** paths) {
 			auto self = static_cast<GameManager*>(glfwGetWindowUserPointer(win));
 			if (self && self->dropCallback) {
 				self->dropCallback(count, paths);
+			}
+		});
+	}
+
+	void GameManager::SetMousePosition_Callback(std::function<void(double, double)> callback)
+	{
+		mousePositionCallback = callback;
+		glfwSetCursorPosCallback(window, [](GLFWwindow* win, double xpos, double ypos)
+		{
+			auto self = static_cast<GameManager*>(glfwGetWindowUserPointer(win));
+			if (self && self->mousePositionCallback)
+			{
+				self->mousePositionCallback(xpos, ypos);
+			}
+		});
+	}
+	
+	void GameManager::SetMouseScroll_Callback(std::function<void(double, double)> callback)
+	{
+		mouseScrollCallback = callback;
+		glfwSetScrollCallback(window, [](GLFWwindow* win, double xoffset, double yoffset)
+		{
+			auto self = static_cast<GameManager*>(glfwGetWindowUserPointer(win));
+			if (self && self->mouseScrollCallback)
+			{
+				self->mouseScrollCallback(xoffset, yoffset);
 			}
 		});
 	}

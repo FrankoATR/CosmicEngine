@@ -33,6 +33,8 @@ namespace WandEngine
 
         std::vector<std::string> droppedfiles;
 
+        std::vector<std::string> gameStates; // "0-PLAYING", "1-PAUSE" ... CREATE GAMESTATEMANAGER? MODULARIZE FOR UI ENGINE WITH FOR LOOP INTO SCENE->UPDATE()
+
         glm::vec2 baseAspectSize;
 
         double fpsTimer;
@@ -41,6 +43,8 @@ namespace WandEngine
 
         std::function<void(int, int)> framebufferSizeCallback;
         std::function<void(int, const char**)> dropCallback;
+        std::function<void(double, double)> mousePositionCallback;
+        std::function<void(double, double)> mouseScrollCallback;
 
     public:
         static GameManager &GetInstance();
@@ -71,7 +75,9 @@ namespace WandEngine
 
         void SetFramebufferSize_Callback(std::function<void(int width, int height)>);
         void SetDrop_Callback(std::function<void(int count, const char **paths)>);
-
+        void SetMousePosition_Callback(std::function<void(double xpos, double ypos)>);
+        void SetMouseScroll_Callback(std::function<void(double xoffset, double yoffset)>);
+        
         std::vector<std::string> GetDroppedFiles();
         void PushDroppedFile(std::string filepath);
 

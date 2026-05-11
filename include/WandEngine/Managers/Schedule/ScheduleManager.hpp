@@ -31,6 +31,7 @@ namespace WandEngine
         void Clear();
     };
 
+    
 }
 
 #endif // SCHEDULEMANAGER_HPP

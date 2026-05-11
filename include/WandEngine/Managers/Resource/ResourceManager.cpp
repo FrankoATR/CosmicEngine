@@ -2,6 +2,9 @@
 #include "MasterShaders.hpp"
 
 #include "../Camera/CameraManager.hpp"
+#include "../Light/LightManager.hpp"
+#include "../../Models/Light/Light.hpp"
+#include "../../Utils/Log.hpp"
 
 
 #include <sstream>
@@ -42,17 +45,94 @@ namespace WandEngine
             {1.0f, 0.0f, 1.0f, 0.0f}
         };
 
-        Load_Static_VAO("WAND_Sprite", vertices);
+        std::vector<std::vector<float>> Parallelepiped_texture_normal_vertices = {
+            {-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f},
+            {0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f},
+            {0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f},
+            {0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f},
+            {-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f},
+            {-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f},
+    
+            {-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f},
+            {0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f},
+            {0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f},
+            {0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f},
+            {-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f},
+            {-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f},
+    
+            {-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f},
+            {-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f},
+            {-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f},
+            {-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f},
+            {-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f},
+            {-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f},
+    
+            {0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f},
+            {0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f},
+            {0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f},
+            {0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f},
+            {0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f},
+            {0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f},
+    
+            {-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f},
+            {0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f},
+            {0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f},
+            {0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f},
+            {-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f},
+            {-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f},
+    
+            {-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f},
+            {0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f},
+            {0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f},
+            {0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f},
+            {-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f},
+            {-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f}
+        };
+    
+        std::vector<std::vector<float>> ParallelepipedLinesVertices = {
+            { -0.5f, -0.5f, -0.5f }, {  0.5f, -0.5f, -0.5f },
+            {  0.5f, -0.5f, -0.5f }, {  0.5f, -0.5f,  0.5f },
+            {  0.5f, -0.5f,  0.5f }, { -0.5f, -0.5f,  0.5f },
+            { -0.5f, -0.5f,  0.5f }, { -0.5f, -0.5f, -0.5f },
+        
+            { -0.5f,  0.5f, -0.5f }, {  0.5f,  0.5f, -0.5f },
+            {  0.5f,  0.5f, -0.5f }, {  0.5f,  0.5f,  0.5f },
+            {  0.5f,  0.5f,  0.5f }, { -0.5f,  0.5f,  0.5f },
+            { -0.5f,  0.5f,  0.5f }, { -0.5f,  0.5f, -0.5f },
+        
+            { -0.5f, -0.5f, -0.5f }, { -0.5f,  0.5f, -0.5f },
+            {  0.5f, -0.5f, -0.5f }, {  0.5f,  0.5f, -0.5f },
+            {  0.5f, -0.5f,  0.5f }, {  0.5f,  0.5f,  0.5f },
+            { -0.5f, -0.5f,  0.5f }, { -0.5f,  0.5f,  0.5f }
+        };
+        
+        
+
+        Load_Static_VAO("WAND_Sprite", vertices, {2, 2});
         Load_Dynamic_VAO_VBO("WAND_Point", 1);
         Load_Dynamic_VAO_VBO("WAND_Line", 2);
         Load_Dynamic_VAO_VBO("WAND_Triangle", 3);
         Load_Dynamic_VAO_VBO("WAND_Rectangle", 4);
 
-        LoadShaderFromCode("WAND_Shape", shape_vs, shape_fs);
+        LoadShaderFromCode("WAND_Shape_2D", shape_2D_vs, shape_2D_fs);
         LoadShaderFromCode("WAND_Sprite", sprite_vs, sprite_fs);
         LoadShaderFromCode("WAND_SpriteSheet", spriteSheet_vs, spriteSheet_fs);
         LoadShaderFromCode("WAND_Text", text_vs, text_fs);
 
+        #if defined(GAME_2D_CONFIGURATION)
+        
+        
+        #elif defined(GAME_3D_CONFIGURATION)
+            LoadShaderFromCode("WAND_Shape_3D", shape_3D_vs, shape_3D_fs);
+            Load_Static_VAO("WAND_Parallelepiped_Lines", ParallelepipedLinesVertices, {3});
+            Load_Static_VAO("WAND_Parallelepiped", Parallelepiped_texture_normal_vertices, {3,3,2});
+            LoadShaderFromCode("WAND_3DModel", model_3d_vs, model_3d_fs);
+            LightManager::GetInstance().RegisterShader(GetShader("WAND_3DModel")); // MOVE TO ...?
+
+        #else
+            #error "[ObjectManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
+        #endif
+    
         std::cout << "Resource manager initialized" << std::endl;
     }
 
@@ -88,6 +168,7 @@ namespace WandEngine
 
         glBindVertexArray(Get_Static_VAO("WAND_Sprite"));
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
 
         texture->Unbind();
         spriteShader->EndUse();
@@ -125,6 +206,7 @@ namespace WandEngine
 
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
 
         texture->Unbind();
         shader->EndUse();
@@ -181,6 +263,7 @@ namespace WandEngine
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glBindTexture(GL_TEXTURE_2D, 0);
+        glBindVertexArray(0);
 
         spriteSheetShader->EndUse();
     }
@@ -188,7 +271,7 @@ namespace WandEngine
     void ResourceManager::Render2DSpriteFromTextureSheet( // normal, specular, etc...
         const std::string &vaoKey,
         const std::string &shaderKey,
-        const std::vector<std::pair<std::string, std::string>> &shaderVar_textureKey,
+        const std::vector<std::pair<std::string, std::string>> &shaderVar_textureKey,  //"name on shader uniform - name on resource manager"
         int row,
         int column,
         glm::vec2 position,
@@ -246,6 +329,7 @@ namespace WandEngine
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glBindTexture(GL_TEXTURE_2D, 0);
+        glBindVertexArray(0);
 
         shader->EndUse();
     }
@@ -269,7 +353,15 @@ namespace WandEngine
         glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(glm::vec3), vertices.data());
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        Shader *shapeShader = GetShader("WAND_Shape");
+
+        #if defined(GAME_2D_CONFIGURATION)
+            Shader *shapeShader = GetShader("WAND_Shape_2D");
+        #elif defined(GAME_3D_CONFIGURATION)
+            Shader *shapeShader = GetShader("WAND_Shape_3D");
+        #else
+            #error "[ObjectManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
+        #endif
+
         shapeShader->Use();
 
         glm::mat4 model(1.0f);
@@ -282,8 +374,10 @@ namespace WandEngine
         shapeShader->SetMatrix4("model", model);
         
         shapeShader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
+        shapeShader->SetMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
 
-        shapeShader->SetProjection("projection", viewType);
+        //shapeShader->SetProjection("projection", viewType);
+        
         shapeShader->SetVec4("LineColor", glm::vec4(color, alpha));
 
 
@@ -291,6 +385,9 @@ namespace WandEngine
 
         glBindVertexArray(dynamic_temp.first);
         glDrawArrays(drawMode, 0, vertices.size());
+
+        glBindVertexArray(0);
+
         shapeShader->EndUse();
     }
 
@@ -313,7 +410,9 @@ namespace WandEngine
 
     void ResourceManager::RenderRectangle(glm::vec3 point_1, glm::vec3 point_2, glm::vec3 pivot, glm::vec3 rotation, glm::vec3 color, float alpha, float lineWidth, bool filled, ViewType viewType)
     {
-        RenderShape("WAND_Rectangle", {point_1, glm::vec3(point_2.x, point_1.y, 0.0f), point_2, glm::vec3(point_1.x, point_2.y, 0.0f)}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP, viewType);
+        //RenderShape("WAND_Rectangle", {point_1, glm::vec3(point_2.x, point_1.y, 0.0f), point_2, glm::vec3(point_1.x, point_2.y, 0.0f)}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP, viewType);
+        RenderShape("WAND_Rectangle", {point_1, glm::vec3(point_2.x, point_1.y, point_1.z), point_2, glm::vec3(point_1.x, point_2.y, point_2.z)}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP, viewType);
+        //TODO ADAP VERSION VEC2 AND VEC3 SEPARETLY
     }
 
     glm::vec2 ResourceManager::MeasureText(
@@ -397,52 +496,181 @@ namespace WandEngine
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
+    void ResourceManager::RenderParallelepipedLines(
+        glm::vec3 position,
+        glm::vec3 size,
+        glm::vec3 pivot,
+        glm::vec3 rotation,
+        glm::vec3 color,
+        float alpha,
+        float lineWidth,
+        bool filled,
+        ViewType viewType
+    )
+    {
+        auto vao = Get_Static_VAO("WAND_Parallelepiped_Lines");
 
-    bool ResourceManager::Load_Static_VAO(const std::string &key, const std::vector<std::vector<float>> &vertices)
+        Shader *shapeShader = GetShader("WAND_Shape_3D");
+        shapeShader->Use();
+
+        shapeShader->SetModel("model", position, size, rotation, pivot);
+
+        shapeShader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
+        shapeShader->SetMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
+        
+        shapeShader->SetVec4("LineColor", glm::vec4(color, alpha));
+
+        glLineWidth(lineWidth);
+        glBindVertexArray(vao);
+        glDrawArrays(GL_LINES, 0, 24);
+        glBindVertexArray(0);
+
+        shapeShader->EndUse();
+    }
+
+
+    void ResourceManager::RenderParallelepipedTexture(
+        std::string textureKey,
+        glm::vec3 position,
+        glm::vec3 size,
+        glm::vec3 pivot,
+        glm::vec3 rotation,
+        glm::vec3 color,
+        float alpha,
+        ViewType viewType
+    )
+    {
+        auto vao = Get_Static_VAO("WAND_Parallelepiped");
+
+        Shader *shader = GetShader("WAND_3DModel");
+        GameTexture2D *texture = GetTexture(textureKey);
+        
+        if ((vao == 0) || !texture || !shader)
+        {
+            return;
+        }
+
+        shader->Use();
+
+        shader->SetModel("model", position, size, rotation);
+        shader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
+        shader->SetMatrix4("projection", CameraManager::GetInstance().GetProjectionMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
+        
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture->GetID());
+        shader->SetInt("material.diffuse", 0);
+    
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture->GetID());
+        shader->SetInt("material.specular", 1);
+
+        glBindVertexArray(vao);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+
+        shader->EndUse();
+    }
+
+
+    void ResourceManager::Render3DModel(
+        const std::string &modelKey,
+        glm::vec3 position,
+        glm::vec3 size,
+        glm::vec3 rotation,
+        glm::vec3 color,
+        float alpha,
+        ViewType viewType
+    )
+    {
+
+        Model *model = GetModel(modelKey);
+
+        if (!model)
+        {
+            return;
+        }
+
+        Shader *modelShader = GetShader("WAND_3DModel");
+
+        modelShader->Use();
+        modelShader->SetModel("model", position, size, rotation);
+        modelShader->SetMatrix4("view", CameraManager::GetInstance().GetViewMatrix());  // TODO OPTIMIZE FOR 3D AND FIX
+        modelShader->SetProjection("projection", viewType);
+
+        model->Draw(*modelShader);
+
+        modelShader->EndUse();
+
+    }
+
+
+    bool ResourceManager::Load_Static_VAO(const std::string &key, const std::vector<std::vector<float>> &vertices, const std::vector<int> &attributeSizes)
     {
         if (static_vao_resources.find(key) != static_vao_resources.end())
+            return false;
+    
+        if (vertices.empty() || attributeSizes.empty())
         {
+            std::cerr << "Error: Empty VAO data or attribute sizes" << std::endl;
             return false;
         }
+    
+        size_t vertexStride = 0;
+        for (int size : attributeSizes)
+            vertexStride += size;
+    
 
-        if (vertices.empty())
+        for(auto current_size : vertices)
         {
-            std::cerr << "Error: Empty VAO data" << std::endl;
-            return false;
+            if (current_size.size() != vertexStride)
+            {
+                std::cerr << "Error: VAO Data size and attribute sizes do not match" << std::endl;
+                return false;
+            }
         }
-
+    
         std::vector<float> flatVertices;
         for (const auto &row : vertices)
         {
             flatVertices.insert(flatVertices.end(), row.begin(), row.end());
         }
-
+    
         unsigned int VBO, VAO;
-
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
-
+    
         glBindVertexArray(VAO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
         glBufferData(GL_ARRAY_BUFFER, flatVertices.size() * sizeof(float), flatVertices.data(), GL_STATIC_DRAW);
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, vertices[0].size(), GL_FLOAT, GL_FALSE, vertices[0].size() * sizeof(float), (void *)0);
-
+    
+        size_t offset = 0;
+        for (GLuint i = 0; i < attributeSizes.size(); ++i)
+        {
+            glEnableVertexAttribArray(i);
+            glVertexAttribPointer(
+                i,
+                attributeSizes[i],
+                GL_FLOAT,
+                GL_FALSE,
+                vertexStride * sizeof(float),
+                (void*)(offset * sizeof(float))
+            );
+            offset += attributeSizes[i];
+        }
+    
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
         glDeleteBuffers(1, &VBO);
-
+    
         static_vao_resources[key] = VAO;
-
+    
         return true;
     }
-
+    
 
     bool ResourceManager::Load_Dynamic_VAO_VBO(const std::string &key, size_t vertexCount)
     {
-        if (static_vao_resources.find(key) != static_vao_resources.end())
+        if (dynamic_vao_vbo_resources.find(key) != dynamic_vao_vbo_resources.end())
         {
             return false;
         }
@@ -582,6 +810,20 @@ namespace WandEngine
         return true;
     }
 
+    bool ResourceManager::Load3DModel(const std::string &key, const std::string &path)
+    {
+        if (model_resources.find(key) != model_resources.end())
+        {
+            return false;
+        }
+
+        Model *model = new Model(path);
+
+        model_resources[key] = model;
+
+        return true;
+    }
+
     unsigned int ResourceManager::Get_Static_VAO(const std::string &key) const
     {
         auto it = static_vao_resources.find(key);
@@ -642,6 +884,16 @@ namespace WandEngine
         return it->second;
     }
 
+    Model *ResourceManager::GetModel(const std::string &key) const
+    {
+        auto it = model_resources.find(key);
+        if (it == model_resources.end())
+        {
+            return nullptr;
+        }
+        return it->second;
+    }
+
     void ResourceManager::Clear()
     {
 
@@ -684,7 +936,8 @@ namespace WandEngine
             if(resource) delete resource;
             resource = nullptr;
         });
-        ClearMap<TextFont*>(text_font_resources, [](TextFont*& resource){
+
+        ClearMap<Model*>(model_resources, [](Model*& resource){
             if(resource) delete resource;
             resource = nullptr;
         });

@@ -7,19 +7,14 @@ using namespace WandEngine;
 
 int main()
 {
-
 	RUNTIME_INFO("********************************PROGRAM START********************************");
 
-	if (GameManager::GetInstance().Init(GAME_INITIAL_SCREEN_WIDTH, GAME_INITIAL_SCREEN_HEIGHT, GAME_BASE_RENDER_SCREEN_WIDTH, GAME_BASE_RENDER_SCREEN_HEIGHT))
-	{
-		GameManager::GetInstance().SetFirstScene(new SecondScene3D);
-		GameManager::GetInstance().Update();
-		GameManager::GetInstance().Shutdown();
-	}
-	else
-	{
-		RUNTIME_WARNING("********************************ERROR********************************");
-	}
+	if(!GameManager::GetInstance().Init(GAME_INITIAL_SCREEN_WIDTH, GAME_INITIAL_SCREEN_HEIGHT, GAME_BASE_RENDER_SCREEN_WIDTH, GAME_BASE_RENDER_SCREEN_HEIGHT))
+		return 0;
+
+	GameManager::GetInstance().SetFirstScene(new SecondScene3D);
+	GameManager::GetInstance().Update();
+	GameManager::GetInstance().Shutdown();
 	
 	RUNTIME_INFO("********************************END PROGRAM SUCCESSFULLY********************************");
 

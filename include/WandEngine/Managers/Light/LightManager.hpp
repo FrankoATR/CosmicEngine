@@ -8,14 +8,20 @@
 
 namespace WandEngine
 {
-    class GameLight;
+    class Light;
+    class Shader;
 
     class LightManager
     {
     private:
-        glm::vec3 ambientLight;
-        std::vector<GameLight*> point_lights;
-        std::vector<GameLight*> spot_lights;
+        glm::vec3 globalAmbientLightColor;
+        glm::vec3 globalAmbientLightDirection;
+        glm::vec3 globalAmbientLightDiffuse;
+        glm::vec3 globalAmbientLightSpecular;
+
+        std::vector<Light*> point_lights_resources;
+        std::vector<Shader*> target_shader_resources;
+        std::vector<Light*> spot_lights;
 
         int nextEntityId;
 
@@ -32,16 +38,28 @@ namespace WandEngine
         }
 
         void Update(float deltaTime);
+        void Init();
         void Draw();
-        void Add(GameLight *actor);
-        void Remove(int EntityId);
-        GameLight *FindById(int EntityId);
-        std::vector<GameLight *> FindByClassName(std::string className);
-        std::vector<GameLight *> FindByPosition(glm::vec2 Position);
-        std::vector<GameLight *> FindByMousePosition();
-        std::vector<GameLight *> FindByLayer(int LayerId);
-        std::vector<GameLight *> GetAll();
-        void SortByLayer();
+        void Add(Light *light);
+        void RegisterShader(Shader *shader);
+        void Remove(int ID);
+
+        void SetGlobalAmbientLightColor(glm::vec3 newGlobalAmbientLightColor);
+        glm::vec3 GetGlobalAmbientLightColor() const;
+
+        void SetGlobalAmbientLightDirection(glm::vec3 newGlobalAmbientLightDirection);
+        glm::vec3 GetGlobalAmbientLightDirection() const;
+
+        void SetGlobalAmbientLightDiffuse(glm::vec3 newGlobalAmbientLightDiffuse);
+        glm::vec3 GetGlobalAmbientLightDiffuse() const;
+
+        void SetGlobalAmbientLightSpecular(glm::vec3 newGlobalAmbientLightSpecular);
+        glm::vec3 GetGlobalAmbientLightSpecular() const;
+
+        Light *FindById(int ID);
+        std::vector<Light *> FindByPosition(glm::vec2 Position);
+        std::vector<Light *> FindByMousePosition();
+        std::vector<Light *> GetAll();
         void Clear();
     };
 

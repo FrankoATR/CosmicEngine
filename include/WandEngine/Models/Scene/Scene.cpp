@@ -9,6 +9,7 @@
 #include "../../Managers/Camera/CameraManager.hpp"
 #include "../../Managers/Input/InputManager.hpp"
 #include "../../Managers/Timer/TimerManager.hpp"
+#include "../../Managers/Light/LightManager.hpp"
 #include "../../Managers/UI/UIManager.hpp"
 
 #include <iostream>
@@ -97,9 +98,18 @@ namespace WandEngine
     void Scene::UpdateManagers(double deltaTime)
     {
         Update(deltaTime);
+
+
         ObjectManager::GetInstance().Update(deltaTime);
         BodyManager::GetInstance().Update();
+        LightManager::GetInstance().Update(deltaTime);
+
+        glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         UIManager::GetInstance().Update(deltaTime);
+        glEnable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
 
     }
 

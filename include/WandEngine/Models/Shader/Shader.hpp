@@ -31,6 +31,7 @@ namespace WandEngine
         unsigned int GetID();
 
         void SetModel(const std::string &name, glm::vec3 position, glm::vec3 size, glm::vec3 rotation) const;
+        void SetModel(const std::string &name, glm::vec3 position, glm::vec3 size, glm::vec3 rotation, glm::vec3 pivot) const;
         void SetProjection(const std::string &name, ViewType viewType) const;
 
         void SetBool(const std::string &name, bool value) const;

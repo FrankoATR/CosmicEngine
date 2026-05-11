@@ -67,8 +67,6 @@ namespace WandEngine
         glLinkProgram(this->ID);
         CheckCompileErrors(this->ID, "PROGRAM");
 
-
-
         std::cout << "Shader " << ID << " created" << std::endl;
 
     }
@@ -80,7 +78,6 @@ namespace WandEngine
 
     void Shader::EndUse()
     {
-        glBindVertexArray(0);
         glUseProgram(0);
     }
 
@@ -106,6 +103,22 @@ namespace WandEngine
 
         SetMatrix4(name, model);
     }
+
+    void Shader::SetModel(const std::string &name, glm::vec3 position, glm::vec3 size, glm::vec3 rotation, glm::vec3 pivot) const
+    {
+        glm::mat4 model(1.0f);
+
+        model = glm::translate(model, pivot);
+        model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::translate(model, position - pivot);
+        model = glm::scale(model, size);
+        
+        SetMatrix4(name, model);
+        
+    }
+
 
     void Shader::SetProjection(const std::string &name, ViewType viewType) const
     {

@@ -9,6 +9,8 @@
 #include "../../Models/Texture/GameTexture2D.hpp"
 #include "../../Models/Shader/Shader.hpp"
 #include "../../Models/TextFont/TextFont.hpp"
+#include "../../Models/Model/Model.hpp"
+#include "../../Utils/Configurations.hpp"
 
 namespace WandEngine
 {
@@ -47,15 +49,16 @@ namespace WandEngine
         std::map<std::string, Texture_Sheet *> textures_sheet_resources;
         std::map<std::string, Shader *> shader_resources;
         std::map<std::string, TextFont *> text_font_resources;
-
+        std::map<std::string, Model *> model_resources;
 
         unsigned int Get_Static_VAO(const std::string &key) const;
         std::pair<unsigned int, unsigned int> Get_Dynamic_VAO_VBO(const std::string &key) const;
+        Shader *GetShader(const std::string &key) const;
         GameTexture2D *GetTexture(const std::string &key) const;
         Texture_Sheet *GetTextureSheet(const std::string &key) const;
-        Shader *GetShader(const std::string &key) const;
         TextFont *GetTextFont(const std::string &key) const;
 
+        Model *GetModel(const std::string &key) const;
 
         template <typename V, typename Callback>
         void ClearMap(std::map<std::string, V> &map, Callback callback) {
@@ -78,6 +81,16 @@ namespace WandEngine
             glm::vec3 color = glm::vec3(1.0f),
             float alpha = 1.0f,
             ViewType viewType = ViewType::Ortho
+        );
+
+        void Render2DSprite_UI(
+            const std::string &textureKey,
+            glm::vec2 position,
+            glm::vec2 size,
+            float rotation = 0.0f,
+            glm::vec3 color = glm::vec3(1.0f),
+            float alpha = 1.0f,
+            ViewType viewType = ViewType::Ortho // NOT NECESSARY ¿? Verify for each
         );
 
         void Render2DSprite(
@@ -189,7 +202,41 @@ namespace WandEngine
         );
 
 
-        bool Load_Static_VAO(const std::string &key, const std::vector<std::vector<float>> &vertices);
+        void RenderParallelepipedLines(
+            glm::vec3 position,
+            glm::vec3 size = glm::vec3(1.0f),
+            glm::vec3 pivot = glm::vec3(0.0f),
+            glm::vec3 rotation = glm::vec3(0.0f),
+            glm::vec3 color = glm::vec3(1.0f),
+            float alpha = 1.0f,
+            float lineWidth = 1.0f,
+            bool filled = false,
+            ViewType viewType = ViewType::Ortho
+        );
+
+        void RenderParallelepipedTexture(
+            std::string textureKey,
+            glm::vec3 position,
+            glm::vec3 size = glm::vec3(1.0f),
+            glm::vec3 pivot = glm::vec3(0.0f),
+            glm::vec3 rotation = glm::vec3(0.0f),
+            glm::vec3 color = glm::vec3(1.0f),
+            float alpha = 1.0f,
+            ViewType viewType = ViewType::Ortho
+        );
+
+        void Render3DModel(
+            const std::string &modelKey,
+            glm::vec3 position,
+            glm::vec3 size,
+            glm::vec3 rotation = glm::vec3(0.0f),
+            glm::vec3 color = glm::vec3(1.0f),
+            float alpha = 1.0f,
+            ViewType viewType = ViewType::Ortho
+        );
+
+
+        bool Load_Static_VAO(const std::string &key, const std::vector<std::vector<float>> &vertices, const std::vector<int> &attributeSizes);
         bool Load_Dynamic_VAO_VBO(const std::string &key, size_t vertexCount);
         bool LoadShaderFromPath(const std::string &key, const std::string &vs_path, const std::string &fs_path, const std::string &gs_path = "");
         bool LoadShaderFromCode(const std::string &key, const char* vertexSource, const char* fragmentSource, const char* geometrySource = nullptr);
@@ -197,6 +244,8 @@ namespace WandEngine
         bool LoadTextureSheet(const std::string &key, const std::string &path, bool alpha, int rows, int columns, int padding);
 
         bool LoadTextFont(const std::string &key, const std::string &path, unsigned int fontSize);
+
+        bool Load3DModel(const std::string &key, const std::string &path);
 
         void Clear();
     };
