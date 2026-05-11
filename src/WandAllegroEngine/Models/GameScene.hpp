@@ -20,10 +20,9 @@ private:
     std::string Name;
 
 public:
-    GameManager* Game;
     ALLEGRO_THREAD *loadingThread = nullptr;
     
-    GameScene(GameManager* Game, std::string Name);
+    GameScene(std::string Name);
 
     virtual void Init() = 0;
     virtual void Update(double deltaTime) = 0;

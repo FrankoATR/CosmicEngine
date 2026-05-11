@@ -3,19 +3,20 @@
 
 int main(){
 
-
 	int ScreenWidth = GetSystemMetrics(SM_CXSCREEN);
 	int ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-	GameManager* Game = new GameManager(Size(ScreenWidth, ScreenHeight));
-
-	if(Game->Init()){
-		Game->SetFirstScene(new MainScene(Game));
-		Game->Update();
+	if(WandEngine::GameManager::GetInstance().Init()){
+		WandEngine::GameManager::GetInstance().SetWindows_Size(Size(ScreenWidth, ScreenHeight));
+		WandEngine::GameManager::GetInstance().SetFirstScene(new MainScene);
+		WandEngine::GameManager::GetInstance().Update();
+		WandEngine::GameManager::GetInstance().Clear();
 	}
-	
-	delete Game;
+	else{
+		std::cerr << "ERROR" << std::endl;
+	}
+
+	std::cout << "END PROGRAM SUCCESFULLY MAIN" << std::endl;
 
 	return 0;
 }
-

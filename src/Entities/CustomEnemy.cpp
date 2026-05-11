@@ -1,8 +1,8 @@
 #include "CustomEnemy.hpp"
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
 
-CustomEnemy::CustomEnemy(GameManager* Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font) : 
-GameObject(Game, ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP), TimeToChangeDirection(1.0f), TimeUntilRecibeDamage(1.0f), ActualDirection(RIGHT)
+CustomEnemy::CustomEnemy(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font) : 
+GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP), TimeToChangeDirection(1.0f), TimeUntilRecibeDamage(1.0f), ActualDirection(RIGHT)
 {
     this->font = font;
 }
@@ -16,7 +16,7 @@ void CustomEnemy::Init(){
 void CustomEnemy::Draw(){
     GameObject::Draw();
     
-    al_draw_text(font, al_map_rgba(255,0,100, 0), GetPosition().x, GetPosition().y + 100, NULL, (std::to_string(Game->currentTime)).c_str());
+    al_draw_text(font, al_map_rgba(255,0,100, 0), GetPosition().x, GetPosition().y + 100, NULL, "test");
     al_draw_text(font, al_map_rgba(255,200,100, 255), GetPosition().x, GetPosition().y - 60, NULL, GetObjectName().c_str());
 
 }

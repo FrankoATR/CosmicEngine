@@ -13,56 +13,69 @@
 #include <windows.h>
 #include <map>
 
-struct Size {
+struct Size
+{
     int Width;
     int Height;
-    Size(int Width, int Height) : Width(Width), Height(Height){}
+    Size(int Width, int Height) : Width(Width), Height(Height) {}
 };
 
 class GameScene;
 
-class GameManager {
+namespace WandEngine
+{
+    class GameManager
+    {
 
-private:
-    bool redraw;
-    bool ShowBodys;
-    ALLEGRO_COLOR BackBufferColor;
+    private:
+        bool redraw;
+        bool ShowBodys;
+        double lastTime, currentTime, deltaTime;
 
-public:
-    Size ScreenSize;
+        ALLEGRO_COLOR BackBufferColor;
+        ALLEGRO_DISPLAY *Window;
+        ALLEGRO_TIMER *FPS;
 
-    ALLEGRO_DISPLAY* Window;
-    ALLEGRO_EVENT_QUEUE* event_queue;
+        Size ScreenSize;
 
-    ALLEGRO_TIMER* FPS;
-    ALLEGRO_EVENT Event;
+        GameManager();
+        ~GameManager();
 
-    std::map<int, bool> keyState;
+        GameManager(const GameManager &) = delete;
+        GameManager &operator=(const GameManager &) = delete;
 
+    public:
 
-    double lastTime, currentTime, deltaTime;
+        ALLEGRO_EVENT_QUEUE *event_queue;
 
-    GameManager(Size ScreenSize);
-    ~GameManager();
+        ALLEGRO_EVENT Event;
 
-    void ToggleShowBody();
-
-    void SetBackBufferColor(ALLEGRO_COLOR color);
-    void SetFirstScene(GameScene* scene);
-
-    void SetWindows_Size(Size ScreenSize);
-    void SetWindows_FullScreenMode();
-    void SetWindows_WindowsMode();
-    Size GetWindowsSize();
-
-    bool IsFullScreen();
-    
-    bool Init();
-    void Update();
-    void End();
+        std::map<int, bool> keyState;
 
 
-};
+        static GameManager &GetInstance()
+        {
+            static GameManager instance;
+            return instance;
+        }
 
+        void ToggleShowBody();
+
+        void SetBackBufferColor(ALLEGRO_COLOR color);
+        void SetFirstScene(GameScene *scene);
+
+        void SetWindows_Size(Size ScreenSize);
+        void SetWindows_FullScreenMode();
+        void SetWindows_WindowsMode();
+        Size GetWindowsSize();
+
+        bool IsFullScreen();
+
+        bool Init();
+        void Update();
+        void Clear();
+    };
+
+}
 
 #endif // GAMEMANAGER_HPP

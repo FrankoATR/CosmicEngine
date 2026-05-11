@@ -3,7 +3,7 @@
 #include "../Managers/BodyManager.hpp"
 #include "../Managers/ObjectManager.hpp"
 
-GameScene::GameScene(GameManager* Game, std::string Name) : Game(Game), ProgressLoadingScene(0.0f), Name(Name)
+GameScene::GameScene(std::string Name) : ProgressLoadingScene(0.0f), Name(Name)
 {
 
 }

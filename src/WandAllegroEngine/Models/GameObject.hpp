@@ -11,7 +11,6 @@
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
 
-#include "../Managers/GameManager.hpp"
 #include "GameBodyObject.hpp"
 
 enum Object {
@@ -35,10 +34,8 @@ private:
     bool AliveInGameManager;
 
 public:
-    GameManager* Game;
-
     GameObject() = delete;
-    GameObject(GameManager* Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId);
+    GameObject(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId);
     virtual void Draw();
     virtual void Init();
     virtual void Update(float deltaTime);

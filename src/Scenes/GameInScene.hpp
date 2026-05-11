@@ -9,7 +9,7 @@ class GameInScene : public GameScene
 private:
 
 public:
-    GameInScene(GameManager* Game);
+    GameInScene();
     
     void Init() override;
     void Update(double deltaTime) override;

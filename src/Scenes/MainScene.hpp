@@ -8,7 +8,7 @@ class MainScene : public GameScene
 private:
 
 public:
-    MainScene(GameManager* Game);
+    MainScene();
     
     void Init() override;
     void Update(double deltaTime) override;

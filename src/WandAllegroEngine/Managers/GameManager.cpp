@@ -2,16 +2,17 @@
 #include "SceneManager.hpp"
 #include "ObjectManager.hpp"
 #include "BodyManager.hpp"
+#include "InputManager.hpp"
 
-GameManager::GameManager(Size ScreenSize) : ScreenSize(ScreenSize), Window(nullptr), event_queue(nullptr),
-											lastTime(0), currentTime(0), deltaTime(0)
+WandEngine::GameManager::GameManager() : ScreenSize(Size(0, 0)), Window(nullptr), event_queue(nullptr),
+										 lastTime(0), currentTime(0), deltaTime(0)
 {
 	this->redraw = true;
 	this->ShowBodys = false;
 	this->BackBufferColor = al_map_rgb(0, 0, 0);
 }
 
-bool GameManager::Init()
+bool WandEngine::GameManager::Init()
 {
 	if (!al_init())
 	{
@@ -24,8 +25,6 @@ bool GameManager::Init()
 	al_init_font_addon();
 	al_init_ttf_addon();
 	al_init_primitives_addon();
-	al_install_mouse();
-	al_install_keyboard();
 	al_init_image_addon();
 
 	al_reserve_samples(1);
@@ -44,22 +43,23 @@ bool GameManager::Init()
 
 	if (!event_queue)
 	{
+		al_show_native_message_box(NULL, "Error", "ERROR: initialize", ":/", NULL, ALLEGRO_MESSAGEBOX_ERROR);
 		return false;
 	}
 
 	FPS = al_create_timer(1.0 / 60);
 
 	al_register_event_source(event_queue, al_get_timer_event_source(FPS));
-	al_register_event_source(event_queue, al_get_mouse_event_source());
-	al_register_event_source(event_queue, al_get_keyboard_event_source());
 	al_register_event_source(event_queue, al_get_display_event_source(Window));
 
 	al_start_timer(FPS);
 
+	WandEngine::InputManager::GetInstance().Init();
+
 	return true;
 }
 
-void GameManager::Update()
+void WandEngine::GameManager::Update()
 {
 
 	lastTime = al_get_time();
@@ -70,22 +70,27 @@ void GameManager::Update()
 		deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
 
-		al_wait_for_event(event_queue, &Event);
+		WandEngine::InputManager::GetInstance().Update();
 
-		switch (Event.type)
+		while (al_get_next_event(event_queue, &Event))
 		{
-		case ALLEGRO_EVENT_DISPLAY_CLOSE:
-			WandEngine::SceneManager::GetInstance().Clear();
-			break;
+			InputManager::GetInstance().ProcessEvent(Event);
 
-		case ALLEGRO_EVENT_TIMER:
-			if (Event.timer.source == FPS)
-				redraw = true;
+			switch (Event.type)
+			{
+			case ALLEGRO_EVENT_DISPLAY_CLOSE:
+				WandEngine::SceneManager::GetInstance().Clear();
+				break;
 
-			break;
+			case ALLEGRO_EVENT_TIMER:
+				if (Event.timer.source == FPS)
+					redraw = true;
 
-		default:
-			break;
+				break;
+
+			default:
+				break;
+			}
 		}
 
 		WandEngine::SceneManager::GetInstance().Update(deltaTime);
@@ -113,17 +118,17 @@ void GameManager::Update()
 	}
 }
 
-void GameManager::ToggleShowBody()
+void WandEngine::GameManager::ToggleShowBody()
 {
 	this->ShowBodys = !this->ShowBodys;
 }
 
-void GameManager::SetBackBufferColor(ALLEGRO_COLOR color)
+void WandEngine::GameManager::SetBackBufferColor(ALLEGRO_COLOR color)
 {
 	this->BackBufferColor = color;
 }
 
-void GameManager::SetFirstScene(GameScene *scene)
+void WandEngine::GameManager::SetFirstScene(GameScene *scene)
 {
 	if (WandEngine::SceneManager::GetInstance().Empty())
 	{
@@ -131,7 +136,7 @@ void GameManager::SetFirstScene(GameScene *scene)
 	}
 }
 
-void GameManager::SetWindows_Size(Size ScreenSize)
+void WandEngine::GameManager::SetWindows_Size(Size ScreenSize)
 {
 	if (!IsFullScreen())
 	{
@@ -146,28 +151,26 @@ void GameManager::SetWindows_Size(Size ScreenSize)
 	}
 }
 
-bool GameManager::IsFullScreen()
+bool WandEngine::GameManager::IsFullScreen()
 {
 	int flags = al_get_display_flags(Window);
 	return ((flags & ALLEGRO_FULLSCREEN) || (!flags & ALLEGRO_FULLSCREEN_WINDOW));
 }
 
-void GameManager::SetWindows_FullScreenMode()
+void WandEngine::GameManager::SetWindows_FullScreenMode()
 {
 	al_set_display_flag(Window, ALLEGRO_FULLSCREEN_WINDOW, true);
 	// al_toggle_display_flag(Window, ALLEGRO_FULLSCREEN_WINDOW, true);
 }
 
-void GameManager::SetWindows_WindowsMode()
+void WandEngine::GameManager::SetWindows_WindowsMode()
 {
 	// al_toggle_display_flag(Window, ALLEGRO_FULLSCREEN_WINDOW, false);
 	al_set_display_flag(Window, ALLEGRO_FULLSCREEN_WINDOW, false);
 }
 
-void GameManager::End()
+void WandEngine::GameManager::Clear()
 {
-	al_unregister_event_source(event_queue, al_get_mouse_event_source());
-	al_unregister_event_source(event_queue, al_get_keyboard_event_source());
 	al_unregister_event_source(event_queue, al_get_display_event_source(Window));
 	al_unregister_event_source(event_queue, al_get_timer_event_source(FPS));
 
@@ -188,14 +191,13 @@ void GameManager::End()
 	al_shutdown_font_addon();
 	al_shutdown_ttf_addon();
 	al_shutdown_primitives_addon();
-	al_uninstall_mouse();
-	al_uninstall_keyboard();
 	al_shutdown_image_addon();
 
+	std::cout << "Game clear" << std::endl;
 }
 
-GameManager::~GameManager()
+WandEngine::GameManager::~GameManager()
 {
-	End();
-	std::cout << "END PROGRAM SUCCESFULLY" << std::endl;
+	Clear();
+	std::cout << "Game destroyed" << std::endl;
 }

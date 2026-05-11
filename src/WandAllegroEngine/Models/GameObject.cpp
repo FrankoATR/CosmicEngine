@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-GameObject::GameObject(GameManager *Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId) : Game(Game), ObjectType(ObjectType), ObjectName(ObjectName), Sprite(Sprite), Size(Size), Position(Position), LastPosition(Position), LayerId(LayerId)
+GameObject::GameObject(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId) : ObjectType(ObjectType), ObjectName(ObjectName), Sprite(Sprite), Size(Size), Position(Position), LastPosition(Position), LayerId(LayerId)
 {
     this->AliveInGameManager = true;
 }

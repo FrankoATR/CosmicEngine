@@ -1,9 +1,10 @@
 #include "LinkObject.hpp"
 #include "../WandAllegroEngine/Managers/EventManager.hpp"
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
+#include "../WandAllegroEngine/Managers/InputManager.hpp"
 
-LinkObject::LinkObject(GameManager* Game, Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font) : 
-GameObject(Game, ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP)
+LinkObject::LinkObject(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font) : 
+GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP)
 {
     this->font = font;
     this->DestructorMode = true;
@@ -28,27 +29,29 @@ void LinkObject::Update(float deltaTime){
 
     GameObject::Update(deltaTime);
 
-    if (Game->keyState[ALLEGRO_KEY_A]) {
+    
+    if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_A, WandEngine::KeyRelease)) {
         MoveLeft(deltaTime);
-        EventManager::GetInstance().Notify(this, "MOVE UP");
     }
-    if (Game->keyState[ALLEGRO_KEY_D]) {
+    if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_D, WandEngine::KeyRelease)) {
         MoveRight(deltaTime);
     }
-    if (Game->keyState[ALLEGRO_KEY_W]) {
+    if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_W, WandEngine::KeyRelease)) {
         MoveUp(deltaTime);
     }
-    if (Game->keyState[ALLEGRO_KEY_S]) {
+    if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_S, WandEngine::KeyRelease)) {
         MoveDown(deltaTime);
-        EventManager::GetInstance().Notify(this, "MOVE DOWN");
     }
     
-    if (Game->keyState[ALLEGRO_KEY_Q]) {
-        SetSize(Vec2(32,32));
+    if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_Q, WandEngine::KeyDown)) {
+        SetSize(Vec2(64, 64));
+        EventManager::GetInstance().Notify(this, "Reset Size");
     }
-    if (Game->keyState[ALLEGRO_KEY_E]) {
+    if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_E, WandEngine::KeyDown)) {
         DestructorMode = !DestructorMode;
     }
+
+
 }
 
 void LinkObject::MoveUp(float deltaTime){
@@ -73,7 +76,7 @@ void LinkObject::MoveLeft(float deltaTime){
 
 void LinkObject::OnCollision(GameObject* other){
 
-    if(other->GetObjectName() == "Enemy"){
+    if(other->GetObjectName() == "Emerson"){
         other->Destroy();
         EventManager::GetInstance().Notify(this, (this->GetObjectName() + " destroyed " + other->GetObjectName() + " D:"));
     }
