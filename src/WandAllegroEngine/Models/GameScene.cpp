@@ -8,6 +8,7 @@
 #include "../Managers/SoundManager.hpp"
 #include "../Managers/CameraManager.hpp"
 #include "../Managers/InputManager.hpp"
+#include "../Managers/TimerManager.hpp"
 #include "../Managers/UIManager.hpp"
 
 #include <iostream>
@@ -62,6 +63,7 @@ namespace WandEngine
         EventManager::GetInstance().Clear();
         MusicManager::GetInstance().Clear();
         SoundManager::GetInstance().Clear();
+        TimerManager::GetInstance().Clear();
         UIManager::GetInstance().Clear();
         InputManager::GetInstance().ResetMouseSettings();
 

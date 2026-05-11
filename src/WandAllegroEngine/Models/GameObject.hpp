@@ -27,7 +27,8 @@ namespace WandEngine
         WAND_VEC2 LastPosition;
         WAND_VEC2 Size;
         short int LayerId;
-
+        float Rotation;
+        //Utilizar vectores para indicar la direccion de visualizacion WAND_VEC2
         bool Visible;
         bool InsideGridArea;
         bool AliveInGameManager;

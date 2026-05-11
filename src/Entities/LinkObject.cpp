@@ -2,6 +2,7 @@
 #include "../WandAllegroEngine/Managers/EventManager.hpp"
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
 #include "../WandAllegroEngine/Managers/InputManager.hpp"
+#include "../WandAllegroEngine/Managers/TimerManager.hpp"
 
 #include <math.h>
 
@@ -10,14 +11,14 @@ LinkObject::LinkObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, st
     this->font = font;
     this->DestructorMode = true;
     this->IsTPActive = false;
-    this->TimeToTP = 3;
-    this->last_time = 0;
     this->Velocity = 400;
 }
 
 void LinkObject::Init()
 {
     BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
+    //ChangeSpriteTimer = new GameTimer(0.5, true, false);
+    //TimerManager::GetInstance().Add(ChangeSpriteTimer);
 }
 
 void LinkObject::Draw()
@@ -91,22 +92,12 @@ void LinkObject::Update(float deltaTime)
         DestructorMode = !DestructorMode;
     }
 
-    double current_time = al_get_time();
-    if (current_time - last_time >= 1.0)
-    {
-        last_time = current_time;
 
-        if (IsTPActive)
-        {
-            TimeToTP--;
-            std::cout << "SEG" << std::endl;
-            if (TimeToTP <= 0)
-            {
-                IsTPActive = false;
-                TimeToTP = 3;
-            }
-        }
+    if(0)
+    {
+        IsTPActive = false;
     }
+
 }
 
 void LinkObject::MoveUp(float deltaTime)

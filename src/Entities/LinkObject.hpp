@@ -2,6 +2,7 @@
 #define LINKOBJECT_HPP
 
 #include "../WandAllegroEngine/Models/GameObject.hpp"
+//#include "../WandAllegroEngine/Models/GameTimer.hpp"
 
 using namespace WandEngine;
 
@@ -13,9 +14,8 @@ private:
     int HP;
     bool DestructorMode;
     bool IsTPActive;
-    int TimeToTP;
-    double last_time;
     float Velocity;
+    //GameTimer* ChangeSpriteTimer;
 
 public:
     LinkObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId, int HP, ALLEGRO_FONT *font);

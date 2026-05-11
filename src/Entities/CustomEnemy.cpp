@@ -1,19 +1,20 @@
 #include "CustomEnemy.hpp"
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
+#include "../WandAllegroEngine/Managers/TimerManager.hpp"
 #include <math.h>
 
 CustomEnemy::CustomEnemy(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font) : 
-GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP), TimeToChangeDirection(1), TimeUntilRecibeDamage(1), ActualDirection(Direction::RIGHT)
+GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP), CurrentDirection(Direction::RIGHT)
 {
     this->font = font;
-    this->last_time = 0;
     this->Velocity = 200;
-
 }
 
 
 void CustomEnemy::Init(){
     BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
+    MoveTimer = new GameTimer(0.5, true, false);
+    TimerManager::GetInstance().Add(MoveTimer);
 }
 
 
@@ -39,41 +40,34 @@ void CustomEnemy::Update(float deltaTime){
 
     */
 
-
-    double current_time = al_get_time();
-    if (current_time - last_time >= 0.5)
+    if(MoveTimer->IsTrigger())
     {
-        last_time = current_time;
-        TimeToChangeDirection--;
-
-        if (TimeToChangeDirection <= 0) {
-            ActualDirection = directions[rand()%8];
-            TimeToChangeDirection = 1;
-        }
+        CurrentDirection = directions[rand()%8];
     }
 
-    if(ActualDirection == Direction::UP){
+
+    if(CurrentDirection == Direction::UP){
         MoveUp(deltaTime);
     }
-    if(ActualDirection == Direction::DOWN){
+    if(CurrentDirection == Direction::DOWN){
         MoveDown(deltaTime);
     }
-    if(ActualDirection == Direction::LEFT){
+    if(CurrentDirection == Direction::LEFT){
         MoveLeft(deltaTime);
     }
-    if(ActualDirection == Direction::RIGHT){
+    if(CurrentDirection == Direction::RIGHT){
         MoveRight(deltaTime);
     }
-    if(ActualDirection == Direction::UP_LELFT){
+    if(CurrentDirection == Direction::UP_LELFT){
         MoveUpLeft(deltaTime);
     }
-    if(ActualDirection == Direction::DOWN_LEFT){
+    if(CurrentDirection == Direction::DOWN_LEFT){
         MoveDownLeft(deltaTime);
     }
-    if(ActualDirection == Direction::UP_RIGHT){
+    if(CurrentDirection == Direction::UP_RIGHT){
         MoveUpRight(deltaTime);
     }
-    if(ActualDirection == Direction::DOWM_RIGHT){
+    if(CurrentDirection == Direction::DOWM_RIGHT){
         MoveDownRight(deltaTime);
     }
 
@@ -133,14 +127,19 @@ void CustomEnemy::OnCollision(GameObject* other){
     else
     {
         SetToLastPosition();
-        ActualDirection = directions[rand()%8];
-        last_time = al_get_time();
+        CurrentDirection = directions[rand()%8];
+        MoveTimer->Reset();
     }
 
     if(other->GetObjectType() == Object::DynamicEntity){
 
     }
 
+}
+
+CustomEnemy::~CustomEnemy()
+{
+    this->MoveTimer->End();
 }
 
 

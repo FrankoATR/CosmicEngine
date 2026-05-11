@@ -1,6 +1,7 @@
 #include "GameManager.hpp"
 #include "SceneManager.hpp"
 #include "InputManager.hpp"
+#include "TimerManager.hpp"
 
 namespace WandEngine
 {
@@ -65,6 +66,7 @@ namespace WandEngine
 			lastTime = currentTime;
 
 			InputManager::GetInstance().Update();
+			TimerManager::GetInstance().Update(currentTime);
 
 			while (al_get_next_event(event_queue, &Event))
 			{

@@ -2,109 +2,100 @@
 
 ## Fecha efectiva
 
-**17 de noviembre de 2024**
+**19 de noviembre de 2024**
 
 ## Descripción general
 
-En esta etapa llevé el framework hacia un soporte más claro para herramientas de edición y manipulación interactiva del runtime. El cambio más visible es que la capa UI deja de tratar todos los elementos como equivalentes y pasa a distinguir tipos concretos, mientras el sistema de entrada separa la posición absoluta del cursor respecto a la posición transformada por cámara.
+En esta etapa incorporé una infraestructura real de temporización dentro del framework y la integré al ciclo principal de ejecución. A partir de este punto el motor ya no depende únicamente de comprobaciones manuales con `al_get_time()` dispersas en objetos concretos, sino que cuenta con timers administrados desde un manager dedicado y actualizados en el loop central del runtime.
 
-Sobre esa misma base también abrí operaciones nuevas sobre el conjunto administrado de objetos, incorporé clonación en el modelo base y reemplacé la persistencia anterior por una implementación apoyada en SQLite para guardar estado de objetos del motor.
+Sobre esa misma base también dejé la limpieza de timers integrada al cierre de escena y empecé a desplazar parte de la lógica temporal de entidades hacia esta nueva capa reutilizable.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- tipar los elementos de interfaz para refinar su comportamiento dentro del framework;
-- separar coordenadas de entrada de pantalla y de mundo para soportar edición con cámara;
-- ampliar el acceso, clonación y persistencia de objetos administrados por el runtime.
+- introducir una infraestructura de timers reutilizable dentro del framework;
+- integrar esa temporización al loop principal y al cierre de escena;
+- preparar la migración de lógicas temporales dispersas hacia un servicio común del motor.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Interfaces/` y `src/WandAllegroEngine/Models/`, donde `Definitions.hpp` incorpora `UIElementType` y `UIElement` pasa a conservar el tipo concreto de cada elemento de interfaz.
-- `src/WandAllegroEngine/Managers/`, donde `InputManager` y `ObjectManager` amplían su contrato para selección espacial, lectura de cursor absoluto y administración más directa del conjunto de objetos.
-- `src/Utilities/`, donde `DataManager` abandona el guardado simple anterior y pasa a una base SQLite para persistencia de `GameObject`.
+- `src/WandAllegroEngine/Models/`, donde aparece `GameTimer` como unidad base para temporización configurable dentro del runtime.
+- `src/WandAllegroEngine/Managers/`, donde `TimerManager` entra en uso efectivo y se integra con `GameManager` y `GameScene`.
+- `src/Entities/`, donde algunos comportamientos temporales comienzan a apoyarse en la nueva capa de timers en lugar de depender de contadores manuales locales.
 
 ## Arquitectura o sistemas principales
 
-### Tipado explícito de elementos UI
+### Unidad base de temporización
 
-`Definitions.hpp` incorpora `UIElementType` con categorías visibles para `Button`, `Label` e `Image`, y `UIElement` pasa a almacenar ese tipo como parte de su estado base. Desde esta etapa el constructor del elemento ya no solo recibe posición, tamaño y visibilidad, sino también la categoría concreta del nodo de interfaz.
+Agregué `GameTimer` como modelo base para representar timers dentro del framework. Su interfaz visible incorpora:
 
-Ese ajuste se refleja de inmediato en los elementos actuales del framework:
+- `Update(double CurrentTime)`;
+- `IsTrigger()`;
+- `SetWaitTime(double NewWaitTime)`;
+- `GetWaitTime()`;
+- `HaveLoop()`;
+- `Reset()`;
+- `Pause()`;
+- `Play()`;
+- `End()`;
+- `IsEnded()`.
 
-- `UIButton` se registra como `UIElementType::Button`;
-- `UIText` se registra como `UIElementType::Label`.
+Con esta clase el motor puede manejar esperas configurables, timers repetitivos o de una sola ejecución, pausa y finalización explícita sin reimplementar ese control en cada objeto que lo necesita.
 
-Con ello la capa UI deja de depender únicamente de comportamiento implícito por clase derivada y gana una clasificación común reutilizable por managers y herramientas.
+### TimerManager integrado al runtime
 
-### Interacción refinada dentro de UIManager
+`TimerManager` deja de ser solo un placeholder y entra como servicio efectivo para administrar instancias de `GameTimer`. Su contrato visible queda concentrado en:
 
-Sobre esa nueva clasificación, `UIManager::Update()` deja de considerar todos los elementos como candidatos de hover. A partir de esta etapa, los elementos marcados como `Label` ya no activan `MouseHoverAny`, con lo que el texto puede convivir dentro de la interfaz sin bloquear la interacción destinada a controles realmente interactivos.
+- `Add(GameTimer *NewTimer)`;
+- `Update(double CurrentTime)`;
+- `Clear()`.
 
-Además, `UIButton` agrega una representación visible del hover mediante un contorno dibujado sobre su área efectiva, reforzando la retroalimentación del framework para edición y navegación por interfaz.
+La actualización recorre todos los timers registrados, ejecuta su estado temporal y elimina de la colección aquellos que ya terminaron. Con ello el framework ya dispone de un punto central para coordinar temporización en lugar de dejarla acoplada a cada entidad.
 
-### Entrada separada entre pantalla y mundo
+### Integración al loop principal
 
-`InputManager` amplía su contrato con `GetAbsoluteMousePosition() const`, que devuelve la posición del cursor en coordenadas de pantalla sin aplicar el desplazamiento de cámara.
+La integración visible ocurre en dos puntos del framework:
 
-Este cambio convive con `GetMousePosition() const`, que sigue devolviendo la posición transformada al espacio del mundo. Con ambas variantes disponibles, el framework ya puede sostener simultáneamente herramientas de interfaz fija y selección espacial dentro de escenas desplazables.
+- `GameManager::Update()` ahora invoca `TimerManager::GetInstance().Update(currentTime)` dentro del loop central;
+- `GameScene::Clear()` ahora incorpora `TimerManager::GetInstance().Clear()` dentro del cierre de escena.
 
-### Consultas y clonación sobre objetos administrados
+Esto vuelve a los timers parte formal del ciclo de vida del runtime: se actualizan en cada frame desde el manager principal y se limpian cuando la escena termina.
 
-`ObjectManager` deja de ofrecer solo búsquedas por identidad o nombre y agrega consultas directamente útiles para herramientas:
+### Primer uso real desde entidades
 
-- `FindByPosition(WAND_VEC2 Position)`;
-- `FindByMousePosition()`;
-- `FindByLayer(int LayerId)`;
-- `GetAll()`.
+La nueva infraestructura ya empieza a reemplazar lógica temporal manual en objetos del juego. El caso visible más claro es `CustomEnemy`, que ahora registra un `GameTimer` para decidir cuándo cambiar de dirección en lugar de depender de comparaciones locales con `al_get_time()` y contadores manuales.
 
-En paralelo, `GameObject` incorpora un constructor basado en otro objeto y expone `Clone() const`, creando una ruta visible para duplicar entidades administradas a partir de su estado actual.
+Aunque ese uso concreto pertenece a una entidad, demuestra que la capa de timers ya es funcional y consumible desde objetos administrados por el framework.
 
-Con ello el runtime gana soporte directo para selección, duplicación e inspección de objetos sin tener que rearmar manualmente esas operaciones en cada escena o utilidad.
+### Preparación de estado temporal en modelos base
 
-### Persistencia apoyada en SQLite
-
-`DataManager` abandona el esquema anterior de guardado simple y pasa a trabajar con `sqlite3`. La nueva implementación visible:
-
-- abre `./saves/game_data.db` al inicializarse;
-- crea una tabla `GameObjects` si todavía no existe;
-- expone `ClearGameObjects()` para vaciar la tabla;
-- guarda objetos mediante `SaveData(const GameObject &obj)`;
-- reconstruye un conjunto de objetos mediante `LoadData()`.
-
-Con esto la persistencia deja de estar limitada a un par de valores sueltos y pasa a modelarse alrededor de registros de objetos del motor.
-
-### Separación de responsabilidades espaciales
-
-`GameGridCollisions` deja de ocuparse de marcar visibilidad según cámara y ese criterio pasa a concentrarse en `ObjectManager::Update()` mediante `CameraManager::IsObjectInsideCameraArea(actor)`.
-
-El efecto estructural es que la grilla vuelve a centrarse en validación y colisión, mientras el manager de objetos asume la responsabilidad de decidir visibilidad efectiva en el runtime.
+Dentro de `GameObject` aparece además un nuevo campo `Rotation`, que deja preparada la base del modelo para futuras extensiones donde la orientación visual o lógica del objeto necesite persistirse junto con el resto de su estado espacial.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- la capa UI puede distinguir controles interactivos frente a elementos puramente informativos sin mezclar ambas responsabilidades en el mismo flujo de hover;
-- las herramientas del runtime ya disponen de selección por posición, clonación de objetos y persistencia estructurada sobre una base de datos local.
+- el loop principal del motor ya puede coordinar temporización reutilizable sin delegar toda la lógica temporal a cada entidad por separado;
+- el cierre de escena ya contempla también la limpieza de timers activos como parte del ciclo normal de recursos del framework.
 
-Con ello dejé una base más útil para editores, inspección de escena y utilidades de manipulación en tiempo de ejecución, con una separación más clara entre interfaz, entrada, selección y persistencia.
+Con ello dejé una base más útil para comportamientos programados por tiempo, IA simple, animaciones futuras y eventos diferidos dentro del runtime, con una infraestructura temporal ya integrada al motor.
 
 ## Dependencias externas visibles
 
-Se incorpora una dependencia externa visible nueva en esta etapa: `sqlite3`, utilizada desde `DataManager` para persistencia local de objetos del framework.
+No incorporé dependencias externas visibles nuevas en esta etapa.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **17 de noviembre de 2024** queda delimitada por estos movimientos:
+La etapa efectiva al **19 de noviembre de 2024** queda delimitada por estos movimientos:
 
-- incorporé `UIElementType` como clasificación común para los elementos de interfaz del framework;
-- adapté `UIElement`, `UIButton` y `UIText` a esa clasificación y evité que las etiquetas activen estado de hover interactivo;
-- añadí `GetAbsoluteMousePosition()` a `InputManager` para separar coordenadas de pantalla y coordenadas de mundo;
-- amplié `ObjectManager` con búsquedas por posición, por mouse, por capa y lectura completa del conjunto administrado;
-- incorporé clonación visible en `GameObject` mediante constructor derivado y `Clone() const`;
-- migré `DataManager` a una base SQLite local para persistencia de objetos;
-- trasladé la decisión de visibilidad por cámara desde `GameGridCollisions` hacia `ObjectManager`.
+- incorporé `GameTimer` como unidad base de temporización configurable para el framework;
+- activé `TimerManager` como servicio efectivo para registrar, actualizar y limpiar timers del runtime;
+- integré la actualización de timers al loop principal de `GameManager`;
+- amplié el cierre de `GameScene` para vaciar también el manager de timers;
+- empecé a sustituir control temporal manual en entidades por timers administrados desde el framework;
+- añadí `Rotation` a `GameObject` como preparación de estado adicional para futuras extensiones del modelo.
 
-Con esta etapa dejé el framework más preparado para edición interactiva, selección de objetos y persistencia estructurada dentro del runtime.
+Con esta etapa dejé el framework más preparado para manejar lógica basada en tiempo desde una infraestructura común y reutilizable dentro del motor.
