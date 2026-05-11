@@ -15,7 +15,7 @@ LinkObject::LinkObject(Object ObjectType, Vec2 Position, Vec2 Size, std::string 
 
 void LinkObject::Init()
 {
-    WandEngine::BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
+    BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
 }
 
 void LinkObject::Draw()
@@ -30,28 +30,28 @@ void LinkObject::Update(float deltaTime)
 
     GameObject::Update(deltaTime);
 
-    if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_A, WandEngine::KeyRelease))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_A, KeyRelease))
     {
         MoveLeft(deltaTime);
     }
-    if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_D, WandEngine::KeyRelease))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_D, KeyRelease))
     {
         MoveRight(deltaTime);
     }
-    if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_W, WandEngine::KeyRelease))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_W, KeyRelease))
     {
         MoveUp(deltaTime);
     }
-    if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_S, WandEngine::KeyRelease))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_S, KeyRelease))
     {
         MoveDown(deltaTime);
     }
 
-    if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_Q, WandEngine::KeyDown))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_Q, KeyDown))
     {
         SetSize(Vec2(64, 64));
     }
-    if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_E, WandEngine::KeyDown))
+    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_E, KeyDown))
     {
         DestructorMode = !DestructorMode;
     }
@@ -103,11 +103,11 @@ void LinkObject::OnCollision(GameObject *other)
         if (other->GetObjectName() == "Emerson")
         {
 
-            // WandEngine::EventManager::GetInstance().TriggerEvent("OnEnemyDestroy");
+            // EventManager::GetInstance().TriggerEvent("OnEnemyDestroy");
 
             if (!IsTPActive)
             {
-                WandEngine::EventManager::GetInstance().TriggerEvent<GameObject *, GameObject *>("ChangePosition", this, other);
+                EventManager::GetInstance().TriggerEvent<GameObject *, GameObject *>("ChangePosition", this, other);
             }
         }
     }
@@ -115,7 +115,7 @@ void LinkObject::OnCollision(GameObject *other)
         if (other->GetObjectName() == "Player")
         {
             other->Destroy();
-            WandEngine::EventManager::GetInstance().TriggerEvent("OnEnemyDestroy");
+            EventManager::GetInstance().TriggerEvent("OnEnemyDestroy");
         }
     }
 
@@ -123,10 +123,10 @@ void LinkObject::OnCollision(GameObject *other)
     if (other->GetObjectName() == "Tile")
     {
         DestructorMode ? other->Destroy() : SetToLastPosition();
-        WandEngine::EventManager::GetInstance().TriggerEvent("OnTileDestroy");
+        EventManager::GetInstance().TriggerEvent("OnTileDestroy");
     }
 
-    if (other->GetObjectType() == DynamicEntity)
+    if (other->GetObjectType() == Object::DynamicEntity)
     {
     }
 }

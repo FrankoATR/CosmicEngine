@@ -3,6 +3,8 @@
 
 #include "../WandAllegroEngine/Models/GameObject.hpp"
 
+using namespace WandEngine;
+
 class CustomEnemy : public GameObject
 {
 private:

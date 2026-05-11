@@ -2,16 +2,21 @@
 #define BODYMANAGER_HPP
 
 #include <algorithm>
-#include "../Collisions/GameGridCollisions.hpp"
+#include <vector>
+#include "../Interfaces/Definitions.hpp"
 
 namespace WandEngine
 {
+
+    class GameBodyObject;
+    class GameObject;
+    class GameGridCollisions;
 
     class BodyManager
     {
     private:
         std::vector<GameBodyObject *> bodys;
-        std::vector<GameGridCollisions> gameGridCollisions;
+        GameGridCollisions *GridArea;
 
         BodyManager();
         ~BodyManager();
@@ -24,6 +29,9 @@ namespace WandEngine
             static BodyManager instance;
             return instance;
         }
+
+        Vec2 GetGridPosition();
+        void SetGridPosition(Vec2 NewPosition);
 
         void Update();
         void Draw();

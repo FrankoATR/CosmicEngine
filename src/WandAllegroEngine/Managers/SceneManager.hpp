@@ -6,16 +6,17 @@
 #include <iostream>
 #include "../Interfaces/Definitions.hpp"
 
-class GameScene;
 
 namespace WandEngine
 {
+
+    class GameScene;
 
     class SceneManager
     {
     private:
         std::vector<GameScene *> sceneStack;
-        bool isRunning = true;
+        bool isRunning;
         WAND_COLOR BackBufferColor;
 
         void StartSceneLoading(GameScene *scene);

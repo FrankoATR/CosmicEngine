@@ -4,6 +4,8 @@
 #include "../WandAllegroEngine/Models/GameScene.hpp"
 #include "../Utilities/Paths.hpp"
 
+using namespace WandEngine;
+
 class GameInScene : public GameScene
 {
 private:

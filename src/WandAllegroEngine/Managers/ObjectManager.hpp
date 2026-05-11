@@ -6,10 +6,9 @@
 #include <vector>
 #include <string>
 
-class GameObject;
-
 namespace WandEngine
 {
+    class GameObject;
 
     class ObjectManager
     {
@@ -33,8 +32,8 @@ namespace WandEngine
         void Draw();
         void Add(GameObject *actor);
         void Remove(int EntityId);
-        GameObject* FindById(int EntityId);
-        GameObject* FindByUniqueName(std::string UniqueName);
+        GameObject *FindById(int EntityId);
+        GameObject *FindByUniqueName(std::string UniqueName);
         std::vector<GameObject *> FindByLayer();
         void SortByLayer();
         void Clear();

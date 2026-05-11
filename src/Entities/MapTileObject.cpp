@@ -11,7 +11,7 @@ GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId)
 
 
 void MapTileObject::Init(){
-    WandEngine::BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
+    BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
 }
 
 

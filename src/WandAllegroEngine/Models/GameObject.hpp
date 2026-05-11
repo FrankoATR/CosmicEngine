@@ -13,62 +13,58 @@
 
 #include "GameBodyObject.hpp"
 
-enum Object {
-    DynamicEntity,
-    StaticEntity
-};
-
-class GameObject
+namespace WandEngine
 {
-private:
 
-    std::string ObjectName;
-    Object ObjectType;
-    int ObjectId;
-    ALLEGRO_BITMAP* Sprite;
-    Vec2 Position;
-    Vec2 LastPosition;
-    Vec2 Size;
-    short int LayerId;
+    class GameObject
+    {
+    private:
+        std::string ObjectName;
+        Object ObjectType;
+        int ObjectId;
+        ALLEGRO_BITMAP *Sprite;
+        Vec2 Position;
+        Vec2 LastPosition;
+        Vec2 Size;
+        short int LayerId;
 
-    bool AliveInGameManager;
+        bool AliveInGameManager;
 
-public:
-    GameObject() = delete;
-    GameObject(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId);
-    virtual void Draw();
-    virtual void Init();
-    virtual void Update(float deltaTime);
-    virtual void OnCollision(GameObject* other);
+    public:
+        GameObject() = delete;
+        GameObject(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId);
+        virtual void Draw();
+        virtual void Init();
+        virtual void Update(float deltaTime);
+        virtual void OnCollision(GameObject *other);
 
-    void SetPosition(Vec2 NewPosition);
-    Vec2 GetPosition();
+        void SetPosition(Vec2 NewPosition);
+        Vec2 GetPosition();
 
-    void SetSize(Vec2 NewSize);
-    Vec2 GetSize();
+        void SetSize(Vec2 NewSize);
+        Vec2 GetSize();
 
-    std::string GetObjectName();
-    void SetObjectName(std::string NewName);
+        std::string GetObjectName();
+        void SetObjectName(std::string NewName);
 
-    Object GetObjectType();
+        Object GetObjectType();
 
-    void SetObjectId(int NewObjectId);
-    int GetObjectId();
+        void SetObjectId(int NewObjectId);
+        int GetObjectId();
 
+        void SetLayerId(short int NewLayerId);
+        short int GetLayerId();
 
-    void SetLayerId(short int NewLayerId);
-    short int GetLayerId();
-    
-    void SetSprite(ALLEGRO_BITMAP* NewSprite);
-    ALLEGRO_BITMAP* GetSprite();
+        void SetSprite(ALLEGRO_BITMAP *NewSprite);
+        ALLEGRO_BITMAP *GetSprite();
 
-    void SetToLastPosition();
-    void Destroy();
-    bool GetAliveInGameManager();
-    
-    virtual ~GameObject();
-};
+        void SetToLastPosition();
+        void Destroy();
+        bool GetAliveInGameManager();
 
+        virtual ~GameObject();
+    };
 
+}
 
 #endif // GAMEOBJECT_HPP

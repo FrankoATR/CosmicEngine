@@ -2,80 +2,84 @@
 
 ## Fecha efectiva
 
-**5 de noviembre de 2024**
+**7 de noviembre de 2024**
 
 ## Descripción general
 
-En esta etapa consolidé dos piezas nuevas del framework: un sistema de eventos tipado que ya no se limita a callbacks sin argumentos y un manager dedicado para reproducción musical persistente. Con eso el motor pasa a poder coordinar reacciones entre subsistemas usando parámetros tipados y también separar el audio musical del arranque general del juego.
+En esta etapa reorganicé varios tipos fundamentales del framework y los concentré en una base común para que managers, colisiones y modelos dejaran de redefinir estructuras equivalentes en distintos puntos del motor. A partir de ese ajuste, la infraestructura principal pasó a compartir una misma definición de vectores, tamaños, colores, tipos de cuerpo y tipos de objeto.
 
-Sobre esa base también ajusté varios puntos de infraestructura menor para que esos servicios nuevos se integren mejor en el ciclo de vida del runtime.
+Sobre esa base también dejé operativa una cámara real dentro del ciclo de dibujo y reestructuré el manejo del grid de colisiones para que el cuerpo central del framework pueda desplazarlo y sincronizarlo con la transformación de cámara.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- convertir el sistema de eventos en un mecanismo genérico con parámetros tipados;
-- incorporar un servicio específico para carga y reproducción de música;
-- redistribuir responsabilidades de audio y estado interno para que el framework no dependa de un único punto de inicialización monolítico.
+- unificar las definiciones base que se repiten entre managers, modelos y colisiones;
+- integrar una cámara funcional al render del framework;
+- encapsular el grid de colisiones de forma que pueda seguir el espacio de trabajo activo del runtime.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Interfaces/`, donde `GameEvent.hpp` desaparece y se incorporan `IEvent.hpp` y `Event.hpp` como base del nuevo sistema de eventos genéricos.
-- `src/WandAllegroEngine/Managers/`, donde `EventManager` pasa a almacenar eventos tipados, `MusicManager` entra en uso efectivo y `GameManager` deja de inicializar directamente la capa de audio musical.
-- `src/WandAllegroEngine/Models/`, donde `GameObject` agrega mutación explícita del nombre y `GameScene` incorpora limpieza del manager de música dentro del cierre de escena.
+- `src/WandAllegroEngine/Interfaces/`, donde `Definitions.hpp` pasa a reunir tipos base utilizados por entrada, escena, cuerpos, cámara y objetos.
+- `src/WandAllegroEngine/Managers/`, donde `CameraManager` entra en operación efectiva, `BodyManager` deja de administrar varias grillas y pasa a encapsular una sola área activa, y `SceneManager` integra el dibujo de cámara dentro del frame.
+- `src/WandAllegroEngine/Models/` y `src/WandAllegroEngine/Collisions/`, donde `GameObject`, `GameBodyObject` y `GameGridCollisions` se alinean con las definiciones compartidas del framework.
 
 ## Arquitectura o sistemas principales
 
-### Sistema de eventos tipado
+### Tipos base unificados
 
-En `EventManager` reemplacé el registro anterior por un contenedor de eventos polimórficos apoyado en dos nuevas bases:
+En `Definitions.hpp` concentré estructuras y enumeraciones que antes aparecían dispersas o duplicadas en distintas capas del motor. A partir de esta etapa, el framework comparte desde un único punto:
 
-- `IEvent`, como interfaz mínima para almacenamiento heterogéneo;
-- `Event<Args...>`, como plantilla que conserva y ejecuta listeners con firma tipada.
+- `Vec2`;
+- `Size`;
+- `WAND_COLOR`;
+- `GameBodyObjectType`;
+- `Object`;
+- `KeyEventType`.
 
-Con esa base, `EventManager` pasa a registrar y disparar eventos mediante plantillas:
+Con este ajuste dejé una base común para entrada, escena, colisiones, cuerpos, cámara y objetos, reduciendo duplicación y evitando que cada subsistema tenga su propia variante de tipos equivalentes.
 
-- `RegisterEvent(const std::string &eventName, std::function<void(Args...)> callback)`;
-- `TriggerEvent(const std::string &eventName, Args... args)`;
-- `RemoveEvent(const std::string &eventName)`.
+### Cámara operativa dentro del runtime
 
-El efecto concreto es que el framework ya puede transportar argumentos tipados dentro del sistema de eventos y validar en tiempo de ejecución si la firma registrada coincide con la firma usada al disparar el evento.
+`CameraManager` deja de ser un contenedor vacío y pasa a operar como subsistema real del framework. Su implementación visible incorpora:
 
-### Retiro del contrato anterior de eventos
+- una transformación activa de cámara basada en `ALLEGRO_TRANSFORM`;
+- control de posición y tamaño del área visible;
+- `FocusObject(GameObject *Obj)` y `FocusPosition(Vec2 NewPosition)` para centrar la vista;
+- `Reset()` para reconstruir el estado inicial de cámara a partir del tamaño de ventana;
+- `Draw()` para representar referencias visuales de la cámara en pantalla.
 
-Como consecuencia del cambio anterior, `GameEvent.hpp` sale del árbol activo y deja de ser la base del sistema. El modelo anterior, apoyado en objetos con contrato fijo de notificación, queda sustituido por eventos genéricos especializados por plantilla.
+Además, `SceneManager::Draw()` ya integra el dibujo de cámara después del render de objetos, con lo que la cámara entra formalmente en el pipeline visual del framework.
 
-Con ello el framework deja de forzar una sola firma de callback para todos los casos y gana un mecanismo más flexible para coordinar subsistemas con necesidades distintas.
+### Grid de colisiones encapsulado
 
-### Servicio de música
+En `BodyManager` sustituí el almacenamiento de múltiples grids por una única referencia central `GridArea`. Sobre esa base, el manager ahora expone:
 
-`MusicManager` entra en uso efectivo como servicio singleton para música continua del runtime. Su interfaz visible queda formada por:
+- `GetGridPosition()`;
+- `SetGridPosition(Vec2 NewPosition)`.
 
-- `LoadMusic(const std::string &name, const std::string &filename)`;
-- `PlayMusic(const std::string &name, float volume = 1.0f, bool loop = true)`;
-- `PauseMusic()`;
-- `ResumeMusic()`;
-- `StopMusic()`;
-- `Clear()`.
+Con esto el grid de colisiones deja de estar repartido entre varias instancias internas y pasa a poder desplazarse como un área única asociada al estado espacial activo del motor.
 
-La implementación inicializa voz, mixer, reserva de muestras y flujos de audio, y destruye esos recursos al cerrar el manager. Con esto separé la reproducción musical del arranque general de `GameManager` y dejé un punto específico para administrar pistas persistentes.
+### Alineación de modelos y colisiones
 
-### Ajustes de integración base
+`GameBodyObject`, `GameObject` y `GameGridCollisions` se adaptan a la misma base tipada del framework. En especial:
 
-Para acompañar el cambio de eventos y música, `GameScene::Clear()` también limpia `MusicManager`, `GameObject` incorpora `SetObjectName(std::string NewName)` y `GameManager` deja de instalar directamente audio y codecs en su secuencia de inicialización.
+- `GameBodyObject` deja de definir `Vec2` y `GameBodyObjectType` localmente;
+- `GameGridCollisions` incorpora acceso explícito a posición mediante `GetPosition()` y `SetPosition()`;
+- `GameObject` y `GameBodyObject` quedan encapsulados en `namespace WandEngine`, alineando su interfaz con el resto de managers y modelos.
 
-Estos cambios no introducen subsistemas nuevos por sí mismos, pero sí completan la integración del sistema tipado de eventos y del nuevo manager de música dentro del ciclo de vida del framework.
+Con ello dejé mejor acopladas las capas de colisión, cámara y objetos alrededor de una misma representación espacial.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- el sistema de eventos ya puede coordinar interacciones que requieren argumentos sin limitarse a notificaciones vacías;
-- la reproducción musical queda administrada desde un servicio específico que puede cargarse, iniciarse, pausarse o limpiarse sin mezclar esa lógica con el manager principal del juego.
+- los managers que trabajan con espacio y render ya comparten las mismas estructuras base para posición, tamaño y color;
+- la cámara puede desplazar el área activa de trabajo y reflejar ese cambio en el grid de colisiones y en el dibujo del frame.
 
-Con ello dejé una base más útil para extender la comunicación entre objetos y escenas, y también para sostener audio persistente como parte del runtime sin acoplarlo al flujo central de inicialización.
+Con ello dejé una base más coherente para extender navegación, seguimiento de objetos y manipulación espacial del runtime sin depender de tipos redefinidos en cada subsistema.
 
 ## Dependencias externas visibles
 
@@ -83,14 +87,12 @@ No incorporé dependencias externas visibles nuevas en esta etapa.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **5 de noviembre de 2024** queda delimitada por estos movimientos:
+La etapa efectiva al **7 de noviembre de 2024** queda delimitada por estos movimientos:
 
-- sustituí la base anterior de eventos por una arquitectura tipada apoyada en `IEvent` y `Event<Args...>`;
-- convertí `EventManager` en un registro de eventos genéricos capaces de recibir parámetros al dispararse;
-- retiré `GameEvent.hpp` del flujo activo del framework;
-- integré `MusicManager` como servicio efectivo para carga, reproducción, pausa, reanudación y limpieza de pistas musicales;
-- amplié `GameScene::Clear()` para que el ciclo de cierre de escena también vacíe el manager de música;
-- añadí `SetObjectName()` a `GameObject` como ajuste de mutabilidad básica para objetos administrados por el motor;
-- retiré de `GameManager` la inicialización directa de audio musical para redistribuir esa responsabilidad.
+- centralicé en `Definitions.hpp` los tipos base de posición, tamaño, color, entrada y clasificación de objetos y cuerpos;
+- activé `CameraManager` como subsistema real del framework con transformación, enfoque y representación visual propia;
+- integré el dibujo de cámara al flujo de `SceneManager`;
+- encapsulé el grid de colisiones en una única área activa dentro de `BodyManager` y habilité su consulta y desplazamiento;
+- adapté `GameBodyObject`, `GameObject` y `GameGridCollisions` al nuevo núcleo compartido de tipos del framework.
 
-Con esta etapa dejé el framework más flexible para comunicación tipada entre subsistemas y mejor preparado para manejar música persistente como parte de la infraestructura general del runtime.
+Con esta etapa dejé el framework más consistente en sus definiciones básicas y mejor preparado para manejar espacio, cámara y colisiones desde una misma base estructural.

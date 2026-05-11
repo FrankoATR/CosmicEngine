@@ -27,7 +27,7 @@ namespace WandEngine
 		al_set_new_display_option(ALLEGRO_OPENGL_MAJOR_VERSION, 3, ALLEGRO_SUGGEST);
 		al_set_new_display_option(ALLEGRO_OPENGL_MINOR_VERSION, 0, ALLEGRO_SUGGEST);
 
-		Window = al_create_display(ScreenSize.Width, ScreenSize.Height);
+		Window = al_create_display(ScreenSize.width, ScreenSize.height);
 
 		al_set_display_flag(Window, ALLEGRO_FULLSCREEN_WINDOW, true);
 
@@ -92,13 +92,10 @@ namespace WandEngine
 			if (redraw && al_is_event_queue_empty(event_queue))
 			{
 				redraw = false;
-
 				SceneManager::GetInstance().Draw();
-
 			}
 		}
 	}
-
 
 	void GameManager::SetFirstScene(GameScene *scene)
 	{
@@ -112,12 +109,12 @@ namespace WandEngine
 	{
 		if (!IsFullScreen())
 		{
-			if (al_resize_display(Window, ScreenSize.Width, ScreenSize.Height))
+			if (al_resize_display(Window, ScreenSize.width, ScreenSize.height))
 			{
 				this->ScreenSize = ScreenSize;
 				ALLEGRO_TRANSFORM transform;
 				al_identity_transform(&transform);
-				al_scale_transform(&transform, ScreenSize.Width / 1920.0, ScreenSize.Height / 1080.0);
+				al_scale_transform(&transform, ScreenSize.width / 1920.0, ScreenSize.height / 1080.0);
 				al_use_transform(&transform);
 			}
 		}

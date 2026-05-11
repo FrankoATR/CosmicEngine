@@ -3,16 +3,10 @@
 
 #include <allegro5/allegro5.h>
 #include <map>
+#include "../Interfaces/Definitions.hpp"
 
 namespace WandEngine
 {
-
-    enum KeyEventType
-    {
-        KeyDown,
-        KeyUp,
-        KeyRelease
-    };
 
     class InputManager
     {

@@ -3,6 +3,8 @@
 
 #include "../WandAllegroEngine/Models/GameScene.hpp"
 
+using namespace WandEngine;
+
 class MainScene : public GameScene
 {
 private:

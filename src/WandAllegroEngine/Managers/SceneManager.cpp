@@ -1,6 +1,8 @@
 #include "SceneManager.hpp"
 #include "ObjectManager.hpp"
 #include "BodyManager.hpp"
+#include "CameraManager.hpp"
+
 #include "../Models/GameScene.hpp"
 
 namespace WandEngine
@@ -9,6 +11,7 @@ namespace WandEngine
     SceneManager::SceneManager()
     {
         this->BackBufferColor = WAND_COLOR(1.0f, 2.0f, 3.0f, 0.0f);
+        this->isRunning = true;
     }
 
     void SceneManager::StartSceneLoading(GameScene *scene)
@@ -94,8 +97,9 @@ namespace WandEngine
 
             if (currentScene->IsProgressLoadingSceneComplete())
             {
-                WandEngine::ObjectManager::GetInstance().Draw();
-                // WandEngine::BodyManager::GetInstance().Draw();
+                ObjectManager::GetInstance().Draw();
+                //BodyManager::GetInstance().Draw();
+                CameraManager::GetInstance().Draw();
             }
             else
             {

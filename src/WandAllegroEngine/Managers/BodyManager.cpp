@@ -1,21 +1,22 @@
 #include "BodyManager.hpp"
 #include "../Models/GameObject.hpp"
+#include "../Collisions/GameGridCollisions.hpp"
 
 namespace WandEngine
 {
 
     BodyManager::BodyManager()
     {
+        this->GridArea = new GameGridCollisions(Vec2(0, 0), 10, 18, 100);
+    }
 
-        std::vector<GameGridCollisions> gameGrids;
-
-        for (auto &grid : gameGrids)
-        {
-            // gameGridCollisions.push_back(GameGridCollisions(Vec2(0, 0), 9, 9, 100));
-        }
-
-        gameGridCollisions.push_back(GameGridCollisions(Vec2(0, 0), 10, 18, 100));
-        // gameGridCollisions.push_back(GameGridCollisions(Vec2(500, 700), 5, 2, 100));
+    Vec2 BodyManager::GetGridPosition()
+    {
+        this->GridArea->GetPosition();
+    }
+    void BodyManager::SetGridPosition(Vec2 NewPosition)
+    {
+        this->GridArea->SetPosition(NewPosition);
     }
 
     void BodyManager::Update()
@@ -27,10 +28,7 @@ namespace WandEngine
             if (body->GetParent()->GetAliveInGameManager())
             {
                 body->SetPosition(body->GetParent()->GetPosition());
-                for (auto &grid : gameGridCollisions)
-                {
-                    grid.AddObject(body);
-                }
+                GridArea->AddObject(body);
             }
             else
             {
@@ -61,13 +59,8 @@ namespace WandEngine
         }
         */
 
-        for (auto &grid : gameGridCollisions)
-        {
-            grid.Find_collision_grid();
-            grid.ClearGrid();
-        }
-
-        // gameGridCollisions->UpdatePositions();
+        GridArea->Find_collision_grid();
+        GridArea->ClearGrid();
     }
 
     bool BodyManager::RectToRectCollisionBody(GameBodyObject *body1, GameBodyObject *body2)
@@ -80,10 +73,9 @@ namespace WandEngine
 
     void BodyManager::Draw()
     {
-        for (auto &grid : gameGridCollisions)
-        {
-            grid.DrawCells();
-        }
+
+        GridArea->DrawCells();
+
         for (auto body : bodys)
         {
             body->DrawBody();
@@ -113,11 +105,8 @@ namespace WandEngine
 
     void BodyManager::Clear()
     {
-        for (auto &grid : gameGridCollisions)
-        {
-            grid.ClearGrid();
-        }
-        // gameGridCollisions.clear(); Pensar si hacer un Manager para grid y otro para colisiones
+
+        GridArea->ClearGrid();
 
         while (!bodys.empty())
         {

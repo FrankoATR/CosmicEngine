@@ -12,19 +12,13 @@
 #include <iostream>
 #include <windows.h>
 #include <map>
-
-struct Size
-{
-    int Width;
-    int Height;
-    Size() : Width(0), Height(0) {}
-    Size(int Width, int Height) : Width(Width), Height(Height) {}
-};
-
-class GameScene;
+#include "../Interfaces/Definitions.hpp"
 
 namespace WandEngine
 {
+
+    class GameScene;
+
     class GameManager
     {
 
@@ -44,7 +38,6 @@ namespace WandEngine
         GameManager &operator=(const GameManager &) = delete;
 
     public:
-
         ALLEGRO_EVENT_QUEUE *event_queue;
         ALLEGRO_EVENT Event;
 

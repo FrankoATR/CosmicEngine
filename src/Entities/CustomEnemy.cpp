@@ -10,7 +10,7 @@ GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP), Tim
 
 
 void CustomEnemy::Init(){
-    WandEngine::BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
+    BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
 }
 
 
@@ -92,7 +92,7 @@ void CustomEnemy::OnCollision(GameObject* other){
         other->SetSprite(this->GetSprite());
     }
 
-    if(other->GetObjectType() == DynamicEntity){
+    if(other->GetObjectType() == Object::DynamicEntity){
 
     }
 
