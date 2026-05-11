@@ -9,7 +9,7 @@ namespace WandEngine
     {
         private:
             double WaitTime, LastTimeTrigger;
-            bool Loop, Paused, Triggered, Ended;
+            bool Init, Loop, Paused, Triggered, Ended;
 
         public:
             GameTimer(double WaitTime, bool Loop, bool Paused);

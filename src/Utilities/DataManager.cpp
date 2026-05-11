@@ -1,5 +1,6 @@
 #include "DataManager.hpp"
 #include "../WandAllegroEngine/Models/GameObject.hpp"
+#include "../Entities/LinkObject.hpp"
 #include <iostream>
 
 namespace WandEngine
@@ -129,7 +130,6 @@ namespace WandEngine
             bool aliveInGameManager = sqlite3_column_int(stmt, 7) != 0;
 
             // Construir el objeto
-            #include "../Entities/LinkObject.hpp"
             GameObject obj(Object::DynamicEntity, {posX, posY}, {sizeX, sizeY}, name, nullptr, layerId);
             objects.push_back(obj);
         }

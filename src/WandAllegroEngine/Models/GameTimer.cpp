@@ -3,13 +3,19 @@
 namespace WandEngine
 {
     GameTimer::GameTimer(double WaitTime, bool Loop, bool Paused) :
-        WaitTime(WaitTime), Loop(Loop), Paused(Paused), Ended(false)
+        WaitTime(WaitTime), Loop(Loop), Paused(Paused), Ended(false), Init(true)
     {
         
     }
 
     void GameTimer::Update(double CurrentTime)
     {
+        if(Init)
+        {
+            LastTimeTrigger = CurrentTime;
+            Init = false;
+        }
+
         if ( !Paused && CurrentTime - LastTimeTrigger >= WaitTime)
         {
             LastTimeTrigger = CurrentTime;

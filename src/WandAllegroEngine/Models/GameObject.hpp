@@ -18,7 +18,7 @@ namespace WandEngine
 
     class GameObject
     {
-    private:
+    protected:
         std::string ObjectName;
         Object ObjectType;
         int ObjectId;

@@ -273,7 +273,7 @@ void MainScene::Update(double deltaTime)
 
     if (!UIManager::GetInstance().IsMouseHoverAny()) //Si el mouse no esta sobre algun elemento UI, deja hacer la accion
     {
-        if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyDown))
+        if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_G, KeyDown))
         {
             GameObject *enemy = new CustomEnemy(Object::DynamicEntity, InputManager::GetInstance().GetMousePosition(), WAND_VEC2(32, 32), "Emerson", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Dungueon Entities", rand()%2, rand()%7), 3, 20, ResourceManager::GetInstance().getFont("Font"));
             ObjectManager::GetInstance().Add(enemy);

@@ -3,10 +3,13 @@
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
 #include "../WandAllegroEngine/Managers/InputManager.hpp"
 #include "../WandAllegroEngine/Managers/TimerManager.hpp"
+#include "../WandAllegroEngine/Managers/ObjectManager.hpp"
+#include "ProjectileObject.hpp"
 
 #include <math.h>
 
-LinkObject::LinkObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId, int HP, ALLEGRO_FONT *font) : GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP)
+LinkObject::LinkObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId, int HP, ALLEGRO_FONT *font) : 
+    GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP)
 {
     this->font = font;
     this->DestructorMode = true;
@@ -16,9 +19,9 @@ LinkObject::LinkObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, st
 
 void LinkObject::Init()
 {
-    BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
-    //ChangeSpriteTimer = new GameTimer(0.5, true, false);
-    //TimerManager::GetInstance().Add(ChangeSpriteTimer);
+    BodyManager::GetInstance().Add(this, Position, GetSize());
+    WaitShootTimer = new GameTimer(0.2, true, true);
+    TimerManager::GetInstance().Add(WaitShootTimer);
 }
 
 void LinkObject::Draw()
@@ -27,8 +30,8 @@ void LinkObject::Draw()
 
     if (font)
     {
-        al_draw_text(font, al_map_rgba(255, 0, 100, 0), GetPosition().x, GetPosition().y - 60, 0, GetObjectName().c_str());
-        al_draw_text(font, al_map_rgba(255, 255, 255, 0), GetPosition().x - 100, GetPosition().y + 60, 0, ("X: " + std::to_string((int)GetPosition().x) + ", " + "Y: " + std::to_string((int)GetPosition().y)).c_str());
+        al_draw_text(font, al_map_rgba(255, 0, 100, 0), Position.x, Position.y - 60, 0, GetObjectName().c_str());
+        al_draw_text(font, al_map_rgba(255, 255, 255, 0), Position.x - 100, Position.y + 60, 0, ("X: " + std::to_string((int)Position.x) + ", " + "Y: " + std::to_string((int)Position.y)).c_str());
     }
 }
 
@@ -93,6 +96,23 @@ void LinkObject::Update(float deltaTime)
     }
 
 
+    if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyRelease))
+    {
+        if(WaitShootTimer->IsTrigger())
+        {
+            ProjectileObject* projectile = new ProjectileObject(Object::DynamicEntity, Position, WAND_VEC2(16, 16), "Projectile", Sprite, 3, this, InputManager::GetInstance().GetMousePosition());
+            ObjectManager::GetInstance().Add(projectile);
+        }
+        WaitShootTimer->Play();
+    }
+    else if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyUp))
+    {
+        WaitShootTimer->Pause();
+        WaitShootTimer->Reset();
+    }
+    
+
+
     if(0)
     {
         IsTPActive = false;
@@ -102,46 +122,46 @@ void LinkObject::Update(float deltaTime)
 
 void LinkObject::MoveUp(float deltaTime)
 {
-    SetPosition(WAND_VEC2(GetPosition().x, (GetPosition().y - Velocity * deltaTime)));
+    SetPosition(WAND_VEC2(Position.x, (Position.y - Velocity * deltaTime)));
 }
 
 void LinkObject::MoveDown(float deltaTime)
 {
-    SetPosition(WAND_VEC2(GetPosition().x, (GetPosition().y + Velocity * deltaTime)));
+    SetPosition(WAND_VEC2(Position.x, (Position.y + Velocity * deltaTime)));
 }
 
 void LinkObject::MoveRight(float deltaTime)
 {
-    SetPosition(WAND_VEC2(GetPosition().x + Velocity * deltaTime, (GetPosition().y)));
+    SetPosition(WAND_VEC2(Position.x + Velocity * deltaTime, (Position.y)));
 }
 
 void LinkObject::MoveLeft(float deltaTime)
 {
-    SetPosition(WAND_VEC2(GetPosition().x - Velocity * deltaTime, (GetPosition().y)));
+    SetPosition(WAND_VEC2(Position.x - Velocity * deltaTime, (Position.y)));
 }
 
 
     
 void LinkObject::MoveUpLeft(float deltaTime)
 {
-    SetPosition(WAND_VEC2(GetPosition().x - (Velocity / sqrt(2.0f)) * deltaTime, GetPosition().y - (Velocity / sqrt(2.0f)) * deltaTime));
+    SetPosition(WAND_VEC2(Position.x - (Velocity / sqrt(2.0f)) * deltaTime, Position.y - (Velocity / sqrt(2.0f)) * deltaTime));
 
 }
 
 void LinkObject::MoveUpRight(float deltaTime)
 {
-    SetPosition(WAND_VEC2(GetPosition().x + (Velocity / sqrt(2.0f)) * deltaTime, GetPosition().y - (Velocity / sqrt(2.0f)) * deltaTime));
+    SetPosition(WAND_VEC2(Position.x + (Velocity / sqrt(2.0f)) * deltaTime, Position.y - (Velocity / sqrt(2.0f)) * deltaTime));
 }
 
 void LinkObject::MoveDownLeft(float deltaTime)
 {
-    SetPosition(WAND_VEC2(GetPosition().x - (Velocity / sqrt(2.0f)) * deltaTime, GetPosition().y + (Velocity / sqrt(2.0f)) * deltaTime));
+    SetPosition(WAND_VEC2(Position.x - (Velocity / sqrt(2.0f)) * deltaTime, Position.y + (Velocity / sqrt(2.0f)) * deltaTime));
 
 }
 
 void LinkObject::MoveDownRight(float deltaTime)
 {
-    SetPosition(WAND_VEC2(GetPosition().x + (Velocity / sqrt(2.0f)) * deltaTime, GetPosition().y + (Velocity / sqrt(2.0f)) * deltaTime));
+    SetPosition(WAND_VEC2(Position.x + (Velocity / sqrt(2.0f)) * deltaTime, Position.y + (Velocity / sqrt(2.0f)) * deltaTime));
 }
 
 
@@ -183,4 +203,10 @@ void LinkObject::OnCollision(GameObject *other)
     if (other->GetObjectType() == Object::DynamicEntity)
     {
     }
+}
+
+
+LinkObject::~LinkObject()
+{
+    WaitShootTimer->End();
 }
