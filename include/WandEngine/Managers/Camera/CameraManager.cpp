@@ -163,12 +163,12 @@ namespace WandEngine
     }
 
 
-    void CameraManager::SetFocusObject(GameObject *Obj, float xoffset, float yoffset)
+    void CameraManager::SetFocusObject(GameObject *Obj)
     {
         if (mode == CameraMode::CAMERA_2D)
         {
-            position2D.x = (Obj->GetPosition().x + Obj->GetSize().x / 2 + xoffset);
-            position2D.y = (Obj->GetPosition().y + Obj->GetSize().y / 2 + yoffset);
+            position2D.x = (Obj->GetPosition().x + Obj->GetSize().x / 2);
+            position2D.y = (Obj->GetPosition().y + Obj->GetSize().y / 2);
         }
     }
 

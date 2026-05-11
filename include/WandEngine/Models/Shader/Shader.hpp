@@ -7,45 +7,37 @@
 namespace WandEngine
 {
 
-    enum class ViewType{
-        Ortho = 0,
-        Projection = 1
-    };
-
     class Shader
     {
     private:
-        unsigned int sVertex, sFragment, gShader;
-        unsigned int ID;
-        void CheckCompileErrors(unsigned int shader, std::string type);
-        void Compile(const char* vertexSource, const char* fragmentSource, const char* geometrySource);
+        void checkCompileErrors(unsigned int shader, std::string type);
 
     public:
-        Shader(const char* vertexSource, const char* fragmentSource, const char* geometrySource = nullptr);
+        unsigned int ID;
+        unsigned int sVertex, sFragment, gShader;
+
+        Shader();
         ~Shader();
 
-        void Use();
-        void EndUse();
+        void use();
+        void endUse();
 
-        unsigned int GetID();
+        void Compile(const char* vertexSource, const char* fragmentSource, const char* geometrySource = nullptr);
 
-        void SetModel(const std::string &name, glm::vec3 position, glm::vec3 size, glm::vec3 rotation) const;
-        void SetProjection(const std::string &name, ViewType viewType) const;
-
-        void SetBool(const std::string &name, bool value) const;
-        void SetInt(const std::string &name, int value) const;
-        void SetFloat(const std::string &name, float value) const;
+        void setBool(const std::string &name, bool value) const;
+        void setInt(const std::string &name, int value) const;
+        void setFloat(const std::string &name, float value) const;
         
-        void SetVec4(const std::string &name, glm::vec4 value) const;
-        void SetVec4(const std::string &name, float value1, float value2, float value3, float value4) const;
+        void setVec4(const std::string &name, glm::vec4 value) const;
+        void setVec4(const std::string &name, float value1, float value2, float value3, float value4) const;
 
-        void SetVec3(const std::string &name, glm::vec3 value) const;
-        void SetVec3(const std::string &name, float value1, float value2, float value3) const;
+        void setVec3(const std::string &name, glm::vec3 value) const;
+        void setVec3(const std::string &name, float value1, float value2, float value3) const;
 
-        void SetVec2(const std::string &name, glm::vec2 value) const;
-        void SetVec2(const std::string &name, float value1, float value2) const;
+        void setVec2(const std::string &name, glm::vec2 value) const;
+        void setVec2(const std::string &name, float value1, float value2) const;
 
-        void SetMatrix4(const std::string &name, glm::mat4 value) const;
+        void setMatrix4(const std::string &name, glm::mat4 value) const;
     };
 }
 

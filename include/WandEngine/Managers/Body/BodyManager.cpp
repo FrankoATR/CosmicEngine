@@ -1,10 +1,7 @@
 #include "BodyManager.hpp"
-#include "../../Models/GameBodyObject.hpp"
 #include "../../Models/GameObject.hpp"
-
 #include "../../Collisions/GameGridCollisions.hpp"
 #include <algorithm>
-#include <iostream>
 
 namespace WandEngine
 {

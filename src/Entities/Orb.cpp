@@ -7,9 +7,6 @@
 #include <WandEngine/Managers/Camera/CameraManager.hpp>
 #include <WandEngine/Managers/Resource/ResourceManager.hpp>
 #include <WandEngine/Managers/Timer/TimerManager.hpp>
-#include <WandEngine/Managers/DataBase/DataBaseManager.hpp>
-
-#include <sstream>
 
 Orb::Orb(OrbType Type, glm::vec2 Position, glm::vec2 Size, short int LayerId) :
 GameObject("Orb", Position, Size, 0.0f, LayerId), Type(Type), Used(false)
@@ -28,7 +25,7 @@ void Orb::Init()
 }
 
 
-void Orb::Draw() const
+void Orb::Draw()
 {
     int idx = Type == OrbType::Green ? 0 : 1;
 
@@ -67,38 +64,8 @@ OrbType Orb::GetOrbType()
 }
 
 
+
 Orb::~Orb()
 {
     //RotateSprite_Timer->Destroy();
-}
-
-
-std::vector<std::string> Orb::GetAllValues() const {
-    return {
-        std::to_string(Position.x),
-        std::to_string(Position.y),
-        std::to_string(static_cast<int>(Type))
-    };
-}
-
-
-void Orb::RegisterSerialize()
-{
-    DataBaseManager::GetInstance().RegisterSerialization(
-        "Orb",
-        { 
-            {"PositionX", "REAL"},
-            {"PositionY", "REAL"},
-            {"OrbType", "INTEGER"}
-        },
-        [](char** argv) -> GameObject*
-        {
-            float posX = std::stof(argv[0]);
-            float posY = std::stof(argv[1]);
-            int type = std::stoi(argv[2]);
-    
-            return new Orb(static_cast<OrbType>(type), glm::vec2(posX, posY), glm::vec2(100.0f), 0);
-        }
-
-    );
 }

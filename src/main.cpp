@@ -6,12 +6,13 @@
 using namespace WandEngine;
 
 int main(){
+
 	int screenWidth = 960;
 	int screenHeight = 540;
 	//int screenWidth = 1920;
 	//int screenHeight = 1080;
 	if(GameManager::GetInstance().Init(screenWidth, screenHeight)){
-		GameManager::GetInstance().SetFirstScene(new MainScene);
+		GameManager::GetInstance().SetFirstScene(new MainScene(0, 1));
 		GameManager::GetInstance().Update();
 		GameManager::GetInstance().Clear();
 	}
@@ -21,7 +22,13 @@ int main(){
 		#endif
 	}
 
-	std::cout << "END PROGRAM SUCCESFULLY MAIN" << std::endl;
+	#ifndef NDEBUG
+		std::cout << "END PROGRAM SUCCESFULLY MAIN" << std::endl;
+	#endif
+
+
+
+
 
 	return 0;
 }

@@ -28,12 +28,6 @@
 #define SCENEMANAGER_HEADER <WandEngine/Managers/Scene/SceneManager.hpp>
 #define SCN_MN SceneManager::GetInstance()
 
-#define UIMANAGER_HEADER <WandEngine/Managers/UI/UIManager.hpp>
-#define UI_MN UIManager::GetInstance()
-
-#define DATABASEMANAGER_HEADER <WandEngine/Managers/DataBase/DataBaseManager.hpp>
-#define DB_MN DataBaseManager::GetInstance()
-
 #define GAMEGRIDCOLLISIONS_HEADER <WandEngine/Collisions/GameGridCollisions.hpp>
 
 
@@ -44,5 +38,16 @@
 
 
 
+namespace WandEngine
+{
+
+
+
+
+
+
+
+
+}
 
 #endif // DEFINITIONS_HPP

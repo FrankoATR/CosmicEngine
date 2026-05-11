@@ -23,6 +23,7 @@ namespace WandEngine
         BOTTOM
     };
 
+
 	class GameObject;
 
 	class GameBodyObject

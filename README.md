@@ -6,98 +6,118 @@
 
 ## Descripción general
 
-En esta etapa el cambio dominante deja de estar en la infraestructura de render y pasa a la persistencia estructurada de objetos. El framework empieza a formalizar una ruta de serialización por tipo, donde la base de datos ya no solo ejecuta SQL auxiliar, sino que puede registrar metadatos de clases, guardar instancias por clase y reconstruir objetos del runtime a partir de constructores declarados.
+En esta etapa el cambio dominante deja de ser la expansión del framework y pasa a ser una depuración fuerte del core. El motor retira varias capas experimentales que habían aparecido poco antes, especialmente la persistencia estructurada con base de datos y la ruta dedicada de texto, y vuelve a una API más directa en recursos, shaders, texturas y modelo base de objetos.
 
-La evidencia visible de esta versión se concentra sobre todo en `DataBaseManager` y `GameObject`. `DataBaseManager` incorpora un registro de serialización con columnas declaradas y constructores por clase; `GameObject` añade `GetAllValues()` como hook virtual para exportar el estado persistible de cada instancia; y además `Draw()` pasa a ser `const`, reforzando la separación entre render y mutación del objeto.
+La evidencia visible de esta versión se concentra sobre todo en tres decisiones: desaparecen por completo `DataBaseManager` y `TextFont`; `ResourceManager`, `Shader` y `GameTexture2D` revierten hacia una interfaz más manual y menos abstracta; y `GameObject` junto con `GameScene` recortan hooks que habían ampliado el contrato del runtime en fechas anteriores.
 
-Con ello el proyecto no cambia de backend ni de stack, pero sí sube de nivel la capa de persistencia del engine: deja de depender solo de consultas manuales y empieza a perfilar una semántica propia de serialización orientada a tipos del framework.
+Con ello el proyecto no gana un subsistema nuevo, pero sí reduce complejidad interna. El framework queda más pequeño, más directo y menos cargado de capas todavía no estabilizadas.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- formalizar un registro de serialización por clase dentro del motor;
-- hacer que el modelo base de objetos exponga una salida uniforme de valores persistibles;
-- preparar la reconstrucción de instancias desde base de datos sin acoplar esa lógica a una implementación concreta de escena.
+- retirar subsistemas experimentales que todavía no estaban consolidados dentro del motor;
+- simplificar la API gráfica de recursos, shaders y texturas hacia un uso más explícito y manual;
+- reducir el contrato base de objetos y escenas para volver a una semántica más contenida del runtime.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `include/WandEngine/Managers/DataBase/DataBaseManager.*`, donde el manager añade `serialization_resources`, `RegisterSerialization()`, nuevas variantes de `SaveObjectsData()` y `LoadObjectsData()`, y una `ConsultTable()` capaz de transportar contexto vía `void* data`.
-- `include/WandEngine/Models/GameObject.*`, donde el modelo base incorpora `GetAllValues()` como contrato virtual de exportación de valores y hace `Draw()` const-correct.
-- `include/WandEngine/Managers/Resource/ResourceManager.hpp`, donde aparece un helper inline `RS_MNX()` para acceso corto al singleton de recursos, aunque sin alterar la arquitectura principal del framework.
+- `include/WandEngine/Managers/DataBase/`, que desaparece del árbol del framework, eliminando la capa de serialización y persistencia declarativa basada en SQLite.
+- `include/WandEngine/Models/TextFont/`, que también desaparece, retirando la ruta de render de texto apoyada en FreeType desde el propio core.
+- `include/WandEngine/Managers/Resource/ResourceManager.*`, donde se abandona la separación entre recursos estáticos y dinámicos, se eliminan las claves internas `WAND_*` y se vuelve a una interfaz de recursos más simple.
+- `include/WandEngine/Models/Shader.*` y `include/WandEngine/Models/Texture/GameTexture2D.*`, donde se revierten helpers de alto nivel y se recupera un manejo más manual de compilación, uniforms y carga de texturas.
+- `include/WandEngine/Models/GameObject.*` y `include/WandEngine/Models/GameScene.*`, donde se recortan métodos como `GetAllValues()`, `Reset()` y parte del endurecimiento previo del contrato base.
+- `include/WandEngine/Interfaces/Definitions.hpp`, donde desaparecen aliases visibles ligados a UI y base de datos, reduciendo la superficie de atajos globales del framework.
 
 ## Arquitectura o sistemas principales
 
-### Registro declarativo de serialización
+### Retirada de persistencia estructurada
 
-El cambio técnico más fuerte de esta etapa está en `DataBaseManager`. La persistencia deja de limitarse a abrir una base de datos, crear tablas o ejecutar consultas puntuales, y empieza a adoptar una estructura declarativa por clase. Con `serialization_resources`, el manager ya puede mantener para cada tipo registrado:
+El cambio técnico más fuerte de esta etapa es la eliminación completa de `DataBaseManager`. Con ello sale del framework toda la capa que intentaba formalizar:
 
-- la lista de columnas y sus tipos SQL;
-- un constructor capaz de reconstruir una instancia a partir de `char** argv`;
-- una relación explícita entre el nombre de clase del runtime y su representación persistida.
+- serialización por clase;
+- constructores de reconstrucción desde filas SQL;
+- guardado y carga por tipo del runtime;
+- helpers de consulta acoplados a un flujo interno de persistencia.
 
-Eso mueve la persistencia desde un uso manual de SQLite hacia una capa del framework con semántica propia de serialización.
+La consecuencia arquitectónica es clara: el motor deja de tratar la persistencia como responsabilidad del core y vuelve a un estado donde esa preocupación queda fuera de su contrato principal.
 
-### Guardado y carga por clase del runtime
+### Retirada del render de texto como responsabilidad del core
 
-`SaveObjectsData()` y `LoadObjectsData()` ya no son placeholders genéricos. En esta versión pasan a trabajar por nombre de clase y se apoyan en el registro de serialización para decidir cómo crear tablas, qué columnas persistir y cómo reconstruir instancias.
+La eliminación de `TextFont` va en la misma dirección. El framework abandona la ruta que había empezado a integrar glifos ASCII, texturas por carácter y render de texto dentro del propio `ResourceManager`.
 
-La ruta de guardado ahora expresa un flujo mucho más definido:
+No se sustituye por un sistema nuevo: simplemente se retira del núcleo. Eso reduce dependencias conceptuales dentro del motor y evita mantener una capa todavía inmadura junto al resto del pipeline gráfico.
 
-- localizar objetos por `ClassName` dentro de `ObjectManager`;
-- derivar columnas desde el metamodelo registrado;
-- crear la tabla correspondiente si no existe;
-- obtener valores serializables desde cada objeto;
-- insertar cada fila en la tabla adecuada.
+### Reversión hacia un ResourceManager más simple
 
-La ruta de carga sigue la misma dirección en sentido inverso: consulta las columnas registradas y usa un constructor por clase para reinstanciar objetos en el manager. Eso ya no es solo utilería de base de datos; es infraestructura de runtime.
+`ResourceManager` también cambia de tono. La versión anterior estaba caminando hacia una infraestructura más sofisticada, con registros separados para VAO estáticos y buffers dinámicos, claves internas reservadas y helpers genéricos de limpieza. En esta etapa, buena parte de esa sofisticación se desarma.
 
-### GameObject como contrato base de persistencia
+El resultado es un manager más directo, más manual y con menos estructura auxiliar. Se recuperan rutas como:
 
-El ajuste en `GameObject` es pequeño en líneas, pero importante en diseño. `GetAllValues()` aparece como método virtual y devuelve la interfaz mínima que la persistencia necesita del modelo base: una lista ordenada de valores serializables para una instancia.
+- `loadVAO` en lugar de variantes especializadas para geometría estática o dinámica;
+- `loadShader`, `loadTexture` y `loadTextureSheet` con una semántica más inmediata;
+- limpieza de recursos mediante bucles explícitos en lugar de utilidades genéricas como `ClearMap()`.
 
-La ventaja de esta decisión es que el engine ya no necesita que cada ruta de guardado conozca por fuera cómo extraer el estado de un objeto concreto. El contrato queda empujado al propio modelo base y listo para ser especializado por clases derivadas.
+Eso reduce abstracción, pero también vuelve más visible y predecible el comportamiento de bajo nivel del subsistema.
 
-Eso convierte a `GameObject` en una pieza central del nuevo flujo de serialización, aunque la implementación por defecto todavía sea vacía.
+### Shader y textura con menos helpers de alto nivel
 
-### Separación más estricta entre render y mutación
+La simplificación también alcanza a `Shader` y `GameTexture2D`. `Shader` vuelve a una forma más clásica: constructor vacío, compilación explícita y setters de uniforms con nomenclatura simple. Desaparecen helpers como `SetModel()`, `SetProjection()`, `Use()`, `EndUse()` y `GetID()` como parte del contrato refinado más reciente.
 
-En la misma línea de endurecer contratos base, `Draw()` pasa a ser `const`. El cambio no altera una API enorme, pero sí comunica mejor la intención del framework: dibujar un objeto no debería modificar su estado observable.
+`GameTexture2D`, por su parte, deja de cargar imágenes desde el constructor y vuelve a un esquema donde otra capa carga datos y llama a `Generate(width, height, data)`. Eso desplaza responsabilidad fuera del objeto y reduce el encapsulamiento que se había intentado ganar en fechas anteriores.
 
-Ese tipo de const-correctness importa más en esta etapa porque el motor empieza a combinar runtime, persistencia y reconstrucción. Cuanto más clara sea la separación entre consultar, dibujar, serializar y mutar, más defendible será la evolución de la arquitectura.
+La lectura técnica de ambos cambios es la misma: el framework prefiere aquí una API menos ambiciosa y más explícita en lugar de empujar más inteligencia a las abstracciones base.
 
-### Consultas con contexto y utilería de bajo ruido
+### Contratos base más contenidos para objetos y escenas
 
-`ConsultTable()` también se refina al aceptar un puntero de contexto, lo que permite callbacks de carga con información adicional sin depender de variables globales o cierres externos imposibles para la firma de SQLite. Eso es justo lo que habilita que `LoadObjectsData()` use un callback genérico y aun así sepa qué clase está reconstruyendo.
+`GameObject` y `GameScene` también se simplifican. Salen del contrato base varios puntos que ampliaban el alcance del runtime más allá de lo estrictamente necesario:
 
-El helper inline `RS_MNX()` en `ResourceManager.hpp` es mucho menor en importancia, pero confirma la misma tendencia general del código de esta fecha: se reducen pequeñas fricciones de uso del framework mientras los contratos centrales se vuelven más explícitos.
+- `GetAllValues()` desaparece junto con la idea de serialización desde el modelo base;
+- `Draw()` deja de ser `const`;
+- `Reset()` sale del contrato base de `GameScene`;
+- el orden de actualización de managers vuelve a priorizar primero subsistemas internos y luego la lógica de escena en un flujo más contenido.
+
+Esto sugiere una decisión de diseño bastante clara: antes de seguir agregando responsabilidades al núcleo, el framework reduce su superficie a aquello que ya considera estable.
+
+### Recorte de utilidades y ergonomía no esenciales
+
+Varios detalles menores acompañan esa misma simplificación:
+
+- desaparece `RS_MNX()` como helper inline de acceso al singleton de recursos;
+- `CameraManager` elimina offsets en `SetFocusObject()` y vuelve a un enfoque más simple;
+- `MusicManager` retira `SetPosition()`;
+- `GameManager` elimina la ruta de `DropCallback()` y el manejo de archivos soltados sobre la ventana.
+
+Cada ajuste por separado es pequeño, pero en conjunto refuerzan el mismo patrón: el framework reduce puntos de entrada accesorios y conserva una base más austera.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- la persistencia del engine ya puede registrar cómo se serializa y reconstruye cada clase del runtime;
-- el modelo base de objetos ya ofrece un punto de extensión directo para que esa persistencia no dependa de extracción manual de datos por fuera del objeto.
+- el core del motor queda menos acoplado a subsistemas todavía experimentales como persistencia estructurada o render de texto;
+- la capa gráfica vuelve a una interfaz más explícita, donde buena parte de la lógica queda en llamadas manuales y no en helpers de alto nivel.
 
-Con ello dejé una base de persistencia mucho más madura que la de febrero. La mejora principal de esta etapa no está en el render, sino en que el framework empieza a tratar serialización y reconstrucción de objetos como una responsabilidad interna del motor y no solo como SQL suelto alrededor del juego.
+Con ello dejé una base de engine más pequeña y más conservadora que la de días anteriores. La mejora principal de esta etapa no está en añadir capacidad, sino en retirar complejidad que todavía no estaba suficientemente asentada.
 
 ## Dependencias externas visibles
 
-No aparecen dependencias nuevas visibles en esta etapa. El cambio está en cómo se usan con más rigor las ya presentes:
+No aparecen dependencias nuevas visibles en esta etapa. Al contrario, el cambio principal es de contracción del uso interno de varias de ellas:
 
-- `sqlite3` deja de actuar solo como backend de consultas y pasa a sostener un registro de serialización más estructurado dentro de `DataBaseManager`.
+- `sqlite3` deja de sostener una capa propia del framework al eliminarse `DataBaseManager`;
+- FreeType deja de estar representada en el core al desaparecer `TextFont`;
+- OpenGL sigue siendo la base del render, pero con una envoltura menos rica y más manual en `Shader`, `GameTexture2D` y `ResourceManager`.
 
 ## Resumen técnico de la versión
 
 La etapa efectiva al **6 de abril de 2025** queda delimitada por estos movimientos:
 
-- incorporé un registro de serialización por clase en `DataBaseManager` con columnas declaradas y constructores de reconstrucción;
-- convertí `SaveObjectsData()` y `LoadObjectsData()` en rutas operativas por tipo del runtime, en lugar de placeholders genéricos;
-- añadí `GetAllValues()` a `GameObject` como contrato base de exportación de estado persistible;
-- hice `Draw()` const-correct para separar mejor render y mutación del objeto;
-- amplié `ConsultTable()` para transportar contexto a callbacks de carga;
-- mantuve un ajuste menor de ergonomía en `ResourceManager` con el helper inline `RS_MNX()`.
+- eliminé `DataBaseManager` y retiré del core la persistencia declarativa de objetos;
+- eliminé `TextFont` y saqué del núcleo la ruta propia de render de texto;
+- simplifiqué `ResourceManager` al volver a una API más directa y menos estructurada para VAO, shaders y texturas;
+- revertí `Shader` y `GameTexture2D` hacia un manejo más manual de compilación, uniforms y carga de imágenes;
+- recorté el contrato base de `GameObject` y `GameScene`, retirando hooks de serialización y reinicio;
+- eliminé varias utilidades accesorias del framework como offsets de cámara, reposicionamiento musical, drop callback y aliases globales ligados a subsistemas retirados.
 
-Con esta etapa dejé el framework en un punto importante de madurez interna: el motor ya no solo administra render y recursos, sino que empieza a definir de forma explícita cómo sus objetos se describen, se guardan y se reconstruyen desde persistencia.
+Con esta etapa dejé el framework en una versión más contenida y defensiva: menos alcance funcional en el core, menos abstracciones experimentales y una API más simple sobre la cual seguir iterando después.

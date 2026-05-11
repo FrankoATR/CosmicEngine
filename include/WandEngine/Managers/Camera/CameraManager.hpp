@@ -55,7 +55,7 @@ namespace WandEngine
 
         // Métodos 2D
         glm::vec2 GetPosition() const;
-        void SetFocusObject(GameObject *Obj, float xoffset = 0.0f, float yoffset = 0.0f);
+        void SetFocusObject(GameObject *Obj);
         void SetFocusPosition(glm::vec2 NewPosition);
         glm::vec2 GetFocusPosition() const;
         bool IsObjectInsideCameraArea(GameObject *Obj) const;

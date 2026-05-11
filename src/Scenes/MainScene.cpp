@@ -10,8 +10,6 @@
 
 #include <WandEngine/Interfaces/Definitions.hpp>
 #include <imgui/imgui.h>
-#include <sstream>
-#include <filesystem>
 
 #include GAMEMANAGE_HEADER
 #include INPUTMANAGER_HEADER
@@ -23,15 +21,11 @@
 #include MUSICMANAGER_HEADER
 #include SOUNDMANAGER_HEADER
 #include SCENEMANAGER_HEADER
-#include UIMANAGER_HEADER
-#include DATABASEMANAGER_HEADER
 
-#include <WandEngine/Managers/Resource/ResourceManager.hpp>
-
-
-MainScene::MainScene() : GameScene("MainScene")
+MainScene::MainScene(int Level, int Attempts) : GameScene("MainScene")
 {
-    currentMusic = "";
+    CurrentLevel = Level;
+    currentMusic = "Electrodynamix";
     player = nullptr;
     ostVolume = 0.5f;
     fpsSliderValue = 60;
@@ -43,7 +37,6 @@ MainScene::MainScene() : GameScene("MainScene")
     mouseKeyDownForArea = false;
     cameraVelocity = glm::vec2(0.0f, 0.0f);
     showPanel = true;
-    EditorMode = false;
 }
 
 
@@ -56,133 +49,35 @@ void MainScene::LoadResources()
 void MainScene::Init()
 {
     CAM_MN.SetCameraMode(CameraMode::CAMERA_2D);
-    CAM_MN.SetFocusPosition(glm::vec2(-200.0f, -400.0f));
+    CAM_MN.SetFocusPosition(glm::vec2(0.0f));
 
-    //RS_MN.LoadShader("sprite", SHADER_SPRITE_VS, SHADER_SPRITE_FS);
-    //RS_MN.LoadShader("sprite_sheet", SHADER_SPRITESHEET_VS, SHADER_SPRITESHEET_FS);
+    //RS_MN.loadShader("sprite", SHADER_SPRITE_VS, SHADER_SPRITE_FS);
+    //RS_MN.loadShader("sprite_sheet", SHADER_SPRITESHEET_VS, SHADER_SPRITESHEET_FS);
 
+    //RS_MN.loadTexture("t1", TEXTURE_FIRSTBLOCK, true);
+    //RS_MN.loadTexture("t2", TEXTURE_FACE, true);
+    RS_MN.loadTextureSheet("gd", TEXTURESHEET_GD, true, 6, 6, 0);
 
-    RS_MNX()->LoadTexture("bg1", TEXTURE_GD_BG1, false);
-    RS_MNX()->LoadTexture("g1", TEXTURE_GD_G1, true);
-    RS_MNX()->LoadTexture("g2", TEXTURE_GD_G2, true);
-    RS_MNX()->LoadTexture("line", TEXTURE_GD_LINE, true);
-    RS_MNX()->LoadTextureSheet("gd", TEXTURESHEET_GD, true, 6, 6, 0);
-
-    RS_MN.LoadTextFont("font1", FONT_THALEAHFAT, 25);
-
-    //UI_MN.AddElement(new UIButton("BUTTON", nullptr, glm::vec2(1500.0f, 20.0f), glm::vec2(50.0f), true, nullptr));
-
-    BOD_MN.SetNewGridArea(new GameGridCollisions(glm::vec2(-500.0f), 5, 5, 200));
     
+
+    BOD_MN.SetNewGridArea(new GameGridCollisions(glm::vec2(-1000, -10 * 100), 25, 200, 100));
+    
+    LoadMap();
+
+
+    MSC_MN.Load("Electrodynamix", MUSIC_GD_ELECTRODYNAMIX);
+    MSC_MN.Load("Cycles", MUSIC_GD_CYCLES);
+    MSC_MN.Load("Practice", MUSIC_GD_PRACTICE);
+
     SND_MN.Load("Dead", MUSIC_GD_DEAD);
 
-    SolidBlock::RegisterSerialize();
-    Spike::RegisterSerialize();
-    Orb::RegisterSerialize();
-
-    Reset();
+    MSC_MN.Play(currentMusic, ostVolume, false);
 
     //SetProgressLoadingScene(1.0);
 };
 
-
-void MainScene::Reset()
-{
-
-    if(player)
-    {
-        player->unRerence(&player);
-    }
-
-    auto objs = OBJ_MN.GetAll();
-    for(auto &obj : objs)
-    {
-        obj->Destroy();
-    }
-
-
-    MSC_MN.Clear();
-
-    if(fileName != "")
-    {
-        DB_MN.OpenDatabaseForLoading("levels/"+fileName);
-    }
-    else
-    {
-        DB_MN.OpenDatabaseForLoading("levels/lvl_mylevel");
-    }
-
-
-
-    DB_MN.LoadObjectsData("SolidBlock");
-    DB_MN.LoadObjectsData("Spike");
-    DB_MN.LoadObjectsData("Orb");
-
-    std::string sql = "SELECT id, path FROM Music;";
-    
-    auto callback = [](void* data, int argc, char** argv, char** colNames) -> int {
-        int id = std::stoi(argv[0]);
-        MSC_MN.Clear();
-        MSC_MN.Load("music", std::string(argv[1]));
-        return 0;
-    };
-
-    DataBaseManager::GetInstance().ExecuteQuery(sql, callback, nullptr);
-    
-
-    DB_MN.CloseDatabase();
-
-
-    
-    player = new Player("MAIN", PlayerMode::Normal, glm::vec2(0.0f), glm::vec2(100.0f), 0.0f, 0);
-    OBJ_MN.Add(player);
-    player->makeReference(&player);
-
-    MSC_MN.StopAll();
-    MSC_MN.Play("music", ostVolume, false);
-
-    std::cout << "SCENE RESETED" << std::endl;
-}
-
-
-
 void MainScene::Draw()
 {
-    
-    for(int i = 0; i < 3; i++)
-    {
-        RS_MN.Render2DSprite("bg1", 
-            glm::vec2(
-                CAM_MN.GetPosition().x - glm::mod(CAM_MN.GetPosition().x, 1920.0f / 0.05f) * 0.05 + i * 1920.0f, 
-                CAM_MN.GetPosition().y - glm::mod(CAM_MN.GetPosition().y, 1920.0f / 0.01f) * 0.01 + CAM_MN.GetBaseWindowSize().y
-            ), 
-            glm::vec2(1920.0f, 1920.0f), 0.0f, glm::vec3(0.2f, 0.7f, 0.3f));
-    }
-    
-    for(int i = 0; i < 6; i++)
-    {
-        RS_MN.Render2DSprite("g1", glm::vec2(CAM_MN.GetPosition().x - glm::mod(CAM_MN.GetPosition().x, 430.0f) + i * 430.0f , 0.0f) , glm::vec2(430.0f, 430.0f), 0.0f, glm::vec3(1.0f, 0.3f, 0.3f));
-    }
-    
-    RS_MN.Render2DSprite("line", glm::vec2(CAM_MN.GetFocusPosition().x, 0.0f - 76.0f * 10 + 2.0f * 1) , glm::vec2(2.0f * 2, 76.0f * 20), 90.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-
-    if(player)
-    {
-        RS_MN.RenderText("Rosita Games", "font1", glm::vec3(player->GetPosition().x - 100, player->GetPosition().y - 30, 0.0f), glm::vec3(3.0f));
-        RS_MN.RenderPoint(glm::vec3(player->GetPosition().x - 100, player->GetPosition().y - 50, 0.0f), glm::vec3(1.0f), 0.5f, 10.0f);
-    }
-
-    if(EditorMode)
-    {
-        RS_MN.RenderLine(
-            glm::vec3(lineMusicPos, CAM_MN.GetPosition().y, 0.0f),
-            glm::vec3(lineMusicPos, CAM_MN.GetPosition().y + CAM_MN.GetBaseWindowSize().y, 0.0f),
-            glm::vec3(0.0f),
-            glm::vec3(0.0f),
-            glm::vec3(0.0f, 1.0f, 0.0f),
-            1.0f,
-            5.0f);
-    }
 
     if(showPanel)
     {
@@ -199,27 +94,10 @@ void MainScene::Draw()
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
             ImGui::Text("Press ESC to exit");
             ImGui::Text("Press F11 to switch window/fullscreen");
-            ImGui::Text("Press F3 to show/hide panel");
-            ImGui::Text("Select level:");
-            std::string directoryPath = "levels";
-            if (!std::filesystem::exists(directoryPath) || !std::filesystem::is_directory(directoryPath)) {
-                std::cerr << "Error: La ruta especificada no es un directorio válido." << std::endl;
-                return;
-            }
-        
-            for (const auto& entry : std::filesystem::directory_iterator(directoryPath)) {
-                if (std::filesystem::is_regular_file(entry.path())) {
-                    std::string name = entry.path().filename().string();
-
-                    if (ImGui::Button(name.c_str())) {  
-                        fileName = name;
-                        Reset();
-                    }
-                }
-            }
-
+            ImGui::Text("Press F3 to hidden panel");
+            ImGui::Text("Press 1, 2 or 3 to select level");
             ImGui::Text("Press R to reset");
-            ImGui::Text("Press H to show/hide hitboxs");
+            ImGui::Text("Press H to show hitboxs");
             ImGui::SliderFloat("Volume", &ostVolume, 0.0f, 2.0f);
             ImGui::SliderInt("FPS", &fpsSliderValue, 15, 240);
             ImGui::Checkbox("VSync", &vsynEnable);
@@ -250,7 +128,7 @@ void MainScene::Draw()
 void MainScene::Update(double deltaTime)
 {
 
-    MSC_MN.SetVolume("music", ostVolume);
+    MSC_MN.SetVolume(currentMusic, ostVolume);
     GM_MN.SetGameTicks(ticksSliderValue);
 
     if(vsynEnable)
@@ -268,289 +146,42 @@ void MainScene::Update(double deltaTime)
     }
 
 
-
-
-    auto files = GM_MN.GetDroppedFiles();
-    if(!files.empty())
+    if(player)
     {
-        std::cout << files.back() << std::endl;
-        size_t dotPos = files.back().find_last_of(".");
 
-        if (dotPos != std::string::npos) {
-            std::string extension = files.back().substr(dotPos + 1);
-            size_t lastSlash = files.back().find_last_of("/\\");
-            currentMusic = (lastSlash == std::string::npos) ? files.back() : files.back().substr(lastSlash + 1);
-            
-            if (extension == "mp3")
-            {
-                droppedmusicfilepath = files.back();
-                std::string destination = "assets/engine/audio/music/" + currentMusic;
-
-                try {
-                    std::filesystem::path srcPath = std::filesystem::absolute(droppedmusicfilepath);
-                    std::filesystem::path destPath = std::filesystem::absolute(destination);
-    
-                    if (srcPath == destPath) {
-                        std::cerr << "Error: El archivo de origen y destino son el mismo. No se copiará." << std::endl;
-                    }
-                    else
-                    {
-                        if (std::filesystem::exists(destination))
-                        {
-                            std::cout << "El archivo ya existe. Eliminando..." << std::endl;
-                            std::filesystem::remove(destination);
-                        }
-
-                        std::filesystem::copy_file(droppedmusicfilepath, destination, std::filesystem::copy_options::overwrite_existing);
-                    }
-    
-
-                    MSC_MN.Clear();
-                    MSC_MN.StopAll();
-                    MSC_MN.Load("music", destination);
-                    MSC_MN.Play("music", ostVolume, false);
-
-                } catch (const std::exception& e) {
-                    std::cerr << "Error al copiar el archivo: " << e.what() << std::endl;
-                }
-            } 
+        glm::vec2 cameraPos = {player->GetPosition().x + 350.0f, CAM_MN.GetFocusPosition().y};
+        
+        if(player->GetPosition().y < CAM_MN.GetPosition().y + CAM_MN.GetBaseWindowSize().y * 0.3)
+        {
+            cameraVelocity.y = -1000.0f;
+        }
+        else if(player->GetPosition().y > CAM_MN.GetPosition().y + CAM_MN.GetBaseWindowSize().y * 0.7)
+        {
+            cameraVelocity.y = 1000.0f;
         }
         else
         {
-            droppedlevelfilepath = files.back();
-            size_t lastSlash = droppedlevelfilepath.find_last_of("/\\");
-            fileName = (lastSlash == std::string::npos) ? droppedlevelfilepath : droppedlevelfilepath.substr(lastSlash + 1);
-            Reset();
-        }
-
-    }
-
-
-
-
-
-
-    if(EditorMode)
-    {
-        if(player)
-        {
-            player->Destroy();
-        }
-
-        lineMusicPos += 1040.0f * deltaTime;
-
-        glm::vec2 cameraPos = CAM_MN.GetFocusPosition();
-        cameraVelocity.y = 0;
-        cameraVelocity.x = 0;
-        
-        if(INP_MN.IsKeyPressed(GLFW_KEY_W, KeyRelease))
-        {
-            cameraVelocity.y = -1500.0f;
-        }
-        else if(INP_MN.IsKeyPressed(GLFW_KEY_S, KeyRelease))
-        {
-            cameraVelocity.y = 1500.0f;
-        }
-        if(INP_MN.IsKeyPressed(GLFW_KEY_A, KeyRelease))
-        {
-            cameraVelocity.x = -1500.0f;
-        }
-        else if(INP_MN.IsKeyPressed(GLFW_KEY_D, KeyRelease))
-        {
-            cameraVelocity.x = 1500.0f;
+            cameraVelocity.y = 0;
         }
 
 
         cameraPos.y += cameraVelocity.y * deltaTime;
-        cameraPos.x += cameraVelocity.x * deltaTime;
 
         CAM_MN.SetFocusPosition(cameraPos);
 
-
-
-        
-        if(INP_MN.IsKeyPressed(GLFW_KEY_G, KeyDown))
-        {
-            if(fileName != "")
-            {
-                DB_MN.OpenDatabaseForSaving(fileName);
-            }
-            else
-            {
-                DB_MN.OpenDatabaseForSaving(("lvl_" + std::to_string(CurrentLevel)));
-            }
-
-            DataBaseManager::GetInstance().ExecuteSQL("BEGIN TRANSACTION;");
-
-            DataBaseManager::GetInstance().SaveObjectsData("SolidBlock");
-            DataBaseManager::GetInstance().SaveObjectsData("Spike");
-            DataBaseManager::GetInstance().SaveObjectsData("Orb");
-
-            DataBaseManager::GetInstance().CreateTable("Music", "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT");
-        
-            std::ostringstream values;
-            values << "'" << droppedmusicfilepath << "'";
-            
-            DataBaseManager::GetInstance().InsertData("Music", "path", values.str());
-            
-            DataBaseManager::GetInstance().ExecuteSQL("COMMIT;");
-            DB_MN.CloseDatabase();
-
-        }
-        if(INP_MN.IsKeyPressed(GLFW_KEY_L, KeyDown))
-        {
-            Reset();
-
-        }
-
-        glm::vec2 mousePos = INP_MN.GetMousePosition();
-        glm::vec2 objSize(100.0f);
-        glm::vec2 objPos(
-            std::round((mousePos.x - objSize.x * 0.5) / 100.0f) * 100.0f,
-            std::round((mousePos.y - objSize.y * 0.5) / 100.0f) * 100.0f
-        );
-        
-        if(INP_MN.IsKeyPressed(GLFW_KEY_0, KeyDown))
-        {
-            if (selectedObject) selectedObject->Destroy();
-        }
-
-        for(int i = 0; i < 9; i++)
-        {
-            if(INP_MN.IsKeyPressed(GLFW_KEY_1+i, KeyDown))
-            {
-                if (selectedObject) selectedObject->Destroy();
-                selectedObject = new SolidBlock(i, glm::vec2(objPos), glm::vec2(objSize), -1);
-                selectedObject->makeReference(&selectedObject);
-                OBJ_MN.Add(selectedObject);
-            }
-        }
-        for(int i = 0; i < 3; i++)
-        {
-            if(INP_MN.IsKeyPressed(GLFW_KEY_RIGHT + i, KeyDown))
-            {
-                if (selectedObject) selectedObject->Destroy();
-                selectedObject = new Spike(static_cast<SpikeType>(i), glm::vec2(objPos), glm::vec2(objSize), -1);
-                selectedObject->makeReference(&selectedObject);
-                OBJ_MN.Add(selectedObject);
-            }
-        }
-
-        if(INP_MN.IsKeyPressed(GLFW_KEY_COMMA, KeyDown))
-        {
-            if (selectedObject) selectedObject->Destroy();
-            selectedObject = new Orb(OrbType::Green, glm::vec2(objPos), glm::vec2(objSize), -1);
-            selectedObject->makeReference(&selectedObject);
-            OBJ_MN.Add(selectedObject);
-        }
-
-        if(INP_MN.IsKeyPressed(GLFW_KEY_PERIOD, KeyDown))
-        {
-            if (selectedObject) selectedObject->Destroy();
-            selectedObject = new Orb(OrbType::Blue, glm::vec2(objPos), glm::vec2(objSize), -1);
-            selectedObject->makeReference(&selectedObject);
-            OBJ_MN.Add(selectedObject);
-        }
-
-
-        if(INP_MN.IsKeyPressed(GLFW_KEY_ENTER, KeyDown))
-        {
-            MSC_MN.SetPosition("music", CAM_MN.GetPosition().x * (1000.0f / 1040.0f));
-            lineMusicPos =  CAM_MN.GetPosition().x;
-        }
-
-        if(selectedObject)
-        {
-            selectedObject->SetPosition(objPos);
-            if(INP_MN.IsMouseButtonPressed(GLFW_MOUSE_BUTTON_1, KeyDown))
-            {
-                auto objs = OBJ_MN.FindByMousePosition();
-                if(objs.size() < 2)
-                {
-                    OBJ_MN.Add(selectedObject->Clone());
-                }
-            }
-            if(INP_MN.IsMouseButtonPressed(GLFW_MOUSE_BUTTON_2, KeyRelease))
-            {
-                auto objs = OBJ_MN.FindByMousePosition();
-                if(objs.size() < 2)
-                {
-                    OBJ_MN.Add(selectedObject->Clone());
-                }
-            }
-
-            if(INP_MN.IsKeyPressed(GLFW_KEY_SPACE, KeyDown))
-            {
-                selectedObject->SetRotation(selectedObject->GetRotation() + 90.0f);
-            }
-        }
-
-        if(!selectedObject)
-        {
-            if(INP_MN.IsMouseButtonPressed(GLFW_MOUSE_BUTTON_1, KeyDown))
-            {
-                auto objs = OBJ_MN.FindByMousePosition();
-                if(!objs.empty())
-                {
-                    objs.back()->makeReference(&selectedObject);
-                }
-            }
-            if(INP_MN.IsMouseButtonPressed(GLFW_MOUSE_BUTTON_2, KeyDown))
-            {
-                auto objs = OBJ_MN.FindByMousePosition();
-                if(!objs.empty())
-                {
-                    objs.back()->Destroy();
-                }
-            }
-        }
-
+        //CAM_MN.SetFocusObject(player); //agregarle offset
     }
     else
     {
-
-        if (selectedObject) selectedObject->Destroy();
-        
-        if(player)
+        auto objs = OBJ_MN.GetAll();;
+        for(auto &obj : objs)
         {
-
-            glm::vec2 cameraPos = {player->GetPosition().x + 350.0f, CAM_MN.GetFocusPosition().y};
-            
-            if(player->GetPosition().y < CAM_MN.GetPosition().y + CAM_MN.GetBaseWindowSize().y * 0.3)
-            {
-                cameraVelocity.y = -1000.0f;
-            }
-            else if(player->GetPosition().y > CAM_MN.GetPosition().y + CAM_MN.GetBaseWindowSize().y * 0.7)
-            {
-                cameraVelocity.y = 1000.0f;
-            }
-            else
-            {
-                cameraVelocity.y = 0;
-            }
-
-
-            cameraPos.y += cameraVelocity.y * deltaTime;
-
-            CAM_MN.SetFocusPosition(cameraPos);
-
-            //CAM_MN.SetFocusObject(player, 350.0f, cameraPosY);
-            BOD_MN.SetGridPosition(glm::vec2(player->GetPosition() - glm::vec2(500.0f)));
+            obj->Destroy();
         }
-        else
-        {
-            BOD_MN.SetGridPosition(glm::vec2(-500.0f));
-            Reset();
-        }
-
-
-        if(INP_MN.IsKeyPressed(GLFW_KEY_R, KeyDown))
-        {
-            Reset();
-        }
-    
+        LoadMap();
+        MSC_MN.StopAll();
+        MSC_MN.Play(currentMusic, ostVolume, false);
     }
-
 
 
     if(INP_MN.IsKeyPressed(GLFW_KEY_ESCAPE, KeyDown))
@@ -569,41 +200,24 @@ void MainScene::Update(double deltaTime)
         ToogleShowBodys();
     }
 
-
-
-
-    if(INP_MN.IsKeyPressed(GLFW_KEY_E, KeyDown))
+    if(INP_MN.IsKeyPressed(GLFW_KEY_1, KeyDown))
     {
-        if(EditorMode)
-        {
-            if(fileName != "")
-            {
-                DB_MN.OpenDatabaseForSaving("levels/"+fileName);
-            }
-            else
-            {
-                DB_MN.OpenDatabaseForSaving(("levels/lvl_mylevel"));
-            }
-            DataBaseManager::GetInstance().ExecuteSQL("BEGIN TRANSACTION;");
-
-            DataBaseManager::GetInstance().SaveObjectsData("SolidBlock");
-            DataBaseManager::GetInstance().SaveObjectsData("Spike");
-            DataBaseManager::GetInstance().SaveObjectsData("Orb");
-
-            DataBaseManager::GetInstance().CreateTable("Music", "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT");
-        
-            std::ostringstream values;
-            values << "'" << "assets/engine/audio/music/" + currentMusic << "'";
-            
-            DataBaseManager::GetInstance().InsertData("Music", "path", values.str());
-            
-            DataBaseManager::GetInstance().ExecuteSQL("COMMIT;");
-            DB_MN.CloseDatabase();
-        }
-        
-        EditorMode = !EditorMode;
+        CurrentLevel = 0;
+        currentMusic = "Electrodynamix";
+        player->Destroy();
     }
-
+    if(INP_MN.IsKeyPressed(GLFW_KEY_2, KeyDown))
+    {
+        CurrentLevel = 1;
+        currentMusic = "Cycles";
+        player->Destroy();
+    }
+    if(INP_MN.IsKeyPressed(GLFW_KEY_3, KeyDown))
+    {
+        CurrentLevel = 2;
+        currentMusic = "Practice";
+        player->Destroy();
+    }
 
     if(INP_MN.IsKeyPressed(GLFW_KEY_F11, KeyDown))
     {
@@ -614,7 +228,8 @@ void MainScene::Update(double deltaTime)
     }
 
 
-    /*
+
+
     if(INP_MN.IsMouseButtonPressed(GLFW_MOUSE_BUTTON_1, KeyDown))
     {
         mouseInitialPosForArea = INP_MN.GetMousePosition();
@@ -633,9 +248,17 @@ void MainScene::Update(double deltaTime)
 
     }
 
-    */
+
+    if(INP_MN.IsKeyPressed(GLFW_KEY_0, KeyDown))
+    {
+        //SCN_MN.ReplaceScene(new MainScene(0, 1));
+    }
 
 
+    if(INP_MN.IsKeyPressed(GLFW_KEY_R, KeyDown))
+    {
+        player->Destroy();
+    }
 
 
 /*
@@ -650,3 +273,147 @@ void MainScene::Update(double deltaTime)
 
 
 
+
+
+
+void MainScene::LoadMap()
+{
+
+    srand(time(NULL));
+
+    //Respawn_Timer = new GameTimer(1.0, true, true);
+    //TimerManager::GetInstance().Add(Respawn_Timer);
+
+    //CameraMovement_Timer = new GameTimer(0.001, true, false);
+    //TimerManager::GetInstance().Add(CameraMovement_Timer);
+
+    //Attempts_Label = new UIText("Attempt", ResourceManager::GetInstance().getFont("ThaleahFat"), WAND_VEC2(100, 50), WAND_SIZE(300, 100), true, nullptr);
+    //UIManager::GetInstance().AddElement(Attempts_Label);
+
+    //ToogleShowGrid();
+    //ToogleShowCamera();
+
+    float StandarSizeEntities = 100.0f;
+    int map_H = 10;
+    int map_W = 150;
+
+    int map0[map_H][map_W] =
+    {
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1,1,0,0,0,0,0,0,0},
+        {0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,1,1,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,0,0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,0},
+        {0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,2,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,2,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,1,1,0,0,0,0,0,0,2},
+        {0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-2,1},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,0,0,0,1,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,2,1,2,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+        {-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,2,2,2,1,2,2,1,0,0,0,0,0,2,2,0,0,0,0,0,0,0,1,2,2,2,2,2,0,0,0,0, 0,0,0,0,1,2,2,0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,2,1,2,2,2,1,2,1,2,2,2,1,0,0,0,0,2, 2,2,0,0,0,0,0,0,1,0,0,0,0,2,2,2,2,1,0,0,0,0,0,0,0,1,2,1,1,1,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,1}
+    };
+
+    int map1[map_H][map_W] =
+    {
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0, 0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,1,0,0,0,0,0,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0, 0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0, 0,0,0,0,0,2,1,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,-2,0},
+        {0,0,0,0,0,0,0,0,1,2,2,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,2,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,1,0, 0,0,1,1,1,1,1,0,0,0,2,0,2,1,0,0,0,0,0,0,0,2,2,0,0,0,1,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,2,2,2,0,0,0,1,1,0,0,4,0,0,0,0,0,1,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0, 0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,4,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,2,0,0,0,1,0,0,2,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,1,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,1,1,2,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0},
+        {-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,2,2,2,2,1,1,0,1,1,0,0,0,0,0,1,2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,2,2,2,2,2,0,0,0,1,2,1,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,0,2,1,0,0,0, 0,0,0,0,2,2,2,1,2,0,0,0,0,0,1,2,2,2,1,2,1,0,0,0,0,0,1,2,2,2,1,1,1,1,2,1,1,1,0,1,0,0,0,0,0,0,1,2,2,2}
+    };
+
+
+    int map2[map_H][map_W] =
+    {
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,1},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,1,1,1},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,1,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,3,0,2,0,0,2,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0, 0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,2,1,1,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,2,2,1,0,0,1,0,0,0},
+        {0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, 0,1,0,0,0,0,4,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,3,0, 1,1,1,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,1,1,0,0,0,0,0,0,-2},
+        {0,0,0,0,0,0,0,1,0,0,0,0,0,3,0,0,0,1,0,0,0,0,0,0,0,3,0,2,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,1,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,3,0,1,1,1,0,0,0,0,0,1,1,1,2,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,4,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,3,0,0,2,0,0,2,1,0,0,0,3,0,0,1,0,0,0,0,0,3,0,0,0,0,1,0,0,4,0, 0,1,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,2,1,0,0,3,0,0,0,1,1,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,1,1,1,2,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,0,0,4,0,0,0,3,0,1,0,0,0,0,0,0,0,0,0,0,0,0},
+        {-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,2,2,1,2,2,1,1,2,2,0,0,0,0,1,2,0,0,0,0,0,0,0,0,0,1,0,2,2,2, 2,1,0,0,0,0,1,0,0,0,2,2,2,2,0,4,0,0,1,0,0,1,0,0,0,0,0,0,2,2,2,0,0,0,0,0,1,0,0,2,2,2,0,0,1,1,0,0,0,0, 2,0,0,0,0,2,0,0,1,2,0,0,1,1,2,0,0,0,0,0,0,0,0,0,0,0,0,2,1,2,2,2,2,2,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2}
+    };
+
+    int map[map_H][map_W];
+
+
+    if(CurrentLevel == 0)
+    {
+        for (int i = 0; i < 10; ++i) {
+            for (int j = 0; j < 150; ++j) {
+                map[i][j] = map0[i][j];
+            }
+        }
+
+        currentMusic = "Electrodynamix";
+    }
+    if(CurrentLevel == 1)
+    {
+        for (int i = 0; i < 10; ++i) {
+            for (int j = 0; j < 150; ++j) {
+                map[i][j] = map1[i][j];
+            }
+        }
+
+        currentMusic = "Cycles";
+    }
+    if(CurrentLevel == 2)
+    {
+        for (int i = 0; i < 10; ++i) {
+            for (int j = 0; j < 150; ++j) {
+                map[i][j] = map2[i][j];
+            }
+        }
+
+        currentMusic = "Practice";
+    }
+
+
+
+    float load = 0;
+
+    for(short unsigned int i = 0; i < 10; i++)
+    {
+        for(short unsigned int j = 0; j < 150; j++)
+        {
+            glm::vec2 pos = {StandarSizeEntities * j + StandarSizeEntities * 5, StandarSizeEntities*i - map_H * StandarSizeEntities};
+
+            if(map[i][j] == -1)
+            {
+                Player* tmp = new Player("MAIN", PlayerMode::Normal, pos, glm::vec2(StandarSizeEntities), 0.0f, 0);
+                OBJ_MN.Add(tmp);
+                tmp->makeReference(&player);
+            }
+
+            if(map[i][j] == 1)
+            {
+                SolidBlock* tmp = new SolidBlock(pos, glm::vec2(StandarSizeEntities), -1);
+                OBJ_MN.Add(tmp);
+            }
+
+            if(map[i][j] == 2)
+            {
+                Spike* tmp = new Spike(pos, glm::vec2(StandarSizeEntities), -1);
+                OBJ_MN.Add(tmp);
+            }
+
+            if(map[i][j] == 3)
+            {
+                Orb* tmp = new Orb(OrbType::Green, pos, glm::vec2(StandarSizeEntities), -1);
+                OBJ_MN.Add(tmp);
+            }
+
+            if(map[i][j] == 4)
+            {
+                Orb* tmp = new Orb(OrbType::Blue, pos, glm::vec2(StandarSizeEntities), -1);
+                OBJ_MN.Add(tmp);
+            }
+        }
+    }
+}

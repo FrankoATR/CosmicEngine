@@ -26,7 +26,6 @@ namespace WandEngine
         virtual ~GameScene();
 
         virtual void Init() = 0;
-        virtual void Reset();
         virtual void Draw();
         virtual void Update(double deltaTime) = 0;
         virtual void LoadResources() = 0;

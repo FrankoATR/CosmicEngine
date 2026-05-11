@@ -21,8 +21,8 @@ namespace WandEngine
 
     void UIElement::Update(float deltaTime)
     {
-        GlobalPosition.x = Position.x + CameraManager::GetInstance().GetPosition().x;
-        GlobalPosition.y = Position.y + CameraManager::GetInstance().GetPosition().y;
+        GlobalPosition.x = Position.x + CameraManager::GetInstance().GetFocusPosition().x - GameManager::GetInstance().GetWindowsSize().x/2;
+        GlobalPosition.y = Position.y + CameraManager::GetInstance().GetFocusPosition().y + GameManager::GetInstance().GetWindowsSize().y/2;
         for (auto &child : children)
         {
             child->Update(deltaTime);
@@ -95,9 +95,11 @@ namespace WandEngine
 
     bool UIElement::MouseHover()
     {
+        glm::vec2 CameraFocusPosition = CameraManager::GetInstance().GetFocusPosition();
+        glm::vec2 ScreenSize = GameManager::GetInstance().GetWindowsSize();
+        glm::vec2 CameraPosition = glm::vec2(CameraFocusPosition.x - ScreenSize.x/2, CameraFocusPosition.y + ScreenSize.y/2);
         glm::vec2 MousePosition = InputManager::GetInstance().GetMousePosition();
-
-        return MousePosition.x >= GlobalPosition.x && MousePosition.x <= GlobalPosition.x + Size.x && MousePosition.y >= GlobalPosition.y && MousePosition.y <= GlobalPosition.y + Size.y;
+        return MousePosition.x >= Position.x + CameraPosition.x && MousePosition.x <= Position.x + CameraPosition.x + Size.x && MousePosition.y >= Position.y + CameraPosition.y && MousePosition.y <= Position.y + CameraPosition.y + Size.y;
     }
 
     glm::vec2 UIElement::GetPosition() const

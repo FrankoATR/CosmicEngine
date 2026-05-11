@@ -8,7 +8,6 @@
 
 #include "../../Models/Texture/GameTexture2D.hpp"
 #include "../../Models/Shader/Shader.hpp"
-#include "../../Models/TextFont/TextFont.hpp"
 
 namespace WandEngine
 {
@@ -16,8 +15,24 @@ namespace WandEngine
     class ResourceManager
     {
     private:
+        struct ShapeResources
+        {
+            unsigned int VAO = 0;
+            unsigned int VBO = 0;
+            bool initialized = false;
+            int vertexCount = 0;
+        };
 
-        void RenderShape(const std::string &key, const std::vector<glm::vec3> &vertices, glm::vec3 pivot, glm::vec3 rotation,
+        unsigned int spriteVAO;
+        
+        Shader shapeShader;
+        Shader spriteShader;
+        Shader spriteSheetShader;
+
+        ShapeResources lineResources, triangleResources, rectangleResources;
+
+        void InitShapeResources(ShapeResources &shape, const std::vector<glm::vec3> &vertices);
+        void RenderShape(ShapeResources &shape, const std::vector<glm::vec3> &vertices, glm::vec3 pivot, glm::vec3 rotation,
                          glm::vec3 color, float alpha, float lineWidth = 1.0f, GLenum drawMode = GL_LINE_LOOP);
 
         struct Texture_Sheet
@@ -28,33 +43,23 @@ namespace WandEngine
             int rows, columns, padding;
         };
 
-        std::map<std::string, unsigned int> static_vao_resources;
-        std::map<std::string, std::pair<unsigned int, unsigned int>> dynamic_vao_vbo_resources;
+        std::map<std::string, unsigned int> vao_resources;
         std::map<std::string, GameTexture2D *> texture_resources;
         std::map<std::string, Texture_Sheet *> textures_sheet_resources;
         std::map<std::string, Shader *> shader_resources;
-        std::map<std::string, TextFont *> text_font_resources;
+        std::map<std::string, int *> font_resources;
 
         ResourceManager();
         ~ResourceManager();
         ResourceManager(const ResourceManager &) = delete;
         ResourceManager &operator=(const ResourceManager &) = delete;
 
-        unsigned int Get_Static_VAO(const std::string &key) const;
-        std::pair<unsigned int, unsigned int> Get_Dynamic_VAO_VBO(const std::string &key) const;
-        GameTexture2D *GetTexture(const std::string &key) const;
-        Texture_Sheet *GetTextureSheet(const std::string &key) const;
-        Shader *GetShader(const std::string &key) const;
-        TextFont *GetTextFont(const std::string &key) const;
+        unsigned int getVAO(const std::string &key) const;
+        GameTexture2D *getTexture(const std::string &key) const;
+        Texture_Sheet *getTextureSheet(const std::string &key) const;
+        Shader *getShader(const std::string &key) const;
 
-
-        template <typename V, typename Callback>
-        void ClearMap(std::map<std::string, V> &map, Callback callback) {
-            for (auto& [key, value] : map) {
-                callback(value);
-            }
-            map.clear();
-        }
+        int *getFont(const std::string &key) const;
 
     public:
         static ResourceManager &GetInstance()
@@ -62,8 +67,6 @@ namespace WandEngine
             static ResourceManager instance;
             return instance;
         }
-
-        void Init();
 
         void Render2DSprite(
             const std::string &textureKey,
@@ -108,7 +111,7 @@ namespace WandEngine
             glm::vec3 coordinates,
             glm::vec3 color,
             float alpha = 1.0f,
-            float width = 1.0f
+            float width = 3.0f
         );
 
         void RenderCircle(
@@ -148,33 +151,16 @@ namespace WandEngine
             float lineWidth = 1.0f,
             bool filled = false);
 
-        
-        void RenderText(
-            const std::string &text,
-            const std::string &fontKey,
-            glm::vec3 position,
-            glm::vec3 scale = glm::vec3(1.0f),
-            glm::vec3 pivot = glm::vec3(0.0f),
-            glm::vec3 rotation = glm::vec3(0.0f),
-            glm::vec3 color = glm::vec3(1.0f),
-            float alpha = 1.0f
-        );
+        bool loadVAO(const std::string &key, const std::vector<std::vector<float>> &vertices);
+        bool loadShader(const std::string &key, const std::string &vs_path, const std::string &fs_path, const std::string &gs_path = "");
+        bool loadTexture(const std::string &key, const std::string &path, bool alpha);
+        bool loadTextureSheet(const std::string &key, const std::string &path, bool alpha, int rows, int columns, int padding);
 
 
-        bool Load_Static_VAO(const std::string &key, const std::vector<std::vector<float>> &vertices);
-        bool Load_Dynamic_VAO_VBO(const std::string &key, size_t vertexCount);
-        bool LoadShaderFromPath(const std::string &key, const std::string &vs_path, const std::string &fs_path, const std::string &gs_path = "");
-        bool LoadShaderFromCode(const std::string &key, const char* vertexSource, const char* fragmentSource, const char* geometrySource = nullptr);
-        bool LoadTexture(const std::string &key, const std::string &path, bool alpha);
-        bool LoadTextureSheet(const std::string &key, const std::string &path, bool alpha, int rows, int columns, int padding);
-
-        bool LoadTextFont(const std::string &key, const std::string &path, unsigned int fontSize);
+        bool loadFont(const std::string &key, const std::string &path, int size);
 
         void Clear();
     };
-
-
-    inline ResourceManager* RS_MNX() { return &ResourceManager::GetInstance(); }  // DEFINITIONS OR INLINES?
 
 }
 

@@ -95,16 +95,6 @@ namespace WandEngine
         }
     }
 
-    void MusicManager::SetPosition(const std::string& key, unsigned int milliseconds)
-    {
-        auto it = channels.find(key);
-        if (it != channels.end() && it->second)
-        {
-            FMOD_Channel_SetPosition(it->second, milliseconds, FMOD_TIMEUNIT_MS);
-        }
-    }
-
-
     void MusicManager::Clear()
     {
         for (auto &[_, music] : musics)

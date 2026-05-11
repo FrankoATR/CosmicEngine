@@ -36,6 +36,7 @@ namespace WandEngine
 
 		const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
+		
 		window = glfwCreateWindow(screenWidth, screenHeight, "WANDENGINE", nullptr, nullptr);
 
 		if (window == nullptr)
@@ -59,7 +60,6 @@ namespace WandEngine
 
 		glViewport(0, 0, screenWidth, screenHeight);
 		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-		glfwSetDropCallback(window, DropCallback);
 
 		if (!MusicManager::GetInstance().Init())
 		{
@@ -86,10 +86,11 @@ namespace WandEngine
 		return true;
 	}
 
+
 	void GameManager::Update()
 	{
 		const double fixedDeltaTime = 1.0 / 144.0;
-
+		
 		double accumulator = 0.0;
 		double lastTime = glfwGetTime();
 		double lastRenderTimer = lastTime;
@@ -100,7 +101,7 @@ namespace WandEngine
 			double frameTime = currentTime - lastTime;
 			lastTime = currentTime;
 			accumulator += frameTime;
-
+	
 			while (accumulator >= fixedDeltaTime)
 			{
 				InputManager::GetInstance().Update(window);
@@ -110,10 +111,10 @@ namespace WandEngine
 				SceneManager::GetInstance().Update(fixedDeltaTime * (gameticks / 20.0f));
 				accumulator -= fixedDeltaTime;
 			}
-
+	
 			double targetFrameTime = 1.0 / targetFPS;
 
-			if (currentTime - lastRenderTimer >= targetFrameTime || VSyncEnable)
+			if(currentTime - lastRenderTimer >= targetFrameTime || VSyncEnable)
 			{
 				glm::vec3 BackbufferColor(SceneManager::GetInstance().GetBackgroundColor());
 				glClearColor(BackbufferColor.r, BackbufferColor.g, BackbufferColor.b, 1.0f);
@@ -134,22 +135,24 @@ namespace WandEngine
 			}
 
 			glfwPollEvents();
+
 		}
 	}
+	
 
 	void GameManager::framebuffer_size_callback(GLFWwindow *window, int width, int height)
 	{
 		float currentAspect = (float)width / (float)height;
 		int newWidth = width;
 		int newHeight = height;
-
-		if (currentAspect > (16.0f / 9.0f))
+		
+		if(currentAspect > (16.0f/9.0f))
 		{
-			newWidth = (int)(height * (16.0f / 9.0f));
+			newWidth = (int)(height * (16.0f/9.0f));
 		}
 		else
 		{
-			newHeight = (int)(width / (16.0f / 9.0f));
+			newHeight = (int)(width / (16.0f/9.0f));
 		}
 
 		int offsetX = (width - newWidth) / 2;
@@ -157,28 +160,8 @@ namespace WandEngine
 		glfwSetWindowAspectRatio(window, 16, 9);
 
 		glViewport(offsetX, offsetY, newWidth, newHeight);
+		
 	}
-
-	void GameManager::DropCallback(GLFWwindow *window, int count, const char **paths)
-	{
-		for (int i = 0; i < count; i++)
-		{
-			GameManager::GetInstance().PushDroppedFile(paths[i]);
-		}
-	}
-
-	std::vector<std::string> GameManager::GetDroppedFiles()
-	{
-		std::vector<std::string> tmp = droppedfiles;
-		droppedfiles.clear();
-		return tmp;
-	}
-
-	void GameManager::PushDroppedFile(std::string filepath)
-	{
-		droppedfiles.push_back(filepath);
-	}
-
 
 	void GameManager::SetTargetFPS(double targetFPS)
 	{
@@ -198,6 +181,7 @@ namespace WandEngine
 	{
 		return gameticks;
 	}
+
 
 	void GameManager::EnableVsync()
 	{
