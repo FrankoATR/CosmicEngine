@@ -66,7 +66,7 @@ void MainScene::Init()
     RS_MN.LoadTexture("line", TEXTURE_GD_LINE, true);
     RS_MN.LoadTextureSheet("gd", TEXTURESHEET_GD, true, 6, 6, 0);
 
-    RS_MN.LoadTextFont("font1", FONT_THALEAHFAT, 30);
+    RS_MN.LoadTextFont("font1", FONT_THALEAHFAT, 25);
 
     //UI_MN.AddElement(new UIButton("BUTTON", nullptr, glm::vec2(1500.0f, 20.0f), glm::vec2(50.0f), true, nullptr));
 
@@ -163,7 +163,7 @@ void MainScene::Draw()
     
     for(int i = 0; i < 3; i++)
     {
-        ResourceManager::GetInstance().Render2DSprite("bg1", 
+        RS_MN.Render2DSprite("bg1", 
             glm::vec2(
                 CAM_MN.GetPosition().x - glm::mod(CAM_MN.GetPosition().x, 1920.0f / 0.05f) * 0.05 + i * 1920.0f, 
                 CAM_MN.GetPosition().y - glm::mod(CAM_MN.GetPosition().y, 1920.0f / 0.01f) * 0.01 + CAM_MN.GetBaseWindowSize().y
@@ -173,19 +173,20 @@ void MainScene::Draw()
     
     for(int i = 0; i < 6; i++)
     {
-        ResourceManager::GetInstance().Render2DSprite("g1", glm::vec2(CAM_MN.GetPosition().x - glm::mod(CAM_MN.GetPosition().x, 430.0f) + i * 430.0f , 0.0f) , glm::vec2(430.0f, 430.0f), 0.0f, glm::vec3(1.0f, 0.3f, 0.3f));
+        RS_MN.Render2DSprite("g1", glm::vec2(CAM_MN.GetPosition().x - glm::mod(CAM_MN.GetPosition().x, 430.0f) + i * 430.0f , 0.0f) , glm::vec2(430.0f, 430.0f), 0.0f, glm::vec3(1.0f, 0.3f, 0.3f));
     }
     
-    ResourceManager::GetInstance().Render2DSprite("line", glm::vec2(CAM_MN.GetFocusPosition().x, 0.0f - 76.0f * 10 + 2.0f * 1) , glm::vec2(2.0f * 2, 76.0f * 20), 90.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+    RS_MN.Render2DSprite("line", glm::vec2(CAM_MN.GetFocusPosition().x, 0.0f - 76.0f * 10 + 2.0f * 1) , glm::vec2(2.0f * 2, 76.0f * 20), 90.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
     if(player)
     {
-        RS_MN.RenderText("Prueba De Texto", "font1", glm::vec3(player->GetPosition().x, player->GetPosition().y - 30, 0.0f), glm::vec3(2.0f));
+        RS_MN.RenderText("Rosita Games", "font1", glm::vec3(player->GetPosition().x - 100, player->GetPosition().y - 30, 0.0f), glm::vec3(3.0f));
+        RS_MN.RenderPoint(glm::vec3(player->GetPosition().x - 100, player->GetPosition().y - 50, 0.0f), glm::vec3(1.0f), 0.5f, 10.0f);
     }
 
     if(EditorMode)
     {
-        ResourceManager::GetInstance().RenderLine(
+        RS_MN.RenderLine(
             glm::vec3(lineMusicPos, CAM_MN.GetPosition().y, 0.0f),
             glm::vec3(lineMusicPos, CAM_MN.GetPosition().y + CAM_MN.GetBaseWindowSize().y, 0.0f),
             glm::vec3(0.0f),

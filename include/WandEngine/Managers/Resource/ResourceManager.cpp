@@ -4,6 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <functional>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -28,12 +29,16 @@ namespace WandEngine
             {1.0f, 0.0f, 1.0f, 0.0f}
         };
 
-        Load_Static_VAO("Sprite", vertices);
+        Load_Static_VAO("WAND_Sprite", vertices);
+        Load_Dynamic_VAO_VBO("WAND_Point", 1);
+        Load_Dynamic_VAO_VBO("WAND_Line", 2);
+        Load_Dynamic_VAO_VBO("WAND_Triangle", 3);
+        Load_Dynamic_VAO_VBO("WAND_Rectangle", 4);
 
-        LoadShaderFromCode("Shape", shape_vs, shape_fs);
-        LoadShaderFromCode("Sprite", sprite_vs, sprite_fs);
-        LoadShaderFromCode("SpriteSheet", spriteSheet_vs, spriteSheet_fs);
-        LoadShaderFromCode("text", text_vs, text_fs);
+        LoadShaderFromCode("WAND_Shape", shape_vs, shape_fs);
+        LoadShaderFromCode("WAND_Sprite", sprite_vs, sprite_fs);
+        LoadShaderFromCode("WAND_SpriteSheet", spriteSheet_vs, spriteSheet_fs);
+        LoadShaderFromCode("WAND_Text", text_vs, text_fs);
     }
 
 
@@ -53,7 +58,7 @@ namespace WandEngine
             return;
         }
 
-        Shader *spriteShader = GetShader("Sprite");
+        Shader *spriteShader = GetShader("WAND_Sprite");
 
         spriteShader->Use();
         spriteShader->SetModel("model", glm::vec3(position, 0.0f), glm::vec3(size, 0.0f), glm::vec3(0.0f, 0.0f, rotation));
@@ -64,7 +69,7 @@ namespace WandEngine
         texture->Bind(textureIndex);
         spriteShader->SetInt("image", textureIndex);
 
-        glBindVertexArray(Get_Static_VAO("Sprite"));
+        glBindVertexArray(Get_Static_VAO("WAND_Sprite"));
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         texture->Unbind();
@@ -124,7 +129,7 @@ namespace WandEngine
             return;
         }
 
-        Shader *spriteSheetShader = GetShader("SpriteSheet");
+        Shader *spriteSheetShader = GetShader("WAND_SpriteSheet");
 
         spriteSheetShader->Use();
         spriteSheetShader->SetModel("model", glm::vec3(position, 0.0f), glm::vec3(size, 0.0f), glm::vec3(0.0f, 0.0f, rotation));
@@ -151,7 +156,7 @@ namespace WandEngine
         textureSheet->texture->Bind(textureIndex);
         spriteSheetShader->SetInt("image", textureIndex);
 
-        glBindVertexArray(Get_Static_VAO("Sprite"));
+        glBindVertexArray(Get_Static_VAO("WAND_Sprite"));
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -222,36 +227,9 @@ namespace WandEngine
         shader->EndUse();
     }
 
-    void ResourceManager::InitShapeResources(ShapeResources &shape, const std::vector<glm::vec3> &vertices)
-    {
-        if (!shape.initialized)
-        {
-            glGenVertexArrays(1, &shape.VAO);
-            glGenBuffers(1, &shape.VBO);
-
-            glBindVertexArray(shape.VAO);
-            glBindBuffer(GL_ARRAY_BUFFER, shape.VBO);
-            glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW); // Reservar espacio
-
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *)0);
-            glEnableVertexAttribArray(0);
-
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glBindVertexArray(0);
-
-            shape.initialized = true;
-            shape.vertexCount = vertices.size();
-        }
-        else
-        {
-            glBindBuffer(GL_ARRAY_BUFFER, shape.VBO);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(glm::vec3), vertices.data());
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-        }
-    }
 
     void ResourceManager::RenderShape(
-        ShapeResources &shape,
+        const std::string &key,
         const std::vector<glm::vec3> &vertices,
         glm::vec3 pivot,
         glm::vec3 rotation,
@@ -260,9 +238,13 @@ namespace WandEngine
         float lineWidth,
         GLenum drawMode)
     {
-        InitShapeResources(shape, vertices);
+        auto dynamic_temp = Get_Dynamic_VAO_VBO(key);
 
-        Shader *shapeShader = GetShader("Shape");
+        glBindBuffer(GL_ARRAY_BUFFER, dynamic_temp.second);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(glm::vec3), vertices.data());
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        Shader *shapeShader = GetShader("WAND_Shape");
         shapeShader->Use();
 
         glm::mat4 model(1.0f);
@@ -278,24 +260,31 @@ namespace WandEngine
 
         glLineWidth(lineWidth);
 
-        glBindVertexArray(shape.VAO);
-        glDrawArrays(drawMode, 0, shape.vertexCount);
+        glBindVertexArray(dynamic_temp.first);
+        glDrawArrays(drawMode, 0, vertices.size());
         shapeShader->EndUse();
+    }
+
+    void ResourceManager::RenderPoint(glm::vec3 coordinates, glm::vec3 color, float alpha, float width)
+    {
+        glPointSize(width);
+        RenderShape("WAND_Point", {coordinates}, coordinates, glm::vec3(0.0f), color, alpha, width, GL_POINTS);
+        glPointSize(1.0f);
     }
 
     void ResourceManager::RenderLine(glm::vec3 point_1, glm::vec3 point_2, glm::vec3 pivot, glm::vec3 rotation, glm::vec3 color, float alpha, float lineWidth)
     {
-        RenderShape(lineResources, {point_1, point_2}, pivot, rotation, color, alpha, lineWidth, GL_LINES);
+        RenderShape("WAND_Line", {point_1, point_2}, pivot, rotation, color, alpha, lineWidth, GL_LINES);
     }
 
     void ResourceManager::RenderTriangle(glm::vec3 point_1, glm::vec3 point_2, glm::vec3 point_3, glm::vec3 pivot, glm::vec3 rotation, glm::vec3 color, float alpha, float lineWidth, bool filled)
     {
-        RenderShape(triangleResources, {point_1, point_2, point_3}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP);
+        RenderShape("WAND_Triangle", {point_1, point_2, point_3}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP);
     }
 
     void ResourceManager::RenderRectangle(glm::vec3 point_1, glm::vec3 point_2, glm::vec3 pivot, glm::vec3 rotation, glm::vec3 color, float alpha, float lineWidth, bool filled)
     {
-        RenderShape(rectangleResources, {point_1, glm::vec3(point_2.x, point_1.y, 0.0f), point_2, glm::vec3(point_1.x, point_2.y, 0.0f)}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP);
+        RenderShape("WAND_Rectangle", {point_1, glm::vec3(point_2.x, point_1.y, 0.0f), point_2, glm::vec3(point_1.x, point_2.y, 0.0f)}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP);
     }
 
     void ResourceManager::RenderText(
@@ -311,11 +300,11 @@ namespace WandEngine
     {
         TextFont * textFont = GetTextFont(fontKey);
 
-        Shader* textShader = GetShader("text");
+        Shader* textShader = GetShader("WAND_Text");
 
         textShader->Use();
         textShader->SetProjection("projection", ViewType::Ortho);
-        textShader->SetInt("text", 0);
+        textShader->SetInt("WAND_text", 0);
         textShader->SetVec3("textColor", color);
         glActiveTexture(GL_TEXTURE0);
         glBindVertexArray(textFont->GetVAO());
@@ -358,7 +347,7 @@ namespace WandEngine
 
     bool ResourceManager::Load_Static_VAO(const std::string &key, const std::vector<std::vector<float>> &vertices)
     {
-        if (vao_resources.find(key) != vao_resources.end())
+        if (static_vao_resources.find(key) != static_vao_resources.end())
         {
             return false;
         }
@@ -392,10 +381,47 @@ namespace WandEngine
         glBindVertexArray(0);
         glDeleteBuffers(1, &VBO);
 
-        vao_resources[key] = VAO;
+        static_vao_resources[key] = VAO;
 
         return true;
     }
+
+
+    bool ResourceManager::Load_Dynamic_VAO_VBO(const std::string &key, size_t vertexCount)
+    {
+        if (static_vao_resources.find(key) != static_vao_resources.end())
+        {
+            return false;
+        }
+
+        if (vertexCount <= 0)
+        {
+            std::cerr << "Vertex must be greater than 0" << std::endl;
+            return false;
+        }
+
+
+        std::pair<unsigned int, unsigned int> tmp_dynamic;
+
+        glGenVertexArrays(1, &tmp_dynamic.first);
+        glGenBuffers(1, &tmp_dynamic.second);
+
+        glBindVertexArray(tmp_dynamic.first);
+        glBindBuffer(GL_ARRAY_BUFFER, tmp_dynamic.second);
+        glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *)0);
+        glEnableVertexAttribArray(0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+
+        dynamic_vao_vbo_resources[key] = tmp_dynamic;
+
+        return true;
+    }
+
+
 
     bool ResourceManager::LoadShaderFromPath(const std::string &key, const std::string &vs_path, const std::string &fs_path, const std::string &gs_path)
     {
@@ -505,10 +531,20 @@ namespace WandEngine
 
     unsigned int ResourceManager::Get_Static_VAO(const std::string &key) const
     {
-        auto it = vao_resources.find(key);
-        if (it == vao_resources.end())
+        auto it = static_vao_resources.find(key);
+        if (it == static_vao_resources.end())
         {
             return 0;
+        }
+        return it->second;
+    }
+
+    std::pair<unsigned int, unsigned int> ResourceManager::Get_Dynamic_VAO_VBO(const std::string &key) const
+    {
+        auto it = dynamic_vao_vbo_resources.find(key);
+        if (it == dynamic_vao_vbo_resources.end())
+        {
+            return std::pair(0,0);
         }
         return it->second;
     }
@@ -555,101 +591,51 @@ namespace WandEngine
 
     void ResourceManager::Clear()
     {
-        if (lineResources.initialized)
-        {
-            glDeleteVertexArrays(1, &lineResources.VAO);
-            glDeleteBuffers(1, &lineResources.VBO);
-            lineResources.initialized = false;
-        }
 
-        if (triangleResources.initialized)
-        {
-            glDeleteVertexArrays(1, &triangleResources.VAO);
-            glDeleteBuffers(1, &triangleResources.VBO);
-            triangleResources.initialized = false;
-        }
+        ClearMap<unsigned int>(static_vao_resources, [](unsigned int& resource){
+            if(resource != 0) glDeleteVertexArrays(1, &resource);
+            resource = 0;
+        });
 
-        if (rectangleResources.initialized)
-        {
-            glDeleteVertexArrays(1, &rectangleResources.VAO);
-            glDeleteBuffers(1, &rectangleResources.VBO);
-            rectangleResources.initialized = false;
-        }
+        ClearMap<std::pair<unsigned int, unsigned int>>(dynamic_vao_vbo_resources, [](std::pair<unsigned int, unsigned int>& resource){
+            if(resource.first != 0) glDeleteVertexArrays(1, &resource.first);
+            resource.first = 0;
+            if(resource.second != 0) glDeleteBuffers(1, &resource.second);
+            resource.second = 0;            
+        });
 
 
+        ClearMap<Shader*>(shader_resources, [](Shader*& resource){
+            if(resource) delete resource;
+            resource = nullptr;
+        });
 
-        auto it_vao_r = vao_resources.begin();
-        while(it_vao_r != vao_resources.end())
-        {
-            if((*it_vao_r).second != 0)
+        ClearMap<GameTexture2D*>(texture_resources, [](GameTexture2D*& resource){
+            if(resource) delete resource;
+            resource = nullptr;
+        });
+
+        
+        ClearMap<Texture_Sheet*>(textures_sheet_resources, [](Texture_Sheet*& resource){
+            if(resource)
             {
-                glDeleteVertexArrays(1, &(*it_vao_r).second);
-                (*it_vao_r).second = 0;
-                it_vao_r++;
+                if(resource->texture) delete resource->texture;
+                resource->texture = nullptr;
+                delete resource;
             }
-        }
-        vao_resources.clear();
+            resource = nullptr;
+        });
 
 
-        auto it_shader_r = shader_resources.begin();
-        while(it_shader_r != shader_resources.end())
-        {
-            if(
-                (*it_shader_r).second != nullptr
-                //&& 
-                //!( (*it_shader_r).first == "Shape" || (*it_shader_r).first == "Sprite" || (*it_shader_r).first == "SpriteSheet" ) // Change to INIT RESOURCES
-                )
-            {
-                delete (*it_shader_r).second;
-                (*it_shader_r).second = nullptr;
-                it_shader_r++;
-            }
-        }
-        shader_resources.clear();
+        ClearMap<TextFont*>(text_font_resources, [](TextFont*& resource){
+            if(resource) delete resource;
+            resource = nullptr;
+        });
+        ClearMap<TextFont*>(text_font_resources, [](TextFont*& resource){
+            if(resource) delete resource;
+            resource = nullptr;
+        });
 
-
-        auto it_texture_r = texture_resources.begin();
-        while(it_texture_r != texture_resources.end())
-        {
-            if((*it_texture_r).second != nullptr)
-            {
-                delete (*it_texture_r).second;
-                (*it_texture_r).second = nullptr;
-                it_texture_r++;
-            }
-        }
-        texture_resources.clear();
-
-
-        auto it_textureSheet_r = textures_sheet_resources.begin();
-        while(it_textureSheet_r != textures_sheet_resources.end())
-        {
-            if((*it_textureSheet_r).second != nullptr)
-            {
-                if((*it_textureSheet_r).second->texture != nullptr)
-                {
-                    delete (*it_textureSheet_r).second->texture;
-                    (*it_textureSheet_r).second->texture = nullptr;
-                }
-                delete (*it_textureSheet_r).second;
-                (*it_textureSheet_r).second = nullptr;
-                it_textureSheet_r++;
-            }
-        }
-        textures_sheet_resources.clear();
-
-
-        auto it_text_r = text_font_resources.begin();
-        while(it_text_r != text_font_resources.end())
-        {
-            if((*it_text_r).second != nullptr)
-            {
-                delete (*it_text_r).second;
-                (*it_text_r).second = nullptr;
-                it_text_r++;
-            }
-        }
-        text_font_resources.clear();
 
 
         #ifndef NDEBUG
