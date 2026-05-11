@@ -29,7 +29,7 @@ namespace WandEngine
         ALLEGRO_DISPLAY *Window;
         ALLEGRO_TIMER *FPS;
 
-        Size ScreenSize;
+        WAND_SIZE ScreenSize;
 
         GameManager();
         ~GameManager();
@@ -49,10 +49,10 @@ namespace WandEngine
 
         void SetFirstScene(GameScene *scene);
 
-        void SetWindows_Size(Size ScreenSize);
+        void SetWindows_Size(WAND_SIZE ScreenSize);
         void SetWindows_FullScreenMode();
         void SetWindows_WindowsMode();
-        Size GetWindowsSize();
+        WAND_SIZE GetWindowsSize();
 
         bool IsFullScreen();
 

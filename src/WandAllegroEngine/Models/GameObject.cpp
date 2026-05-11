@@ -6,7 +6,7 @@
 namespace WandEngine
 {
 
-    GameObject::GameObject(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId) : ObjectType(ObjectType), ObjectName(ObjectName), Sprite(Sprite), Size(Size), Position(Position), LastPosition(Position), LayerId(LayerId)
+    GameObject::GameObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId) : ObjectType(ObjectType), ObjectName(ObjectName), Sprite(Sprite), Size(Size), Position(Position), LastPosition(Position), LayerId(LayerId)
     {
         this->AliveInGameManager = true;
     }
@@ -34,23 +34,23 @@ namespace WandEngine
     {
     }
 
-    void GameObject::SetPosition(Vec2 NewPosition)
+    void GameObject::SetPosition(WAND_VEC2 NewPosition)
     {
         this->LastPosition = this->Position;
         this->Position = NewPosition;
     }
 
-    Vec2 GameObject::GetPosition()
+    WAND_VEC2 GameObject::GetPosition()
     {
         return this->Position;
     }
 
-    void GameObject::SetSize(Vec2 NewSize)
+    void GameObject::SetSize(WAND_VEC2 NewSize)
     {
         this->Size = NewSize;
     }
 
-    Vec2 GameObject::GetSize()
+    WAND_VEC2 GameObject::GetSize()
     {
         return this->Size;
     }

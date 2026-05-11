@@ -5,6 +5,9 @@
 #include "../Managers/GameManager.hpp"
 #include "../Managers/EventManager.hpp"
 #include "../Managers/MusicManager.hpp"
+#include "../Managers/SoundManager.hpp"
+#include "../Managers/CameraManager.hpp"
+#include "../Managers/UIManager.hpp"
 
 #include <iostream>
 
@@ -12,15 +15,14 @@ namespace WandEngine
 {
     GameScene::GameScene(std::string Name) : ProgressLoadingScene(0.0f), Name(Name)
     {
+        this->ShowBodys = false;
+        this->ShowGrid = false;
+        this->ShowCamera = false;
     }
 
     GameScene::~GameScene()
     {
         Clear();
-        if (loadingThread.joinable())
-        {
-            loadingThread.join();
-        }
         std::cout << "Scene destroyed: " << GetName() << std::endl;
     }
 
@@ -58,6 +60,14 @@ namespace WandEngine
         WandEngine::ResourceManager::GetInstance().Clear();
         WandEngine::EventManager::GetInstance().Clear();
         WandEngine::MusicManager::GetInstance().Clear();
+        WandEngine::SoundManager::GetInstance().Clear();
+        WandEngine::UIManager::GetInstance().Clear();
+
+        if (loadingThread.joinable())
+        {
+            loadingThread.join();
+        }
+
         std::cout << "Scene Clear: " << GetName() << std::endl;
     }
 
@@ -109,6 +119,50 @@ namespace WandEngine
     {
         int W_width = WandEngine::GameManager::GetInstance().GetWindowsSize().width;
         al_draw_filled_rectangle(50, W_width / 2 - 10, 50 + 800 * GetProgressLoadingScene(), W_width / 2 + 10, al_map_rgb(0, 255, 0));
+    }
+
+    void GameScene::UpdateManagers(double deltaTime)
+    {
+        Update(deltaTime);
+        UIManager::GetInstance().Update(deltaTime);
+        BodyManager::GetInstance().Update();
+        ObjectManager::GetInstance().Update(deltaTime);
+    }
+
+    void GameScene::Draw()
+    {
+        ObjectManager::GetInstance().Draw();
+
+        if (ShowBodys)
+        {
+            BodyManager::GetInstance().Draw();
+        }
+
+        if (ShowGrid)
+        {
+        }
+
+        if (ShowCamera)
+        {
+            CameraManager::GetInstance().Draw();
+        }
+
+        UIManager::GetInstance().Draw();
+    }
+
+    void GameScene::ToogleShowBodys()
+    {
+        this->ShowBodys = !this->ShowBodys;
+    }
+
+    void GameScene::ToogleShowGrid()
+    {
+        this->ShowGrid = !this->ShowGrid;
+    }
+
+    void GameScene::ToogleShowCamera()
+    {
+        this->ShowCamera = !this->ShowCamera;
     }
 
 }

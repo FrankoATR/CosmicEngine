@@ -5,20 +5,29 @@
 #include "../WandAllegroEngine/Managers/SceneManager.hpp"
 #include "../WandAllegroEngine/Managers/InputManager.hpp"
 #include "../WandAllegroEngine/Managers/MusicManager.hpp"
+#include "../WandAllegroEngine/Managers/SoundManager.hpp"
 #include "../WandAllegroEngine/Managers/GameManager.hpp"
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
+#include "../WandAllegroEngine/Managers/UIManager.hpp"
 #include "../WandAllegroEngine/Managers/CameraManager.hpp"
+
+#include "../WandAllegroEngine/Models/UIElements/UIButton.hpp"
 
 #include "GameInScene.hpp"
 #include "../Entities/BackgroundObject.hpp"
 #include "../Utilities/Paths.hpp"
 #include "../Entities/LinkObject.hpp"
+#include "../Entities/MapTileObject.hpp"
 #include "../Entities/CustomEnemy.hpp"
 #include "../Events/Logger.hpp"
 
 
-MainScene::MainScene() : GameScene("MainScene")
+MainScene::MainScene() : GameScene("MainScene"), CurrentMousePosition(InputManager::GetInstance().GetMousePosition()), LastMousePosition(InputManager::GetInstance().GetMousePosition())
 {
+    this->InitialSound = false;
+    this->last_time = 0;
+    this->timeAfterDeath = 0;
+    this->DeathSound = false;
 }
 
 void MainScene::Init()
@@ -29,20 +38,29 @@ void MainScene::Init()
         ResourceManager::GetInstance().loadBitmap("Background2", BG_SPACE_IMAGE_PATH);
         ResourceManager::GetInstance().loadSpriteSheet("Mario Sprites", MARIO_SPRITES_PATH, 4, 4);
         ResourceManager::GetInstance().loadSpriteSheet("Player", CHARACTERS_IMAGE_PATH, 2, 7);
+        ResourceManager::GetInstance().loadSpriteSheet("Blocks Sprites", BLOCKS_SPRITES_PATH, 5, 3);
         
-        ResourceManager::GetInstance().loadFont("Font", RETRO_FONT_PATH, 50); });
+        ResourceManager::GetInstance().loadFont("Font", RETRO_FONT_PATH, 50);
+        ResourceManager::GetInstance().loadFont("ButtonFont", RETRO_FONT_PATH, 30);
+        ResourceManager::GetInstance().loadBitmap("Button1", BUTTON1_SPRITE_PATH);
+        
+        SoundManager::GetInstance().Load("PacmanSound1", SOUND1_PATH);
+        SoundManager::GetInstance().Load("Intro", SOUND2_PATH);
+        SoundManager::GetInstance().Load("PacmanDeath", SOUND3_PATH);
+        
+        });
 
     SetProgressLoadingScene(0.2f);
 
     AddMainThreadTask([this]()
                       {
-        GameObject *bg = new BackgroundObject(Object::StaticEntity, Vec2(0, 0), Vec2(1920, 1080), "BG", ResourceManager::GetInstance().getBitmap("Background2"), 0);
+        GameObject *bg = new BackgroundObject(Object::StaticEntity, WAND_VEC2(0, 0), WAND_VEC2(1920, 1080), "BG", ResourceManager::GetInstance().getBitmap("Background2"), 0);
         ObjectManager::GetInstance().Add(bg);
 
-        GameObject *player = new LinkObject(Object::DynamicEntity, Vec2(400, 300), Vec2(64, 64), "Player", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Mario Sprites", 0, 0), 1, 20, ResourceManager::GetInstance().getFont("Font"));
+        GameObject *player = new LinkObject(Object::DynamicEntity, WAND_VEC2(400, 300), WAND_VEC2(64, 64), "Player", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Mario Sprites", 0, 0), 1, 20, ResourceManager::GetInstance().getFont("Font"));
         ObjectManager::GetInstance().Add(player);
 
-        GameObject *enemy = new CustomEnemy(Object::DynamicEntity, Vec2(600, 600), Vec2(64, 64), "Emerson", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Mario Sprites", 0, 2), 1, 20, ResourceManager::GetInstance().getFont("Font"));
+        GameObject *enemy = new CustomEnemy(Object::DynamicEntity, WAND_VEC2(600, 600), WAND_VEC2(64, 64), "Emerson", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Mario Sprites", 0, 2), 1, 20, ResourceManager::GetInstance().getFont("Font"));
         ObjectManager::GetInstance().Add(enemy); });
 
     SetProgressLoadingScene(0.3f);
@@ -51,44 +69,81 @@ void MainScene::Init()
                       {
         for (int i = 0; i < 10; i++)
         {
-            GameObject *enemy = new CustomEnemy(Object::DynamicEntity, Vec2(rand()%(int)GameManager::GetInstance().GetWindowsSize().width, rand()%(int)GameManager::GetInstance().GetWindowsSize().height), Vec2(32, 32), "Emerson", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", rand()%2, rand()%5), 3, 20, ResourceManager::GetInstance().getFont("Font"));
-            ObjectManager::GetInstance().Add(enemy);
-        } });
+            GameObject* tmp = new MapTileObject(Object::DynamicEntity, WAND_VEC2(rand()%(int)GameManager::GetInstance().GetWindowsSize().width, rand()%(int)GameManager::GetInstance().GetWindowsSize().height), WAND_VEC2(32, 32), "Tile", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Blocks Sprites", rand()%5, rand()%3), 3);
+            ObjectManager::GetInstance().Add(tmp);
+        } }
+    );
 
     SetProgressLoadingScene(0.5f);
 
-    // new LinkObject(DynamicEntity, Vec2(300, 200), Vec2(64, 64), "Enemy", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 1), 3, 20, ResourceManager::GetInstance().getFont("Font"));
+    // new LinkObject(DynamicEntity, WAND_VEC2(300, 200), WAND_VEC2(64, 64), "Enemy", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 1), 3, 20, ResourceManager::GetInstance().getFont("Font"));
 
-    EventManager::GetInstance().RegisterEvent("OnEnemyDestroy", std::function<void()>([]()
-                                                                                      {
-        GameObject* player = ObjectManager::GetInstance().FindByUniqueName("Player");
-        if(player){
-            player->SetPosition(Vec2(500, 500));
-        }
-        std::cout << "Enemigo destruido" << std::endl; }));
+    AddMainThreadTask([this](){
 
-    EventManager::GetInstance().RegisterEvent(
-        "ChangePosition",
-        std::function<void(GameObject *, GameObject *)>([](GameObject *obj1, GameObject *obj2)
-                                                        {
-            Vec2 tmp = obj1->GetPosition();
-            obj1->SetPosition(obj2->GetPosition());
-            obj2->SetPosition(tmp);
-            ALLEGRO_BITMAP* tmp2 = obj1->GetSprite();
-            obj1->SetSprite(obj2->GetSprite());
-            obj2->SetSprite(tmp2);
-            std::string tmp3 = obj1->GetObjectName();
-            obj1->SetObjectName(obj2->GetObjectName());
-            obj2->SetObjectName(tmp3);
-            std::cout << "Positions Changed" << std::endl; }));
+        EventManager::GetInstance().RegisterEvent("OnEnemyDestroy", std::function<void()>([]()
+                                                                                        {
+            GameObject* player = ObjectManager::GetInstance().FindByUniqueName("Player");
+            if(player){
+                player->SetPosition(WAND_VEC2(500, 500));
+            }
+            std::cout << "Enemigo destruido" << std::endl; }));
 
-    MusicManager::GetInstance().LoadMusic("Background", TRACK1_PATH);
+        EventManager::GetInstance().RegisterEvent(
+            "ChangePosition",
+            std::function<void(GameObject *, GameObject *)>([](GameObject *obj1, GameObject *obj2)
+                                                            {
+                WAND_VEC2 tmp = obj1->GetPosition();
+                obj1->SetPosition(obj2->GetPosition());
+                obj2->SetPosition(tmp);
+                ALLEGRO_BITMAP* tmp2 = obj1->GetSprite();
+                obj1->SetSprite(obj2->GetSprite());
+                obj2->SetSprite(tmp2);
+                std::string tmp3 = obj1->GetObjectName();
+                obj1->SetObjectName(obj2->GetObjectName());
+                obj2->SetObjectName(tmp3);
+                std::cout << "Positions Changed" << std::endl; }));
+
+    });
+
+
+
+    AddMainThreadTask([this]()
+                    {
+        UIButton* button1 = new UIButton(ResourceManager::GetInstance().getBitmap("Button1"), "Game Over", ResourceManager::GetInstance().getFont("ButtonFont"), WAND_VEC2(0, 0), WAND_SIZE(150, 75), true, NULL);
+
+        button1->SetOnClick([](){
+            SoundManager::GetInstance().Play("PacmanDeath", 1.0f, false);
+
+        });
+
+        UIManager::GetInstance().AddElement(button1);
+
+
+        UIButton* button2 = new UIButton(ResourceManager::GetInstance().getBitmap("Button1"), "Next Scene", ResourceManager::GetInstance().getFont("ButtonFont"), WAND_VEC2(200, 0), WAND_SIZE(150, 75), true, NULL);
+
+        button2->SetOnClick([](){
+            SceneManager::GetInstance().ReplaceScene(new GameInScene);
+        });
+
+        UIManager::GetInstance().AddElement(button2);
+
+
+        UIButton* button3 = new UIButton(ResourceManager::GetInstance().getBitmap("Button1"), "Toggle Bodys", ResourceManager::GetInstance().getFont("ButtonFont"), WAND_VEC2(400, 0), WAND_SIZE(150, 75), true, NULL);
+
+        button3->SetOnClick([this](){
+                ToogleShowBodys();
+                ToogleShowGrid();
+                ToogleShowCamera();
+        });
+
+        UIManager::GetInstance().AddElement(button3);
+    });
+
 
     SceneManager::GetInstance().SetBackBufferColor(WAND_COLOR(155.0f, 0.0f, 33.0f, 0.0f));
 
     SetProgressLoadingScene(1.0f);
 
-    MusicManager::GetInstance().PlayMusic("Background", 1.0f, true);
 
     std::cout << "\n\nSCENE CREATED: " << GetName() << std::endl
               << std::endl;
@@ -96,6 +151,12 @@ void MainScene::Init()
 
 void MainScene::Update(double deltaTime)
 {
+
+    if(!InitialSound)
+    {
+        SoundManager::GetInstance().Play("Intro", 1.0f, false);
+        InitialSound = true;
+    }
 
     if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_ESCAPE, KeyDown))
     {
@@ -107,10 +168,6 @@ void MainScene::Update(double deltaTime)
         SceneManager::GetInstance().ReplaceScene(new GameInScene);
     }
 
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_H, KeyDown))
-    {
-        // GameManager::GetInstance().ToggleShowBody();
-    }
 
     if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_P, KeyDown))
     {
@@ -123,36 +180,76 @@ void MainScene::Update(double deltaTime)
 
     if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_U, KeyDown))
     {
-        GameManager::GetInstance().SetWindows_Size(Size(800, 640));
+        GameManager::GetInstance().SetWindows_Size(WAND_SIZE(800, 640));
     }
     else if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_I, KeyDown))
     {
-        GameManager::GetInstance().SetWindows_Size(Size(1920, 1080));
+        GameManager::GetInstance().SetWindows_Size(WAND_SIZE(1920, 1080));
     }
 
 
 
     if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_M, KeyDown))
     {
-        GameObject *enemy = new CustomEnemy(Object::DynamicEntity, Vec2(rand()%(int)GameManager::GetInstance().GetWindowsSize().width, rand()%(int)GameManager::GetInstance().GetWindowsSize().height), Vec2(32, 32), "Emerson", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", rand()%2, rand()%5), 3, 20, ResourceManager::GetInstance().getFont("Font"));
-        ObjectManager::GetInstance().Add(enemy);
+
     }
     else if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_N, KeyDown))
     {
 
     }
 
+    if (!UIManager::GetInstance().IsMouseHoverAny()) //Si el mouse no esta sobre algun elemento UI, deja hacer la accion
+    {
+        if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyDown))
+        {
+            GameObject *enemy = new CustomEnemy(Object::DynamicEntity, InputManager::GetInstance().GetMousePosition(), WAND_VEC2(32, 32), "Emerson", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", rand()%2, rand()%5), 3, 20, ResourceManager::GetInstance().getFont("Font"));
+            ObjectManager::GetInstance().Add(enemy);
+            SoundManager::GetInstance().Play("PacmanSound1", 1.0f, false);
+        }
+    }
+
+
+    /*
+    
+    if (InputManager::GetInstance().IsMouseButtonPressed(2, KeyRelease))
+    {
+        double current_time = al_get_time();
+        if (current_time - last_time >= 0.5)
+        {
+            last_time = current_time;
+
+            CurrentMousePosition = InputManager::GetInstance().GetMousePosition();
+            float offX = CameraManager::GetInstance().GetPosition().x + LastMousePosition.x - CurrentMousePosition.x;
+            float offY = CameraManager::GetInstance().GetPosition().y + LastMousePosition.y - CurrentMousePosition.y;
+            CameraManager::GetInstance().FocusPosition(WAND_VEC2(offX, offY));
+            LastMousePosition = CurrentMousePosition;
+
+        }
+
+    }
+
+    */
 
     GameObject* player = ObjectManager::GetInstance().FindByUniqueName("Player");
     if (player)
     {
         CameraManager::GetInstance().FocusObject(player);
     }
-    else{
-        CameraManager::GetInstance().FocusPosition(Vec2(0.0f, 0.0f));
+    else
+    {
+        if(!DeathSound){
+            double current_time = al_get_time();
+            if (current_time - timeAfterDeath >= 1.5)
+            {
+                timeAfterDeath = current_time;
+                DeathSound = true;
+            }
+            if(DeathSound)
+            {
+                SoundManager::GetInstance().Play("PacmanDeath", 1.0f, false);
+            }
+        }
+        
     }
 }
 
-MainScene::~MainScene()
-{
-}

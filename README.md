@@ -2,84 +2,88 @@
 
 ## Fecha efectiva
 
-**7 de noviembre de 2024**
+**9 de noviembre de 2024**
 
 ## Descripción general
 
-En esta etapa reorganicé varios tipos fundamentales del framework y los concentré en una base común para que managers, colisiones y modelos dejaran de redefinir estructuras equivalentes en distintos puntos del motor. A partir de ese ajuste, la infraestructura principal pasó a compartir una misma definición de vectores, tamaños, colores, tipos de cuerpo y tipos de objeto.
+En esta etapa incorporé una capa de interfaz propia al framework y la integré al ciclo normal de actualización y dibujo de las escenas. A partir de este punto el motor ya no depende únicamente de objetos del mundo para renderizar y responder a entrada, sino que también puede administrar elementos de UI con posición, tamaño, jerarquía y comportamiento interactivo.
 
-Sobre esa base también dejé operativa una cámara real dentro del ciclo de dibujo y reestructuré el manejo del grid de colisiones para que el cuerpo central del framework pueda desplazarlo y sincronizarlo con la transformación de cámara.
+En paralelo separé el manejo de efectos de sonido respecto a la música persistente y ajusté la coordinación entre escena, cámara e input para que la interacción visual y sonora quede organizada desde subsistemas específicos.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- unificar las definiciones base que se repiten entre managers, modelos y colisiones;
-- integrar una cámara funcional al render del framework;
-- encapsular el grid de colisiones de forma que pueda seguir el espacio de trabajo activo del runtime.
+- incorporar una base de interfaz reutilizable dentro del framework;
+- separar sonido puntual y música continua en servicios distintos;
+- trasladar más control del ciclo de frame y depuración visual hacia la escena activa.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Interfaces/`, donde `Definitions.hpp` pasa a reunir tipos base utilizados por entrada, escena, cuerpos, cámara y objetos.
-- `src/WandAllegroEngine/Managers/`, donde `CameraManager` entra en operación efectiva, `BodyManager` deja de administrar varias grillas y pasa a encapsular una sola área activa, y `SceneManager` integra el dibujo de cámara dentro del frame.
-- `src/WandAllegroEngine/Models/` y `src/WandAllegroEngine/Collisions/`, donde `GameObject`, `GameBodyObject` y `GameGridCollisions` se alinean con las definiciones compartidas del framework.
+- `src/WandAllegroEngine/Models/`, donde aparece `UIElement` como base para elementos de interfaz y se agrega `UIElements/UIButton` como primer control interactivo concreto.
+- `src/WandAllegroEngine/Managers/`, donde `UIManager` entra en uso efectivo, `SoundManager` se incorpora como servicio nuevo y `SceneManager` redistribuye el control de actualización, dibujo y reemplazo de escenas.
+- `src/WandAllegroEngine/Interfaces/` y las capas de input, cámara, objetos, cuerpos y colisiones, donde la nomenclatura compartida de tipos pasa a usar prefijos `WAND_` de forma consistente.
 
 ## Arquitectura o sistemas principales
 
-### Tipos base unificados
+### Capa base de interfaz
 
-En `Definitions.hpp` concentré estructuras y enumeraciones que antes aparecían dispersas o duplicadas en distintas capas del motor. A partir de esta etapa, el framework comparte desde un único punto:
+Incorporé `UIElement` como clase base para construir interfaz dentro del framework. Su implementación visible resuelve:
 
-- `Vec2`;
-- `Size`;
-- `WAND_COLOR`;
-- `GameBodyObjectType`;
-- `Object`;
-- `KeyEventType`.
+- posición y tamaño mediante `WAND_VEC2` y `WAND_SIZE`;
+- visibilidad por elemento;
+- relación padre e hijos para componer UI jerárquica;
+- actualización y dibujo encadenados sobre la jerarquía;
+- detección de `MouseHover()` sobre el área ocupada.
 
-Con este ajuste dejé una base común para entrada, escena, colisiones, cuerpos, cámara y objetos, reduciendo duplicación y evitando que cada subsistema tenga su propia variante de tipos equivalentes.
+Sobre esa base también agregué `UIButton` como primer control concreto, con sprite, texto, fuente, callback de clic y estados básicos de interacción para hover y presión del mouse.
 
-### Cámara operativa dentro del runtime
+### Manager de UI integrado al frame
 
-`CameraManager` deja de ser un contenedor vacío y pasa a operar como subsistema real del framework. Su implementación visible incorpora:
+`UIManager` entra como singleton efectivo para registrar, actualizar, dibujar y limpiar elementos de interfaz. Además conserva un estado global `MouseHoverAny` para saber si algún elemento está capturando la atención del cursor durante el frame.
 
-- una transformación activa de cámara basada en `ALLEGRO_TRANSFORM`;
-- control de posición y tamaño del área visible;
-- `FocusObject(GameObject *Obj)` y `FocusPosition(Vec2 NewPosition)` para centrar la vista;
-- `Reset()` para reconstruir el estado inicial de cámara a partir del tamaño de ventana;
-- `Draw()` para representar referencias visuales de la cámara en pantalla.
+Con esto la UI deja de ser una responsabilidad dispersa de escenas o entidades concretas y pasa a contar con un punto central de administración dentro del framework.
 
-Además, `SceneManager::Draw()` ya integra el dibujo de cámara después del render de objetos, con lo que la cámara entra formalmente en el pipeline visual del framework.
+### Audio dividido entre música y efectos
 
-### Grid de colisiones encapsulado
+Agregué `SoundManager` como servicio específico para efectos de sonido basados en `ALLEGRO_SAMPLE` y `ALLEGRO_SAMPLE_INSTANCE`. Su interfaz visible cubre:
 
-En `BodyManager` sustituí el almacenamiento de múltiples grids por una única referencia central `GridArea`. Sobre esa base, el manager ahora expone:
+- `Load()`;
+- `Play()`;
+- `Stop()`;
+- `StopAll()`;
+- `SetVolume()`;
+- `Clear()`.
 
-- `GetGridPosition()`;
-- `SetGridPosition(Vec2 NewPosition)`.
+Al mismo tiempo normalicé `MusicManager` para usar la misma convención de nombres (`Load`, `Play`, `Pause`, `Resume`, `Stop`) y ajusté su inicialización para coexistir mejor con otros servicios de audio cuando Allegro ya se encuentra instalado.
 
-Con esto el grid de colisiones deja de estar repartido entre varias instancias internas y pasa a poder desplazarse como un área única asociada al estado espacial activo del motor.
+### Escena como orquestador de managers
 
-### Alineación de modelos y colisiones
+`GameScene` asume más control directo sobre el frame del runtime mediante dos puntos nuevos:
 
-`GameBodyObject`, `GameObject` y `GameGridCollisions` se adaptan a la misma base tipada del framework. En especial:
+- `UpdateManagers(double deltaTime)`;
+- `Draw()`.
 
-- `GameBodyObject` deja de definir `Vec2` y `GameBodyObjectType` localmente;
-- `GameGridCollisions` incorpora acceso explícito a posición mediante `GetPosition()` y `SetPosition()`;
-- `GameObject` y `GameBodyObject` quedan encapsulados en `namespace WandEngine`, alineando su interfaz con el resto de managers y modelos.
+Desde ahí la escena coordina su propia lógica, la actualización de UI, cuerpos y objetos, y también el dibujo opcional de cuerpos y cámara mediante banderas de depuración (`ShowBodys`, `ShowGrid`, `ShowCamera`).
 
-Con ello dejé mejor acopladas las capas de colisión, cámara y objetos alrededor de una misma representación espacial.
+En la misma línea, `SceneManager` deja preparado el reemplazo diferido de escena mediante `NextScene`, delega el frame visible en `GameScene::Draw()` y cierra la ejecución cuando ya no existe una escena activa.
+
+### Input y cámara aplicados a interfaz
+
+La nueva capa UI obligó a ajustar la lectura espacial de entrada. `InputManager` ahora expone `GetMousePosition()` y devuelve la posición del cursor compensada con la posición actual de cámara, mientras `CameraManager` agrega `GetPosition()` para volver accesible esa referencia.
+
+Además, la base tipada compartida se termina de consolidar con el reemplazo visible de `Vec2` y `Size` por `WAND_VEC2` y `WAND_SIZE` en managers, modelos y colisiones.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- los managers que trabajan con espacio y render ya comparten las mismas estructuras base para posición, tamaño y color;
-- la cámara puede desplazar el área activa de trabajo y reflejar ese cambio en el grid de colisiones y en el dibujo del frame.
+- la escena activa puede actualizar y dibujar objetos del mundo, depuración visual y elementos de interfaz desde un mismo punto de control;
+- el audio queda separado entre música persistente y sonidos de evento, evitando mezclar ambas responsabilidades en un solo manager.
 
-Con ello dejé una base más coherente para extender navegación, seguimiento de objetos y manipulación espacial del runtime sin depender de tipos redefinidos en cada subsistema.
+Con ello dejé una base más útil para construir menús, overlays, controles interactivos y retroalimentación sonora sin forzar esa lógica dentro de las entidades del mundo.
 
 ## Dependencias externas visibles
 
@@ -87,12 +91,13 @@ No incorporé dependencias externas visibles nuevas en esta etapa.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **7 de noviembre de 2024** queda delimitada por estos movimientos:
+La etapa efectiva al **9 de noviembre de 2024** queda delimitada por estos movimientos:
 
-- centralicé en `Definitions.hpp` los tipos base de posición, tamaño, color, entrada y clasificación de objetos y cuerpos;
-- activé `CameraManager` como subsistema real del framework con transformación, enfoque y representación visual propia;
-- integré el dibujo de cámara al flujo de `SceneManager`;
-- encapsulé el grid de colisiones en una única área activa dentro de `BodyManager` y habilité su consulta y desplazamiento;
-- adapté `GameBodyObject`, `GameObject` y `GameGridCollisions` al nuevo núcleo compartido de tipos del framework.
+- incorporé `UIElement` y `UIButton` como primera base visible para construir interfaz interactiva dentro del framework;
+- integré `UIManager` al ciclo de actualización, dibujo y limpieza de escena;
+- añadí `SoundManager` como servicio separado para efectos de sonido y alineé `MusicManager` con una interfaz más uniforme;
+- trasladé a `GameScene` el control directo de actualización de managers, dibujo del frame y banderas de depuración visual;
+- reorganicé `SceneManager` para reemplazar escenas de forma diferida y cerrar correctamente el runtime cuando no queda ninguna activa;
+- consolidé el uso de `WAND_VEC2` y `WAND_SIZE` como convención tipada visible en input, cámara, objetos, cuerpos y colisiones.
 
-Con esta etapa dejé el framework más consistente en sus definiciones básicas y mejor preparado para manejar espacio, cámara y colisiones desde una misma base estructural.
+Con esta etapa dejé el framework mejor preparado para construir interfaz, respuesta sonora y control de frame desde una arquitectura más clara y separada por responsabilidades.

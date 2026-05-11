@@ -3,7 +3,7 @@
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
 #include "../WandAllegroEngine/Managers/InputManager.hpp"
 
-LinkObject::LinkObject(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId, int HP, ALLEGRO_FONT *font) : GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP)
+LinkObject::LinkObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId, int HP, ALLEGRO_FONT *font) : GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP)
 {
     this->font = font;
     this->DestructorMode = true;
@@ -22,7 +22,10 @@ void LinkObject::Draw()
 {
     GameObject::Draw();
 
-    al_draw_text(font, al_map_rgba(255, 0, 100, 0), GetPosition().x, GetPosition().y - 60, NULL, GetObjectName().c_str());
+    if (font)
+    {
+        al_draw_text(font, al_map_rgba(255, 0, 100, 0), GetPosition().x, GetPosition().y - 60, 0, GetObjectName().c_str());
+    }
 }
 
 void LinkObject::Update(float deltaTime)
@@ -49,7 +52,7 @@ void LinkObject::Update(float deltaTime)
 
     if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_Q, KeyDown))
     {
-        SetSize(Vec2(64, 64));
+        SetSize(WAND_VEC2(64, 64));
     }
     if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_E, KeyDown))
     {
@@ -77,22 +80,22 @@ void LinkObject::Update(float deltaTime)
 
 void LinkObject::MoveUp(float deltaTime)
 {
-    SetPosition(Vec2(GetPosition().x, (GetPosition().y - 400 * deltaTime)));
+    SetPosition(WAND_VEC2(GetPosition().x, (GetPosition().y - 400 * deltaTime)));
 }
 
 void LinkObject::MoveDown(float deltaTime)
 {
-    SetPosition(Vec2(GetPosition().x, (GetPosition().y + 400 * deltaTime)));
+    SetPosition(WAND_VEC2(GetPosition().x, (GetPosition().y + 400 * deltaTime)));
 }
 
 void LinkObject::MoveRight(float deltaTime)
 {
-    SetPosition(Vec2(GetPosition().x + 400 * deltaTime, (GetPosition().y)));
+    SetPosition(WAND_VEC2(GetPosition().x + 400 * deltaTime, (GetPosition().y)));
 }
 
 void LinkObject::MoveLeft(float deltaTime)
 {
-    SetPosition(Vec2(GetPosition().x - 400 * deltaTime, (GetPosition().y)));
+    SetPosition(WAND_VEC2(GetPosition().x - 400 * deltaTime, (GetPosition().y)));
 }
 
 void LinkObject::OnCollision(GameObject *other)
@@ -110,21 +113,28 @@ void LinkObject::OnCollision(GameObject *other)
                 EventManager::GetInstance().TriggerEvent<GameObject *, GameObject *>("ChangePosition", this, other);
             }
         }
+        if (other->GetObjectName() == "Tile")
+        {
+            DestructorMode ? other->Destroy() : SetToLastPosition();
+            EventManager::GetInstance().TriggerEvent("OnTileDestroy");
+        }
     }
     else{
         if (other->GetObjectName() == "Player")
         {
-            other->Destroy();
-            EventManager::GetInstance().TriggerEvent("OnEnemyDestroy");
+            SetToLastPosition();
+            //other->Destroy();
+            //EventManager::GetInstance().TriggerEvent("OnEnemyDestroy");
         }
+        if (other->GetObjectName() == "Tile")
+        {
+            SetToLastPosition();
+        }
+
     }
 
 
-    if (other->GetObjectName() == "Tile")
-    {
-        DestructorMode ? other->Destroy() : SetToLastPosition();
-        EventManager::GetInstance().TriggerEvent("OnTileDestroy");
-    }
+
 
     if (other->GetObjectType() == Object::DynamicEntity)
     {

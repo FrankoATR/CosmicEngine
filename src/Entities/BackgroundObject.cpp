@@ -1,6 +1,6 @@
 #include "BackgroundObject.hpp"
 
-BackgroundObject::BackgroundObject(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId) : 
+BackgroundObject::BackgroundObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId) : 
 GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId)
 {
 

@@ -8,21 +8,22 @@ namespace WandEngine
     {
         float r, g, b, a;
         WAND_COLOR() : r(0.0f), g(0.0f), b(0.0f), a(0.0f) {}
+        WAND_COLOR(float r, float g, float b) : r(r), g(g), b(b), a(0.0f) {}
         WAND_COLOR(float r, float g, float b, float a) : r(r), g(g), b(b), a(a) {}
     };
 
-    struct Vec2
+    struct WAND_VEC2
     {
         float x, y;
-        Vec2() = delete;
-        Vec2(float x, float y) : x(x), y(y) {}
+        WAND_VEC2() = delete;
+        WAND_VEC2(float x, float y) : x(x), y(y) {}
     };
 
-    struct Size
+    struct WAND_SIZE
     {
         float width, height;
-        Size() : width(0.0f), height(0.0f) {}
-        Size(float width, float height) : width(width), height(height) {}
+        WAND_SIZE() : width(0.0f), height(0.0f) {}
+        WAND_SIZE(float width, float height) : width(width), height(height) {}
     };
 
     enum class GameBodyObjectType

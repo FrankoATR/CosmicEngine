@@ -5,7 +5,7 @@
 namespace WandEngine
 {
 
-    GameGridCollisions::GameGridCollisions(Vec2 GridPosition, int Arrows, int Columns, int CellSize) : GridPosition(GridPosition), Arrows(Arrows), Columns(Columns), CellSize(CellSize), EntitiesOnGrid(0)
+    GameGridCollisions::GameGridCollisions(WAND_VEC2 GridPosition, int Arrows, int Columns, int CellSize) : GridPosition(GridPosition), Arrows(Arrows), Columns(Columns), CellSize(CellSize), EntitiesOnGrid(0)
     {
         Cells.resize(Arrows);
         for (int i = 0; i < Arrows; i++)
@@ -13,17 +13,17 @@ namespace WandEngine
             Cells[i].resize(Columns);
             for (int j = 0; j < Columns; j++)
             {
-                Cells[i][j] = Cell(Vec2(GridPosition.x + j * CellSize, GridPosition.y + i * CellSize));
+                Cells[i][j] = Cell(WAND_VEC2(GridPosition.x + j * CellSize, GridPosition.y + i * CellSize));
             }
         }
     }
 
-    Vec2 GameGridCollisions::GetPosition()
+    WAND_VEC2 GameGridCollisions::GetPosition()
     {
         return this->GridPosition;
     }
 
-    void GameGridCollisions::SetPosition(Vec2 NewsPosition)
+    void GameGridCollisions::SetPosition(WAND_VEC2 NewsPosition)
     {
         this->GridPosition = NewsPosition;
     }
@@ -97,7 +97,7 @@ namespace WandEngine
         EntitiesOnGrid = 0;
     }
 
-    Cell *GameGridCollisions::GetCellByPosition(Vec2 position)
+    Cell *GameGridCollisions::GetCellByPosition(WAND_VEC2 position)
     {
         int relX = position.x - GridPosition.x;
         int relY = position.y - GridPosition.y;

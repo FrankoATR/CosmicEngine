@@ -34,16 +34,11 @@ namespace WandEngine
             return instance;
         }
 
-        bool LoadMusic(const std::string &name, const std::string &filename);
-
-        bool PlayMusic(const std::string &name, float volume = 1.0f, bool loop = true);
-
-        void PauseMusic();
-
-        void ResumeMusic();
-
-        void StopMusic();
-
+        bool Load(const std::string &name, const std::string &filename);
+        bool Play(const std::string &name, float volume = 1.0f, bool loop = true);
+        void Pause();
+        void Resume();
+        void Stop();
         void Clear();
     };
 

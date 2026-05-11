@@ -30,12 +30,12 @@ namespace WandEngine
             return instance;
         }
 
-        Vec2 GetGridPosition();
-        void SetGridPosition(Vec2 NewPosition);
+        WAND_VEC2 GetGridPosition();
+        void SetGridPosition(WAND_VEC2 NewPosition);
 
         void Update();
         void Draw();
-        void Add(GameObject *obj, Vec2 Position, Vec2 Size);
+        void Add(GameObject *obj, WAND_VEC2 Position, WAND_VEC2 Size);
         void Remove(int entityId);
         void Clear();
 

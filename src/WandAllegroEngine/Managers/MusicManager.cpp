@@ -5,14 +5,20 @@ namespace WandEngine
 
     MusicManager::MusicManager() : currentMusic(nullptr), voice(nullptr), mixer(nullptr)
     {
-        if (!al_install_audio())
+        if (!al_is_audio_installed())
         {
-            std::cerr << "Failed to initialize audio!" << std::endl;
+            if (!al_install_audio())
+            {
+                std::cerr << "Failed to initialize audio!" << std::endl;
+            }
         }
 
-        if (!al_init_acodec_addon())
+        if (!al_is_acodec_addon_initialized())
         {
-            std::cerr << "Failed to initialize audio codecs" << std::endl;
+            if (!al_init_acodec_addon())
+            {
+                std::cerr << "Failed to initialize audio codecs!" << std::endl;
+            }
         }
 
         al_reserve_samples(10);
@@ -51,12 +57,15 @@ namespace WandEngine
             voice = nullptr;
         }
 
-        al_uninstall_audio();
+        if(al_is_audio_installed())
+        {
+            al_uninstall_audio();
+        }
 
         std::cout << "Music manager destroyed" << std::endl;
     }
 
-    bool MusicManager::LoadMusic(const std::string &name, const std::string &filename)
+    bool MusicManager::Load(const std::string &name, const std::string &filename)
     {
         if (musicTracks.find(name) != musicTracks.end())
         {
@@ -85,7 +94,7 @@ namespace WandEngine
         return true;
     }
 
-    bool MusicManager::PlayMusic(const std::string &name, float volume, bool loop)
+    bool MusicManager::Play(const std::string &name, float volume, bool loop)
     {
         auto it = musicTracks.find(name);
         if (it == musicTracks.end())
@@ -111,7 +120,7 @@ namespace WandEngine
         return true;
     }
 
-    void MusicManager::PauseMusic()
+    void MusicManager::Pause()
     {
         if (currentMusic)
         {
@@ -119,7 +128,7 @@ namespace WandEngine
         }
     }
 
-    void MusicManager::ResumeMusic()
+    void MusicManager::Resume()
     {
         if (currentMusic)
         {
@@ -127,7 +136,7 @@ namespace WandEngine
         }
     }
 
-    void MusicManager::StopMusic()
+    void MusicManager::Stop()
     {
         if (currentMusic)
         {

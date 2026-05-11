@@ -105,7 +105,7 @@ namespace WandEngine
 		}
 	}
 
-	void GameManager::SetWindows_Size(Size ScreenSize)
+	void GameManager::SetWindows_Size(WAND_SIZE ScreenSize)
 	{
 		if (!IsFullScreen())
 		{
@@ -120,7 +120,7 @@ namespace WandEngine
 		}
 	}
 
-	Size GameManager::GetWindowsSize()
+	WAND_SIZE GameManager::GetWindowsSize()
 	{
 		return this->ScreenSize;
 	}

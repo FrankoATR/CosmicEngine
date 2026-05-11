@@ -1,6 +1,6 @@
 #include "InputManager.hpp"
 #include "GameManager.hpp"
-#include <allegro5/allegro.h>
+#include "CameraManager.hpp"
 
 namespace WandEngine
 {
@@ -121,5 +121,12 @@ namespace WandEngine
     bool InputManager::IsJoystickButtonPressed(int button) const
     {
         return joystickButtonState.count(button) && joystickButtonState.at(button);
+    }
+
+    WAND_VEC2 InputManager::GetMousePosition() const
+    {
+        int x, y;
+        al_get_mouse_cursor_position(&x, &y);
+        return WAND_VEC2(CameraManager::GetInstance().GetPosition().x + x, CameraManager::GetInstance().GetPosition().y + y);
     }
 }

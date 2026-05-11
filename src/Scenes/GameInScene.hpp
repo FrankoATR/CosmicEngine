@@ -15,8 +15,6 @@ public:
     
     void Init() override;
     void Update(double deltaTime) override;
-
-    ~GameInScene();
 };
 
 

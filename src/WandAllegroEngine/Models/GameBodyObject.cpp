@@ -2,27 +2,27 @@
 
 namespace WandEngine
 {
-	GameBodyObject::GameBodyObject(GameObject *Parent, Vec2 Position, Vec2 Size) : Parent(Parent), Position(Position), Size(Size), Active(true)
+	GameBodyObject::GameBodyObject(GameObject *Parent, WAND_VEC2 Position, WAND_VEC2 Size) : Parent(Parent), Position(Position), Size(Size), Active(true)
 	{
 		// this->BodyType = BodyType;
 	}
 
-	void GameBodyObject::SetPosition(Vec2 NewPosition)
+	void GameBodyObject::SetPosition(WAND_VEC2 NewPosition)
 	{
 		this->Position = NewPosition;
 	}
 
-	Vec2 GameBodyObject::GetPosition()
+	WAND_VEC2 GameBodyObject::GetPosition()
 	{
 		return this->Position;
 	}
 
-	void GameBodyObject::SetSize(Vec2 NewSize)
+	void GameBodyObject::SetSize(WAND_VEC2 NewSize)
 	{
 		this->Size = NewSize;
 	}
 
-	Vec2 GameBodyObject::GetSize()
+	WAND_VEC2 GameBodyObject::GetSize()
 	{
 		return this->Size;
 	}

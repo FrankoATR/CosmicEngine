@@ -15,16 +15,16 @@ namespace WandEngine
     private:
         ALLEGRO_TRANSFORM camera;
         void Transform();
-        Vec2 Position;
-        Size Size;
+        WAND_VEC2 Position;
+        WAND_SIZE Size;
 
         CameraManager();
         ~CameraManager() = default;
         CameraManager(const CameraManager &) = delete;
         CameraManager &operator=(const CameraManager &) = delete;
 
-        Vec2 GetGridPosition();
-        void SetGridPosition(Vec2 NewPosition);
+        WAND_VEC2 GetGridPosition();
+        void SetGridPosition(WAND_VEC2 NewPosition);
 
     public:
         static CameraManager &GetInstance()
@@ -33,9 +33,10 @@ namespace WandEngine
             return instance;
         }
 
+        WAND_VEC2 GetPosition();
         void Draw();
         void FocusObject(GameObject *Obj);
-        void FocusPosition(Vec2 NewPosition);
+        void FocusPosition(WAND_VEC2 NewPosition);
         void Reset();
     };
 

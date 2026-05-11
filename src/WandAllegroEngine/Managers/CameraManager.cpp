@@ -6,24 +6,24 @@
 namespace WandEngine
 {
 
-    CameraManager::CameraManager() : Position(Vec2(0, 0))
+    CameraManager::CameraManager() : Position(WAND_VEC2(0, 0))
     {
         Reset();
     }
 
 
-    Vec2 CameraManager::GetGridPosition()
+    WAND_VEC2 CameraManager::GetGridPosition()
     {
         return BodyManager::GetInstance().GetGridPosition();
     }
-    void CameraManager::SetGridPosition(Vec2 NewPosition)
+    void CameraManager::SetGridPosition(WAND_VEC2 NewPosition)
     {
         return BodyManager::GetInstance().SetGridPosition(NewPosition);
     }
 
     void CameraManager::Reset()
     {
-        this->Position = Vec2(0.0f, 0.0f);
+        this->Position = WAND_VEC2(0.0f, 0.0f);
         this->Size = GameManager::GetInstance().GetWindowsSize();
         Transform();
     }
@@ -34,6 +34,11 @@ namespace WandEngine
         al_identity_transform(&camera);
         al_translate_transform(&camera, -this->Position.x, -this->Position.y);
         al_use_transform(&camera);
+    }
+
+    WAND_VEC2 CameraManager::GetPosition()
+    {
+       return  this->Position;
     }
 
     void CameraManager::Draw()
@@ -49,7 +54,7 @@ namespace WandEngine
         Transform();
     }
 
-    void CameraManager::FocusPosition(Vec2 NewPosition){
+    void CameraManager::FocusPosition(WAND_VEC2 NewPosition){
         this->Position.x = -(Size.width / 2) + (NewPosition.x);
         this->Position.y = -(Size.height / 2) + (NewPosition.y);
         Transform();

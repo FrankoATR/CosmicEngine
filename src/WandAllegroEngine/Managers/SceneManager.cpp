@@ -1,7 +1,4 @@
 #include "SceneManager.hpp"
-#include "ObjectManager.hpp"
-#include "BodyManager.hpp"
-#include "CameraManager.hpp"
 
 #include "../Models/GameScene.hpp"
 
@@ -12,6 +9,7 @@ namespace WandEngine
     {
         this->BackBufferColor = WAND_COLOR(1.0f, 2.0f, 3.0f, 0.0f);
         this->isRunning = true;
+        this->NextScene = nullptr;
     }
 
     void SceneManager::StartSceneLoading(GameScene *scene)
@@ -27,18 +25,7 @@ namespace WandEngine
 
     void SceneManager::ReplaceScene(GameScene *scene)
     {
-        if (!sceneStack.empty())
-        {
-            if (sceneStack.back()->IsLoadingThreadJoinable())
-            {
-                sceneStack.back()->JoinLoadingThread();
-            }
-            sceneStack.back()->Clear();
-            delete sceneStack.back();
-            sceneStack.pop_back();
-        }
-
-        sceneStack.push_back(scene);
+        NextScene = scene;
         StartSceneLoading(scene);
     }
 
@@ -63,6 +50,23 @@ namespace WandEngine
 
     void SceneManager::Update(double deltaTime)
     {
+        if (NextScene != nullptr)
+        {
+            if (!sceneStack.empty())
+            {
+                if (sceneStack.back()->IsLoadingThreadJoinable())
+                {
+                    sceneStack.back()->JoinLoadingThread();
+                }
+                sceneStack.back()->Clear();
+                delete sceneStack.back();
+                sceneStack.pop_back();
+            }
+
+            sceneStack.push_back(NextScene);
+            NextScene = nullptr;
+        }
+
         if (!sceneStack.empty())
         {
             GameScene *currentScene = sceneStack.back();
@@ -75,15 +79,17 @@ namespace WandEngine
                 }
 
                 currentScene->ExecuteMainThreadTasks();
-                currentScene->Update(deltaTime);
-                ObjectManager::GetInstance().Update(deltaTime);
-                BodyManager::GetInstance().Update();
+                currentScene->UpdateManagers(deltaTime);
             }
             else
             {
                 currentScene->ExecuteMainThreadTasks();
                 currentScene->UpdateLoadingScene();
             }
+        }
+        else
+        {
+            isRunning = false;
         }
     }
 
@@ -97,9 +103,7 @@ namespace WandEngine
 
             if (currentScene->IsProgressLoadingSceneComplete())
             {
-                ObjectManager::GetInstance().Draw();
-                //BodyManager::GetInstance().Draw();
-                CameraManager::GetInstance().Draw();
+                currentScene->Draw();
             }
             else
             {
@@ -146,6 +150,18 @@ namespace WandEngine
             delete sceneStack.back();
             sceneStack.pop_back();
         }
+
+        if (NextScene != nullptr)
+        {
+            if (NextScene->IsLoadingThreadJoinable())
+            {
+                NextScene->JoinLoadingThread();
+            }
+            NextScene->Clear();
+            delete NextScene;
+            NextScene = nullptr;
+        }
+
         isRunning = false;
         std::cout << "Scene manager cleared" << std::endl;
     }

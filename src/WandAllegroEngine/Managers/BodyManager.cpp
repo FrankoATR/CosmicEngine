@@ -7,14 +7,14 @@ namespace WandEngine
 
     BodyManager::BodyManager()
     {
-        this->GridArea = new GameGridCollisions(Vec2(0, 0), 10, 18, 100);
+        this->GridArea = new GameGridCollisions(WAND_VEC2(0, 0), 10, 18, 100);
     }
 
-    Vec2 BodyManager::GetGridPosition()
+    WAND_VEC2 BodyManager::GetGridPosition()
     {
         this->GridArea->GetPosition();
     }
-    void BodyManager::SetGridPosition(Vec2 NewPosition)
+    void BodyManager::SetGridPosition(WAND_VEC2 NewPosition)
     {
         this->GridArea->SetPosition(NewPosition);
     }
@@ -82,7 +82,7 @@ namespace WandEngine
         }
     }
 
-    void BodyManager::Add(GameObject *obj, Vec2 Position, Vec2 Size)
+    void BodyManager::Add(GameObject *obj, WAND_VEC2 Position, WAND_VEC2 Size)
     {
         if (obj)
         {

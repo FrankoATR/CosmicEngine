@@ -18,7 +18,7 @@ namespace WandEngine
         std::vector<GameScene *> sceneStack;
         bool isRunning;
         WAND_COLOR BackBufferColor;
-
+        GameScene* NextScene;
         void StartSceneLoading(GameScene *scene);
         
         SceneManager();

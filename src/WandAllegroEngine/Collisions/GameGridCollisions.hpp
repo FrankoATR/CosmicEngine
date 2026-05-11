@@ -15,17 +15,17 @@ namespace WandEngine
 
     struct Cell
     {
-        Vec2 Position;
+        WAND_VEC2 Position;
         std::vector<GameBodyObject *> objects;
-        Cell() : Position(Vec2(0, 0)) {}
-        Cell(Vec2 Position) : Position(Position) {}
+        Cell() : Position(WAND_VEC2(0, 0)) {}
+        Cell(WAND_VEC2 Position) : Position(Position) {}
     };
 
     
     class GameGridCollisions
     {
     public:
-        Vec2 GridPosition;
+        WAND_VEC2 GridPosition;
         int Arrows;
         int Columns;
         int CellSize;
@@ -33,11 +33,11 @@ namespace WandEngine
 
         int EntitiesOnGrid;
 
-        GameGridCollisions(Vec2 GridPosition, int Arrows, int Columns, int CellSize);
+        GameGridCollisions(WAND_VEC2 GridPosition, int Arrows, int Columns, int CellSize);
         ~GameGridCollisions();
 
-        Vec2 GetPosition();
-        void SetPosition(Vec2 NewsPosition);
+        WAND_VEC2 GetPosition();
+        void SetPosition(WAND_VEC2 NewsPosition);
         Cell *GetCell(int Arrow, int Column);
         void DrawCells();
         void AddObject(GameBodyObject *obj);
@@ -45,7 +45,7 @@ namespace WandEngine
         void Check_cells_collisions(Cell *cell_1, Cell *cell_2);
         void Find_collision_grid();
         bool RectToRectCollisionBody(GameBodyObject *body1, GameBodyObject *body2);
-        Cell *GetCellByPosition(Vec2 position);
+        Cell *GetCellByPosition(WAND_VEC2 position);
 
         void ClearGrid();
     };

@@ -20,19 +20,19 @@ namespace WandEngine
 		GameBodyObjectType BodyType;
 		int BodyId;
 		bool Active;
-		Vec2 Position;
-		Vec2 Size;
+		WAND_VEC2 Position;
+		WAND_VEC2 Size;
 		GameObject *Parent;
 
 	public:
 		GameBodyObject() = delete;
-		GameBodyObject(GameObject *Parent, Vec2 Position, Vec2 Size);
+		GameBodyObject(GameObject *Parent, WAND_VEC2 Position, WAND_VEC2 Size);
 
-		void SetPosition(Vec2 NewPosition);
-		Vec2 GetPosition();
+		void SetPosition(WAND_VEC2 NewPosition);
+		WAND_VEC2 GetPosition();
 
-		void SetSize(Vec2 NewSize);
-		Vec2 GetSize();
+		void SetSize(WAND_VEC2 NewSize);
+		WAND_VEC2 GetSize();
 
 		void DrawBody();
 		void DrawCoordinates();

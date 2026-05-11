@@ -7,6 +7,12 @@
 #define BLOCKS_SPRITES_PATH "assets/sprites/smb_blocks.png"
 #define MARIO_SPRITES_PATH "assets/sprites/smb_m1.png"
 
+#define BUTTON1_SPRITE_PATH "assets/img/buttons/button1.png"
+
 #define RETRO_FONT_PATH "assets/fonts/ThaleahFat.ttf"
 
 #define TRACK1_PATH "assets/music/Ludum Dare 38 - Track 5.wav"
+
+#define SOUND1_PATH "assets/sounds/Chomp High.mp3"
+#define SOUND2_PATH "assets/sounds/01. Game Start.mp3"
+#define SOUND3_PATH "assets/sounds/Death.mp3"

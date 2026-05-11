@@ -23,26 +23,26 @@ namespace WandEngine
         Object ObjectType;
         int ObjectId;
         ALLEGRO_BITMAP *Sprite;
-        Vec2 Position;
-        Vec2 LastPosition;
-        Vec2 Size;
+        WAND_VEC2 Position;
+        WAND_VEC2 LastPosition;
+        WAND_VEC2 Size;
         short int LayerId;
 
         bool AliveInGameManager;
 
     public:
         GameObject() = delete;
-        GameObject(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId);
+        GameObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId);
         virtual void Draw();
         virtual void Init();
         virtual void Update(float deltaTime);
         virtual void OnCollision(GameObject *other);
 
-        void SetPosition(Vec2 NewPosition);
-        Vec2 GetPosition();
+        void SetPosition(WAND_VEC2 NewPosition);
+        WAND_VEC2 GetPosition();
 
-        void SetSize(Vec2 NewSize);
-        Vec2 GetSize();
+        void SetSize(WAND_VEC2 NewSize);
+        WAND_VEC2 GetSize();
 
         std::string GetObjectName();
         void SetObjectName(std::string NewName);

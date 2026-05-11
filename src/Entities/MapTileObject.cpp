@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-MapTileObject::MapTileObject(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId) : 
+MapTileObject::MapTileObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId) : 
 GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId)
 {
 
@@ -30,7 +30,7 @@ void MapTileObject::Update(float deltaTime){
 void MapTileObject::OnCollision(GameObject* other){
 
     if(other->GetObjectName() == "Player"){
-        other->SetSize(Vec2(other->GetSize().x*1.01f, other->GetSize().y*1.01f));
+        other->SetSize(WAND_VEC2(other->GetSize().x*1.01f, other->GetSize().y*1.01f));
     }
 
 

@@ -1,7 +1,7 @@
 #include "CustomEnemy.hpp"
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
 
-CustomEnemy::CustomEnemy(Object ObjectType, Vec2 Position, Vec2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font) : 
+CustomEnemy::CustomEnemy(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP* Sprite, short int LayerId, int HP, ALLEGRO_FONT* font) : 
 GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP), TimeToChangeDirection(1), TimeUntilRecibeDamage(1), ActualDirection(Direction::RIGHT)
 {
     this->font = font;
@@ -63,22 +63,22 @@ void CustomEnemy::Update(float deltaTime){
 
 void CustomEnemy::MoveUp(float deltaTime)
 {
-    SetPosition(Vec2(GetPosition().x, (GetPosition().y - 200 * deltaTime)));
+    SetPosition(WAND_VEC2(GetPosition().x, (GetPosition().y - 200 * deltaTime)));
 }
 
 void CustomEnemy::MoveDown(float deltaTime)
 {
-    SetPosition(Vec2(GetPosition().x, (GetPosition().y + 200 * deltaTime)));
+    SetPosition(WAND_VEC2(GetPosition().x, (GetPosition().y + 200 * deltaTime)));
 }
 
 
 void CustomEnemy::MoveRight(float deltaTime){
-    SetPosition(Vec2(GetPosition().x + 200*deltaTime, (GetPosition().y)));
+    SetPosition(WAND_VEC2(GetPosition().x + 200*deltaTime, (GetPosition().y)));
 }
 
 
 void CustomEnemy::MoveLeft(float deltaTime){
-    SetPosition(Vec2(GetPosition().x - 200*deltaTime, (GetPosition().y)));
+    SetPosition(WAND_VEC2(GetPosition().x - 200*deltaTime, (GetPosition().y)));
 }
 
 

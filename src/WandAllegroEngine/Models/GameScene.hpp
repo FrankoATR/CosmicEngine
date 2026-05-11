@@ -20,6 +20,10 @@ namespace WandEngine
         std::queue<std::function<void()>> mainThreadTasks;
         std::mutex taskMutex;
 
+        bool ShowBodys;
+        bool ShowGrid;
+        bool ShowCamera;
+
     public:
         GameScene(std::string Name);
         virtual ~GameScene();
@@ -29,6 +33,9 @@ namespace WandEngine
 
         virtual void UpdateLoadingScene(); // Utilizar en caso de animaciones en la pantalla de carga
         virtual void DrawLoadingScene();
+
+        void UpdateManagers(double deltaTime);
+        void Draw();
 
         void SetProgressLoadingScene(float Progress);
         float GetProgressLoadingScene();
@@ -43,6 +50,10 @@ namespace WandEngine
         void StartLoadingThread();
         bool IsLoadingThreadJoinable() const;
         void JoinLoadingThread();
+
+        void ToogleShowBodys();
+        void ToogleShowGrid();
+        void ToogleShowCamera();
     };
 }
 

@@ -39,6 +39,8 @@ namespace WandEngine
         bool IsKeyPressed(int keycode, KeyEventType eventType) const;
         bool IsMouseButtonPressed(int button, KeyEventType eventType) const;
         bool IsJoystickButtonPressed(int button) const;
+
+        WAND_VEC2 GetMousePosition() const;
     };
 }
 

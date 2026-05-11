@@ -9,7 +9,7 @@ int main(){
 	int ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
 	if(GameManager::GetInstance().Init()){
-		GameManager::GetInstance().SetWindows_Size(Size(ScreenWidth, ScreenHeight));
+		GameManager::GetInstance().SetWindows_Size(WAND_SIZE(ScreenWidth, ScreenHeight));
 		GameManager::GetInstance().SetFirstScene(new MainScene);
 		GameManager::GetInstance().Update();
 		GameManager::GetInstance().Clear();
