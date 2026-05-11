@@ -5,6 +5,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <vector>
+#include <string>
 
 namespace WandEngine
 {
@@ -23,12 +25,15 @@ namespace WandEngine
 
         GLFWwindow* window;
 
+        std::vector<std::string> droppedfiles;
+
         GameManager();
         ~GameManager();
 
         GameManager(const GameManager &) = delete;
         GameManager &operator=(const GameManager &) = delete;
         static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+        static void DropCallback(GLFWwindow *window, int count, const char **paths); // Deberia hacer un metodo para cada setcallback?
 
     public:
 
@@ -54,6 +59,10 @@ namespace WandEngine
         void SetWindows_Size(glm::vec2 screenSize);
         void SetWindows_FullScreenMode();
         void SetWindows_WindowsMode(int width, int height);
+
+        std::vector<std::string> GetDroppedFiles();
+        void PushDroppedFile(std::string filepath);
+
 
         GLFWwindow* GetWindow();
 

@@ -6,10 +6,12 @@
 #include <WandEngine/Managers/Camera/CameraManager.hpp>
 #include <WandEngine/Managers/Resource/ResourceManager.hpp>
 #include <WandEngine/Managers/Timer/TimerManager.hpp>
+#include <WandEngine/Managers/DataBase/DataBaseManager.hpp>
 
-#include <random>
+#include <sstream>
 
-SolidBlock::SolidBlock(glm::vec2 Position, glm::vec2 Size, short int LayerId) : GameObject("SolidBlock", Position, Size, 0.0f, LayerId)
+SolidBlock::SolidBlock(int BlockID, glm::vec2 Position, glm::vec2 Size, short int LayerId) : 
+    GameObject("SolidBlock", Position, Size, 0.0f, LayerId), BlockID(BlockID)
 {
 }
 
@@ -19,19 +21,14 @@ void SolidBlock::Init()
                               { BodyCollisionEvent(Other, Side); });
     BodyManager::GetInstance().Add(Body);
 
-    std::random_device rd;
 
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dist(0, 2);
 
-    randomNumber1 = dist(gen);
-    randomNumber2 = dist(gen);
 }
 
 void SolidBlock::Draw()
 {
 
-    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", randomNumber1, randomNumber2, Position, Size, Rotation, MainColor, 1.0f);
+    ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", BlockID % 3, BlockID / 3, Position, Size, Rotation, MainColor, 1.0f);
 }
 
 void SolidBlock::Update(float deltaTime)
@@ -40,4 +37,48 @@ void SolidBlock::Update(float deltaTime)
 
 void SolidBlock::BodyCollisionEvent(GameObject *Other, CollisionSide Side)
 {
+}
+
+
+void SolidBlock::SaveToDB()
+{
+    DataBaseManager::GetInstance().CreateTable("SolidBlock", "id INTEGER PRIMARY KEY AUTOINCREMENT, PositionX REAL, PositionY REAL, BlockID INTEGER");
+    DataBaseManager::GetInstance().ExecuteSQL("BEGIN TRANSACTION;");
+
+    for(GameObject*  obj : ObjectManager::GetInstance().FindByClassName("SolidBlock"))
+    {
+        SolidBlock* solidblock = static_cast<SolidBlock*>(obj);
+        std::ostringstream values;
+        values << solidblock->GetPosition().x << ", " << solidblock->GetPosition().y << ", " << solidblock->GetBlockID();
+    
+        DataBaseManager::GetInstance().InsertData("SolidBlock", "PositionX, PositionY, BlockID", values.str());
+    }
+    
+    DataBaseManager::GetInstance().ExecuteSQL("COMMIT;");
+}
+
+
+void SolidBlock::LoadFrom()
+{
+    std::string sql = "SELECT id, PositionX, PositionY, BlockID FROM SolidBlock;";
+    
+    auto callback = [](void* data, int argc, char** argv, char** colNames) -> int {
+        int id = std::stoi(argv[0]);
+        float posX = std::stof(argv[1]);
+        float posY = std::stof(argv[2]);
+        int type = std::stoi(argv[3]);
+
+        SolidBlock* block = new SolidBlock(type, glm::vec2(posX, posY), glm::vec2(100.0f), 0);
+        ObjectManager::GetInstance().Add(block);
+
+        return 0;
+    };
+
+    DataBaseManager::GetInstance().ExecuteQuery(sql, callback, nullptr);
+}
+
+
+int SolidBlock::GetBlockID()
+{
+    return BlockID;
 }

@@ -2,6 +2,7 @@
 #define PLAYER_HPP
 
 #include <WandEngine/Models/GameObject.hpp>
+#include <WandEngine/Models/GameBodyObject.hpp>
 #include <random>
 
 using namespace WandEngine;
@@ -21,13 +22,12 @@ class Player : public GameObject
 {
 private:
     std::string UniqueName;
+
     bool OnGroundOrBlock;
     float Gravity;
-    GameTimer* RotateSprite_Timer;
-    GameTimer* Update_Gravity_Timer;
+
     GameBodyObject* Body1;
     GameBodyObject* Body2;
-    GameBodyObject* Center;
 
     bool KeySpaceDown, KeySpaceRelease;
     bool RigthClickDown, RigthClickRelease;
@@ -36,8 +36,7 @@ private:
     PlayerMode CurrentPlayerMode;
 
     std::random_device rd;
-    float OtherRotation;
-    GameTimer* OtherRotationTimer;
+
     GameTimer* TimeToEndTimer;
 
     int randomNumber1;

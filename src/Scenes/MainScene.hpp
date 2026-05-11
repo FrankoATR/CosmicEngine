@@ -30,10 +30,16 @@ private:
     glm::vec2 mouseFinalPosForArea;
     bool mouseKeyDownForArea;
 
+    bool EditorMode;
+    GameObject* selectedObject = nullptr;
+
+
+
 public:
     MainScene(int Level, int Attempts);
     
     void Init() override;
+    void Reset() override;
     void Draw() override;
     void Update(double deltaTime) override;
     void LoadResources() override;

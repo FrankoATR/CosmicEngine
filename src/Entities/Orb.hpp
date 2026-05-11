@@ -2,6 +2,7 @@
 #define ORB_HPP
 
 #include <WandEngine/Models/GameObject.hpp>
+#include <WandEngine/Models/GameBodyObject.hpp>
 #include <WandEngine/Models/GameTimer.hpp>
 
 using namespace WandEngine;

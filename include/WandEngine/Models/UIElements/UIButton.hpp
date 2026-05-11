@@ -17,7 +17,6 @@ namespace WandEngine
         int *font;
         std::function<void()> onClick;
 
-        unsigned int* Sprite;
         glm::vec3 textColor;
         float Transparency;
 
@@ -26,7 +25,7 @@ namespace WandEngine
         void HandleInput();
 
     public:
-        UIButton(unsigned int* Sprite, const std::string &text, int *font, glm::vec2 Position, glm::vec2 Size, bool visible, UIElement* parent);
+        UIButton(const std::string &text, int *font, glm::vec2 Position, glm::vec2 Size, bool visible, UIElement* parent);
         virtual ~UIButton();
 
         void Update(float deltaTime) override;

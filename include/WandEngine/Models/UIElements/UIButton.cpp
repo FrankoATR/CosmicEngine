@@ -1,14 +1,15 @@
 #include "UIButton.hpp"
 #include "../../Managers/Input/InputManager.hpp"
 #include "../../Managers/Camera/CameraManager.hpp"
+#include "../../Managers/Resource/ResourceManager.hpp"
 
 #include <iostream>
 
 namespace WandEngine
 {
 
-    UIButton::UIButton(unsigned int *Sprite, const std::string &text, int *font, glm::vec2 Position, glm::vec2 Size, bool visible, UIElement *parent) : 
-        Sprite(Sprite), text(text), font(font), UIElement(Position, Size, visible, parent, UIElementType::Button), textColor(glm::vec3(255, 255, 255)), isPressed(false)
+    UIButton::UIButton(const std::string &text, int *font, glm::vec2 Position, glm::vec2 Size, bool visible, UIElement *parent) : 
+        text(text), font(font), UIElement(Position, Size, visible, parent, UIElementType::Button), textColor(glm::vec3(1.0f, 1.0f, 1.0f)), isPressed(false)
     {
     }
 
@@ -32,11 +33,6 @@ namespace WandEngine
 
 
 
-        if (Sprite)
-        {
-            
-        }
-
         if (font)
         {
             int textWidth = 1;
@@ -59,11 +55,22 @@ namespace WandEngine
             }
         }
 
+        glm::vec3 color(0.0f, 1.0f, 0.0f);
+
         if (MouseHover())
         {
-            //al_draw_rectangle(GlobalPosition.x, GlobalPosition.y, GlobalPosition.x + Size.width, GlobalPosition.y + Size.height, al_map_rgb(255, 255, 255), 2.0f);
+            color.b = 1.0f;
         }
 
+        
+        ResourceManager::GetInstance().RenderRectangle(
+            glm::vec3(GlobalPosition, 0.0f), 
+            glm::vec3(GlobalPosition + Size, 0.0f), 
+            glm::vec3(GlobalPosition.x + Size.x / 2, GlobalPosition.y + Size.y / 2, 0.0f), 
+            glm::vec3(0.0f, 0.0f, 0.0f), 
+            color,
+            1.0f, 
+            1.0f);
 
         UIElement::Draw();
     }

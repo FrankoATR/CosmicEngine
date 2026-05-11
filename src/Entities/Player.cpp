@@ -14,11 +14,10 @@
 Player::Player(std::string UniqueName, PlayerMode mode, glm::vec2 Position, glm::vec2 Size, float Rotation, short int LayerId) : 
     GameObject("Player", Position, Size, Rotation, LayerId), CurrentPlayerMode(mode)
 {
-    Velocity = glm::vec2(400.0f, 400.f);
     OnGroundOrBlock = false;
-    Velocity.x = 950.0f;
+    Velocity.x = 1040.0f;
     Velocity.y = 0.0f;
-    Acceleration.y = 7000.0f;
+    Acceleration.y = 9200.0f;
     AngularVelocity = 0.0f;
     KeySpaceDown = false;
     RigthClickDown = false;
@@ -26,7 +25,6 @@ Player::Player(std::string UniqueName, PlayerMode mode, glm::vec2 Position, glm:
     RigthClickRelease = false;
     ReleaseJumping = false;
     this->UniqueName = UniqueName;
-    OtherRotation = 0.0f;
 }
 
 void Player::Init()
@@ -36,7 +34,7 @@ void Player::Init()
     BodyManager::GetInstance().Add(Body1);
 
 
-    glm::vec2 collisionSize = {GetSize().x * 0.4f, GetSize().y * 0.4f};
+    glm::vec2 collisionSize = {GetSize().x * 0.30f, GetSize().y * 0.30f};
     glm::vec2 collisionPosition = {
         (GetSize().x - collisionSize.x) / 2,
         (GetSize().y - collisionSize.y) / 2
@@ -45,9 +43,6 @@ void Player::Init()
                                { Body2CollisionEvent(Other, Side); });
     BodyManager::GetInstance().Add(Body2);
 
-
-    OtherRotationTimer = new GameTimer(0.01, true, false);
-    TimerManager::GetInstance().Add(OtherRotationTimer);
 
     TimeToEndTimer = new GameTimer(1.0, false, false, TimeToEndTimer);
     TimerManager::GetInstance().Add(TimeToEndTimer);
@@ -58,6 +53,8 @@ void Player::Init()
     std::uniform_int_distribution<int> dist(0, 4);
 
     randomNumber1 = dist(gen);
+
+
 }
 
 void Player::Draw()
@@ -107,18 +104,7 @@ void Player::Draw()
 
 void Player::Update(float deltaTime)
 {
-    /*
-        KeySpaceRelease = InputManager::GetInstance().IsKeyPressed(GLFW_KEY_RIGHT, KeyEventType::KeyRelease);
-        RigthClickRelease = InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyRelease);
-        KeySpaceDown = InputManager::GetInstance().IsKeyPressed(GLFW_KEY_RIGHT, KeyEventType::KeyDown);
-        RigthClickDown = InputManager::GetInstance().IsMouseButtonPressed(1, KeyEventType::KeyDown);
 
-    */
-
-    if(OtherRotationTimer->IsTrigger())
-    {
-       OtherRotation += 0.5;
-    }
 
     bool KeyRightRelease = InputManager::GetInstance().IsKeyPressed(GLFW_KEY_RIGHT, KeyEventType::KeyRelease);
     bool KeyLeftRelease = InputManager::GetInstance().IsKeyPressed(GLFW_KEY_LEFT, KeyEventType::KeyRelease);
@@ -148,13 +134,13 @@ void Player::Update(float deltaTime)
 
     if(MainJumpControlRelease && OnGroundOrBlock)
     {
-        Velocity.y = -1750.0f;
+        Velocity.y = -2000.0f;
         ReleaseJumping = false;
     }
 
     if(!OnGroundOrBlock)
     {
-        AngularVelocity = 300.0f;
+        AngularVelocity = 400.0f;
     }
     else
     {
@@ -201,36 +187,6 @@ void Player::Update(float deltaTime)
 
 
 
-    //SET MAX VEL.Y
-
-
-    /* CONTROLS
-    if (KeyRightRelease)
-    {
-        Velocity.x = 400.0f;
-    }
-    else if (KeyLeftRelease)
-    {
-        Velocity.x = -400.0f;
-    }
-    else
-    {
-        Velocity.x = 0;
-    }
-
-    */
-
-
-    if(TimeToEndTimer && TimeToEndTimer->IsTrigger())
-    {
-        //std::cout << Position.x << " " << Position.y << std::endl;
-    }
-
-
-
-
-
-
 }
 
 void Player::SetUniqueName(const std::string &name)
@@ -265,8 +221,7 @@ void Player::Body1CollisionEvent(GameObject *Other, CollisionSide Side)
             case CollisionSide::BOTTOM:
                 if(CurrentPlayerMode == PlayerMode::Normal)
                 {
-                    if((Velocity.y >= 0 && Position.y + Size.y < current->GetPosition().y + current->GetSize().y * 0.30) ||
-                        (Position.x + Size.x > current->GetPosition().x && current->GetPosition().x + current->GetSize().x < Position.x))
+                    if((Velocity.y >= 0 && Position.y + Size.y < current->GetPosition().y + current->GetSize().y * 0.35))
                     {
                         OnGroundOrBlock = true;
                         Position.y = current->GetPosition().y - Size.y;
@@ -304,11 +259,11 @@ void Player::Body1CollisionEvent(GameObject *Other, CollisionSide Side)
             switch (current->GetOrbType())
             {
             case OrbType::Green:
-                Velocity.y = -1750;
+                Velocity.y = -2000;
                 break;
 
             case OrbType::Blue:
-                Velocity.y = -1200;
+                Velocity.y = -1500;
                 break;
 
             default:
@@ -338,6 +293,5 @@ void Player::Body2CollisionEvent(GameObject *Other, CollisionSide Side)
 
 Player::~Player()
 {
-    OtherRotationTimer->Destroy();
     TimeToEndTimer->Destroy();
 }

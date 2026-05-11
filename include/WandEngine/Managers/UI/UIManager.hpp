@@ -2,6 +2,7 @@
 #define UIMANAGER_HPP
 
 #include "../../Models/UIElement.hpp"
+#include "../../Models/UIElements/UIButton.hpp"
 #include <vector>
 
 namespace WandEngine

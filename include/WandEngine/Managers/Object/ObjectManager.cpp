@@ -33,12 +33,10 @@ namespace WandEngine
                     actor->SetVisible(false);
                 }
 
-                if (actor->GetInsideGridArea())
-                {
-                    actor->UpdateLastPosition();
-                    actor->Update(deltaTime);
-                    actor->UpdatePosition(deltaTime);
-                }
+                actor->UpdateLastPosition();
+                actor->Update(deltaTime);
+                actor->UpdatePosition(deltaTime);
+                
             }
             else
             {
@@ -79,7 +77,10 @@ namespace WandEngine
             GameObject* tmp = *it;
             for(auto **copies : tmp->pointer_copies)
             {
-                (*copies) = nullptr;
+                if(*copies == tmp)
+                {
+                    (*copies) = nullptr;
+                }
             }
             objects.erase(it);
             delete tmp;
