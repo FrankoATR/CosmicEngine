@@ -63,7 +63,7 @@ void Spike::Init()
 }
 
 
-void Spike::Draw()
+void Spike::Draw() const
 {
     ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", 4, static_cast<int>(Type), Position, Size, Rotation, MainColor, 1.0f);
 }
@@ -82,43 +82,43 @@ void Spike::BodyCollisionEvent(GameObject *Other, CollisionSide Side)
 }
 
 
-
-void Spike::SaveToDB()
-{
-    DataBaseManager::GetInstance().CreateTable("Spike", "id INTEGER PRIMARY KEY AUTOINCREMENT, PositionX REAL, PositionY REAL, SpikeType INTEGER, Rotation REAL");
-
-    for(GameObject* obj : ObjectManager::GetInstance().FindByClassName("Spike"))
-    {
-        Spike* spike = static_cast<Spike*>(obj);
-        std::ostringstream values;
-        values << spike->GetPosition().x << ", " << spike->GetPosition().y << ", " << static_cast<int>(spike->GetSpikeType()) << ", " << spike->GetRotation();
-    
-        DataBaseManager::GetInstance().InsertData("Spike", "PositionX, PositionY, SpikeType, Rotation", values.str());
-    }
-    
-}
-
-
-void Spike::LoadFrom()
-{
-    auto callback = [](void* data, int argc, char** argv, char** colNames) -> int {
-        float posX = std::stof(argv[0]);
-        float posY = std::stof(argv[1]);
-        int type = std::stoi(argv[2]);
-        float rotation = std::stof(argv[3]);
-
-        Spike* spike = new Spike(static_cast<SpikeType>(type), glm::vec2(posX, posY), glm::vec2(100.0f), 0);
-        spike->SetRotation(rotation);
-        ObjectManager::GetInstance().Add(spike);
-
-        return 0;
-    };
-
-    DataBaseManager::GetInstance().ConsultTable("Spike", "PositionX, PositionY, SpikeType, Rotation", callback);
-}
-
-
 SpikeType Spike::GetSpikeType()
 {
     return Type;
+}
+
+
+std::vector<std::string> Spike::GetAllValues() const {
+    return {
+        std::to_string(Position.x),
+        std::to_string(Position.y),
+        std::to_string(static_cast<int>(Type)),
+        std::to_string(Rotation)
+    };
+}
+
+
+void Spike::RegisterSerialize()
+{
+    DataBaseManager::GetInstance().RegisterSerialization(
+        "Spike",
+        { 
+            {"PositionX", "REAL"},
+            {"PositionY", "REAL"},
+            {"SpikeType", "INTEGER"},
+            {"Rotation", "REAL"}
+        },
+        [](char** argv) -> GameObject*
+        {
+            float posX = std::stof(argv[0]);
+            float posY = std::stof(argv[1]);
+            int type = std::stoi(argv[2]);
+            float rotation = std::stof(argv[3]);
+    
+            Spike* spike = new Spike(static_cast<SpikeType>(type), glm::vec2(posX, posY), glm::vec2(100.0f), 0);
+            spike->SetRotation(rotation);
+            return spike;
+        }
+
+    );
 }

@@ -46,7 +46,7 @@ public:
     ~Player();
 
     void Init() override;
-    void Draw() override;
+    void Draw() const override;
     void Update(float deltaTime) override;
 
     void SetUniqueName(const std::string & name);

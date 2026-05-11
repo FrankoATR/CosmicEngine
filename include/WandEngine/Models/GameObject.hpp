@@ -67,7 +67,7 @@ namespace WandEngine
         GameObject() = delete;
         //GameObject(GameObject *Other);
         GameObject(std::string ClassName, glm::vec2 Position, glm::vec2 Size, float Rotation, short int LayerId);
-        virtual void Draw();
+        virtual void Draw() const;
         virtual void Init();
         virtual void Update(float deltaTime);
 
@@ -154,6 +154,7 @@ namespace WandEngine
 
         virtual void Reset();
 
+        virtual std::vector<std::string> GetAllValues() const;
 
         virtual ~GameObject();
     };

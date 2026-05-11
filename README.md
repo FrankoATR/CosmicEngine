@@ -2,114 +2,102 @@
 
 ## Fecha efectiva
 
-**2 de abril de 2025**
+**6 de abril de 2025**
 
 ## Descripción general
 
-En esta etapa el cambio dominante no es la aparición de un subsistema nuevo, sino la consolidación del refactor gráfico anterior. El framework toma la infraestructura de recursos y texto introducida al cierre de marzo y la vuelve más estable desde el punto de vista interno: separa recursos gráficos estáticos de buffers dinámicos, normaliza claves internas del motor y mejora la limpieza del ciclo de vida de recursos GPU.
+En esta etapa el cambio dominante deja de estar en la infraestructura de render y pasa a la persistencia estructurada de objetos. El framework empieza a formalizar una ruta de serialización por tipo, donde la base de datos ya no solo ejecuta SQL auxiliar, sino que puede registrar metadatos de clases, guardar instancias por clase y reconstruir objetos del runtime a partir de constructores declarados.
 
-La evidencia visible de esta versión se concentra sobre todo en `ResourceManager` y `TextFont`. `ResourceManager` abandona definitivamente la lógica especial por forma y pasa a operar con registros explícitos de VAO estáticos y VAO/VBO dinámicos; además adopta claves reservadas del motor con prefijo `WAND_` para shaders y geometría interna. En paralelo, `TextFont` deja de ser solo un cargador de glifos funcional y pasa a responsabilizarse también por la liberación correcta de texturas de caracteres.
+La evidencia visible de esta versión se concentra sobre todo en `DataBaseManager` y `GameObject`. `DataBaseManager` incorpora un registro de serialización con columnas declaradas y constructores por clase; `GameObject` añade `GetAllValues()` como hook virtual para exportar el estado persistible de cada instancia; y además `Draw()` pasa a ser `const`, reforzando la separación entre render y mutación del objeto.
 
-Con ello el proyecto no amplía demasiado la superficie pública del framework, pero sí endurece la parte que ya estaba creciendo: el render se vuelve más consistente, menos ambiguo y menos propenso a fugas o acoplamientos implícitos.
+Con ello el proyecto no cambia de backend ni de stack, pero sí sube de nivel la capa de persistencia del engine: deja de depender solo de consultas manuales y empieza a perfilar una semántica propia de serialización orientada a tipos del framework.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- distinguir con claridad recursos de geometría estática y buffers dinámicos dentro del pipeline 2D del engine;
-- formalizar nombres reservados y rutas internas del motor para evitar colisiones con recursos del usuario;
-- mejorar la administración de memoria y destrucción de recursos gráficos asociados a texto y render inmediato.
+- formalizar un registro de serialización por clase dentro del motor;
+- hacer que el modelo base de objetos exponga una salida uniforme de valores persistibles;
+- preparar la reconstrucción de instancias desde base de datos sin acoplar esa lógica a una implementación concreta de escena.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `include/WandEngine/Managers/Resource/ResourceManager.*`, donde el manager separa `static_vao_resources` de `dynamic_vao_vbo_resources`, introduce `Load_Dynamic_VAO_VBO()` con conteo de vértices y centraliza limpieza mediante `ClearMap()`.
-- `include/WandEngine/Managers/Resource/ResourceManager.*`, donde las primitivas internas y shaders por defecto pasan a registrarse bajo claves reservadas como `WAND_Sprite`, `WAND_Shape`, `WAND_Text`, `WAND_Point`, `WAND_Line`, `WAND_Triangle` y `WAND_Rectangle`.
-- `include/WandEngine/Models/TextFont/TextFont.cpp`, donde el modelo de fuente ya libera las texturas de glifos al destruirse y deja más cerrada la responsabilidad del recurso.
+- `include/WandEngine/Managers/DataBase/DataBaseManager.*`, donde el manager añade `serialization_resources`, `RegisterSerialization()`, nuevas variantes de `SaveObjectsData()` y `LoadObjectsData()`, y una `ConsultTable()` capaz de transportar contexto vía `void* data`.
+- `include/WandEngine/Models/GameObject.*`, donde el modelo base incorpora `GetAllValues()` como contrato virtual de exportación de valores y hace `Draw()` const-correct.
+- `include/WandEngine/Managers/Resource/ResourceManager.hpp`, donde aparece un helper inline `RS_MNX()` para acceso corto al singleton de recursos, aunque sin alterar la arquitectura principal del framework.
 
 ## Arquitectura o sistemas principales
 
-### Separación entre geometría estática y dinámica
+### Registro declarativo de serialización
 
-El cambio técnico más claro de esta etapa está en la forma en que `ResourceManager` entiende la geometría interna del engine. La versión anterior ya registraba recursos por clave, pero todavía no distinguía con suficiente precisión entre:
+El cambio técnico más fuerte de esta etapa está en `DataBaseManager`. La persistencia deja de limitarse a abrir una base de datos, crear tablas o ejecutar consultas puntuales, y empieza a adoptar una estructura declarativa por clase. Con `serialization_resources`, el manager ya puede mantener para cada tipo registrado:
 
-- VAO estáticos reutilizables para sprites y geometría fija;
-- VAO/VBO dinámicos que necesitan recibir datos nuevos en cada operación de render inmediato.
+- la lista de columnas y sus tipos SQL;
+- un constructor capaz de reconstruir una instancia a partir de `char** argv`;
+- una relación explícita entre el nombre de clase del runtime y su representación persistida.
 
-Con la introducción de `static_vao_resources` y `dynamic_vao_vbo_resources`, esa diferencia pasa a ser explícita. Esto mejora la semántica del framework porque deja de tratar líneas, rectángulos, triángulos y puntos como casos especiales dispersos y los convierte en recursos dinámicos declarados desde `Init()`.
+Eso mueve la persistencia desde un uso manual de SQLite hacia una capa del framework con semántica propia de serialización.
 
-### Render inmediato más ordenado para primitivas
+### Guardado y carga por clase del runtime
 
-La consecuencia directa de esa separación es que `RenderShape()` deja de depender de estructuras auxiliares dedicadas por forma y pasa a trabajar contra un registro dinámico por clave. El flujo ahora es más coherente:
+`SaveObjectsData()` y `LoadObjectsData()` ya no son placeholders genéricos. En esta versión pasan a trabajar por nombre de clase y se apoyan en el registro de serialización para decidir cómo crear tablas, qué columnas persistir y cómo reconstruir instancias.
 
-- se resuelve el VAO/VBO dinámico por nombre reservado del motor;
-- se actualiza el contenido del buffer con `glBufferSubData`;
-- se reutiliza el mismo camino de shader y transformación para dibujar puntos, líneas, triángulos y rectángulos.
+La ruta de guardado ahora expresa un flujo mucho más definido:
 
-Eso reduce estado implícito y hace más predecible el comportamiento del render inmediato dentro del engine.
+- localizar objetos por `ClassName` dentro de `ObjectManager`;
+- derivar columnas desde el metamodelo registrado;
+- crear la tabla correspondiente si no existe;
+- obtener valores serializables desde cada objeto;
+- insertar cada fila en la tabla adecuada.
 
-### Namespacing interno de recursos del motor
+La ruta de carga sigue la misma dirección en sentido inverso: consulta las columnas registradas y usa un constructor por clase para reinstanciar objetos en el manager. Eso ya no es solo utilería de base de datos; es infraestructura de runtime.
 
-Otro ajuste importante, aunque más discreto, es la adopción de claves internas con prefijo `WAND_`. Los shaders y recursos creados por el framework ya no viven con nombres genéricos como `Sprite`, `Shape` o `text`, sino bajo identificadores explícitamente reservados para el motor.
+### GameObject como contrato base de persistencia
 
-Esto aporta dos ventajas estructurales:
+El ajuste en `GameObject` es pequeño en líneas, pero importante en diseño. `GetAllValues()` aparece como método virtual y devuelve la interfaz mínima que la persistencia necesita del modelo base: una lista ordenada de valores serializables para una instancia.
 
-- evita colisiones conceptuales con recursos que una capa superior pudiera registrar por su cuenta;
-- vuelve más clara la frontera entre recursos del engine y recursos del proyecto que consume el engine.
+La ventaja de esta decisión es que el engine ya no necesita que cada ruta de guardado conozca por fuera cómo extraer el estado de un objeto concreto. El contrato queda empujado al propio modelo base y listo para ser especializado por clases derivadas.
 
-No es un cambio visual, pero sí una mejora real de contrato interno.
+Eso convierte a `GameObject` en una pieza central del nuevo flujo de serialización, aunque la implementación por defecto todavía sea vacía.
 
-### Texto integrado con limpieza de recursos más completa
+### Separación más estricta entre render y mutación
 
-La ruta de texto introducida al final de marzo se consolida en abril. En esta etapa no aparece una API nueva radical, pero sí se fortalece su implementación: `TextFont` ahora destruye explícitamente las texturas generadas para cada glifo y limpia su mapa interno al destruirse.
+En la misma línea de endurecer contratos base, `Draw()` pasa a ser `const`. El cambio no altera una API enorme, pero sí comunica mejor la intención del framework: dibujar un objeto no debería modificar su estado observable.
 
-Eso importa porque el texto en este diseño depende de:
+Ese tipo de const-correctness importa más en esta etapa porque el motor empieza a combinar runtime, persistencia y reconstrucción. Cuanto más clara sea la separación entre consultar, dibujar, serializar y mutar, más defendible será la evolución de la arquitectura.
 
-- texturas OpenGL por carácter ASCII;
-- buffers dinámicos para los quads de glifos;
-- una vida útil asociada al registro y eliminación de fuentes dentro de `ResourceManager`.
+### Consultas con contexto y utilería de bajo ruido
 
-Al cerrarse mejor ese ciclo, el subsistema de texto deja de ser solo funcional y pasa a ser más seguro desde el punto de vista del runtime.
+`ConsultTable()` también se refina al aceptar un puntero de contexto, lo que permite callbacks de carga con información adicional sin depender de variables globales o cierres externos imposibles para la firma de SQLite. Eso es justo lo que habilita que `LoadObjectsData()` use un callback genérico y aun así sepa qué clase está reconstruyendo.
 
-### Limpieza genérica de mapas de recursos
-
-`ResourceManager` también introduce una utilidad de limpieza genérica mediante `ClearMap()`. El cambio parece pequeño, pero expresa una intención clara del framework: dejar de repetir bucles manuales para cada mapa de recursos y mover esa responsabilidad a una operación más uniforme.
-
-Con ello el código de destrucción gana consistencia en varias familias de recursos:
-
-- shaders;
-- texturas;
-- hojas de sprites;
-- fuentes de texto;
-- VAO y VBO internos.
-
-Ese tipo de refactor no agrega capacidad visible al usuario final, pero sí reduce el riesgo de errores de mantenimiento en la infraestructura del motor.
+El helper inline `RS_MNX()` en `ResourceManager.hpp` es mucho menor en importancia, pero confirma la misma tendencia general del código de esta fecha: se reducen pequeñas fricciones de uso del framework mientras los contratos centrales se vuelven más explícitos.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- el render 2D del motor ahora separa mejor qué recursos son persistentes y cuáles se actualizan cuadro a cuadro;
-- la capa de recursos ya administra con más disciplina tanto la nomenclatura interna del engine como la destrucción de buffers, texturas y glifos.
+- la persistencia del engine ya puede registrar cómo se serializa y reconstruye cada clase del runtime;
+- el modelo base de objetos ya ofrece un punto de extensión directo para que esa persistencia no dependa de extracción manual de datos por fuera del objeto.
 
-Con ello dejé una base gráfica más robusta que la del 31 de marzo. La mejora principal de esta etapa no está en añadir otra capacidad grande, sino en hacer más confiable la que ya se había abierto en recursos, primitivas y texto.
+Con ello dejé una base de persistencia mucho más madura que la de febrero. La mejora principal de esta etapa no está en el render, sino en que el framework empieza a tratar serialización y reconstrucción de objetos como una responsabilidad interna del motor y no solo como SQL suelto alrededor del juego.
 
 ## Dependencias externas visibles
 
 No aparecen dependencias nuevas visibles en esta etapa. El cambio está en cómo se usan con más rigor las ya presentes:
 
-- OpenGL queda mejor encapsulado en la gestión de VAO estáticos y VBO dinámicos del `ResourceManager`;
-- FreeType mantiene su papel dentro de `TextFont`, pero ahora con un cierre más completo del ciclo de vida de glifos y texturas.
+- `sqlite3` deja de actuar solo como backend de consultas y pasa a sostener un registro de serialización más estructurado dentro de `DataBaseManager`.
 
 ## Resumen técnico de la versión
 
-La etapa efectiva al **2 de abril de 2025** queda delimitada por estos movimientos:
+La etapa efectiva al **6 de abril de 2025** queda delimitada por estos movimientos:
 
-- separé los recursos geométricos internos del engine entre VAO estáticos y VAO/VBO dinámicos;
-- reemplacé la lógica auxiliar por forma en `ResourceManager` por una ruta unificada de render inmediato apoyada en buffers dinámicos;
-- normalicé nombres reservados del motor con prefijo `WAND_` para shaders y geometría interna;
-- reforcé la limpieza del subsistema de recursos con `ClearMap()` y destrucción más homogénea de mapas internos;
-- completé la liberación de texturas de glifos en `TextFont`, consolidando mejor la ruta de render de texto.
+- incorporé un registro de serialización por clase en `DataBaseManager` con columnas declaradas y constructores de reconstrucción;
+- convertí `SaveObjectsData()` y `LoadObjectsData()` en rutas operativas por tipo del runtime, en lugar de placeholders genéricos;
+- añadí `GetAllValues()` a `GameObject` como contrato base de exportación de estado persistible;
+- hice `Draw()` const-correct para separar mejor render y mutación del objeto;
+- amplié `ConsultTable()` para transportar contexto a callbacks de carga;
+- mantuve un ajuste menor de ergonomía en `ResourceManager` con el helper inline `RS_MNX()`.
 
-Con esta etapa dejé el framework en una versión más disciplinada internamente: misma dirección gráfica que la del 31 de marzo, pero con una separación más clara entre recursos, menos estado implícito y mejor administración del ciclo de vida en GPU.
+Con esta etapa dejé el framework en un punto importante de madurez interna: el motor ya no solo administra render y recursos, sino que empieza a definir de forma explícita cómo sus objetos se describen, se guardan y se reconstruyen desde persistencia.

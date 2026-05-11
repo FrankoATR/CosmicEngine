@@ -55,13 +55,13 @@ namespace WandEngine
     {
 
     }
-
-    void GameObject::Init()
+    
+    void GameObject::Draw() const
     {
 
     }
 
-    void GameObject::Draw()
+    void GameObject::Init()
     {
 
     }
@@ -308,6 +308,12 @@ namespace WandEngine
     void GameObject::Reset()
     {
 
+    }
+
+
+    std::vector<std::string> GameObject::GetAllValues() const
+    {
+        return {};
     }
 
 

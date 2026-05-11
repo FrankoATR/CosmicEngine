@@ -26,6 +26,7 @@
 #include UIMANAGER_HEADER
 #include DATABASEMANAGER_HEADER
 
+#include <WandEngine/Managers/Resource/ResourceManager.hpp>
 
 
 MainScene::MainScene() : GameScene("MainScene")
@@ -60,11 +61,12 @@ void MainScene::Init()
     //RS_MN.LoadShader("sprite", SHADER_SPRITE_VS, SHADER_SPRITE_FS);
     //RS_MN.LoadShader("sprite_sheet", SHADER_SPRITESHEET_VS, SHADER_SPRITESHEET_FS);
 
-    RS_MN.LoadTexture("bg1", TEXTURE_GD_BG1, false);
-    RS_MN.LoadTexture("g1", TEXTURE_GD_G1, true);
-    RS_MN.LoadTexture("g2", TEXTURE_GD_G2, true);
-    RS_MN.LoadTexture("line", TEXTURE_GD_LINE, true);
-    RS_MN.LoadTextureSheet("gd", TEXTURESHEET_GD, true, 6, 6, 0);
+
+    RS_MNX()->LoadTexture("bg1", TEXTURE_GD_BG1, false);
+    RS_MNX()->LoadTexture("g1", TEXTURE_GD_G1, true);
+    RS_MNX()->LoadTexture("g2", TEXTURE_GD_G2, true);
+    RS_MNX()->LoadTexture("line", TEXTURE_GD_LINE, true);
+    RS_MNX()->LoadTextureSheet("gd", TEXTURESHEET_GD, true, 6, 6, 0);
 
     RS_MN.LoadTextFont("font1", FONT_THALEAHFAT, 25);
 
@@ -74,6 +76,9 @@ void MainScene::Init()
     
     SND_MN.Load("Dead", MUSIC_GD_DEAD);
 
+    SolidBlock::RegisterSerialize();
+    Spike::RegisterSerialize();
+    Orb::RegisterSerialize();
 
     Reset();
 
@@ -107,40 +112,23 @@ void MainScene::Reset()
         DB_MN.OpenDatabaseForLoading("levels/lvl_mylevel");
     }
 
-    std::string sql = "SELECT name FROM sqlite_master WHERE type='table';";
 
 
-    auto callback = [](void* data, int argc, char** argv, char** colNames) -> int {
-        std::string tableName = argv[0];
+    DB_MN.LoadObjectsData("SolidBlock");
+    DB_MN.LoadObjectsData("Spike");
+    DB_MN.LoadObjectsData("Orb");
 
-        if (tableName == "SolidBlock") {
-            SolidBlock::LoadFrom();
-        }
-        else if (tableName == "Spike") {
-            Spike::LoadFrom();
-        }
-        else if (tableName == "Orb") {
-            Orb::LoadFrom();
-        }
-        else if (tableName == "Music") {
-            std::string sql = "SELECT id, path FROM Music;";
+    std::string sql = "SELECT id, path FROM Music;";
     
-            auto callback = [](void* data, int argc, char** argv, char** colNames) -> int {
-                int id = std::stoi(argv[0]);
-
-                MSC_MN.Clear();
-                MSC_MN.Load("music", std::string(argv[1]));
-
-                return 0;
-            };
-        
-            DataBaseManager::GetInstance().ExecuteQuery(sql, callback, nullptr);
-        }
-
+    auto callback = [](void* data, int argc, char** argv, char** colNames) -> int {
+        int id = std::stoi(argv[0]);
+        MSC_MN.Clear();
+        MSC_MN.Load("music", std::string(argv[1]));
         return 0;
     };
 
-    DB_MN.ExecuteQuery(sql, callback, nullptr);
+    DataBaseManager::GetInstance().ExecuteQuery(sql, callback, nullptr);
+    
 
     DB_MN.CloseDatabase();
 
@@ -394,9 +382,9 @@ void MainScene::Update(double deltaTime)
 
             DataBaseManager::GetInstance().ExecuteSQL("BEGIN TRANSACTION;");
 
-            SolidBlock::SaveToDB();
-            Spike::SaveToDB();
-            Orb::SaveToDB();
+            DataBaseManager::GetInstance().SaveObjectsData("SolidBlock");
+            DataBaseManager::GetInstance().SaveObjectsData("Spike");
+            DataBaseManager::GetInstance().SaveObjectsData("Orb");
 
             DataBaseManager::GetInstance().CreateTable("Music", "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT");
         
@@ -598,9 +586,9 @@ void MainScene::Update(double deltaTime)
             }
             DataBaseManager::GetInstance().ExecuteSQL("BEGIN TRANSACTION;");
 
-            SolidBlock::SaveToDB();
-            Spike::SaveToDB();
-            Orb::SaveToDB();
+            DataBaseManager::GetInstance().SaveObjectsData("SolidBlock");
+            DataBaseManager::GetInstance().SaveObjectsData("Spike");
+            DataBaseManager::GetInstance().SaveObjectsData("Orb");
 
             DataBaseManager::GetInstance().CreateTable("Music", "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT");
         

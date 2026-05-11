@@ -12,7 +12,7 @@ private:
 public:
     Background(glm::vec2 Position, glm::vec2 Size, short int LayerId);
     void Init() override;
-    void Draw() override;
+    void Draw() const override;
     void Update(float deltaTime) override;
 
 };

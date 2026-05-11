@@ -4,14 +4,25 @@
 #include <iostream>
 #include <sqlite/sqlite3.h>
 #include <string>
+#include <unordered_map>
+#include <functional>
 
 namespace WandEngine
 {
+    class GameObject;
+
+    struct SerializedObjects
+    {
+        std::vector<std::pair<std::string, std::string>> Columns;
+        std::function<GameObject*(char**)> Constructor;
+    };
+
     class DataBaseManager
     {
     private:
         sqlite3 *db;
         std::string dbName;
+        std::unordered_map<std::string, SerializedObjects> serialization_resources;
 
         DataBaseManager();
         ~DataBaseManager();
@@ -33,12 +44,14 @@ namespace WandEngine
         void ExecuteQuery(const std::string& sql, int (*callback)(void*, int, char**, char**), void* data);
 
         void CreateTable(const std::string &tableName, const std::string &columns);
-        void ConsultTable(const std::string &tableName, const std::string &columns, int (*callback)(void *, int, char **, char **));
+        void ConsultTable(const std::string &tableName, const std::string &columns, int (*callback)(void *, int, char **, char **), void* data = nullptr);
 
+
+        void RegisterSerialization(const std::string& className, std::vector<std::pair<std::string, std::string>> columns, std::function<GameObject*(char**)> constructor);
 
         void ClearDatabase();
-        void SaveObjectsData();
-        void LoadObjectsData();
+        void SaveObjectsData(const std::string& className);
+        void LoadObjectsData(const std::string& className);
 
         void InsertData(const std::string &table, const std::string &columns, const std::string &values);
         int GetLastInsertID();

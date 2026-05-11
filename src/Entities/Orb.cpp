@@ -28,7 +28,7 @@ void Orb::Init()
 }
 
 
-void Orb::Draw()
+void Orb::Draw() const
 {
     int idx = Type == OrbType::Green ? 0 : 1;
 
@@ -67,41 +67,38 @@ OrbType Orb::GetOrbType()
 }
 
 
-void Orb::SaveToDB()
-{
-    DataBaseManager::GetInstance().CreateTable("Orb", "id INTEGER PRIMARY KEY AUTOINCREMENT, PositionX REAL, PositionY REAL, OrbType INTEGER");
-
-    for(GameObject*  obj : ObjectManager::GetInstance().FindByClassName("Orb"))
-    {
-        Orb* orb = static_cast<Orb*>(obj);
-        std::ostringstream values;
-        values << orb->GetPosition().x << ", " << orb->GetPosition().y << ", " << static_cast<int>(orb->GetOrbType());
-    
-        DataBaseManager::GetInstance().InsertData("Orb", "PositionX, PositionY, OrbType", values.str());
-    }
-    
-}
-
-
-void Orb::LoadFrom()
-{    
-    auto callback = [](void* data, int argc, char** argv, char** colNames) -> int {
-        float posX = std::stof(argv[0]);
-        float posY = std::stof(argv[1]);
-        int type = std::stoi(argv[2]);
-
-        Orb* block = new Orb(static_cast<OrbType>(type), glm::vec2(posX, posY), glm::vec2(100.0f), 0);
-        ObjectManager::GetInstance().Add(block);
-
-        return 0;
-    };
-
-    DataBaseManager::GetInstance().ConsultTable("Orb", "PositionX, PositionY, OrbType", callback);
-}
-
-
-
 Orb::~Orb()
 {
     //RotateSprite_Timer->Destroy();
+}
+
+
+std::vector<std::string> Orb::GetAllValues() const {
+    return {
+        std::to_string(Position.x),
+        std::to_string(Position.y),
+        std::to_string(static_cast<int>(Type))
+    };
+}
+
+
+void Orb::RegisterSerialize()
+{
+    DataBaseManager::GetInstance().RegisterSerialization(
+        "Orb",
+        { 
+            {"PositionX", "REAL"},
+            {"PositionY", "REAL"},
+            {"OrbType", "INTEGER"}
+        },
+        [](char** argv) -> GameObject*
+        {
+            float posX = std::stof(argv[0]);
+            float posY = std::stof(argv[1]);
+            int type = std::stoi(argv[2]);
+    
+            return new Orb(static_cast<OrbType>(type), glm::vec2(posX, posY), glm::vec2(100.0f), 0);
+        }
+
+    );
 }

@@ -29,7 +29,7 @@ public:
     Orb(OrbType Type, glm::vec2 Position, glm::vec2 Size, short int LayerId);
     ~Orb();
     void Init() override;
-    void Draw() override;
+    void Draw() const override;
     void Update(float deltaTime) override;
     void BodyCollisionEvent(GameObject *other, CollisionSide Side);
 
@@ -42,9 +42,8 @@ public:
         return new Orb(*this);
     }
 
-
-    static void SaveToDB();
-    static void LoadFrom();
+    std::vector<std::string> GetAllValues() const;
+    static void RegisterSerialize();
 };
 
 #endif //ORB_HPP

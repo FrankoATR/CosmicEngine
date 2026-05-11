@@ -6,7 +6,6 @@
 using namespace WandEngine;
 
 int main(){
-
 	int screenWidth = 960;
 	int screenHeight = 540;
 	//int screenWidth = 1920;

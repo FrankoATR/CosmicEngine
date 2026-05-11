@@ -57,7 +57,7 @@ void Player::Init()
 
 }
 
-void Player::Draw()
+void Player::Draw() const
 {
 
     //ResourceManager::GetInstance().Render2DSprite("t1", glm::vec2(Position.x + sin(OtherRotation * 0.015) * 200, Position.y + cos(OtherRotation * 0.015) * 200), Size, -OtherRotation, MainColor, 1.0f);

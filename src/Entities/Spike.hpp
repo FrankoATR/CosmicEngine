@@ -25,7 +25,7 @@ public:
 
     Spike(SpikeType Type, glm::vec2 Position, glm::vec2 Size, short int LayerId);
     void Init() override;
-    void Draw() override;
+    void Draw() const override;
     void Update(float deltaTime) override;
     void BodyCollisionEvent(GameObject *other, CollisionSide Side);
 
@@ -34,8 +34,9 @@ public:
         return new Spike(*this);
     }
 
-    static void SaveToDB();
-    static void LoadFrom();
+    
+    std::vector<std::string> GetAllValues() const;
+    static void RegisterSerialize();
 
     SpikeType GetSpikeType();
 };

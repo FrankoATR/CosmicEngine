@@ -5,6 +5,7 @@
 #include <chrono>
 #include <vector>
 #include <string>
+#include <sstream>
 
 namespace WandEngine
 {
@@ -138,31 +139,85 @@ void DataBaseManager::ExecuteQuery(const std::string &sql, int (*callback)(void 
 void DataBaseManager::CreateTable(const std::string &tableName, const std::string &columns)
 {
     std::string sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" + columns + ");";
+    std::cout << sql << std::endl;
     ExecuteSQL(sql);
 }
 
-void DataBaseManager::ConsultTable(const std::string &tableName, const std::string &columns, int (*callback)(void *, int, char **, char **))
+void DataBaseManager::ConsultTable(const std::string &tableName, const std::string &columns, int (*callback)(void *, int, char **, char **), void* data)
 {
     std::string sql = "SELECT " + columns + " FROM " + tableName + ";";
-    ExecuteQuery(sql, callback, nullptr);
+    std::cout << sql << std::endl;
+    ExecuteQuery(sql, callback, data);
 }
 
-void DataBaseManager::SaveObjectsData()
+void DataBaseManager::RegisterSerialization(const std::string& className, std::vector<std::pair<std::string, std::string>> columns, std::function<GameObject*(char**)> constructor)
 {
-    for(auto *obj : ObjectManager::GetInstance().GetAll())
-    {
-        // obj->SaveToDB(db);
+    serialization_resources[className] = {columns, constructor};
+}
+
+void DataBaseManager::SaveObjectsData(const std::string& className)
+{
+    auto objs = ObjectManager::GetInstance().FindByClassName(className);
+
+    if (objs.empty()) return;
+
+    auto first = dynamic_cast<GameObject*>(objs[0]);
+    auto columns = serialization_resources[className].Columns;
+
+    std::ostringstream colTypeStr;
+    for (size_t i = 0; i < columns.size(); ++i) {
+        colTypeStr << columns[i].first << " " << columns[i].second;
+        if (i != columns.size() - 1) colTypeStr << ", ";
+    }
+    
+    CreateTable(className, "id INTEGER PRIMARY KEY AUTOINCREMENT, " + colTypeStr.str());
+
+    std::ostringstream colStr;
+    for (size_t i = 0; i < columns.size(); ++i) {
+        colStr << columns[i].first;
+        if (i != columns.size() - 1) colStr << ", ";
+    }
+
+    for (GameObject* obj : objs) {
+        std::ostringstream valStr;
+        auto values = obj->GetAllValues();
+
+        for (size_t i = 0; i < values.size(); ++i) {
+            valStr << values[i];
+            if (i != values.size() - 1) valStr << ", ";
+        }
+        InsertData(className, colStr.str(), valStr.str());
     }
 }
 
-void DataBaseManager::LoadObjectsData()
+void DataBaseManager::LoadObjectsData(const std::string& className)
 {
-    std::cout << "Cargando objetos desde la base de datos..." << std::endl;
+    auto callback = [](void* userdata, int argc, char** argv, char** colNames) -> int {
+        std::string className = *static_cast<std::string*>(userdata);
+
+        DataBaseManager* self = &DataBaseManager::GetInstance();
+    
+        auto it = self->serialization_resources.find(className);
+        if (it != self->serialization_resources.end()) {
+            GameObject* obj = it->second.Constructor(argv);
+            ObjectManager::GetInstance().Add(obj);
+        }
+        return 0;
+    };
+
+    std::ostringstream cols;
+    for (size_t i = 0; i < serialization_resources[className].Columns.size(); ++i) {
+        cols << serialization_resources[className].Columns[i].first;
+        if (i != serialization_resources[className].Columns.size() - 1) cols << ", ";
+    }
+
+    ConsultTable(className, cols.str(), callback, (void*)&className);
 }
 
 void DataBaseManager::InsertData(const std::string &table, const std::string &columns, const std::string &values)
 {
     std::string sql = "INSERT INTO " + table + " (" + columns + ") VALUES (" + values + ");";
+    std::cout << sql << std::endl;
     ExecuteSQL(sql);
 }
 

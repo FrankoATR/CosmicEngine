@@ -173,6 +173,9 @@ namespace WandEngine
         void Clear();
     };
 
+
+    inline ResourceManager* RS_MNX() { return &ResourceManager::GetInstance(); }  // DEFINITIONS OR INLINES?
+
 }
 
 #endif // RESOURCEMANAGER_HPP

@@ -25,7 +25,7 @@ void SolidBlock::Init()
 
 }
 
-void SolidBlock::Draw()
+void SolidBlock::Draw() const
 {
 
     ResourceManager::GetInstance().Render2DSpriteFromTextureSheet("gd", BlockID % 3, BlockID / 3, Position, Size, Rotation, MainColor, 1.0f);
@@ -41,40 +41,37 @@ void SolidBlock::BodyCollisionEvent(GameObject *Other, CollisionSide Side)
 }
 
 
-void SolidBlock::SaveToDB()
-{
-    DataBaseManager::GetInstance().CreateTable("SolidBlock", "id INTEGER PRIMARY KEY AUTOINCREMENT, PositionX REAL, PositionY REAL, BlockID INTEGER");
-
-    for(GameObject*  obj : ObjectManager::GetInstance().FindByClassName("SolidBlock"))
-    {
-        SolidBlock* solidblock = static_cast<SolidBlock*>(obj);
-        std::ostringstream values;
-        values << solidblock->GetPosition().x << ", " << solidblock->GetPosition().y << ", " << solidblock->GetBlockID();
-    
-        DataBaseManager::GetInstance().InsertData("SolidBlock", "PositionX, PositionY, BlockID", values.str());
-    }
-    
-}
-
-
-void SolidBlock::LoadFrom()
-{
-    auto callback = [](void* data, int argc, char** argv, char** colNames) -> int {
-        float posX = std::stof(argv[0]);
-        float posY = std::stof(argv[1]);
-        int type = std::stoi(argv[2]);
-
-        SolidBlock* block = new SolidBlock(type, glm::vec2(posX, posY), glm::vec2(100.0f), 0);
-        ObjectManager::GetInstance().Add(block);
-
-        return 0;
-    };
-
-    DataBaseManager::GetInstance().ConsultTable("SolidBlock", "PositionX, PositionY, BlockID", callback);
-}
-
-
 int SolidBlock::GetBlockID()
 {
     return BlockID;
+}
+
+std::vector<std::string> SolidBlock::GetAllValues() const {
+    return {
+        std::to_string(Position.x),
+        std::to_string(Position.y),
+        std::to_string(BlockID)
+    };
+}
+
+
+void SolidBlock::RegisterSerialize()
+{
+    DataBaseManager::GetInstance().RegisterSerialization(
+        "SolidBlock",
+        { 
+            {"PositionX", "REAL"},
+            {"PositionY", "REAL"},
+            {"BlockID" , "INTEGER"}
+        },
+        [](char** argv) -> GameObject*
+        {
+            float posX = std::stof(argv[0]);
+            float posY = std::stof(argv[1]);
+            int blockID = std::stoi(argv[2]);
+        
+            return new SolidBlock(blockID, glm::vec2(posX, posY), glm::vec2(100.0f), 0);
+        }
+
+    );
 }

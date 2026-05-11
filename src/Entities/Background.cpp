@@ -16,7 +16,7 @@ void Background::Init()
 }
 
 
-void Background::Draw()
+void Background::Draw() const
 {
 
 
