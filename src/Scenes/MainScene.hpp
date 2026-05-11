@@ -32,7 +32,11 @@ private:
 
     bool EditorMode;
     GameObject* selectedObject = nullptr;
+    float lineMusicPos = 0.0f;
 
+    std::string droppedlevelfilepath = "";
+    std::string droppedmusicfilepath = "";
+    std::string fileName = "";
 
 
 public:
@@ -43,7 +47,6 @@ public:
     void Draw() override;
     void Update(double deltaTime) override;
     void LoadResources() override;
-    void LoadMap();
 
 };
 

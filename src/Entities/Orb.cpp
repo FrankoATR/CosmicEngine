@@ -7,6 +7,9 @@
 #include <WandEngine/Managers/Camera/CameraManager.hpp>
 #include <WandEngine/Managers/Resource/ResourceManager.hpp>
 #include <WandEngine/Managers/Timer/TimerManager.hpp>
+#include <WandEngine/Managers/DataBase/DataBaseManager.hpp>
+
+#include <sstream>
 
 Orb::Orb(OrbType Type, glm::vec2 Position, glm::vec2 Size, short int LayerId) :
 GameObject("Orb", Position, Size, 0.0f, LayerId), Type(Type), Used(false)
@@ -61,6 +64,44 @@ bool Orb::IsUsed()
 OrbType Orb::GetOrbType()
 {
     return this->Type;
+}
+
+
+void Orb::SaveToDB()
+{
+    DataBaseManager::GetInstance().CreateTable("Orb", "id INTEGER PRIMARY KEY AUTOINCREMENT, PositionX REAL, PositionY REAL, OrbType INTEGER");
+    DataBaseManager::GetInstance().ExecuteSQL("BEGIN TRANSACTION;");
+
+    for(GameObject*  obj : ObjectManager::GetInstance().FindByClassName("Orb"))
+    {
+        Orb* orb = static_cast<Orb*>(obj);
+        std::ostringstream values;
+        values << orb->GetPosition().x << ", " << orb->GetPosition().y << ", " << static_cast<int>(orb->GetOrbType());
+    
+        DataBaseManager::GetInstance().InsertData("Orb", "PositionX, PositionY, OrbType", values.str());
+    }
+    
+    DataBaseManager::GetInstance().ExecuteSQL("COMMIT;");
+}
+
+
+void Orb::LoadFrom()
+{
+    std::string sql = "SELECT id, PositionX, PositionY, OrbType FROM Orb;";
+    
+    auto callback = [](void* data, int argc, char** argv, char** colNames) -> int {
+        int id = std::stoi(argv[0]);
+        float posX = std::stof(argv[1]);
+        float posY = std::stof(argv[2]);
+        int type = std::stoi(argv[3]);
+
+        Orb* block = new Orb(static_cast<OrbType>(type), glm::vec2(posX, posY), glm::vec2(100.0f), 0);
+        ObjectManager::GetInstance().Add(block);
+
+        return 0;
+    };
+
+    DataBaseManager::GetInstance().ExecuteQuery(sql, callback, nullptr);
 }
 
 

@@ -36,6 +36,15 @@ public:
     void SetUsed();
     bool IsUsed();
     OrbType GetOrbType();
+
+    virtual Orb* Clone() const override
+    {
+        return new Orb(*this);
+    }
+
+
+    static void SaveToDB();
+    static void LoadFrom();
 };
 
 #endif //ORB_HPP

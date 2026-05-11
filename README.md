@@ -8,7 +8,7 @@
 
 En esta etapa el cambio dominante deja de ser la migración de backend gráfico y pasa a ser la consolidación del motor nuevo como framework de trabajo. La base OpenGL ya no solo sirve para abrir ventana, renderizar y ejecutar el loop principal, sino que empieza a incorporar servicios internos para persistencia estructurada, administración más robusta del ciclo de vida de objetos y soporte de tooling dentro del propio runtime.
 
-La evidencia visible de esta versión está en tres frentes que se cruzan entre sí: aparece un `DataBaseManager` apoyado en SQLite para guardar y reconstruir datos del mundo, `GameManager` añade ingestión de archivos soltados sobre la ventana y `GameObject` amplía su modelo base con aceleración, límites de velocidad, rotación angular, clonación operativa y referencias controladas entre objetos administrados por el motor.
+La evidencia visible de esta versión está en varios frentes que se cruzan entre sí: aparece un `DataBaseManager` apoyado en SQLite para guardar y reconstruir datos del mundo, `GameManager` añade ingestión de archivos soltados sobre la ventana, `GameObject` amplía su modelo base con aceleración, límites de velocidad, rotación angular, clonación operativa y referencias controladas entre objetos administrados por el motor, y además se afinan tanto la gestión de reproducción musical como la capa de importación y dibujo de modelos.
 
 Con ello el proyecto deja de mostrar solo una reconstrucción técnica del engine y empieza a perfilar una capa de servicios internos más completa: gestionar objetos, persistir estado, recibir entradas externas y reutilizar esos mecanismos desde cualquier escena o arranque basado en el framework.
 
@@ -30,6 +30,8 @@ La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 - `include/WandEngine/Managers/GameManager.*`, donde se añade soporte visible para archivos soltados sobre la ventana y se abre una ruta de importación/carga desde el runtime.
 - `include/WandEngine/Models/GameScene.*`, donde `Reset()` pasa a formar parte del contrato base de escena y se reorganiza el orden de actualización de managers.
 - `include/WandEngine/Models/UIElements/UIButton.*` y `include/WandEngine/Managers/UI/UIManager.*`, donde se sigue delimitando una capa de UI separada y reutilizable dentro del runtime.
+- `include/WandEngine/Managers/Audio/Music/MusicManager.*`, donde la reproducción musical gana seguimiento explícito de canales por clave, control de volumen por pista y reposicionamiento temporal dentro del stream.
+- `include/WandEngine/Models/Mesh/*` y `include/WandEngine/Models/Model/*`, donde la capa de mallas y modelos queda más acotada a importación, materiales, buffers y dibujado directo.
 
 ## Arquitectura o sistemas principales
 
@@ -61,6 +63,17 @@ El cambio importante de esta etapa es que varias capacidades que antes habrían 
 
 Eso cambia el papel del engine dentro del proyecto: ya no es solo un runtime que reproduce contenido definido en código, sino una base que empieza a incorporar infraestructura de tooling lista para ser consumida por cualquier capa superior.
 
+### Audio con control más fino por recurso
+
+La capa de audio también se vuelve más precisa en el nivel del framework. `MusicManager` no se limita a cargar y disparar reproducción, sino que pasa a conservar un mapa de `FMOD_CHANNEL*` por clave musical. Eso habilita operaciones más específicas dentro del runtime:
+
+- detener una pista concreta sin afectar al resto;
+- ajustar volumen por recurso ya reproducido;
+- reposicionar la reproducción en milisegundos con `SetPosition()`;
+- mantener una separación más clara entre el registro de sonidos cargados y los canales activos en ejecución.
+
+No cambia la dependencia base, pero sí mejora la semántica del subsistema: la música deja de ser un disparo opaco y pasa a quedar bajo un control más administrable desde el engine.
+
 ### Modelo de objeto más útil para tooling y simulación
 
 `GameObject` amplía su contrato de forma considerable. Además de posición, tamaño y color, el modelo base ahora expone:
@@ -90,6 +103,16 @@ El resultado es una base más estable que la de versiones anteriores, porque el 
 
 Aunque el flujo todavía es básico, el paso técnico importante es claro: el engine empieza a aceptar entradas externas del usuario como parte de su propia infraestructura de tooling.
 
+### Capa 3D más contenida en torno a importación y draw
+
+También hay una depuración visible en `Mesh` y `Model`. La infraestructura sigue apoyándose en `Assimp`, `stb_image` y OpenGL, pero el contrato queda más concentrado en lo que el framework efectivamente necesita en esta etapa:
+
+- importar nodos, mallas y materiales desde archivo;
+- convertir vértices, normales, UV y texturas a buffers utilizables por OpenGL;
+- dibujar colecciones de mallas mediante `Shader` sin capas extra de complejidad todavía no consolidadas.
+
+Ese ajuste no expande capacidades nuevas de cara al usuario final, pero sí limpia la frontera interna del engine: la capa 3D queda definida como infraestructura base de carga y render, en lugar de adelantarse a abstracciones que todavía no se usan de forma estable dentro del framework.
+
 ### UI y escena con hooks más reutilizables
 
 La capa de escena también se ajusta a esta orientación de tooling. `GameScene` incorpora `Reset()` como operación virtual y reordena `UpdateManagers()` para ejecutar primero la lógica propia de la escena antes de delegar la actualización al resto de managers. En paralelo, `UIButton` se mantiene como elemento interactivo visible y `UIManager` sigue consolidándose como capa separada para controles de interfaz dentro del runtime.
@@ -109,6 +132,8 @@ Con ello dejé una base más cercana a una herramienta real de creación sobre e
 
 No aparecen sustituciones grandes de dependencias respecto a la etapa del 8 de febrero, pero sí se vuelve mucho más visible el papel de `sqlite3` dentro del framework. En esta versión deja de estar solo presente como biblioteca enlazada y pasa a participar de forma directa en el flujo del engine mediante `DataBaseManager` y la persistencia de entidades del nivel.
 
+En paralelo, `FMOD`, `Assimp` y `stb_image` quedan algo más integrados en la semántica interna del motor: `FMOD` con control de canales por pista, y `Assimp` más `stb_image` como base concreta de la capa `Model`/`Mesh` ya simplificada alrededor de importación y draw.
+
 ## Resumen técnico de la versión
 
 La etapa efectiva al **11 de febrero de 2025** queda delimitada por estos movimientos:
@@ -119,5 +144,7 @@ La etapa efectiva al **11 de febrero de 2025** queda delimitada por estos movimi
 - adapté `ObjectManager` para invalidar referencias externas al destruir objetos y para sostener mejor selección por mouse o por área;
 - incorporé soporte de archivos soltados sobre la ventana para cargar niveles persistidos desde el propio runtime;
 - incorporé `Reset()` al contrato base de `GameScene` y seguí separando la UI como subsistema reutilizable dentro del framework.
+- afiné `MusicManager` para controlar canales, volumen y posición de reproducción por recurso musical;
+- simplifiqué la capa `Mesh`/`Model` para dejarla concentrada en importación, materiales, buffers y dibujado directo.
 
 Con esta etapa dejé el motor en una versión donde el backend OpenGL ya no solo sirve para correr el juego de ejemplo: también empieza a sostener herramientas internas de edición, persistencia y manipulación estructurada del contenido.
