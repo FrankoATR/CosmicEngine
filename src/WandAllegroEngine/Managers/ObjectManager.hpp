@@ -14,8 +14,7 @@ namespace WandEngine
     {
     private:
         std::vector<GameObject *> actors;
-        std::vector<GameObject *> actors_to_update;
-        std::vector<GameObject *> actors_to_draw;
+
         int nextEntityId;
 
         ObjectManager();
@@ -36,7 +35,8 @@ namespace WandEngine
         void Remove(int EntityId);
         GameObject *FindById(int EntityId);
         GameObject *FindByUniqueName(std::string UniqueName);
-        std::vector<GameObject *> FindByLayer();
+        std::vector<GameObject *> FindByLayer(int LayerId);
+        std::vector<GameObject *> GetAll();
         void SortByLayer();
         void Clear();
     };

@@ -79,6 +79,9 @@ void GameEditorScene::Init()
 
         SceneManager::GetInstance().SetBackBufferColor(WAND_COLOR(120.0f, 20.0f, 20.0f, 0.0f));
         
+        InputManager::GetInstance().SetMouseSprite(ResourceManager::GetInstance().getBitmap("HandEditor"));
+
+
         CameraManager::GetInstance().Reset();
         SetProgressLoadingScene(1.0f);
         std::cout << "\n\nSCENE CREATED: " << GetName() << std::endl << std::endl;

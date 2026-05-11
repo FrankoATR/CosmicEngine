@@ -113,10 +113,11 @@ namespace WandEngine
             return nullptr;
         }
 
-        if (row < 0 || row > it->second.size() - 1 || column < 0 || column > it->second.size() - 1)
+        if (row < 0 || row > it->second.size() - 1 || column < 0 || column > it->second[row].size() - 1)
         {
             return nullptr;
         }
+
         return it->second[row][column];
     }
 

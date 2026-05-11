@@ -3,6 +3,8 @@
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
 #include "../WandAllegroEngine/Managers/InputManager.hpp"
 
+#include <math.h>
+
 LinkObject::LinkObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId, int HP, ALLEGRO_FONT *font) : GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId), HP(HP)
 {
     this->font = font;
@@ -10,7 +12,7 @@ LinkObject::LinkObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, st
     this->IsTPActive = false;
     this->TimeToTP = 3;
     this->last_time = 0;
-
+    this->Velocity = 400;
 }
 
 void LinkObject::Init()
@@ -25,35 +27,58 @@ void LinkObject::Draw()
     if (font)
     {
         al_draw_text(font, al_map_rgba(255, 0, 100, 0), GetPosition().x, GetPosition().y - 60, 0, GetObjectName().c_str());
+        al_draw_text(font, al_map_rgba(255, 255, 255, 0), GetPosition().x - 100, GetPosition().y + 60, 0, ("X: " + std::to_string((int)GetPosition().x) + ", ").c_str());
+        al_draw_text(font, al_map_rgba(255, 255, 255, 0), GetPosition().x + 100, GetPosition().y + 60, 0, ("Y: " + std::to_string((int)GetPosition().y)).c_str());
     }
 }
 
 void LinkObject::Update(float deltaTime)
 {
 
+
     GameObject::Update(deltaTime);
 
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_A, KeyRelease))
+    bool KeyARelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_A, KeyRelease);
+    bool KeyDRelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_D, KeyRelease);
+    bool KeyWRelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_W, KeyRelease);
+    bool KeySRelease = InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_S, KeyRelease);
+    
+
+    if (KeyARelease && KeyWRelease)
+    {
+        MoveUpLeft(deltaTime);
+    }
+    else if (KeyWRelease && KeyDRelease)
+    {
+        MoveUpRight(deltaTime);
+    }
+    else if (KeyDRelease && KeySRelease)
+    {
+        MoveDownRight(deltaTime);
+    }
+    else if (KeySRelease && KeyARelease)
+    {
+        MoveDownLeft(deltaTime);
+    }
+    else if (KeyARelease)
     {
         MoveLeft(deltaTime);
     }
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_D, KeyRelease))
+    else if (KeyDRelease)
     {
         MoveRight(deltaTime);
     }
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_W, KeyRelease))
+    else if (KeyWRelease)
     {
         MoveUp(deltaTime);
     }
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_S, KeyRelease))
+    else if (KeySRelease)
     {
         MoveDown(deltaTime);
     }
 
-    if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_Q, KeyDown))
-    {
-        SetSize(WAND_VEC2(64, 64));
-    }
+
+
     if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_E, KeyDown))
     {
         DestructorMode = !DestructorMode;
@@ -64,76 +89,98 @@ void LinkObject::Update(float deltaTime)
     {
         last_time = current_time;
 
-
-        if(IsTPActive){
+        if (IsTPActive)
+        {
             TimeToTP--;
-            std::cout << "SEG" << std:: endl;
-            if (TimeToTP <= 0) {
+            std::cout << "SEG" << std::endl;
+            if (TimeToTP <= 0)
+            {
                 IsTPActive = false;
                 TimeToTP = 3;
             }
         }
-
     }
-
 }
 
 void LinkObject::MoveUp(float deltaTime)
 {
-    SetPosition(WAND_VEC2(GetPosition().x, (GetPosition().y - 400 * deltaTime)));
+    SetPosition(WAND_VEC2(GetPosition().x, (GetPosition().y - Velocity * deltaTime)));
 }
 
 void LinkObject::MoveDown(float deltaTime)
 {
-    SetPosition(WAND_VEC2(GetPosition().x, (GetPosition().y + 400 * deltaTime)));
+    SetPosition(WAND_VEC2(GetPosition().x, (GetPosition().y + Velocity * deltaTime)));
 }
 
 void LinkObject::MoveRight(float deltaTime)
 {
-    SetPosition(WAND_VEC2(GetPosition().x + 400 * deltaTime, (GetPosition().y)));
+    SetPosition(WAND_VEC2(GetPosition().x + Velocity * deltaTime, (GetPosition().y)));
 }
 
 void LinkObject::MoveLeft(float deltaTime)
 {
-    SetPosition(WAND_VEC2(GetPosition().x - 400 * deltaTime, (GetPosition().y)));
+    SetPosition(WAND_VEC2(GetPosition().x - Velocity * deltaTime, (GetPosition().y)));
 }
+
+
+    
+void LinkObject::MoveUpLeft(float deltaTime)
+{
+    SetPosition(WAND_VEC2(GetPosition().x - (Velocity / sqrt(2.0f)) * deltaTime, GetPosition().y - (Velocity / sqrt(2.0f)) * deltaTime));
+
+}
+
+void LinkObject::MoveUpRight(float deltaTime)
+{
+    SetPosition(WAND_VEC2(GetPosition().x + (Velocity / sqrt(2.0f)) * deltaTime, GetPosition().y - (Velocity / sqrt(2.0f)) * deltaTime));
+}
+
+void LinkObject::MoveDownLeft(float deltaTime)
+{
+    SetPosition(WAND_VEC2(GetPosition().x - (Velocity / sqrt(2.0f)) * deltaTime, GetPosition().y + (Velocity / sqrt(2.0f)) * deltaTime));
+
+}
+
+void LinkObject::MoveDownRight(float deltaTime)
+{
+    SetPosition(WAND_VEC2(GetPosition().x + (Velocity / sqrt(2.0f)) * deltaTime, GetPosition().y + (Velocity / sqrt(2.0f)) * deltaTime));
+}
+
+
 
 void LinkObject::OnCollision(GameObject *other)
 {
 
-    if (GetObjectName() == "Player")
+    if (other->GetObjectName() == "Emerson")
     {
-        if (other->GetObjectName() == "Emerson")
-        {
 
-            // EventManager::GetInstance().TriggerEvent("OnEnemyDestroy");
-
-            if (!IsTPActive)
-            {
-                //EventManager::GetInstance().TriggerEvent<GameObject *, GameObject *>("ChangePosition", this, other);
-            }
-        }
-        if (other->GetObjectName() == "Tile")
+        if (DestructorMode)
         {
             SetToLastPosition();
+        }
+        else
+        {
+            other->Destroy();
+        }
+
+        // EventManager::GetInstance().TriggerEvent("OnEnemyDestroy");
+
+        if (!IsTPActive)
+        {
+            // EventManager::GetInstance().TriggerEvent<GameObject *, GameObject *>("ChangePosition", this, other);
         }
     }
-    else{
-        if (other->GetObjectName() == "Player")
-        {
-            SetToLastPosition();
-            //other->Destroy();
-            //EventManager::GetInstance().TriggerEvent("OnEnemyDestroy");
-        }
-        if (other->GetObjectName() == "Tile")
+    if (other->GetObjectName() == "Tile")
+    {
+        if (DestructorMode)
         {
             SetToLastPosition();
         }
-
+        else
+        {
+            other->Destroy();
+        }
     }
-
-
-
 
     if (other->GetObjectType() == Object::DynamicEntity)
     {

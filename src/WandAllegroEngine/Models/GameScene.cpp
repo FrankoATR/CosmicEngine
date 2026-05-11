@@ -7,6 +7,7 @@
 #include "../Managers/MusicManager.hpp"
 #include "../Managers/SoundManager.hpp"
 #include "../Managers/CameraManager.hpp"
+#include "../Managers/InputManager.hpp"
 #include "../Managers/UIManager.hpp"
 
 #include <iostream>
@@ -55,13 +56,14 @@ namespace WandEngine
 
     void GameScene::Clear()
     {
-        WandEngine::BodyManager::GetInstance().Clear();
-        WandEngine::ObjectManager::GetInstance().Clear();
-        WandEngine::ResourceManager::GetInstance().Clear();
-        WandEngine::EventManager::GetInstance().Clear();
-        WandEngine::MusicManager::GetInstance().Clear();
-        WandEngine::SoundManager::GetInstance().Clear();
-        WandEngine::UIManager::GetInstance().Clear();
+        BodyManager::GetInstance().Clear();
+        ObjectManager::GetInstance().Clear();
+        ResourceManager::GetInstance().Clear();
+        EventManager::GetInstance().Clear();
+        MusicManager::GetInstance().Clear();
+        SoundManager::GetInstance().Clear();
+        UIManager::GetInstance().Clear();
+        InputManager::GetInstance().ResetMouseSettings();
 
         if (loadingThread.joinable())
         {
@@ -125,8 +127,8 @@ namespace WandEngine
     {
         Update(deltaTime);
         UIManager::GetInstance().Update(deltaTime);
-        BodyManager::GetInstance().Update();
         ObjectManager::GetInstance().Update(deltaTime);
+        BodyManager::GetInstance().Update();
     }
 
     void GameScene::Draw()
@@ -148,6 +150,7 @@ namespace WandEngine
         }
 
         UIManager::GetInstance().Draw();
+        InputManager::GetInstance().DrawMouseSprite();
     }
 
     void GameScene::ToogleShowBodys()

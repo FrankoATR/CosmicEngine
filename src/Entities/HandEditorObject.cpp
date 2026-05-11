@@ -12,17 +12,12 @@ GameObject(ObjectType, Position, Size, ObjectName, Sprite, LayerId)
 
 void HandEditorObject::Init(){
     BodyManager::GetInstance().Add(this, GetPosition(), GetSize());
-    ALLEGRO_DISPLAY *display = al_get_current_display();
-    if (display)
-    {
-        al_hide_mouse_cursor(display);
-    }
 }
 
 
 void HandEditorObject::Draw(){
     if(this->GetSprite()){
-        al_draw_tinted_scaled_rotated_bitmap(this->GetSprite(), al_map_rgba(255,255,255, 255), 0, 0, this->GetPosition().x, this->GetPosition().y, this->GetSize().x/al_get_bitmap_width(this->GetSprite()), this->GetSize().y/al_get_bitmap_height(this->GetSprite()), 0, NULL );
+        //al_draw_tinted_scaled_rotated_bitmap(this->GetSprite(), al_map_rgba(255,255,255, 255), 0, 0, this->GetPosition().x, this->GetPosition().y, this->GetSize().x/al_get_bitmap_width(this->GetSprite()), this->GetSize().y/al_get_bitmap_height(this->GetSprite()), 0, NULL );
     }
     //al_draw_rectangle(this->GetPosition().x, this->GetPosition().y, )
 }
@@ -45,9 +40,5 @@ void HandEditorObject::OnCollision(GameObject* other){
 
 HandEditorObject::~HandEditorObject()
 {
-    ALLEGRO_DISPLAY *display = al_get_current_display();
-    if (display)
-    {
-        al_show_mouse_cursor(display);
-    }
+
 }

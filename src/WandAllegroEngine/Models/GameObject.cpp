@@ -115,6 +115,14 @@ namespace WandEngine
         }
     }
 
+
+    WAND_VEC2 GameObject::GetLastPosition() const
+    {
+        return this->LastPosition;
+    }
+
+
+
     void GameObject::Destroy()
     {
         this->AliveInGameManager = false;

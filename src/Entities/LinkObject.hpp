@@ -15,6 +15,7 @@ private:
     bool IsTPActive;
     int TimeToTP;
     double last_time;
+    float Velocity;
 
 public:
     LinkObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId, int HP, ALLEGRO_FONT *font);
@@ -22,10 +23,16 @@ public:
     void Init() override;
     void Update(float deltaTime) override;
     void OnCollision(GameObject *other) override;
+
     void MoveUp(float deltaTime);
     void MoveDown(float deltaTime);
     void MoveRight(float deltaTime);
     void MoveLeft(float deltaTime);
+    
+    void MoveUpLeft(float deltaTime);
+    void MoveUpRight(float deltaTime);
+    void MoveDownLeft(float deltaTime);
+    void MoveDownRight(float deltaTime);
 
 
 };

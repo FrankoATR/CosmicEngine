@@ -2,6 +2,8 @@
 #define MAINSCENE_HPP
 
 #include "../WandAllegroEngine/Models/GameScene.hpp"
+#include "../WandAllegroEngine/Models/UIElements/UIButton.hpp"
+#include "../WandAllegroEngine/Models/UIElements/UIText.hpp"
 
 using namespace WandEngine;
 
@@ -14,6 +16,8 @@ private:
     double last_time;
     double timeAfterDeath;
     bool DeathSound;
+    UIText* Text1;
+    std::vector<UIText* > textsEntities;
 
 public:
     MainScene();

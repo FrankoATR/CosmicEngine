@@ -14,7 +14,6 @@
 #include "../WandAllegroEngine/Managers/UIManager.hpp"
 #include "../WandAllegroEngine/Managers/CameraManager.hpp"
 
-#include "../WandAllegroEngine/Models/UIElements/UIButton.hpp"
 
 #include "GameInScene.hpp"
 #include "GameEditorScene.hpp"
@@ -33,16 +32,22 @@ MainScene::MainScene() : GameScene("MainScene"), CurrentMousePosition(InputManag
     this->last_time = 0;
     this->timeAfterDeath = 0;
     this->DeathSound = false;
+    this->Text1 = nullptr;
 }
 
 void MainScene::Init()
 {
     AddMainThreadTask([this]()
                       {
+
+        ResourceManager::GetInstance().loadBitmap("HandEditor", CURSOR_SPRITE_PATH);
+
         ResourceManager::GetInstance().loadBitmap("Background1", BG_FOREST_IMAGE_PATH);
         ResourceManager::GetInstance().loadBitmap("Background2", BG_SPACE_IMAGE_PATH);
         ResourceManager::GetInstance().loadSpriteSheet("Mario Sprites", MARIO_SPRITES_PATH, 4, 4);
-        ResourceManager::GetInstance().loadSpriteSheet("Player", CHARACTERS_IMAGE_PATH, 2, 7);
+
+        ResourceManager::GetInstance().loadSpriteSheet("Dungueon Entities", CHARACTERS_IMAGE_PATH, 2, 7);
+        ResourceManager::GetInstance().loadSpriteSheet("Dungueon Tiles", DUNGUEON_IMAGE_PATH, 10, 10);
         ResourceManager::GetInstance().loadSpriteSheet("Blocks Sprites", BLOCKS_SPRITES_PATH, 5, 3);
         
         ResourceManager::GetInstance().loadFont("Font", RETRO_FONT_PATH, 50);
@@ -56,26 +61,29 @@ void MainScene::Init()
 
     SetProgressLoadingScene(0.2f);
 
-
-        GameObject *bg = new BackgroundObject(Object::StaticEntity, WAND_VEC2(0, 0), WAND_VEC2(1920, 1080), "BG", ResourceManager::GetInstance().getBitmap("Background2"), 0);
-        ObjectManager::GetInstance().Add(bg);
+    
+        //GameObject *bg = new BackgroundObject(Object::StaticEntity, WAND_VEC2(0, 0), WAND_VEC2(1920, 1080), "BG", ResourceManager::GetInstance().getBitmap("Background2"), 0);
+        //ObjectManager::GetInstance().Add(bg);
 
         int posX = 100;
         int posY = 100;
         DataManager::GetInstance().LoadData(posX, posY);
-        GameObject *player = new LinkObject(Object::DynamicEntity, WAND_VEC2(posX, posY), WAND_VEC2(64, 64), "Player", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Mario Sprites", 0, 0), 1, 20, ResourceManager::GetInstance().getFont("Font"));
+        GameObject *player = new LinkObject(Object::DynamicEntity, WAND_VEC2(posX, posY), WAND_VEC2(64, 64), "Player", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Dungueon Entities", 0, 0), 1, 20, ResourceManager::GetInstance().getFont("Font"));
         ObjectManager::GetInstance().Add(player);
 
-        GameObject *enemy = new CustomEnemy(Object::DynamicEntity, WAND_VEC2(600, 600), WAND_VEC2(64, 64), "Emerson", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Mario Sprites", 0, 2), 1, 20, ResourceManager::GetInstance().getFont("Font"));
-        ObjectManager::GetInstance().Add(enemy); 
+        //GameObject *enemy = new CustomEnemy(Object::DynamicEntity, WAND_VEC2(600, 600), WAND_VEC2(64, 64), "Emerson", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Mario Sprites", 0, 2), 1, 20, ResourceManager::GetInstance().getFont("Font"));
+        //ObjectManager::GetInstance().Add(enemy); 
 
     SetProgressLoadingScene(0.3f);
 
 
         for (int i = 0; i < 10; i++)
         {
-            GameObject* tmp = new MapTileObject(Object::DynamicEntity, WAND_VEC2(rand()%(int)GameManager::GetInstance().GetWindowsSize().width, rand()%(int)GameManager::GetInstance().GetWindowsSize().height), WAND_VEC2(64, 64), "Tile", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Blocks Sprites", rand()%5, rand()%3), 3);
-            ObjectManager::GetInstance().Add(tmp);
+            GameObject *enemy = new CustomEnemy(Object::DynamicEntity, WAND_VEC2(200 + i*100, 200), WAND_VEC2(64, 64), "Emerson", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Dungueon Entities", rand()%2, rand()%7), 1, 20, ResourceManager::GetInstance().getFont("Font"));
+            ObjectManager::GetInstance().Add(enemy);
+
+            //GameObject* tmp = new MapTileObject(Object::DynamicEntity, WAND_VEC2(rand()%(int)GameManager::GetInstance().GetWindowsSize().width, rand()%(int)GameManager::GetInstance().GetWindowsSize().height), WAND_VEC2(64, 64), "Tile", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Blocks Sprites", rand()%5, rand()%3), 3);
+            //ObjectManager::GetInstance().Add(tmp);
         }
 
 
@@ -176,20 +184,37 @@ void MainScene::Init()
         UIManager::GetInstance().AddElement(button6);
 
 
-    BodyManager::GetInstance().SetNewGridArea(new GameGridCollisions(WAND_VEC2(200, 200), 5, 7, 100));
+        Text1 = new UIText("Camera view at: ", ResourceManager::GetInstance().getFont("ButtonFont"), WAND_VEC2(1500, 0), WAND_SIZE(150, 75), true, NULL);
+        UIManager::GetInstance().AddElement(Text1);
+
+        textsEntities.clear();
+
+
+    InputManager::GetInstance().SetMouseSprite(ResourceManager::GetInstance().getBitmap("HandEditor"));
+
+
+    BodyManager::GetInstance().SetNewGridArea(new GameGridCollisions(WAND_VEC2(-200, -200), 20, 20, 100));
     SceneManager::GetInstance().SetBackBufferColor(WAND_COLOR(155.0f, 0.0f, 33.0f, 0.0f));
 
     SetProgressLoadingScene(1.0f);
 
 
-    std::cout << "\n\nSCENE CREATED: " << GetName() << std::endl
-              << std::endl;
+    std::cout << "\n\nSCENE CREATED: " << GetName() << std::endl << std::endl;
 
                   });
 }
 
 void MainScene::Update(double deltaTime)
 {
+
+    if(Text1)
+    {
+        int x = CameraManager::GetInstance().GetFocusPosition().x;
+        int y = CameraManager::GetInstance().GetFocusPosition().y;
+        Text1->SetText("Camera view at: " + std::to_string(x) + ", " + std::to_string(y));
+    }
+
+
 
     if(!InitialSound)
     {
@@ -241,9 +266,14 @@ void MainScene::Update(double deltaTime)
     {
         if (InputManager::GetInstance().IsMouseButtonPressed(1, KeyDown))
         {
-            GameObject *enemy = new CustomEnemy(Object::DynamicEntity, InputManager::GetInstance().GetMousePosition(), WAND_VEC2(32, 32), "Emerson", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", rand()%2, rand()%5), 3, 20, ResourceManager::GetInstance().getFont("Font"));
+            GameObject *enemy = new CustomEnemy(Object::DynamicEntity, InputManager::GetInstance().GetMousePosition(), WAND_VEC2(32, 32), "Emerson", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Dungueon Entities", rand()%2, rand()%7), 3, 20, ResourceManager::GetInstance().getFont("Font"));
             ObjectManager::GetInstance().Add(enemy);
             SoundManager::GetInstance().Play("PacmanSound1", 1.0f, false);
+        }
+        if(InputManager::GetInstance().IsMouseButtonPressed(2, KeyDown))
+        {
+            GameObject* tmp = new MapTileObject(Object::DynamicEntity, InputManager::GetInstance().GetMousePosition(), WAND_VEC2(64, 64), "Tile", ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Blocks Sprites", rand()%5, rand()%3), 3);
+            ObjectManager::GetInstance().Add(tmp);
         }
     }
 

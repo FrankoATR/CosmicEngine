@@ -17,21 +17,13 @@ void CustomEnemy::Init(){
 void CustomEnemy::Draw(){
     GameObject::Draw();
     
-    al_draw_text(font, al_map_rgba(255,0,100, 0), GetPosition().x, GetPosition().y + 100, NULL, "test");
-    al_draw_text(font, al_map_rgba(255,200,100, 255), GetPosition().x, GetPosition().y - 60, NULL, GetObjectName().c_str());
+    //al_draw_text(font, al_map_rgba(255,0,100, 0), GetPosition().x, GetPosition().y + 100, NULL, "test");
+    //al_draw_text(font, al_map_rgba(255,200,100, 255), GetPosition().x, GetPosition().y - 60, NULL, GetObjectName().c_str());
 
 }
 
 
 void CustomEnemy::Update(float deltaTime){
-
-/*
-    if(Game->Event.type == ALLEGRO_EVENT_TIMER && Game->Event.timer.source == Game->FPS){
-
-    }
-*/
-
-
 
     double current_time = al_get_time();
     if (current_time - last_time >= 1.0)
@@ -89,7 +81,7 @@ void CustomEnemy::OnCollision(GameObject* other){
     }
 
     if(other->GetObjectName() == "Player"){
-        other->SetSprite(this->GetSprite());
+        //other->SetSprite(this->GetSprite());
     }
 
     if(other->GetObjectType() == Object::DynamicEntity){

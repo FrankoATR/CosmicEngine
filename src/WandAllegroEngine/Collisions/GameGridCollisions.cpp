@@ -14,9 +14,12 @@ namespace WandEngine
             Cells[i].resize(Columns);
             for (int j = 0; j < Columns; j++)
             {
+                //std::cout << "CREATE INDEX: [" << i << "][" << j << "]" << std::endl;
+                //std::cout << "AT POSITION: (" << GridPosition.x + j * CellSize << ", " << GridPosition.y + i * CellSize << ")" << std::endl;
                 Cells[i][j] = Cell(WAND_VEC2(GridPosition.x + j * CellSize, GridPosition.y + i * CellSize));
             }
         }
+        GridSize = WAND_SIZE(Columns * CellSize, Arrows * CellSize);
     }
 
     WAND_VEC2 GameGridCollisions::GetPosition()
@@ -62,10 +65,11 @@ namespace WandEngine
     void GameGridCollisions::AddObject(GameBodyObject *obj)
     {
 
-        Cell *cell = GetCellByPosition(obj->GetPosition());
+        Cell *cell = GetCellByPositionAndSize(obj->GetPosition(), obj->GetSize());
         if (!cell)
         {
             obj->GetParent()->SetInsideGridArea(false);
+            obj->GetParent()->SetToLastPosition();
             return;
         }
         obj->GetParent()->SetInsideGridArea(true);
@@ -76,7 +80,7 @@ namespace WandEngine
     void GameGridCollisions::RemoveObject(GameBodyObject *obj)
     {
 
-        Cell *cell = GetCellByPosition(obj->GetPosition());
+        Cell *cell = GetCellByPositionAndSize(obj->GetPosition(), obj->GetSize());
 
         if (!cell)
             return;
@@ -98,10 +102,15 @@ namespace WandEngine
         EntitiesOnGrid = 0;
     }
 
-    Cell *GameGridCollisions::GetCellByPosition(WAND_VEC2 position)
+    Cell *GameGridCollisions::GetCellByPositionAndSize(WAND_VEC2 position, WAND_VEC2 size)
     {
         int relX = position.x - GridPosition.x;
         int relY = position.y - GridPosition.y;
+
+        if(relX < 0 || relY < 0 || relX + size.x > GridSize.width || relY + size.y > GridSize.height)
+        {
+            return nullptr;
+        }
 
         int Column = relX / CellSize;
         int Arrow = relY / CellSize;
@@ -144,9 +153,9 @@ namespace WandEngine
 
     void GameGridCollisions::Find_collision_grid()
     {
-        for (int column = 1; column < this->Columns; ++column)
+        for (int arrow = 0; arrow < this->Arrows; ++arrow)
         {
-            for (int arrow = 1; arrow < this->Arrows; ++arrow)
+            for (int column = 0; column < this->Columns; ++column)
             {
                 auto current_cell = this->GetCell(arrow, column);
                 for (int dcolumn = -1; dcolumn <= 1; ++dcolumn)

@@ -26,6 +26,7 @@ namespace WandEngine
     {
     public:
         WAND_VEC2 GridPosition;
+        WAND_SIZE GridSize;
         int Arrows;
         int Columns;
         int CellSize;
@@ -45,7 +46,7 @@ namespace WandEngine
         void Check_cells_collisions(Cell *cell_1, Cell *cell_2);
         void Find_collision_grid();
         bool RectToRectCollisionBody(GameBodyObject *body1, GameBodyObject *body2);
-        Cell *GetCellByPosition(WAND_VEC2 position);
+        Cell *GetCellByPositionAndSize(WAND_VEC2 position, WAND_VEC2 size);
 
         void ClearGrid();
     };

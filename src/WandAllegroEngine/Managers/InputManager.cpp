@@ -5,12 +5,15 @@
 namespace WandEngine
 {
 
-    InputManager::InputManager()
+    InputManager::InputManager() : MouseSprite(nullptr), MouseSpriteOffSet(WAND_VEC2(0,0)), MouseSpriteSize(WAND_SIZE(32,32))
     {
+
     }
 
     InputManager::~InputManager()
     {
+        ResetMouseSettings();
+
         al_unregister_event_source(GameManager::GetInstance().event_queue, al_get_mouse_event_source());
         al_unregister_event_source(GameManager::GetInstance().event_queue, al_get_keyboard_event_source());
         al_unregister_event_source(GameManager::GetInstance().event_queue, al_get_joystick_event_source());
@@ -129,4 +132,53 @@ namespace WandEngine
         al_get_mouse_cursor_position(&x, &y);
         return WAND_VEC2(CameraManager::GetInstance().GetPosition().x + x, CameraManager::GetInstance().GetPosition().y + y);
     }
+
+    void InputManager::ResetMouseSettings()
+    {
+        if(MouseSprite)
+        {
+            this->MouseSprite = nullptr;
+        }
+        ALLEGRO_DISPLAY *display = al_get_current_display();
+        if (display)
+        {
+            al_show_mouse_cursor(display);
+        }
+        this->MouseSpriteOffSet = WAND_VEC2(0, 0);
+        this->MouseSpriteSize = WAND_SIZE(32, 32);
+    }
+
+
+    void InputManager::SetMouseSprite(ALLEGRO_BITMAP* NewMouseSprite)
+    {
+        if(!MouseSprite)
+        {
+            ALLEGRO_DISPLAY *display = al_get_current_display();
+            if (display)
+            {
+                al_hide_mouse_cursor(display);
+            }
+        }
+        this->MouseSprite = NewMouseSprite;
+    }
+
+    void InputManager::SetMouseSpriteOffSet(WAND_VEC2 MouseSpriteOffSet)
+    {
+        this->MouseSpriteOffSet = MouseSpriteOffSet;
+    }
+
+    void InputManager::SetMouseSpriteSize(WAND_SIZE MouseSpriteSize)
+    {
+        this->MouseSpriteSize = MouseSpriteSize;
+    }
+
+    void InputManager::DrawMouseSprite()
+    {
+        if(MouseSprite)
+        {
+            al_draw_tinted_scaled_rotated_bitmap(MouseSprite, al_map_rgba(255,255,255, 255), 0, 0, GetMousePosition().x, GetMousePosition().y, MouseSpriteSize.width/al_get_bitmap_width(MouseSprite), MouseSpriteSize.height/al_get_bitmap_height(MouseSprite), 0, NULL );
+        }
+    }
+
+
 }

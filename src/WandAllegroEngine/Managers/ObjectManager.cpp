@@ -91,6 +91,24 @@ namespace WandEngine
         }
     }
 
+    std::vector<GameObject *> ObjectManager::FindByLayer(int LayerId){
+        std::vector<GameObject *> layer;
+        for(auto & actor : actors)
+        {
+            if(actor->GetLayerId() == LayerId)
+            {
+                layer.push_back(actor);
+            }
+        }
+        return this->actors;
+    }
+
+    std::vector<GameObject *> ObjectManager::GetAll(){
+        return this->actors;
+    }
+
+
+
     void ObjectManager::SortByLayer()
     {
         std::sort(actors.begin(), actors.end(), [](GameObject *a, GameObject *b)

@@ -1,7 +1,10 @@
 #define BG_FOREST_IMAGE_PATH "assets/img/backgrounds/bg2.jpg"
 #define BG_SPACE_IMAGE_PATH "assets/img/backgrounds/bg1.png"
 #define LINK_IMAGE_PATH "assets/img/blocks/white1.png"
+
 #define CHARACTERS_IMAGE_PATH "assets/img/entities/Dungeon_Character_2.png"
+#define DUNGUEON_IMAGE_PATH "assets/img/entities/Dungeon_Tileset.png"
+
 #define DUNGUEON1_IMAGE_PATH "assets/img/blocks/SpriteSheet-Dungueon.png"
 
 #define BLOCKS_SPRITES_PATH "assets/sprites/smb_blocks.png"

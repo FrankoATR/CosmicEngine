@@ -25,6 +25,10 @@ namespace WandEngine
         std::map<int, bool> mouseButtonHeldState;
         std::map<int, bool> joystickButtonState;
 
+        ALLEGRO_BITMAP *MouseSprite;
+        WAND_VEC2 MouseSpriteOffSet;
+        WAND_SIZE MouseSpriteSize;
+
     public:
         static InputManager &GetInstance()
         {
@@ -41,6 +45,12 @@ namespace WandEngine
         bool IsJoystickButtonPressed(int button) const;
 
         WAND_VEC2 GetMousePosition() const;
+
+        void ResetMouseSettings();
+        void SetMouseSprite(ALLEGRO_BITMAP *NewMouseSprite);
+        void SetMouseSpriteOffSet(WAND_VEC2 MouseSpriteOffSet);
+        void SetMouseSpriteSize(WAND_SIZE MouseSpriteSize);
+        void DrawMouseSprite();
     };
 }
 

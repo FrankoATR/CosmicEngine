@@ -61,6 +61,7 @@ namespace WandEngine
         ALLEGRO_BITMAP *GetSprite() const;
 
         void SetToLastPosition();
+        WAND_VEC2 GetLastPosition() const;
 
         void SetVisible(bool Visible);
         bool GetVisible();
