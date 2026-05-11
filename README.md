@@ -6,63 +6,65 @@
 
 ## Descripción general
 
-En esta etapa reforcé el cierre del runtime y completé varias piezas que todavía estaban incompletas en la capa de managers. El cambio principal consiste en que la destrucción de escenas, recursos, eventos, objetos y cuerpos queda ahora más explícita y consistente entre managers, en lugar de depender de limpiezas parciales o implícitas.
+En esta etapa reorganicé el sistema de eventos del framework para dejar de depender de observadores definidos por herencia y pasar a un registro de callbacks asociados por nombre. Con ese cambio el motor ya no necesita una interfaz dedicada para cada consumidor de eventos, sino que puede resolver disparo y suscripción desde el propio manager.
 
-Sobre esa base también incorporé consultas directas en `ObjectManager` para localizar objetos por identidad lógica, con el fin de que el framework pueda resolver transiciones o validaciones de estado sin exigir estructuras auxiliares externas.
+En paralelo incorporé una definición propia de color para el framework y la integré en `SceneManager`, con el fin de desacoplar la representación interna del color de la firma directa de Allegro dentro del manager de escenas.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- cerrar correctamente el ciclo de vida de escenas y managers compartidos;
-- exponer búsquedas directas de objetos dentro del manager central de entidades;
-- homogeneizar la interfaz de limpieza entre managers para reducir ambigüedad operativa.
+- sustituir el modelo de eventos basado en objetos observadores por callbacks registrados por nombre;
+- introducir tipos base propios del framework para datos compartidos de infraestructura;
+- simplificar la integración del sistema de eventos en escenas y entidades sin exigir clases adaptadoras adicionales.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Managers/`, donde ajusté `SceneManager`, `ObjectManager`, `BodyManager`, `ResourceManager` y `EventManager` para que su limpieza y destrucción sean más uniformes.
-- `src/WandAllegroEngine/Models/`, donde `GameScene` amplía el alcance de `Clear()` para vaciar también el sistema de eventos además de cuerpos, objetos y recursos.
-- `src/Scenes/`, donde las escenas ya pueden apoyarse en consultas directas del framework para decidir transiciones según el estado actual de los objetos registrados.
+- `src/WandAllegroEngine/Managers/`, donde `EventManager` abandona el almacenamiento de observadores concretos y pasa a resolver eventos mediante callbacks indexados por nombre, y donde `SceneManager` adopta un color propio del framework.
+- `src/WandAllegroEngine/Interfaces/`, donde aparece `Definitions.hpp` con la estructura `WAND_COLOR` y donde la antigua interfaz `GameEvent` queda desplazada del flujo activo.
+- `src/Events/`, donde `Logger` deja de formar parte efectiva del mecanismo vigente de eventos.
 
 ## Arquitectura o sistemas principales
 
-### Ciclo de vida de escenas
+### Sistema de eventos por callbacks
 
-En `SceneManager` completé la liberación efectiva de escenas al reemplazar, extraer o vaciar la pila. Después de ejecutar `Clear()` sobre la escena activa, ahora también se destruye explícitamente la instancia antes de retirarla del contenedor.
+En `EventManager` reemplacé el esquema anterior por una tabla de callbacks indexada por nombre de evento. La interfaz activa del manager queda compuesta ahora por:
 
-Con este ajuste evité que la limpieza lógica de una escena quedara separada de su liberación real en memoria.
+- `RegisterEvent(const std::string &eventName, EventCallback callback)`;
+- `TriggerEvent(const std::string &eventName)`;
+- `RemoveEvent(const std::string &eventName)`;
+- `Clear()`.
 
-### Limpieza coordinada de managers
+Con este ajuste dejé de almacenar instancias de observadores concretos y pasé a resolver la suscripción desde funciones registradas dinámicamente. El efecto inmediato es un sistema de eventos más liviano y menos acoplado a jerarquías de clases.
 
-En `GameScene::Clear()` amplié la limpieza del runtime para incluir también `EventManager`, además de `BodyManager`, `ObjectManager` y `ResourceManager`.
+### Retiro del contrato basado en herencia
 
-Al mismo tiempo normalicé la interfaz de recursos desde `clear()` hacia `Clear()` y ajusté `BodyManager`, `ObjectManager`, `ResourceManager`, `EventManager` y `GameManager` para que sus rutinas de cierre utilicen una terminología y una secuencia de destrucción más consistentes.
+La interfaz `GameEvent` y la implementación `Logger` dejan de formar parte efectiva del flujo activo del sistema. Ambas quedaron fuera de uso directo dentro del árbol visible, lo que confirma el desplazamiento del modelo anterior basado en objetos con `OnNotify()`.
 
-### Consultas sobre objetos registrados
+Con ello eliminé la necesidad de definir una clase derivada por cada consumidor del sistema de eventos cuando basta con registrar una acción puntual.
 
-En `ObjectManager` incorporé dos búsquedas directas:
+### Definición propia de color
 
-- `FindById(int EntityId)`;
-- `FindByUniqueName(std::string UniqueName)`.
+En `Definitions.hpp` incorporé `WAND_COLOR` como estructura base del framework para representar color mediante componentes `r`, `g`, `b` y `a`.
 
-Con esto dejé disponible una vía interna para consultar el estado del conjunto de objetos administrados sin recorrer manualmente la colección desde cada consumidor del framework.
+Sobre esa base, `SceneManager` deja de conservar `ALLEGRO_COLOR` como estado interno y pasa a trabajar con `WAND_COLOR`, convirtiéndolo a color de Allegro únicamente en el punto de dibujo real mediante `al_map_rgba(...)`.
 
-### Vaciado explícito de contenedores
+Con este ajuste reduje la dependencia directa de tipos externos dentro de la API interna del manager de escenas.
 
-En varios managers sustituí la limpieza basada en iteración simple por un vaciado explícito desde el final del contenedor mediante `while (!container.empty())`, destruyendo cada elemento antes de retirarlo.
+### Ajuste mínimo de infraestructura
 
-Ese patrón queda visible en `BodyManager::Clear()`, `ObjectManager::Clear()` y `EventManager::Clear()`, y refuerza un cierre más directo del estado administrado por cada servicio.
+Además de lo anterior, `Size` incorpora un constructor por defecto y `GameManager` deja de inicializar manualmente ese tamaño desde la lista de inicialización. El cambio no altera el rol del manager, pero sí deja su construcción más alineada con el resto de tipos básicos del framework.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- las escenas pueden resolver transiciones a partir de consultas directas al estado de los objetos administrados;
-- el cierre de escena vacía de forma conjunta los subsistemas compartidos que quedaron asociados a su ejecución.
+- las escenas y entidades pueden registrar acciones asociadas a eventos concretos sin crear observadores dedicados;
+- el color de fondo de escena ya puede configurarse mediante una estructura propia del framework en lugar de depender de `ALLEGRO_COLOR` como tipo de intercambio interno.
 
-Con ello dejé una base más útil para escenas que dependen del estado actual del runtime y para transiciones que requieren limpiar completamente el contexto anterior antes de continuar.
+Con ello dejé una base más directa para integrar reacciones de gameplay y estados visuales desde la propia capa del framework, con menos clases accesorias y menor acoplamiento a tipos externos.
 
 ## Dependencias externas visibles
 
@@ -72,10 +74,10 @@ No incorporé dependencias externas visibles nuevas en esta etapa.
 
 La etapa efectiva al **4 de noviembre de 2024** queda delimitada por estos movimientos:
 
-- completé la destrucción explícita de escenas dentro de `SceneManager` al reemplazar, extraer o limpiar la pila;
-- amplié `GameScene::Clear()` para vaciar también `EventManager` junto con cuerpos, objetos y recursos;
-- unifiqué la operación de limpieza de recursos bajo `ResourceManager::Clear()`;
-- incorporé `FindById()` y `FindByUniqueName()` en `ObjectManager` como consultas directas sobre entidades registradas;
-- reforcé el vaciado explícito de contenedores en managers que destruyen objetos, cuerpos y eventos.
+- reemplacé el sistema de eventos basado en observadores por un registro de callbacks asociados por nombre;
+- retiré del flujo activo la dependencia efectiva de `GameEvent` y de implementaciones concretas como `Logger`;
+- incorporé `WAND_COLOR` como tipo base del framework para representar color;
+- adapté `SceneManager` para conservar y consumir color propio del framework en lugar de `ALLEGRO_COLOR` como estado interno;
+- añadí un constructor por defecto a `Size` para simplificar la inicialización de infraestructura básica.
 
-Con esta etapa dejé el framework más consistente en cierre, limpieza y consulta de estado interno, especialmente en transiciones de escena y en ciclos donde el contexto anterior debe desaparecer por completo antes de continuar.
+Con esta etapa dejé el framework más coherente en su sistema de eventos y un poco menos dependiente de tipos externos en su API interna, especialmente en los puntos donde la infraestructura del motor necesita exponer mecanismos reutilizables a las escenas.

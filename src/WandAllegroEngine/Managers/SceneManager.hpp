@@ -4,6 +4,7 @@
 #include <allegro5/allegro5.h>
 #include <vector>
 #include <iostream>
+#include "../Interfaces/Definitions.hpp"
 
 class GameScene;
 
@@ -15,7 +16,7 @@ namespace WandEngine
     private:
         std::vector<GameScene *> sceneStack;
         bool isRunning = true;
-        ALLEGRO_COLOR BackBufferColor;
+        WAND_COLOR BackBufferColor;
 
         void StartSceneLoading(GameScene *scene);
         
@@ -44,7 +45,7 @@ namespace WandEngine
         bool IsSceneLoaded() const;
         bool Running() const;
 
-        void SetBackBufferColor(ALLEGRO_COLOR color);
+        void SetBackBufferColor(WAND_COLOR color);
 
     };
 

@@ -8,7 +8,7 @@ namespace WandEngine
 
     SceneManager::SceneManager()
     {
-		this->BackBufferColor = al_map_rgb(0, 0, 0);
+        this->BackBufferColor = WAND_COLOR(1.0f, 2.0f, 3.0f, 0.0f);
     }
 
     void SceneManager::StartSceneLoading(GameScene *scene)
@@ -90,12 +90,12 @@ namespace WandEngine
         {
             GameScene *currentScene = sceneStack.back();
 
-            al_clear_to_color(BackBufferColor);
+            al_clear_to_color(al_map_rgba(BackBufferColor.r, BackBufferColor.g, BackBufferColor.b, BackBufferColor.a));
 
             if (currentScene->IsProgressLoadingSceneComplete())
             {
                 WandEngine::ObjectManager::GetInstance().Draw();
-                //WandEngine::BodyManager::GetInstance().Draw();
+                // WandEngine::BodyManager::GetInstance().Draw();
             }
             else
             {
@@ -103,7 +103,6 @@ namespace WandEngine
             }
 
             al_flip_display();
-
         }
     }
 
@@ -126,11 +125,10 @@ namespace WandEngine
         return sceneStack.empty();
     }
 
-    void SceneManager::SetBackBufferColor(ALLEGRO_COLOR color)
+    void SceneManager::SetBackBufferColor(WAND_COLOR color)
     {
         this->BackBufferColor = color;
     }
-
 
     void SceneManager::Clear()
     {

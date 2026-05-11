@@ -45,7 +45,6 @@ void LinkObject::Update(float deltaTime){
     
     if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_Q, WandEngine::KeyDown)) {
         SetSize(Vec2(64, 64));
-        WandEngine::EventManager::GetInstance().Notify(this, "Reset Size");
     }
     if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_E, WandEngine::KeyDown)) {
         DestructorMode = !DestructorMode;
@@ -78,11 +77,12 @@ void LinkObject::OnCollision(GameObject* other){
 
     if(other->GetObjectName() == "Emerson"){
         other->Destroy();
-        WandEngine::EventManager::GetInstance().Notify(this, (this->GetObjectName() + " destroyed " + other->GetObjectName() + " D:"));
+        WandEngine::EventManager::GetInstance().TriggerEvent("OnEnemyDestroy");
     }
 
     if(other->GetObjectName() == "Tile"){
         DestructorMode ? other->Destroy() : SetToLastPosition();
+        WandEngine::EventManager::GetInstance().TriggerEvent("OnTileDestroy");
     }
 
 

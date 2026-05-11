@@ -60,10 +60,12 @@ void MainScene::Init()
 
     // new LinkObject(DynamicEntity, Vec2(300, 200), Vec2(64, 64), "Enemy", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("Player", 1, 1), 3, 20, WandEngine::ResourceManager::GetInstance().getFont("Font"));
 
-    WandEngine::EventManager::GetInstance().Add(new Logger);
+    WandEngine::EventManager::GetInstance().RegisterEvent("OnEnemyDestroy", [](){
+           std::cout << "Enemigo destruido" << std::endl;
+    });
 
 
-    WandEngine::SceneManager::GetInstance().SetBackBufferColor(al_map_rgb(155, 0, 30));
+    WandEngine::SceneManager::GetInstance().SetBackBufferColor(WandEngine::WAND_COLOR(155.0f, 0.0f, 33.0f, 0.0f));
 
 
     SetProgressLoadingScene(1.0f);

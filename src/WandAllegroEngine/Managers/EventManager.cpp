@@ -1,37 +1,37 @@
 #include "EventManager.hpp"
 #include "../Interfaces/GameEvent.hpp"
-#include "../Models/GameObject.hpp"
 
 namespace WandEngine
 {
 
-    void EventManager::Add(GameEvent *GameEvent)
+    void EventManager::RegisterEvent(const std::string &eventName, EventCallback callback)
     {
-        gameEvents.push_back(GameEvent);
+        eventCallbacks[eventName].push_back(callback);
     }
 
-    void EventManager::Remove(GameEvent *GameEvent)
+    void EventManager::TriggerEvent(const std::string &eventName)
     {
-        gameEvents.erase(std::remove(gameEvents.begin(), gameEvents.end(), GameEvent), gameEvents.end());
-    }
-
-    void EventManager::Notify(GameObject *obj, const std::string &event)
-    {
-        for (GameEvent *GameEvent : gameEvents)
+        if (eventCallbacks.find(eventName) != eventCallbacks.end())
         {
-            GameEvent->OnNotify(obj, event);
+            for (const auto &callback : eventCallbacks[eventName])
+            {
+                callback();
+            }
         }
+        else
+        {
+            std::cout << "Event not found: " << eventName << std::endl;
+        }
+    }
+
+    void EventManager::RemoveEvent(const std::string &eventName)
+    {
+        eventCallbacks.erase(eventName);
     }
 
     void EventManager::Clear()
     {
-
-        while(!gameEvents.empty())
-        {
-            delete gameEvents.back();
-            gameEvents.pop_back();
-        }
-
+        eventCallbacks.clear();
         std::cout << "Event manager cleared" << std::endl;
     }
 
@@ -40,5 +40,5 @@ namespace WandEngine
         Clear();
         std::cout << "Event manager destroyed" << std::endl;
     }
-    
+
 }

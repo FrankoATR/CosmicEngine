@@ -43,12 +43,12 @@ void GameInScene::Init()
     AddMainThreadTask([this]()
     {
         float load = 1.0;
-        for(int i=0; i < 50; i++)
-            for(int j=0; j < 30; j++){
-                GameObject* tmp = new MapTileObject(DynamicEntity, Vec2(32*i, 32*j), Vec2(32, 32), "Tile", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
+        for(int i=0; i < 40; i++)
+            for(int j=0; j < 20; j++){
+                GameObject* tmp = new MapTileObject(DynamicEntity, Vec2(100 + 32*i, 100 + 32*j), Vec2(32, 32), "Tile", WandEngine::ResourceManager::GetInstance().getBitmapRegionFromSpriteSheet("SpriteSheet", rand()%2, rand()%4), 0);
                 WandEngine::ObjectManager::GetInstance().Add(tmp);
                 load++;
-                SetProgressLoadingScene((load/(50.0f*30.0f)));
+                SetProgressLoadingScene((load/(40.0f*20.0f)));
             }
     });
 
@@ -63,8 +63,13 @@ void GameInScene::Init()
         }
     */
     
+    destroyedTiles = 0;
+    WandEngine::EventManager::GetInstance().RegisterEvent("OnTileDestroy", [](){
+            destroyedTiles++;
+            std::cout << "Tiles Destroyed: " << destroyedTiles << std::endl;
+    });
 
-    WandEngine::SceneManager::GetInstance().SetBackBufferColor(al_map_rgb(155, 141, 30));
+    WandEngine::SceneManager::GetInstance().SetBackBufferColor(WandEngine::WAND_COLOR(155.0f, 141.0f, 30.0f, 0.0f));
 
     SetProgressLoadingScene(1.0f);
     
@@ -111,7 +116,7 @@ void GameInScene::Update(double deltaTime)
         //WandEngine::GameManager::GetInstance().ToggleShowBody();
     }
 
-    if(destroyedTiles >= 25)
+    if(destroyedTiles >= 50)
     {
         WandEngine::SceneManager::GetInstance().ReplaceScene(new MainScene);
     }

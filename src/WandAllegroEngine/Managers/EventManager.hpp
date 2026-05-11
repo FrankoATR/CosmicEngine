@@ -1,12 +1,11 @@
 #ifndef EVENTMANAGER_HPP
 #define EVENTMANAGER_HPP
 
+#include <unordered_map>
 #include <vector>
+#include <functional>
 #include <string>
-#include <algorithm>
-
-class GameEvent;
-class GameObject;
+#include <iostream>
 
 namespace WandEngine
 {
@@ -19,7 +18,8 @@ namespace WandEngine
         EventManager(const EventManager &) = delete;
         EventManager &operator=(const EventManager &) = delete;
 
-        std::vector<GameEvent *> gameEvents;
+        using EventCallback = std::function<void()>;
+        std::unordered_map<std::string, std::vector<EventCallback>> eventCallbacks;
 
     public:
         static EventManager &GetInstance()
@@ -27,12 +27,17 @@ namespace WandEngine
             static EventManager instance;
             return instance;
         }
-        void Add(GameEvent *GameEvent);
-        void Remove(GameEvent *GameEvent);
+
+
+        void RegisterEvent(const std::string &eventName, EventCallback callback);
+
+        void TriggerEvent(const std::string &eventName);
+
+        void RemoveEvent(const std::string &eventName);
+
         void Clear();
-        void Notify(GameObject *obj, const std::string &event);
     };
-    
+
 }
 
 #endif // EVENTMANAGER_HPP

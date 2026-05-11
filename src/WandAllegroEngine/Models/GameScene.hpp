@@ -6,6 +6,7 @@
 #include <queue>
 #include <functional>
 #include <thread>
+#include "../Interfaces/Definitions.hpp"
 
 class GameScene
 {

@@ -5,8 +5,7 @@
 namespace WandEngine
 {
 
-	GameManager::GameManager() : ScreenSize(Size(0, 0)), Window(nullptr), event_queue(nullptr),
-								 lastTime(0), currentTime(0), deltaTime(0)
+	GameManager::GameManager() : Window(nullptr), event_queue(nullptr), lastTime(0), currentTime(0), deltaTime(0)
 	{
 		this->redraw = true;
 	}
