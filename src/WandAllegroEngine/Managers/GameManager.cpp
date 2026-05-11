@@ -175,7 +175,7 @@ namespace WandEngine
 		al_shutdown_primitives_addon();
 		al_shutdown_image_addon();
 
-		std::cout << "Game clear" << std::endl;
+		std::cout << "Game cleared" << std::endl;
 	}
 
 	GameManager::~GameManager()

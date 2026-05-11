@@ -8,10 +8,6 @@ namespace WandEngine
         
     }
 
-    ObjectManager::~ObjectManager()
-    {
-        Clear();
-    }
 
     void ObjectManager::Update(float deltaTime)
     {
@@ -45,16 +41,45 @@ namespace WandEngine
         SortByLayer();
     }
 
-    void ObjectManager::Remove(int entityId)
+    void ObjectManager::Remove(int EntityId)
     {
-        auto it = std::find_if(actors.begin(), actors.end(), [entityId](GameObject *obj)
-                               { return obj->GetObjectId() == entityId; });
+        auto it = std::find_if(actors.begin(), actors.end(), [EntityId](GameObject *obj)
+                               { return obj->GetObjectId() == EntityId; });
         if (it != actors.end())
         {
             delete *it;
             actors.erase(it);
         }
     }
+
+
+    GameObject* ObjectManager::FindById(int EntityId)
+    {
+        auto it = std::find_if(actors.begin(), actors.end(), [EntityId](GameObject *obj)
+                               { return obj->GetObjectId() == EntityId; });
+        if (it != actors.end())
+        {
+            return *it;
+        }
+        else{
+            return nullptr;
+        }
+    }
+
+
+        GameObject* ObjectManager::FindByUniqueName(std::string UniqueName)
+    {
+        auto it = std::find_if(actors.begin(), actors.end(), [UniqueName](GameObject *obj)
+                               { return obj->GetObjectName() == UniqueName; });
+        if (it != actors.end())
+        {
+            return *it;
+        }
+        else{
+            return nullptr;
+        }
+    }
+
 
     void ObjectManager::SortByLayer()
     {
@@ -64,12 +89,22 @@ namespace WandEngine
 
     void ObjectManager::Clear()
     {
-        for (const auto &actor : actors)
+
+        while(!actors.empty())
         {
-            delete actor;
+            delete actors.back();
+            actors.pop_back();
         }
-        actors.clear();
+
         nextEntityId = 0;
+    
+        std::cout << "Object manager cleared" << std::endl;
+    }
+
+    ObjectManager::~ObjectManager()
+    {
+        Clear();
+        std::cout << "Object manager destroyed" << std::endl;
     }
 
 }

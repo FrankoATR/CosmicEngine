@@ -38,7 +38,7 @@ namespace WandEngine
         ALLEGRO_BITMAP* getBitmapRegionFromSpriteSheet(const std::string& key, int file, int column) const;
         ALLEGRO_FONT* getFont(const std::string& key) const;
 
-        void clear();
+        void Clear();
 
     };
 

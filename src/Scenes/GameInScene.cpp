@@ -8,6 +8,10 @@
 #include "../WandAllegroEngine/Managers/SceneManager.hpp"
 #include "../WandAllegroEngine/Managers/InputManager.hpp"
 #include "../WandAllegroEngine/Managers/GameManager.hpp"
+#include "../WandAllegroEngine/Managers/EventManager.hpp"
+
+
+int destroyedTiles = 0;
 
 GameInScene::GameInScene() : GameScene("GameInScene")
 {
@@ -105,6 +109,11 @@ void GameInScene::Update(double deltaTime)
     if (WandEngine::InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_H, WandEngine::KeyDown))
     {
         //WandEngine::GameManager::GetInstance().ToggleShowBody();
+    }
+
+    if(destroyedTiles >= 25)
+    {
+        WandEngine::SceneManager::GetInstance().ReplaceScene(new MainScene);
     }
 
 }

@@ -109,6 +109,10 @@ void MainScene::Update(double deltaTime)
         WandEngine::GameManager::GetInstance().SetWindows_Size(Size(1920, 1080));
     }
 
+    if(!WandEngine::ObjectManager::GetInstance().FindByUniqueName("Player")){
+        WandEngine::SceneManager::GetInstance().ReplaceScene(new GameInScene);
+    }
+
 
 }
 

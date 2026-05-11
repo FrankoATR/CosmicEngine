@@ -86,7 +86,7 @@ namespace WandEngine
         return it->second;
     }
 
-    void ResourceManager::clear()
+    void ResourceManager::Clear()
     {
         for (auto &pair : bitmap_resources)
         {
@@ -108,12 +108,12 @@ namespace WandEngine
             al_destroy_font(pair.second);
         }
         font_resources.clear();
-        std::cout << "Resource Manager clear" << std::endl;
+        std::cout << "Resource manager cleared" << std::endl;
     }
 
     ResourceManager::~ResourceManager()
     {
-        clear();
+        Clear();
         std::cout << "Resource manager destroyed" << std::endl;
     }
 }

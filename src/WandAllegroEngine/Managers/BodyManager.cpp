@@ -119,12 +119,12 @@ namespace WandEngine
         }
         // gameGridCollisions.clear(); Pensar si hacer un Manager para grid y otro para colisiones
 
-        for (const auto &body : bodys)
+        while (!bodys.empty())
         {
-            delete body;
+            delete bodys.back();
+            bodys.pop_back();
         }
-        bodys.clear();
-        std::cout << "Body manager clear" << std::endl;
+        std::cout << "Body manager cleared" << std::endl;
     }
 
     BodyManager::~BodyManager()

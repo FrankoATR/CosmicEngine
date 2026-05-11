@@ -25,13 +25,14 @@ namespace WandEngine
 
     void EventManager::Clear()
     {
-        for (GameEvent *event : gameEvents)
-        {
-            delete event;
-        }
-        gameEvents.clear();
 
-        std::cout << "Event manager clear" << std::endl;
+        while(!gameEvents.empty())
+        {
+            delete gameEvents.back();
+            gameEvents.pop_back();
+        }
+
+        std::cout << "Event manager cleared" << std::endl;
     }
 
     EventManager::~EventManager()

@@ -31,6 +31,7 @@ namespace WandEngine
                 sceneStack.back()->JoinLoadingThread();
             }
             sceneStack.back()->Clear();
+            delete sceneStack.back();
             sceneStack.pop_back();
         }
 
@@ -47,6 +48,7 @@ namespace WandEngine
                 sceneStack.back()->JoinLoadingThread();
             }
             sceneStack.back()->Clear();
+            delete sceneStack.back();
             sceneStack.pop_back();
 
             if (sceneStack.empty())
@@ -139,6 +141,7 @@ namespace WandEngine
                 sceneStack.back()->JoinLoadingThread();
             }
             sceneStack.back()->Clear();
+            delete sceneStack.back();
             sceneStack.pop_back();
         }
         isRunning = false;
