@@ -7,7 +7,10 @@
 #include "../WandAllegroEngine/Managers/MusicManager.hpp"
 #include "../WandAllegroEngine/Managers/SoundManager.hpp"
 #include "../WandAllegroEngine/Managers/GameManager.hpp"
+
+#include "../WandAllegroEngine/Collisions/GameGridCollisions.hpp"
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
+
 #include "../WandAllegroEngine/Managers/UIManager.hpp"
 #include "../WandAllegroEngine/Managers/CameraManager.hpp"
 
@@ -173,7 +176,7 @@ void MainScene::Init()
         UIManager::GetInstance().AddElement(button6);
 
 
-
+    BodyManager::GetInstance().SetNewGridArea(new GameGridCollisions(WAND_VEC2(200, 200), 5, 7, 100));
     SceneManager::GetInstance().SetBackBufferColor(WAND_COLOR(155.0f, 0.0f, 33.0f, 0.0f));
 
     SetProgressLoadingScene(1.0f);

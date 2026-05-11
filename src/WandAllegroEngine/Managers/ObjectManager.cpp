@@ -5,9 +5,7 @@ namespace WandEngine
 {
     ObjectManager::ObjectManager() : nextEntityId(0)
     {
-        
     }
-
 
     void ObjectManager::Update(float deltaTime)
     {
@@ -15,7 +13,17 @@ namespace WandEngine
 
         for (auto actor : actors)
         {
-            actor->GetAliveInGameManager() ? actor->Update(deltaTime) : toRemove.push_back(actor->GetObjectId());
+            if (actor->GetAliveInGameManager())
+            {
+                if (actor->GetInsideGridArea())
+                {
+                    actor->Update(deltaTime);
+                }
+            }
+            else
+            {
+                toRemove.push_back(actor->GetObjectId());
+            }
         }
 
         for (int id : toRemove)
@@ -28,7 +36,10 @@ namespace WandEngine
     {
         for (auto actor : actors)
         {
-            actor->Draw();
+            if (actor->GetVisible())
+            {
+                actor->Draw();
+            }
         }
     }
 
@@ -52,8 +63,7 @@ namespace WandEngine
         }
     }
 
-
-    GameObject* ObjectManager::FindById(int EntityId)
+    GameObject *ObjectManager::FindById(int EntityId)
     {
         auto it = std::find_if(actors.begin(), actors.end(), [EntityId](GameObject *obj)
                                { return obj->GetObjectId() == EntityId; });
@@ -61,13 +71,13 @@ namespace WandEngine
         {
             return *it;
         }
-        else{
+        else
+        {
             return nullptr;
         }
     }
 
-
-        GameObject* ObjectManager::FindByUniqueName(std::string UniqueName)
+    GameObject *ObjectManager::FindByUniqueName(std::string UniqueName)
     {
         auto it = std::find_if(actors.begin(), actors.end(), [UniqueName](GameObject *obj)
                                { return obj->GetObjectName() == UniqueName; });
@@ -75,11 +85,11 @@ namespace WandEngine
         {
             return *it;
         }
-        else{
+        else
+        {
             return nullptr;
         }
     }
-
 
     void ObjectManager::SortByLayer()
     {
@@ -90,14 +100,14 @@ namespace WandEngine
     void ObjectManager::Clear()
     {
 
-        while(!actors.empty())
+        while (!actors.empty())
         {
             delete actors.back();
             actors.pop_back();
         }
 
         nextEntityId = 0;
-    
+
         std::cout << "Object manager cleared" << std::endl;
     }
 

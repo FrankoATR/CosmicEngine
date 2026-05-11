@@ -6,92 +6,95 @@
 
 ## Descripción general
 
-En esta etapa empecé a mover el framework hacia una base de persistencia y serialización propia para datos simples del runtime. El cambio más visible es que los tipos espaciales compartidos dejan de ser solamente estructuras de uso interno y pasan a quedar preparados para representarse en JSON, lo que abre una ruta directa para guardar y reconstruir estado sin depender de conversiones externas dispersas.
+En esta etapa reforcé la infraestructura espacial del framework para que el runtime pueda decidir con mayor claridad qué objetos deben actualizarse, dibujarse o quedar fuera del área activa de trabajo. El cambio central ya no está en la persistencia, sino en la coordinación entre cámara, grid de colisiones, objetos y managers base.
 
-Junto con eso añadí una utilidad específica para lectura y escritura de datos en disco, reforcé algunos puntos de la API base de cámara y objetos, y dejé reservado el espacio estructural para futuros managers orientados a temporización, agenda de tareas y animación de sprites.
+Sobre esa misma línea también rehice el tratamiento de los sprite sheets dentro del cargador de recursos para que cada región quede desacoplada del bitmap principal y pueda reutilizarse como recurso independiente dentro del motor.
 
 ## Objetivo técnico
 
 Esta etapa queda centrada en tres frentes:
 
-- preparar serialización y persistencia básica para datos del runtime;
-- ampliar la API base de cámara y objetos para consumo más seguro desde otras capas;
-- dejar estructurada la siguiente expansión de managers especializados del framework.
+- controlar visibilidad y actualización de objetos desde el estado espacial del runtime;
+- permitir que el grid activo del motor pueda reemplazarse dinámicamente;
+- estabilizar el acceso a regiones de sprite sheet como recursos reutilizables.
 
 ## Estructura del proyecto
 
 La diferencia visible respecto a la etapa anterior se concentra en estos puntos:
 
-- `src/WandAllegroEngine/Interfaces/`, donde `Definitions.hpp` deja preparada la serialización JSON de `WAND_VEC2` y ajusta su construcción por defecto para soportar esa ruta de datos.
-- `src/Utilities/`, donde aparecen `DataManager` y `GameData` como base de persistencia y representación serializable de datos del juego.
-- `src/WandAllegroEngine/Managers/`, donde se amplía la interfaz de cámara y se agregan los archivos base de `TimerManager`, `ScheduleManager` y `SpriteAnimationManager` como preparación estructural de siguientes subsistemas.
+- `src/WandAllegroEngine/Models/` y `src/WandAllegroEngine/Managers/`, donde `GameObject`, `ObjectManager`, `BodyManager` y `CameraManager` pasan a compartir estados explícitos de visibilidad, pertenencia al área activa y consulta de cámara.
+- `src/WandAllegroEngine/Collisions/`, donde `GameGridCollisions` deja de limitarse a poblar celdas y empieza a marcar qué objetos están dentro del grid y cuáles deben considerarse visibles según la cámara.
+- `src/WandAllegroEngine/Managers/ResourceManager.*`, donde el manejo de sprite sheets cambia de regiones calculadas al vuelo a una matriz persistente de bitmaps independientes.
 
 ## Arquitectura o sistemas principales
 
-### Serialización de tipos base
+### Visibilidad y pertenencia al área activa
 
-`Definitions.hpp` deja de limitarse a definir estructuras compartidas y pasa a incluir la especialización `adl_serializer` de `nlohmann::json` para `WAND_VEC2`. Con ello el vector base del framework ya puede transformarse de forma directa a una representación JSON con claves `x` e `y`, y reconstruirse desde esa misma estructura.
+`GameObject` incorpora dos estados nuevos dentro de su contrato base:
 
-Para sostener esa ruta también incorporé un constructor por defecto en `WAND_VEC2`, lo que permite que el tipo pueda existir como destino válido durante procesos de deserialización y carga de datos.
+- `Visible`;
+- `InsideGridArea`.
 
-### Persistencia básica de runtime
+Sobre esa base también agregué los accesores y mutadores correspondientes:
 
-`DataManager` entra como utilidad dedicada para guardar y recuperar datos simples del estado del juego. Su interfaz visible queda concentrada en:
+- `SetVisible()` y `GetVisible()`;
+- `SetInsideGridArea()` y `GetInsideGridArea()`.
 
-- `LoadData(int &PositionX, int &PositionY)`;
-- `SaveData(int PositionX, int PositionY)`.
+Con esto el objeto deja de depender únicamente de su existencia en memoria para participar en el frame, y pasa a poder ser filtrado por managers según su presencia dentro del área activa y su visibilidad efectiva.
 
-La implementación usa archivos JSON sobre una carpeta `saves` ubicada junto al ejecutable, crea el directorio cuando hace falta y elimina el archivo si detecta un contenido inválido. Con esto queda establecida una primera base para persistencia local desde el propio framework.
+### Culling espacial desde cámara y grid
 
-### Estructura serializable de datos
+`GameGridCollisions` ahora marca explícitamente si un objeto entra o no en el grid activo al momento de insertarlo en celdas. Si el cuerpo no cae dentro del área de la grilla, el objeto asociado queda marcado fuera de `InsideGridArea`; si sí cae dentro, vuelve a marcarse como válido.
 
-Además de la utilidad de guardado, agregué `GameData` como estructura de datos con serialización visible basada en `nlohmann::json`. En su estado actual conserva el campo `Type` y deja preparada la incorporación posterior de colecciones de entidades.
+Además, durante el recorrido de colisiones, la grilla consulta `CameraManager::IsObjectInsideCameraArea()` para decidir si el objeto debe permanecer visible. De esta forma, el sistema de colisiones también pasa a alimentar el filtrado visual del runtime.
 
-Aunque todavía no es una capa completa de guardado de escenas u objetos, sí establece el contrato inicial para representar datos del motor en una forma intercambiable y persistible.
+### Managers coordinados por estado espacial
 
-### Ajustes de API en cámara y objetos
+`ObjectManager::Update()` deja de actualizar cualquier actor vivo de forma indiscriminada y pasa a hacerlo solo cuando el objeto sigue dentro del área activa del grid. Del mismo modo, `ObjectManager::Draw()` y `BodyManager::Draw()` filtran por `GetVisible()` antes de renderizar.
 
-`CameraManager` amplía su interfaz con `GetFocusPosition()`, permitiendo consultar el punto central actualmente enfocado en lugar de operar únicamente sobre el desplazamiento bruto de cámara.
+En paralelo, `BodyManager` deja de asumir que siempre existe una grilla inicial fija. Ahora puede trabajar sin grid activa, exponer una posición segura cuando no existe una, y recibir una nueva mediante `SetNewGridArea(GameGridCollisions *)`.
 
-En paralelo, `GameObject` vuelve const-correct varios accesores visibles:
+Con esto la relación entre cuerpo, cámara, visibilidad y actualización ya no queda dispersa, sino coordinada desde el estado espacial común del runtime.
 
-- `GetPosition()`;
-- `GetSize()`;
-- `GetObjectName()`;
-- `GetObjectType()`;
-- `GetObjectId()`;
-- `GetLayerId()`;
-- `GetSprite()`;
-- `GetAliveInGameManager()`.
+### API de cámara orientada a consulta espacial
 
-Con esto la API base de objetos queda más clara para lectura desde otras capas sin sugerir mutación implícita del estado.
+`CameraManager` amplía su interfaz con `IsObjectInsideCameraArea(GameObject *Obj)`, que evalúa si un objeto intersecta el rectángulo visible actual de cámara.
 
-### Preparación de managers futuros
+Este cambio complementa la consulta previa de foco y convierte a la cámara en una referencia útil no solo para transformar la vista, sino también para decidir qué contenido del mundo debe seguir activo visualmente.
 
-Dentro de `src/WandAllegroEngine/Managers/` dejé creados los archivos base de `TimerManager`, `ScheduleManager` y `SpriteAnimationManager`. En esta etapa todavía funcionan como estructura reservada y no como subsistemas operativos, pero marcan la dirección inmediata de expansión del framework hacia temporización, agenda interna y animación desacoplada.
+### Sprite sheets como recursos persistentes
+
+`ResourceManager` cambia su estrategia de sprite sheets. En lugar de conservar un bitmap principal y devolver sub-bitmaps creados en cada consulta, ahora divide la hoja al cargarla y almacena una matriz bidimensional de bitmaps independientes.
+
+Ese ajuste implica tres cambios visibles:
+
+- `loadSpriteSheet()` pasa a trabajar explícitamente con filas y columnas;
+- `getBitmapRegionFromSpriteSheet()` devuelve directamente el bitmap persistido en la matriz;
+- `Clear()` destruye cada región almacenada como recurso independiente.
+
+Con ello la obtención de sprites queda más estable para reutilización continua dentro del framework y evita depender de sub-bitmaps temporales creados en cada acceso.
 
 ## Integración del framework
 
 Las implementaciones visibles del framework ya aprovechan estas capacidades en dos sentidos:
 
-- los tipos espaciales compartidos ya pueden cruzar la frontera entre memoria y archivo en una forma serializable estándar;
-- la base de objetos y cámara expone lecturas más estables para utilidades, herramientas y futuras capas de edición o persistencia.
+- el runtime puede omitir actualización y dibujo de objetos fuera del área útil sin destruirlos ni sacarlos del flujo general del motor;
+- los recursos gráficos extraídos de sprite sheets ya quedan listos para reutilización directa desde managers, escenas y utilidades de edición.
 
-Con ello dejé una base más útil para avanzar hacia guardado de estado, herramientas auxiliares y subsistemas temporales sin volver a redefinir contratos de datos en cada capa del motor.
+Con ello dejé una base más útil para trabajar con mundos extensos, herramientas de edición y selección visual sin cargar de trabajo innecesario el frame ni recalcular regiones gráficas en cada acceso.
 
 ## Dependencias externas visibles
 
-No incorporé dependencias externas visibles nuevas en esta etapa, pero `nlohmann::json` pasa a quedar integrado de forma explícita en la serialización de tipos base y estructuras de datos auxiliares.
+No incorporé dependencias externas visibles nuevas en esta etapa.
 
 ## Resumen técnico de la versión
 
 La etapa efectiva al **12 de noviembre de 2024** queda delimitada por estos movimientos:
 
-- preparé `WAND_VEC2` para serialización JSON directa y añadí su constructor por defecto para soportar carga de datos;
-- incorporé `DataManager` como utilidad visible para guardar y recuperar estado simple en archivos JSON locales;
-- agregué `GameData` como estructura serializable inicial para datos del juego;
-- amplié `CameraManager` con `GetFocusPosition()` para consultar el centro actual de enfoque;
-- volví const-correct la lectura pública de `GameObject` en varios accesores base;
-- dejé creada la estructura inicial de `TimerManager`, `ScheduleManager` y `SpriteAnimationManager` como preparación de la siguiente expansión del framework.
+- incorporé estados explícitos de visibilidad y pertenencia al grid dentro de `GameObject`;
+- hice que `ObjectManager`, `BodyManager` y `GameGridCollisions` utilicen esos estados para filtrar actualización, dibujo y presencia espacial;
+- amplié `CameraManager` con una consulta directa para saber si un objeto está dentro del área visible actual;
+- permití reemplazar dinámicamente la grilla activa desde `BodyManager` en lugar de asumir una instancia fija permanente;
+- rehice el almacenamiento de sprite sheets en `ResourceManager` para conservar regiones independientes ya separadas desde la carga.
 
-Con esta etapa dejé el framework más cerca de una infraestructura de persistencia y herramientas, con contratos de datos más utilizables y una base más clara para subsistemas especializados posteriores.
+Con esta etapa dejé el framework más preparado para edición, navegación espacial y administración eficiente de recursos visuales dentro del runtime.

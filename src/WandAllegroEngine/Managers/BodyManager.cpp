@@ -7,16 +7,36 @@ namespace WandEngine
 
     BodyManager::BodyManager()
     {
-        this->GridArea = new GameGridCollisions(WAND_VEC2(0, 0), 10, 18, 100);
+        this->GridArea = nullptr;
+    }
+
+    void BodyManager::SetNewGridArea(GameGridCollisions * NewGridArea)
+    {
+        if(GridArea)
+        {
+            GridArea->ClearGrid();
+            delete GridArea;
+        }
+        this->GridArea = NewGridArea;
     }
 
     WAND_VEC2 BodyManager::GetGridPosition()
     {
-        this->GridArea->GetPosition();
+        if (GridArea)
+        {
+            return this->GridArea->GetPosition();
+        }
+        else
+        {
+            return WAND_VEC2(0, 0);
+        }
     }
     void BodyManager::SetGridPosition(WAND_VEC2 NewPosition)
     {
-        this->GridArea->SetPosition(NewPosition);
+        if (GridArea)
+        {
+            this->GridArea->SetPosition(NewPosition);
+        }
     }
 
     void BodyManager::Update()
@@ -28,7 +48,10 @@ namespace WandEngine
             if (body->GetParent()->GetAliveInGameManager())
             {
                 body->SetPosition(body->GetParent()->GetPosition());
-                GridArea->AddObject(body);
+                if (GridArea)
+                {
+                    GridArea->AddObject(body);
+                }
             }
             else
             {
@@ -41,44 +64,27 @@ namespace WandEngine
             Remove(id);
         }
 
-        /*
-            for (const auto &body : bodys)
+        if (GridArea)
         {
-            for (const auto &body2 : bodys)
-            {
-                if (body != body2)
-                {
-                    if (RectToRectCollisionBody(body, body2))
-                    {
-                        //std::cout << "COLLISION" << std::endl;   //VARIAS COLISIONES SE ESTAN BORRANDO A LA VEZ, CUANDO SOLO TOCO 1
-                        body->GetParent()->OnCollision(body2->GetParent());
-                        body2->GetParent()->OnCollision(body->GetParent());
-                    }
-                }
-            }
+            GridArea->Find_collision_grid();
+            GridArea->ClearGrid();
         }
-        */
-
-        GridArea->Find_collision_grid();
-        GridArea->ClearGrid();
-    }
-
-    bool BodyManager::RectToRectCollisionBody(GameBodyObject *body1, GameBodyObject *body2)
-    {
-        return (body1->GetPosition().x < body2->GetPosition().x + body2->GetSize().x &&
-                body1->GetPosition().x + body1->GetSize().x > body2->GetPosition().x &&
-                body1->GetPosition().y < body2->GetPosition().y + body2->GetSize().y &&
-                body1->GetPosition().y + body1->GetSize().y > body2->GetPosition().y);
     }
 
     void BodyManager::Draw()
     {
 
-        GridArea->DrawCells();
+        if (GridArea)
+        {
+            GridArea->DrawCells();
+        }
 
         for (auto body : bodys)
         {
-            body->DrawBody();
+            if(body->GetParent()->GetVisible())
+            {
+                body->DrawBody();
+            }
         }
     }
 
@@ -106,7 +112,11 @@ namespace WandEngine
     void BodyManager::Clear()
     {
 
-        GridArea->ClearGrid();
+        if (GridArea)
+        {
+            GridArea->ClearGrid();
+            std::cout << "GRID DELETE" << std::endl;
+        }
 
         while (!bodys.empty())
         {

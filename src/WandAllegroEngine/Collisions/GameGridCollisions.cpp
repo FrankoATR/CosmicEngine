@@ -1,6 +1,7 @@
 #include "GameGridCollisions.hpp"
 #include "../Models/GameObject.hpp"
 #include "../Models/GameBodyObject.hpp"
+#include "../Managers/CameraManager.hpp"
 
 namespace WandEngine
 {
@@ -64,10 +65,10 @@ namespace WandEngine
         Cell *cell = GetCellByPosition(obj->GetPosition());
         if (!cell)
         {
-            // obj->GetParent()->Destroy();
+            obj->GetParent()->SetInsideGridArea(false);
             return;
         }
-
+        obj->GetParent()->SetInsideGridArea(true);
         cell->objects.push_back(obj);
         EntitiesOnGrid++;
     }
@@ -119,6 +120,15 @@ namespace WandEngine
     {
         for (auto &obj_1 : cell_1->objects)
         {
+            if (CameraManager::GetInstance().IsObjectInsideCameraArea(obj_1->GetParent()))
+            {
+                obj_1->GetParent()->SetVisible(true);
+            }
+            else
+            {
+                obj_1->GetParent()->SetVisible(false);
+            }
+
             for (auto &obj_2 : cell_2->objects)
             {
                 if (obj_1 != obj_2)
@@ -134,9 +144,9 @@ namespace WandEngine
 
     void GameGridCollisions::Find_collision_grid()
     {
-        for (int column = 0; column < this->Columns; ++column)
+        for (int column = 1; column < this->Columns; ++column)
         {
-            for (int arrow = 0; arrow < this->Arrows; ++arrow)
+            for (int arrow = 1; arrow < this->Arrows; ++arrow)
             {
                 auto current_cell = this->GetCell(arrow, column);
                 for (int dcolumn = -1; dcolumn <= 1; ++dcolumn)

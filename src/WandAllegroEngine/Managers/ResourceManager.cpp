@@ -19,7 +19,7 @@ namespace WandEngine
         return true;
     }
 
-    bool ResourceManager::loadSpriteSheet(const std::string &key, const std::string &path, int files, int columns)
+    bool ResourceManager::loadSpriteSheet(const std::string &key, const std::string &path, int rows, int columns)
     {
         if (spriteSheet_resources.find(key) != spriteSheet_resources.end())
         {
@@ -32,7 +32,49 @@ namespace WandEngine
             return false;
         }
 
-        spriteSheet_resources[key] = std::make_tuple(spriteSheet, al_get_bitmap_width(spriteSheet) / columns, al_get_bitmap_height(spriteSheet) / files);
+        int spritesWidth = al_get_bitmap_width(spriteSheet) / columns;
+        int spritesHeight = al_get_bitmap_height(spriteSheet) / rows;
+
+        std::vector<std::vector<ALLEGRO_BITMAP *>> sprites(rows, std::vector<ALLEGRO_BITMAP *>(columns, nullptr));
+
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < columns; j++)
+            {
+                ALLEGRO_BITMAP *subBitmap = al_create_sub_bitmap(spriteSheet, j * spritesWidth, i * spritesHeight, spritesWidth, spritesHeight);
+                if (!subBitmap)
+                {
+                    std::cerr << "Error: could not create sub-bitmap at [" << i << "][" << j << "]" << std::endl;
+                    for (int x = 0; x <= i; ++x)
+                    {
+                        for (int y = 0; y < ((x == i) ? j : columns); ++y)
+                        {
+                            al_destroy_bitmap(sprites[x][y]);
+                        }
+                    }
+                    al_destroy_bitmap(spriteSheet);
+                    return false;
+                }
+
+                ALLEGRO_BITMAP *independentSprite = al_create_bitmap(spritesWidth, spritesHeight);
+                if (!independentSprite)
+                {
+                    std::cerr << "Error: could not create independent bitmap at [" << i << "][" << j << "]" << std::endl;
+                    al_destroy_bitmap(subBitmap);
+                    continue;
+                }
+
+                al_set_target_bitmap(independentSprite);
+                al_draw_bitmap(subBitmap, 0, 0, 0);
+                al_set_target_bitmap(al_get_backbuffer(al_get_current_display()));
+
+                al_destroy_bitmap(subBitmap);
+
+                sprites[i][j] = independentSprite;
+            }
+        }
+        spriteSheet_resources[key] = sprites;
+
         return true;
     }
 
@@ -63,17 +105,19 @@ namespace WandEngine
         return it->second;
     }
 
-    ALLEGRO_BITMAP *ResourceManager::getBitmapRegionFromSpriteSheet(const std::string &key, int file, int column) const
+    ALLEGRO_BITMAP *ResourceManager::getBitmapRegionFromSpriteSheet(const std::string &key, int row, int column) const
     {
         auto it = spriteSheet_resources.find(key);
         if (it == spriteSheet_resources.end())
         {
             return nullptr;
         }
-        ALLEGRO_BITMAP *sprite = std::get<0>(it->second);
-        int spritesWidth = std::get<1>(it->second);
-        int spritesHeight = std::get<2>(it->second);
-        return al_create_sub_bitmap(sprite, column * spritesWidth, file * spritesHeight, spritesWidth, spritesHeight);
+
+        if (row < 0 || row > it->second.size() - 1 || column < 0 || column > it->second.size() - 1)
+        {
+            return nullptr;
+        }
+        return it->second[row][column];
     }
 
     ALLEGRO_FONT *ResourceManager::getFont(const std::string &key) const
@@ -96,9 +140,18 @@ namespace WandEngine
 
         for (auto &pair : spriteSheet_resources)
         {
-            if (std::get<0>(pair.second))
+            if (!pair.second.empty())
             {
-                al_destroy_bitmap(std::get<0>(pair.second));
+                for (auto &row : pair.second)
+                {
+                    if (!row.empty())
+                    {
+                        for (auto &column : row)
+                        {
+                            al_destroy_bitmap(column);
+                        }
+                    }
+                }
             }
         }
         spriteSheet_resources.clear();

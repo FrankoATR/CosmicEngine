@@ -41,5 +41,4 @@ void MapTileObject::OnCollision(GameObject* other){
 
 MapTileObject::~MapTileObject()
 {
-    al_destroy_bitmap(GetSprite());
 }

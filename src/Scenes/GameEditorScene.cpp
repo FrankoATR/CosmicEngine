@@ -10,12 +10,16 @@
 #include "../WandAllegroEngine/Managers/EventManager.hpp"
 #include "../WandAllegroEngine/Managers/CameraManager.hpp"
 #include "../WandAllegroEngine/Managers/UIManager.hpp"
+
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
+#include "../WandAllegroEngine/Collisions/GameGridCollisions.hpp"
 
 #include "MainScene.hpp"
 
 #include "../WandAllegroEngine/Models/UIElements/UIButton.hpp"
 #include "../Entities/BackgroundObject.hpp"
+#include "../Entities/MapTileObject.hpp"
+#include "../Entities/HandEditorObject.hpp"
 
 #include "../Utilities/Paths.hpp"
 
@@ -30,6 +34,7 @@ void GameEditorScene::Init()
 {
     AddMainThreadTask([this]()
     {
+        ResourceManager::GetInstance().loadBitmap("HandEditor", CURSOR_SPRITE_PATH);
         ResourceManager::GetInstance().loadSpriteSheet("Pokemon Map", POKEMONTILES_SPRITES_PATH, 29, 8);
         ResourceManager::GetInstance().loadSpriteSheet("Blocks Sprites", BLOCKS_SPRITES_PATH, 5, 3);
         ResourceManager::GetInstance().loadFont("Font", RETRO_FONT_PATH, 50);
@@ -68,6 +73,10 @@ void GameEditorScene::Init()
         UIManager::GetInstance().AddElement(button1);
             
 
+        BodyManager::GetInstance().SetNewGridArea(new GameGridCollisions(WAND_VEC2(0, 0), 10, 10, 64));
+        GameObject* Hand = new HandEditorObject(Object::StaticEntity, WAND_VEC2(0, 0), WAND_VEC2(64, 64), "HandEditor", ResourceManager::GetInstance().getBitmap("HandEditor"), 255);
+        ObjectManager::GetInstance().Add(Hand);
+
         SceneManager::GetInstance().SetBackBufferColor(WAND_COLOR(120.0f, 20.0f, 20.0f, 0.0f));
         
         CameraManager::GetInstance().Reset();
@@ -82,6 +91,11 @@ void GameEditorScene::Init()
 void GameEditorScene::Update(double deltaTime)
 {
 
+    GameObject* HandEditor = ObjectManager::GetInstance().FindByUniqueName("HandEditor");
+    if (HandEditor)
+    {
+        HandEditor->SetPosition(InputManager::GetInstance().GetMousePosition());
+    }
 
     if(ObjectInHand)
     {
@@ -106,19 +120,19 @@ void GameEditorScene::Update(double deltaTime)
     WAND_VEC2 actPos = CameraManager::GetInstance().GetFocusPosition();
     if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_A, KeyRelease))
     {
-        CameraManager::GetInstance().FocusPosition(WAND_VEC2(actPos.x-deltaTime*200, actPos.y));
+        CameraManager::GetInstance().FocusPosition(WAND_VEC2(actPos.x-deltaTime*400, actPos.y));
     }
     if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_D, KeyRelease))
     {
-        CameraManager::GetInstance().FocusPosition(WAND_VEC2(actPos.x+deltaTime*200, actPos.y));
+        CameraManager::GetInstance().FocusPosition(WAND_VEC2(actPos.x+deltaTime*400, actPos.y));
     }
     if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_W, KeyRelease))
     {
-        CameraManager::GetInstance().FocusPosition(WAND_VEC2(actPos.x, actPos.y-deltaTime*200));
+        CameraManager::GetInstance().FocusPosition(WAND_VEC2(actPos.x, actPos.y-deltaTime*400));
     }
     if (InputManager::GetInstance().IsKeyPressed(ALLEGRO_KEY_S, KeyRelease))
     {
-        CameraManager::GetInstance().FocusPosition(WAND_VEC2(actPos.x, actPos.y+deltaTime*200));
+        CameraManager::GetInstance().FocusPosition(WAND_VEC2(actPos.x, actPos.y+deltaTime*400));
     }
 
 }

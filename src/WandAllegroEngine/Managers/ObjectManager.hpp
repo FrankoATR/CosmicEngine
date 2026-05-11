@@ -14,6 +14,8 @@ namespace WandEngine
     {
     private:
         std::vector<GameObject *> actors;
+        std::vector<GameObject *> actors_to_update;
+        std::vector<GameObject *> actors_to_draw;
         int nextEntityId;
 
         ObjectManager();

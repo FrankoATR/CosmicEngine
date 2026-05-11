@@ -10,6 +10,8 @@
 #include "../WandAllegroEngine/Managers/GameManager.hpp"
 #include "../WandAllegroEngine/Managers/EventManager.hpp"
 #include "../WandAllegroEngine/Managers/CameraManager.hpp"
+
+#include "../WandAllegroEngine/Collisions/GameGridCollisions.hpp"
 #include "../WandAllegroEngine/Managers/BodyManager.hpp"
 
 #include "../Utilities/Paths.hpp"
@@ -79,7 +81,7 @@ void GameInScene::Init()
         );
     });
 
-
+    BodyManager::GetInstance().SetNewGridArea(new GameGridCollisions(WAND_VEC2(-200, -200), 30, 30, 100));
     SceneManager::GetInstance().SetBackBufferColor(WAND_COLOR(155.0f, 141.0f, 30.0f, 0.0f));
     
     CameraManager::GetInstance().Reset();

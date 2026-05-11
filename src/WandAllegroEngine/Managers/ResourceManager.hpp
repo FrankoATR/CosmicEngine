@@ -6,7 +6,7 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
 #include <map>
-#include <tuple>
+#include <vector>
 #include <string>
 #include <iostream>
 
@@ -16,7 +16,7 @@ namespace WandEngine
     class ResourceManager {
     private:
         std::map<std::string, ALLEGRO_BITMAP*> bitmap_resources;
-        std::map<std::string, std::tuple<ALLEGRO_BITMAP*, int, int>> spriteSheet_resources;
+        std::map<std::string, std::vector<std::vector<ALLEGRO_BITMAP*>>> spriteSheet_resources;
         std::map<std::string, ALLEGRO_FONT*> font_resources;
 
         ResourceManager() = default;
@@ -31,11 +31,11 @@ namespace WandEngine
         }
 
         bool loadBitmap(const std::string& key, const std::string& path);
-        bool loadSpriteSheet(const std::string& key, const std::string& path, int files, int columns);
+        bool loadSpriteSheet(const std::string& key, const std::string& path, int rows, int columns);
         bool loadFont(const std::string& key, const std::string& path, int size);
 
         ALLEGRO_BITMAP* getBitmap(const std::string& key) const;
-        ALLEGRO_BITMAP* getBitmapRegionFromSpriteSheet(const std::string& key, int file, int column) const;
+        ALLEGRO_BITMAP* getBitmapRegionFromSpriteSheet(const std::string& key, int row, int column) const;
         ALLEGRO_FONT* getFont(const std::string& key) const;
 
         void Clear();

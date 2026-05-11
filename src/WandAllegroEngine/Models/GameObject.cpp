@@ -9,6 +9,8 @@ namespace WandEngine
     GameObject::GameObject(Object ObjectType, WAND_VEC2 Position, WAND_VEC2 Size, std::string ObjectName, ALLEGRO_BITMAP *Sprite, short int LayerId) : ObjectType(ObjectType), ObjectName(ObjectName), Sprite(Sprite), Size(Size), Position(Position), LastPosition(Position), LayerId(LayerId)
     {
         this->AliveInGameManager = true;
+        this->Visible = true;
+        this->InsideGridArea = true;
     }
 
     void GameObject::Init()
@@ -117,6 +119,27 @@ namespace WandEngine
     {
         this->AliveInGameManager = false;
     }
+
+    void GameObject::SetVisible(bool Visible)
+    {
+        this->Visible = Visible;
+    }
+
+    bool GameObject::GetVisible()
+    {
+        return this->Visible;
+    }
+
+    void GameObject::SetInsideGridArea(bool InsideGridArea)
+    {
+        this->InsideGridArea = InsideGridArea;
+    }
+
+    bool GameObject::GetInsideGridArea()
+    {
+        return this->InsideGridArea;
+    }
+
 
     bool GameObject::GetAliveInGameManager() const
     {

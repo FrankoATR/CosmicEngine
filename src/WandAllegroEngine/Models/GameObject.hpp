@@ -28,6 +28,8 @@ namespace WandEngine
         WAND_VEC2 Size;
         short int LayerId;
 
+        bool Visible;
+        bool InsideGridArea;
         bool AliveInGameManager;
 
     public:
@@ -59,6 +61,13 @@ namespace WandEngine
         ALLEGRO_BITMAP *GetSprite() const;
 
         void SetToLastPosition();
+
+        void SetVisible(bool Visible);
+        bool GetVisible();
+
+        void SetInsideGridArea(bool InsideGridArea);
+        bool GetInsideGridArea();
+
         void Destroy();
         bool GetAliveInGameManager() const;
 

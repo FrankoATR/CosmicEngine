@@ -39,6 +39,7 @@ namespace WandEngine
         void Remove(int entityId);
         void Clear();
 
+        void SetNewGridArea(GameGridCollisions*);
         bool RectToRectCollisionBody(GameBodyObject *body_1, GameBodyObject *body_2);
     };
 

@@ -40,6 +40,8 @@ namespace WandEngine
         WAND_VEC2 GetFocusPosition();
 
         void Reset();
+
+        bool IsObjectInsideCameraArea(GameObject *Obj);
     };
 
 }

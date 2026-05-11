@@ -11,12 +11,11 @@ namespace WandEngine
         Reset();
     }
 
-
     WAND_VEC2 CameraManager::GetGridPosition()
     {
         return BodyManager::GetInstance().GetGridPosition();
     }
-    void CameraManager::SetGridPosition(WAND_VEC2 NewPosition)
+    void CameraManager::SetGridPosition(WAND_VEC2 NewPosition)  //Crear manager para grid
     {
         return BodyManager::GetInstance().SetGridPosition(NewPosition);
     }
@@ -30,7 +29,6 @@ namespace WandEngine
 
     void CameraManager::Transform()
     {
-        SetGridPosition(Position);
         al_identity_transform(&camera);
         al_translate_transform(&camera, -this->Position.x, -this->Position.y);
         al_use_transform(&camera);
@@ -38,23 +36,25 @@ namespace WandEngine
 
     WAND_VEC2 CameraManager::GetPosition()
     {
-       return  this->Position;
+        return this->Position;
     }
 
     void CameraManager::Draw()
     {
-        al_draw_line(Position.x , Position.y + Size.height/2, Position.x + Size.width, Position.y + Size.height/2, al_map_rgba(255, 255, 255, 255), 1);
+        al_draw_line(Position.x, Position.y + Size.height / 2, Position.x + Size.width, Position.y + Size.height / 2, al_map_rgba(255, 255, 255, 255), 1);
 
-        al_draw_line(Position.x + Size.width/2 , Position.y, Position.x + Size.width/2, Position.y + Size.height, al_map_rgba(255, 255, 255, 255), 1);
+        al_draw_line(Position.x + Size.width / 2, Position.y, Position.x + Size.width / 2, Position.y + Size.height, al_map_rgba(255, 255, 255, 255), 1);
     }
 
-    void CameraManager::FocusObject(GameObject* Obj){
+    void CameraManager::FocusObject(GameObject *Obj)
+    {
         this->Position.x = -(Size.width / 2) + (Obj->GetPosition().x + Obj->GetSize().x / 2);
         this->Position.y = -(Size.height / 2) + (Obj->GetPosition().y + Obj->GetSize().y / 2);
         Transform();
     }
 
-    void CameraManager::FocusPosition(WAND_VEC2 NewPosition){
+    void CameraManager::FocusPosition(WAND_VEC2 NewPosition)
+    {
         this->Position.x = -(Size.width / 2) + (NewPosition.x);
         this->Position.y = -(Size.height / 2) + (NewPosition.y);
         Transform();
@@ -65,5 +65,12 @@ namespace WandEngine
         return WAND_VEC2(this->Position.x + (Size.width / 2), this->Position.y + (Size.height / 2));
     }
 
+    bool CameraManager::IsObjectInsideCameraArea(GameObject *Obj)
+    {
+        return (Obj->GetPosition().x < Position.x + Size.width &&
+        Obj->GetPosition().x + Obj->GetSize().x > Position.x &&
+        Obj->GetPosition().y < Position.y + Size.height &&
+        Obj->GetPosition().y + Obj->GetSize().y > Position.y);
+    }
 
 }

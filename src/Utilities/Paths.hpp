@@ -9,6 +9,8 @@
 #define POKEMONTILES_SPRITES_PATH "assets/sprites/pokemon-tiles.png"
 
 
+#define CURSOR_SPRITE_PATH "assets/img/cursors/cursor.png"
+
 #define BUTTON1_SPRITE_PATH "assets/img/buttons/button1.png"
 
 #define RETRO_FONT_PATH "assets/fonts/ThaleahFat.ttf"
