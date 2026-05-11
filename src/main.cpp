@@ -22,13 +22,7 @@ int main(){
 		#endif
 	}
 
-	#ifndef NDEBUG
-		std::cout << "END PROGRAM SUCCESFULLY MAIN" << std::endl;
-	#endif
-
-
-
-
+	std::cout << "END PROGRAM SUCCESFULLY MAIN" << std::endl;
 
 	return 0;
 }

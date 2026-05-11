@@ -25,3 +25,6 @@
 #define MUSIC_GD_DEAD "assets/engine/audio/sound/Explode.mp3"
 
 #define MUSIC_IMPOSSIBLE_GAME "assets/engine/audio/music/FireAura.mp3"
+
+
+#define FONT_THALEAHFAT "assets/engine/fonts/ThaleahFat.ttf"

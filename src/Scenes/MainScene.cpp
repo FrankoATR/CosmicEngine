@@ -66,6 +66,8 @@ void MainScene::Init()
     RS_MN.LoadTexture("line", TEXTURE_GD_LINE, true);
     RS_MN.LoadTextureSheet("gd", TEXTURESHEET_GD, true, 6, 6, 0);
 
+    RS_MN.LoadTextFont("font1", FONT_THALEAHFAT, 30);
+
     //UI_MN.AddElement(new UIButton("BUTTON", nullptr, glm::vec2(1500.0f, 20.0f), glm::vec2(50.0f), true, nullptr));
 
     BOD_MN.SetNewGridArea(new GameGridCollisions(glm::vec2(-500.0f), 5, 5, 200));
@@ -176,6 +178,10 @@ void MainScene::Draw()
     
     ResourceManager::GetInstance().Render2DSprite("line", glm::vec2(CAM_MN.GetFocusPosition().x, 0.0f - 76.0f * 10 + 2.0f * 1) , glm::vec2(2.0f * 2, 76.0f * 20), 90.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
+    if(player)
+    {
+        RS_MN.RenderText("Prueba De Texto", "font1", glm::vec3(player->GetPosition().x, player->GetPosition().y - 30, 0.0f), glm::vec3(2.0f));
+    }
 
     if(EditorMode)
     {

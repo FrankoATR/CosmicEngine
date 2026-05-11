@@ -8,6 +8,7 @@
 
 #include "../../Models/Texture/GameTexture2D.hpp"
 #include "../../Models/Shader/Shader.hpp"
+#include "../../Models/TextFont/TextFont.hpp"
 
 namespace WandEngine
 {
@@ -41,19 +42,19 @@ namespace WandEngine
         std::map<std::string, GameTexture2D *> texture_resources;
         std::map<std::string, Texture_Sheet *> textures_sheet_resources;
         std::map<std::string, Shader *> shader_resources;
-        std::map<std::string, int *> font_resources;
+        std::map<std::string, TextFont *> text_font_resources;
 
         ResourceManager();
         ~ResourceManager();
         ResourceManager(const ResourceManager &) = delete;
         ResourceManager &operator=(const ResourceManager &) = delete;
 
-        unsigned int GetVAO(const std::string &key) const;
+        unsigned int Get_Static_VAO(const std::string &key) const;
+        std::pair<unsigned int, unsigned int> Get_Dynamic_VAO_VBO(const std::string &key) const;
         GameTexture2D *GetTexture(const std::string &key) const;
         Texture_Sheet *GetTextureSheet(const std::string &key) const;
         Shader *GetShader(const std::string &key) const;
-
-        int *GetFont(const std::string &key) const;
+        TextFont *GetTextFont(const std::string &key) const;
 
     public:
         static ResourceManager &GetInstance()
@@ -147,14 +148,28 @@ namespace WandEngine
             float lineWidth = 1.0f,
             bool filled = false);
 
-        bool LoadVAO(const std::string &key, const std::vector<std::vector<float>> &vertices);
+        
+        void RenderText(
+            const std::string &text,
+            const std::string &fontKey,
+            glm::vec3 position,
+            glm::vec3 scale = glm::vec3(1.0f),
+            glm::vec3 pivot = glm::vec3(0.0f),
+            glm::vec3 rotation = glm::vec3(0.0f),
+            glm::vec3 color = glm::vec3(1.0f),
+            float alpha = 1.0f
+        );
+
+
+        bool Load_Static_VAO(const std::string &key, const std::vector<std::vector<float>> &vertices);
+        bool Load_Dynamic_VAO_VBO(const std::string &key, const std::vector<std::vector<float>> &vertices);
         bool LoadShaderFromPath(const std::string &key, const std::string &vs_path, const std::string &fs_path, const std::string &gs_path = "");
         bool LoadShaderFromCode(const std::string &key, const char* vertexSource, const char* fragmentSource, const char* geometrySource = nullptr);
         bool LoadTexture(const std::string &key, const std::string &path, bool alpha);
         bool LoadTextureSheet(const std::string &key, const std::string &path, bool alpha, int rows, int columns, int padding);
 
 
-        bool LoadFont(const std::string &key, const std::string &path, int size);
+        bool LoadTextFont(const std::string &key, const std::string &path, unsigned int fontSize);
 
         void Clear();
     };

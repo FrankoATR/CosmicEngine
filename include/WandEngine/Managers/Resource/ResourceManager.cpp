@@ -28,11 +28,12 @@ namespace WandEngine
             {1.0f, 0.0f, 1.0f, 0.0f}
         };
 
-        LoadVAO("Sprite", vertices);
+        Load_Static_VAO("Sprite", vertices);
 
         LoadShaderFromCode("Shape", shape_vs, shape_fs);
         LoadShaderFromCode("Sprite", sprite_vs, sprite_fs);
         LoadShaderFromCode("SpriteSheet", spriteSheet_vs, spriteSheet_fs);
+        LoadShaderFromCode("text", text_vs, text_fs);
     }
 
 
@@ -63,7 +64,7 @@ namespace WandEngine
         texture->Bind(textureIndex);
         spriteShader->SetInt("image", textureIndex);
 
-        glBindVertexArray(GetVAO("Sprite"));
+        glBindVertexArray(Get_Static_VAO("Sprite"));
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         texture->Unbind();
@@ -80,7 +81,7 @@ namespace WandEngine
         glm::vec3 color,
         float alpha)
     {
-        unsigned int vao = GetVAO(vaoKey);
+        unsigned int vao = Get_Static_VAO(vaoKey);
         GameTexture2D *texture = GetTexture(textureKey);
         Shader *shader = GetShader(shaderKey);
 
@@ -150,7 +151,7 @@ namespace WandEngine
         textureSheet->texture->Bind(textureIndex);
         spriteSheetShader->SetInt("image", textureIndex);
 
-        glBindVertexArray(GetVAO("Sprite"));
+        glBindVertexArray(Get_Static_VAO("Sprite"));
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -170,7 +171,7 @@ namespace WandEngine
         glm::vec3 color,
         float alpha)
     {
-        unsigned int vao = GetVAO(vaoKey);
+        unsigned int vao = Get_Static_VAO(vaoKey);
         Shader *shader = GetShader(shaderKey);
 
         if ((vao == 0) || !shader)
@@ -297,7 +298,65 @@ namespace WandEngine
         RenderShape(rectangleResources, {point_1, glm::vec3(point_2.x, point_1.y, 0.0f), point_2, glm::vec3(point_1.x, point_2.y, 0.0f)}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP);
     }
 
-    bool ResourceManager::LoadVAO(const std::string &key, const std::vector<std::vector<float>> &vertices)
+    void ResourceManager::RenderText(
+        const std::string &text,
+        const std::string &fontKey,
+        glm::vec3 position,
+        glm::vec3 scale,
+        glm::vec3 pivot,
+        glm::vec3 rotation,
+        glm::vec3 color,
+        float alpha
+    )
+    {
+        TextFont * textFont = GetTextFont(fontKey);
+
+        Shader* textShader = GetShader("text");
+
+        textShader->Use();
+        textShader->SetProjection("projection", ViewType::Ortho);
+        textShader->SetInt("text", 0);
+        textShader->SetVec3("textColor", color);
+        glActiveTexture(GL_TEXTURE0);
+        glBindVertexArray(textFont->GetVAO());
+
+        std::string::const_iterator c;
+        for (c = text.begin(); c != text.end(); c++)
+        {
+            TextCharacter ch = textFont->GetCharacters()[*c];
+    
+            float xpos = position.x + ch.Bearing.x * scale.x;
+            float ypos = position.y + (textFont->GetCharacters()['H'].Bearing.y - ch.Bearing.y) * scale.y;
+    
+            float w = ch.Size.x * scale.x;
+            float h = ch.Size.y * scale.y;
+            // update VBO for each character
+            float vertices[6][4] = {
+                { xpos,     ypos + h,   0.0f, 1.0f },
+                { xpos + w, ypos,       1.0f, 0.0f },
+                { xpos,     ypos,       0.0f, 0.0f },
+    
+                { xpos,     ypos + h,   0.0f, 1.0f },
+                { xpos + w, ypos + h,   1.0f, 1.0f },
+                { xpos + w, ypos,       1.0f, 0.0f }
+            };
+            // render glyph texture over quad
+            glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+            // update content of VBO memory
+            glBindBuffer(GL_ARRAY_BUFFER, textFont->GetVBO());
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); // be sure to use glBufferSubData and not glBufferData
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            // render quad
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            // now advance cursors for next glyph
+            position.x += (ch.Advance >> 6) * scale.x; // bitshift by 6 to get value in pixels (1/64th times 2^6 = 64)
+        }
+        glBindVertexArray(0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+
+    bool ResourceManager::Load_Static_VAO(const std::string &key, const std::vector<std::vector<float>> &vertices)
     {
         if (vao_resources.find(key) != vao_resources.end())
         {
@@ -430,17 +489,21 @@ namespace WandEngine
         return true;
     }
 
-    bool ResourceManager::LoadFont(const std::string &key, const std::string &path, int size)
+    bool ResourceManager::LoadTextFont(const std::string &key, const std::string &path, unsigned int fontSize)
     {
-        if (font_resources.find(key) != font_resources.end())
+        if (text_font_resources.find(key) != text_font_resources.end())
         {
             return false;
         }
 
+        TextFont *text = new TextFont(path, fontSize);
+
+        text_font_resources[key] = text;
+
         return true;
     }
 
-    unsigned int ResourceManager::GetVAO(const std::string &key) const
+    unsigned int ResourceManager::Get_Static_VAO(const std::string &key) const
     {
         auto it = vao_resources.find(key);
         if (it == vao_resources.end())
@@ -480,10 +543,10 @@ namespace WandEngine
         return it->second;
     }
 
-    int *ResourceManager::GetFont(const std::string &key) const
+    TextFont *ResourceManager::GetTextFont(const std::string &key) const
     {
-        auto it = font_resources.find(key);
-        if (it == font_resources.end())
+        auto it = text_font_resources.find(key);
+        if (it == text_font_resources.end())
         {
             return nullptr;
         }
@@ -522,8 +585,6 @@ namespace WandEngine
             {
                 glDeleteVertexArrays(1, &(*it_vao_r).second);
                 (*it_vao_r).second = 0;
-                //glDeleteBuffers(1, ------); DELETE VBO
-
                 it_vao_r++;
             }
         }
@@ -578,11 +639,17 @@ namespace WandEngine
         textures_sheet_resources.clear();
 
 
-        for (auto &pair : font_resources)
+        auto it_text_r = text_font_resources.begin();
+        while(it_text_r != text_font_resources.end())
         {
-
+            if((*it_text_r).second != nullptr)
+            {
+                delete (*it_text_r).second;
+                (*it_text_r).second = nullptr;
+                it_text_r++;
+            }
         }
-        font_resources.clear();
+        text_font_resources.clear();
 
 
         #ifndef NDEBUG
