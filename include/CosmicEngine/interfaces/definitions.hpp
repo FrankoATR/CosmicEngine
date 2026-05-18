@@ -97,11 +97,6 @@
 /** @brief Singleton accessor for UIManager. */
 #define UI_MN CosmicEngine::UIManager::GetInstance()
 
-/** @brief Header path for SQLManager. */
-#define SQLMANAGER_HEADER <CosmicEngine/managers/storage/sql/sql_manager.hpp>
-/** @brief Singleton accessor for SQLManager. */
-#define SQL_MN CosmicEngine::SQLManager::GetInstance()
-
 /** @brief Header path for JsonManager. */
 #define JSONMANAGER_HEADER <CosmicEngine/managers/storage/json/json_manager.hpp>
 /** @brief Singleton accessor for JsonManager. */

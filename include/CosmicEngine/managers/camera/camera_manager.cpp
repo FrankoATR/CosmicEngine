@@ -93,23 +93,9 @@ namespace CosmicEngine
     
         glm::vec2 CameraManager::GetCameraOrthoArea() const
         {
-			// Preserve the base virtual aspect by expanding the orthographic area on the dominant axis.
-            float baseAspectRatio = baseWindowSize.x / baseWindowSize.y;
-    
-            glm::vec2 screenSize = GameManager::GetInstance().getWindowSize();
-            float aspectRatio = screenSize.x / screenSize.y ;
-    
-            float orthoWidth = baseWindowSize.x;
-            float orthoHeight = baseWindowSize.y;
-    
-            if (aspectRatio > baseAspectRatio) {
-                orthoWidth = baseWindowSize.y * aspectRatio;
-            } else {
-                orthoHeight = baseWindowSize.x / aspectRatio;
-            }
-    
-            return glm::vec2(orthoWidth, orthoHeight);
-    
+			// Keep the visible world fixed and let the window viewport letterbox as needed.
+            return baseWindowSize;
+
         }
     
 /*
@@ -345,7 +331,26 @@ namespace CosmicEngine
     
         glm::mat4 CameraManager::GetProjectionMatrix() const
         {
-            return glm::perspective(glm::radians(zoom), GameManager::GetInstance().getWindowSize().x / GameManager::GetInstance().getWindowSize().y, 0.1f, 300.0f);
+            if (GameManager::GetInstance().isViewportScaledToWindow())
+            {
+                return glm::perspective(glm::radians(zoom), baseAspectRatio, 0.1f, 300.0f);
+            }
+
+            GLint viewport[4] = {0, 0, 0, 0};
+            glGetIntegerv(GL_VIEWPORT, viewport);
+
+            float viewportWidth = static_cast<float>(viewport[2]);
+            float viewportHeight = static_cast<float>(viewport[3]);
+
+            if (viewportWidth <= 0.0f || viewportHeight <= 0.0f)
+            {
+                glm::vec2 windowSize = GameManager::GetInstance().getWindowSize();
+                viewportWidth = windowSize.x;
+                viewportHeight = windowSize.y;
+            }
+
+            const float aspectRatio = viewportHeight > 0.0f ? (viewportWidth / viewportHeight) : baseAspectRatio;
+            return glm::perspective(glm::radians(zoom), aspectRatio, 0.1f, 300.0f);
         }
 
         void CameraManager::Classic3DProcessKeyboard(Camera_Movement direction, float deltaTime)

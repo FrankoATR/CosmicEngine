@@ -77,6 +77,18 @@ if(NOT DEFINED COSMIC_PROJECT_BASE_RENDER_SCREEN_HEIGHT)
     set(COSMIC_PROJECT_BASE_RENDER_SCREEN_HEIGHT ${GAME_BASE_RENDER_SCREEN_HEIGHT})
 endif()
 
+if(NOT DEFINED COSMIC_PROJECT_VIEWPORT_SCALE_TO_WINDOW)
+    set(COSMIC_PROJECT_VIEWPORT_SCALE_TO_WINDOW OFF)
+endif()
+
+if(NOT DEFINED COSMIC_PROJECT_WINDOW_RESIZABLE)
+    set(COSMIC_PROJECT_WINDOW_RESIZABLE ON)
+endif()
+
+if(NOT DEFINED COSMIC_PROJECT_WINDOW_LOCK_BASE_RENDER_ASPECT)
+    set(COSMIC_PROJECT_WINDOW_LOCK_BASE_RENDER_ASPECT OFF)
+endif()
+
 if(NOT DEFINED COSMIC_PROJECT_START_FULLSCREEN)
     set(COSMIC_PROJECT_START_FULLSCREEN OFF)
 endif()
@@ -103,6 +115,24 @@ if(COSMIC_PROJECT_START_VSYNC)
     set(COSMIC_PROJECT_START_VSYNC_CPP true)
 else()
     set(COSMIC_PROJECT_START_VSYNC_CPP false)
+endif()
+
+if(COSMIC_PROJECT_VIEWPORT_SCALE_TO_WINDOW)
+    set(COSMIC_PROJECT_VIEWPORT_SCALE_TO_WINDOW_CPP true)
+else()
+    set(COSMIC_PROJECT_VIEWPORT_SCALE_TO_WINDOW_CPP false)
+endif()
+
+if(COSMIC_PROJECT_WINDOW_RESIZABLE)
+    set(COSMIC_PROJECT_WINDOW_RESIZABLE_CPP true)
+else()
+    set(COSMIC_PROJECT_WINDOW_RESIZABLE_CPP false)
+endif()
+
+if(COSMIC_PROJECT_WINDOW_LOCK_BASE_RENDER_ASPECT)
+    set(COSMIC_PROJECT_WINDOW_LOCK_BASE_RENDER_ASPECT_CPP true)
+else()
+    set(COSMIC_PROJECT_WINDOW_LOCK_BASE_RENDER_ASPECT_CPP false)
 endif()
 
 if(NOT DEFINED COSMIC_PROJECT_ASSET_DIR)
@@ -214,7 +244,6 @@ set(ENGINE_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/timer/timer_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/schedule/schedule_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/ui/ui_manager.cpp
-    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/storage/sql/sql_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/storage/json/json_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/light/light_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/network/network_manager.cpp
@@ -264,9 +293,6 @@ set(RUNTIME_OUTPUT_DIR_RELWITHDEBINFO "${RUNTIME_OUTPUT_BASE_DIR}/RelWithDebInfo
 set(PROJECT_ASSET_OUTPUT_DIR "${RUNTIME_OUTPUT_BASE_DIR}/$<CONFIG>/assets")
 
 
-
-set(SQLITE3_DIR "${CMAKE_SOURCE_DIR}/include/sqlite")
-
 set(PLATFORM_SOURCE_FILES)
 set(RUNTIME_DEPENDENCY_DLLS)
 set(PROJECT_RUNTIME_DLLS)
@@ -304,14 +330,6 @@ endif()
 
 set(BUNDLE_LINUX_SCRIPT "${CMAKE_SOURCE_DIR}/cmake/BundleLinuxDeps.cmake")
 set(WRITE_LINUX_LAUNCHER_SCRIPT "${CMAKE_SOURCE_DIR}/cmake/WriteLinuxLauncher.cmake")
-
-add_library(sqlite3 STATIC
-    ${SQLITE3_DIR}/sqlite3.c
-)
-
-target_include_directories(sqlite3 PUBLIC
-    ${SQLITE3_DIR}
-)
 
 add_executable(
         ${PROJECT_NAME} 
@@ -370,10 +388,9 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 
 
 if (WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${WINDOWS_LINK_LIBRARIES} sqlite3 ws2_32 mswsock winmm)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${WINDOWS_LINK_LIBRARIES} ws2_32 mswsock winmm)
 else()
     target_link_libraries(${PROJECT_NAME} PRIVATE
-        sqlite3
         OpenGL::GL
         Freetype::Freetype
         ZLIB::ZLIB

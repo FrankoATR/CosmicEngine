@@ -171,6 +171,9 @@ namespace CosmicEngine
          */
         bool init();
 
+        /** @brief Clears scene-loaded assets while preserving built-in COSMIC renderer resources. */
+        void ClearSceneResources();
+
         /**
          * @brief Renders a textured 2D sprite using the built-in unlit shader.
          * @param textureKey Texture resource key.

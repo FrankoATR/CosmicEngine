@@ -33,6 +33,12 @@ namespace CosmicEngine
         int baseScreenWidth;
         /** @brief Virtual base height used by camera and UI calculations. */
         int baseScreenHeight;
+        /** @brief Whether the render viewport should stretch to the window instead of preserving the base aspect ratio. */
+        bool scaleViewportToWindow;
+        /** @brief Whether the native window can be resized by the user. */
+        bool windowResizable;
+        /** @brief Whether windowed resizing should keep the base render aspect ratio. */
+        bool lockWindowAspectToBaseRender;
         /** @brief Whether the application should start in fullscreen mode. */
         bool startFullscreen;
         /** @brief Whether the application should start with vsync enabled. */
@@ -46,11 +52,14 @@ namespace CosmicEngine
          * @param sh Initial window height in pixels.
          * @param bsw Base virtual width.
          * @param bsh Base virtual height.
+         * @param scaleViewport Whether the render viewport should stretch to the window instead of preserving the base aspect ratio.
+         * @param resizable Whether the native window can be resized by the user.
+         * @param lockAspect Whether windowed resizing should keep the base render aspect ratio.
          * @param fullscreen Whether the application should start in fullscreen mode.
          * @param vsync Whether the application should start with vsync enabled.
          */
-        GameManagerInitParams(const std::string &title, const std::string &iconPath, int sw, int sh, int bsw, int bsh, bool fullscreen = false, bool vsync = false)
-            : windowTitle(title), windowIconPath(iconPath), screenWidth(sw), screenHeight(sh), baseScreenWidth(bsw), baseScreenHeight(bsh), startFullscreen(fullscreen), startVsync(vsync) {}
+        GameManagerInitParams(const std::string &title, const std::string &iconPath, int sw, int sh, int bsw, int bsh, bool scaleViewport = false, bool resizable = true, bool lockAspect = false, bool fullscreen = false, bool vsync = false)
+            : windowTitle(title), windowIconPath(iconPath), screenWidth(sw), screenHeight(sh), baseScreenWidth(bsw), baseScreenHeight(bsh), scaleViewportToWindow(scaleViewport), windowResizable(resizable), lockWindowAspectToBaseRender(lockAspect), startFullscreen(fullscreen), startVsync(vsync) {}
     };
 
     class Scene;
@@ -107,6 +116,9 @@ namespace CosmicEngine
         GLFWwindow *window;
         glm::vec2 baseAspectSize;
         bool fullScreenMode, vsyncEnabled;
+        bool scaleViewportToWindow = false;
+        bool windowResizable = true;
+        bool lockWindowAspectToBaseRender = false;
 
         float gameticks;
         double targetFPS;
@@ -197,6 +209,8 @@ namespace CosmicEngine
         void setWindowTitle(const std::string &title);
         /** @brief Loads and applies a GLFW window icon from an image file. */
         void setWindowIcon(const std::string &iconPath);
+        /** @brief Applies the configured resize and aspect-lock policy to the current native window. */
+        void applyWindowResizePolicy();
         /** @brief Switches the current window into fullscreen mode. */
         void setWindowFullScreenMode();
         /**
@@ -263,6 +277,8 @@ namespace CosmicEngine
          * @return Base virtual size.
          */
         glm::vec2 getBaseAspectSize() const;
+        /** @brief Returns whether the render viewport is configured to stretch to the full window. */
+        bool isViewportScaledToWindow() const;
         /**
          * @brief Returns whether the desktop window is currently in fullscreen mode.
          * @return True when fullscreen mode is active.

@@ -21,6 +21,13 @@
 
 namespace CosmicEngine
 {
+    namespace
+    {
+        bool IsBuiltInResourceKey(const std::string &key)
+        {
+            return key.rfind("COSMIC_", 0) == 0;
+        }
+    }
 
     ResourceManager &ResourceManager::GetInstance()
     {
@@ -388,6 +395,79 @@ namespace CosmicEngine
 
 
         RUNTIME_LIFECYCLE("Resource manager", "cleared");
+    }
+
+    void ResourceManager::ClearSceneResources()
+    {
+        for (auto it = static_vao_resources.begin(); it != static_vao_resources.end();)
+        {
+            if (!IsBuiltInResourceKey(it->first))
+            {
+                if (it->second != 0)
+                {
+                    glDeleteVertexArrays(1, &it->second);
+                }
+                it = static_vao_resources.erase(it);
+                continue;
+            }
+            ++it;
+        }
+
+        for (auto it = dynamic_vao_vbo_resources.begin(); it != dynamic_vao_vbo_resources.end();)
+        {
+            if (!IsBuiltInResourceKey(it->first))
+            {
+                if (it->second.first != 0)
+                {
+                    glDeleteVertexArrays(1, &it->second.first);
+                }
+                if (it->second.second != 0)
+                {
+                    glDeleteBuffers(1, &it->second.second);
+                }
+                it = dynamic_vao_vbo_resources.erase(it);
+                continue;
+            }
+            ++it;
+        }
+
+        for (auto it = shader_resources.begin(); it != shader_resources.end();)
+        {
+            if (!IsBuiltInResourceKey(it->first))
+            {
+                delete it->second;
+                it = shader_resources.erase(it);
+                continue;
+            }
+            ++it;
+        }
+
+        ClearMap<Texture2D *>(texture_resources, [](Texture2D *&resource) {
+            if (resource) delete resource;
+            resource = nullptr;
+        });
+
+        ClearMap<Texture_Sheet *>(textures_sheet_resources, [](Texture_Sheet *&resource) {
+            if (resource)
+            {
+                if (resource->texture) delete resource->texture;
+                resource->texture = nullptr;
+                delete resource;
+            }
+            resource = nullptr;
+        });
+
+        ClearMap<Font *>(text_font_resources, [](Font *&resource) {
+            if (resource) delete resource;
+            resource = nullptr;
+        });
+
+        ClearMap<Model *>(model_resources, [](Model *&resource) {
+            if (resource) delete resource;
+            resource = nullptr;
+        });
+
+        RUNTIME_LIFECYCLE("Resource manager", "scene resources cleared");
     }
 
 

@@ -9,6 +9,11 @@
 
 namespace CosmicEngine
 {
+    namespace
+    {
+        constexpr float kBackspaceRepeatDelay = 0.65f;
+        constexpr float kBackspaceRepeatInterval = 0.06f;
+    }
 
     UITextField::UITextField(const std::string &initialText, const std::string &placeholder, const std::string &font,
                              glm::vec2 Position, glm::vec2 Size, int maxLength, bool visible, UIElement *parent)
@@ -86,10 +91,9 @@ namespace CosmicEngine
         else if (input.IsKeyPressed(GLFW_KEY_BACKSPACE, KeyEventType::KeyRelease))
         {
             backspaceHoldTimer += deltaTime;
-            if (backspaceHoldTimer >= 1.0f)
+            if (backspaceHoldTimer >= kBackspaceRepeatDelay)
             {
                 backspaceRepeatTimer += deltaTime;
-                constexpr float kBackspaceRepeatInterval = 0.06f;
                 while (backspaceRepeatTimer >= kBackspaceRepeatInterval)
                 {
                     RemoveCharacterBeforeCursor();

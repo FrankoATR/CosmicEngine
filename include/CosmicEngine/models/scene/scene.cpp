@@ -174,7 +174,7 @@ namespace CosmicEngine
         AudioManager::GetInstance().Clear();
         BodyManager::GetInstance().Clear();
         ObjectManager::GetInstance().Clear();
-        ResourceManager::GetInstance().Clear();
+        ResourceManager::GetInstance().ClearSceneResources();
         EventManager::GetInstance().Clear();
         TimerManager::GetInstance().Clear();
         ScheduleManager::GetInstance().Clear();

@@ -25,6 +25,9 @@ int main()
 			ProjectConfig::kInitialScreenHeight,
 			ProjectConfig::kBaseRenderWidth,
 			ProjectConfig::kBaseRenderHeight,
+			ProjectConfig::kScaleViewportToWindow,
+			ProjectConfig::kWindowResizable,
+			ProjectConfig::kLockWindowAspectToBaseRender,
 			ProjectConfig::kStartFullscreen,
 			ProjectConfig::kStartVsync};
 

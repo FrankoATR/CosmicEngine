@@ -35,7 +35,6 @@
  * | `ANM_MN`   | AnimationManager         | Animation clips and players            |
  * | `AUD_MN`   | AudioManager             | Music and sound effects (miniaudio)    |
  * | `JSON_MN`  | JsonManager              | JSON serialization and loading         |
- * | `SQL_MN`   | SQLManager               | Embedded SQLite database persistence   |
  * | `NET_MN`   | NetworkManager           | ENet server/client networking          |
  * | `SCN_MN`   | SceneManager             | Scene navigation                       |
  * | `TMR_MN`   | TimerManager             | Named timers                           |
@@ -192,7 +191,7 @@
  * - The @c logs/ directory is created lazily by @c CosmicEngine::Logger only when
  *   file logging is enabled at runtime; the build system no longer pre-creates it.
  * - Fatal initialization failures in critical subsystems such as GLFW, GLAD,
- *   built-in renderer resources, SQLite, ENet, and ImGui are treated as startup
+ *   built-in renderer resources, ENet, and ImGui are treated as startup
  *   errors and abort engine initialization through @c std::runtime_error.
  * - JSON persistence writes are performed atomically through a temporary file to
  *   reduce the risk of corrupting save data when a write fails.
@@ -234,9 +233,9 @@
  *
  * @section build_sec Building
  *
- * The repository now uses **project-oriented CMake presets**. Instead of selecting
- * a single global 2D or 3D build, each configure preset chooses one project via
- * the cache variable @c COSMIC_PROJECT.
+ * The repository now uses **project-oriented CMake presets**. Instead of sharing
+ * one build tree between multiple demos, each public preset targets one project
+ * and one build configuration.
  *
  * Each project declares:
  * - its runtime mode (@c GAME_2D_CONFIGURATION or @c GAME_3D_CONFIGURATION),
@@ -248,30 +247,49 @@
  *
  * @subsection build_presets_sec Configure Presets
  *
- * Typical preset names:
- * - @c windows-sandbox-3d-debug
- * - @c windows-sandbox-3d-release
- * - @c windows-basicdemo-2d-debug
- * - @c windows-basicdemo-2d-release
- * - @c windows-basicdemo-3d-debug
- * - @c windows-basicdemo-3d-release
- * - @c windows-networkdemo-debug
- * - @c windows-networkdemo-release
- * - @c linux-sandbox-3d-debug
- * - @c linux-basicdemo-2d-release
- * - @c linux-basicdemo-3d-release
- * - @c linux-networkdemo-release
+ * Public preset names currently provided for Windows:
+ * - @c windows-release-networkdemo
+ * - @c windows-debug-networkdemo
+ * - @c windows-release-basicdemo-2d
+ * - @c windows-debug-basicdemo-2d
+ * - @c windows-release-basicdemo-3d
+ * - @c windows-debug-basicdemo-3d
+ * - @c windows-release-sandbox-3d
+ * - @c windows-debug-sandbox-3d
+ * - @c build-windows-release-networkdemo
+ * - @c build-windows-debug-networkdemo
+ * - @c build-windows-release-basicdemo-2d
+ * - @c build-windows-debug-basicdemo-2d
+ * - @c build-windows-release-basicdemo-3d
+ * - @c build-windows-debug-basicdemo-3d
+ * - @c build-windows-release-sandbox-3d
+ * - @c build-windows-debug-sandbox-3d
+ *
+ * These names correspond to the example projects currently shipped in the
+ * repository. When a new project is added under @c projects/, it can follow the
+ * same public preset structure whenever a dedicated build tree is desired:
+ * - @c windows-release-myproject
+ * - @c windows-debug-myproject
+ * - @c build-windows-release-myproject
+ * - @c build-windows-debug-myproject
+ *
+ * The recommended pattern is one configure preset per project/configuration pair
+ * and one build preset that points to that configure preset.
+ *
+ * Hidden base presets still exist internally to avoid duplication, but the public
+ * workflow is centered on these per-project configure/build pairs.
  *
  * @subsection build_cli_sec Command-Line Usage
  *
  * @code{.sh}
- * # Configure and build the BasicDemo_3D release preset on Windows
- * cmake --preset windows-basicdemo-3d-release
- * cmake --build --preset build-windows-basicdemo-3d-release
+ * # Configure and build the BasicDemo_3D project on Windows
+ * cmake --preset windows-release-basicdemo-3d
+ * cmake --build --preset build-windows-release-basicdemo-3d
  * @endcode
  *
- * Linux and WSL builds use the equivalent @c linux-* presets and generate into
- * their own independent build directories.
+ * The same pattern applies to debug builds by selecting the matching @c windows-debug-...
+ * preset. Linux or WSL presets can follow the same model when project-specific
+ * Linux entries are added.
  *
  * @subsection build_vscode_sec Visual Studio Code
  *
@@ -285,21 +303,20 @@
  *
  * @subsection build_layout_sec Build And Runtime Layout
  *
- * Each preset writes its CMake cache and intermediate files into a dedicated
- * directory under @c build/[platform]/[preset-name]/:
+ * Each project preset writes its CMake cache and intermediate files into a dedicated
+ * directory under @c build/[platform]/:
  *
  * @code{.txt}
  * build/
  *   Windows/
- *     windows-basicdemo-2d-debug/
- *     windows-basicdemo-3d-release/
- *     windows-networkdemo-release/
- *     windows-sandbox-3d-debug/
- *   Linux/
- *     linux-basicdemo-2d-debug/
- *     linux-basicdemo-3d-release/
- *     linux-networkdemo-release/
- *     linux-sandbox-3d-release/
+ *     networkdemo-debug/
+ *     networkdemo-release/
+ *     basicdemo-2d-debug/
+ *     basicdemo-2d-release/
+ *     basicdemo-3d-debug/
+ *     basicdemo-3d-release/
+ *     sandbox-3d-debug/
+ *     sandbox-3d-release/
  * @endcode
  *
  * Final executables and copied runtime assets are emitted under @c bin/ using the
@@ -328,6 +345,242 @@
  *
  * On Linux, the build also provides support files for bundling dependencies and
  * creating a launcher around the generated executable.
+ *
+ * @subsection build_project_guide_sec Project Creation, Configuration, Build, and Execution Guide
+ *
+ * This section documents the general workflow required to create and lift a basic
+ * project inside the framework on a clean machine. The same process applies to any
+ * project hosted under @c projects/.
+ *
+ * @subsubsection build_project_layout_sec Recommended Project Layout
+ *
+ * A basic project should remain autonomous inside @c projects/[project-name].
+ * A recommended structure is:
+ *
+ * @code{.txt}
+ * projects/
+ *   MyProject/
+ *     project.cmake
+ *     scenes/
+ *       main_scene.hpp
+ *       main_scene.cpp
+ *     entities/
+ *     utilities/
+ *     assets/
+ *       textures/
+ *       audio/
+ *       fonts/
+ * @endcode
+ *
+ * Minimum required elements:
+ * - a project folder under @c projects/
+ * - a @c project.cmake manifest
+ * - at least one startup scene
+ * - an @c assets/ directory whenever the project depends on external resources
+ *
+ * @subsubsection build_project_manifest_sec project.cmake Requirements
+ *
+ * Every project must define its own @c project.cmake. At minimum, that file should declare:
+ * - @c COSMIC_PROJECT_NAME
+ * - @c COSMIC_PROJECT_EXECUTABLE_NAME
+ * - @c COSMIC_PROJECT_MODE
+ * - @c COSMIC_PROJECT_FIRST_SCENE_HEADER
+ * - @c COSMIC_PROJECT_FIRST_SCENE_CLASS
+ * - @c COSMIC_PROJECT_SOURCE_FILES
+ *
+ * Example:
+ *
+ * @code{.cmake}
+ * set(COSMIC_PROJECT_NAME "MyProject")
+ * set(COSMIC_PROJECT_EXECUTABLE_NAME "MyProject")
+ * set(COSMIC_PROJECT_MODE "GAME_2D_CONFIGURATION")
+ * set(COSMIC_PROJECT_FIRST_SCENE_HEADER "scenes/main_scene.hpp")
+ * set(COSMIC_PROJECT_FIRST_SCENE_CLASS "MainScene")
+ *
+ * set(COSMIC_PROJECT_SOURCE_FILES
+ *     scenes/main_scene.cpp
+ * )
+ * @endcode
+ *
+ * Projects may also define optional values such as startup resolution, fullscreen mode,
+ * VSync, window title, asset directory, and icon path.
+ *
+ * @subsubsection build_project_selection_sec Project Selection
+ *
+ * The root build compiles one project at a time through the cache variable @c COSMIC_PROJECT.
+ * If the project folder is @c projects/MyProject, the selected value must be @c MyProject.
+ *
+ * @subsubsection build_windows_requirements_sec Windows Requirements
+ *
+ * Recommended environment: @c MSYS2 UCRT64.
+ *
+ * Minimum packages to install:
+ *
+ * @code{.sh}
+ * pacman -Syu
+ * pacman -S --needed \
+ *   mingw-w64-ucrt-x86_64-gcc \
+ *   mingw-w64-ucrt-x86_64-cmake \
+ *   mingw-w64-ucrt-x86_64-make
+ * @endcode
+ *
+ * Tools that must be available in @c PATH:
+ * - @c gcc
+ * - @c g++
+ * - @c cmake
+ * - @c mingw32-make
+ *
+ * Quick verification:
+ *
+ * @code{.sh}
+ * gcc --version
+ * g++ --version
+ * cmake --version
+ * mingw32-make --version
+ * @endcode
+ *
+ * Important notes about MSYS2:
+ * - use an @c MSYS2 UCRT64 terminal, or a VS Code terminal that loads the same environment
+ * - in this environment the normal make command is @c mingw32-make, not @c make
+ * - if @c cmake --version fails or prints nothing, the usual cause is that @c mingw-w64-ucrt-x86_64-cmake is missing or the terminal is not running under @c UCRT64
+ *
+ * The Windows presets in this repository use the @c MinGW Makefiles generator.
+ * Vendored static libraries are already stored in @c lib/, so they do not need to be
+ * installed separately on the machine.
+ *
+ * During the Windows build, the framework also copies MinGW runtime DLLs and any DLLs
+ * found in @c dll/ into the final executable directory.
+ *
+ * @subsubsection build_linux_requirements_sec Linux Requirements
+ *
+ * To configure and compile on Linux, the following tools are required:
+ * - Git
+ * - CMake
+ * - a C/C++ toolchain such as @c gcc and @c g++
+ * - @c make
+ * - system packages for OpenGL, Freetype, Zlib, Pkg-config, GLFW3, and Assimp
+ *
+ * Typical Debian or Ubuntu setup:
+ *
+ * @code{.sh}
+ * sudo apt update
+ * sudo apt install build-essential cmake pkg-config libglfw3-dev libfreetype6-dev zlib1g-dev libassimp-dev libgl1-mesa-dev
+ * @endcode
+ *
+ * Package names may vary depending on the Linux distribution.
+ *
+ * @subsubsection build_windows_steps_sec Windows Build Procedure
+ *
+ * The Windows build flow uses CMake presets from the repository root. There is no need
+ * to enter manually into @c projects/[demo]/build.
+ *
+ * 1. Open an @c MSYS2 UCRT64 terminal.
+ * 2. Go to the repository root.
+ * 3. Configure with the desired preset and pass @c COSMIC_PROJECT on the command line.
+ * 4. Build with the corresponding build preset.
+ *
+ * Example for @c sandbox_3D in release:
+ *
+ * @code{.sh}
+ * cd CosmicEngine
+ * cmake --preset windows-release -D COSMIC_PROJECT=sandbox_3D --fresh
+ * cmake --build --preset build-windows-release
+ * @endcode
+ *
+ * Equivalent example in PowerShell:
+ *
+ * @code{.ps1}
+ * cd CosmicEngine
+ * cmake --preset windows-release -D COSMIC_PROJECT=sandbox_3D --fresh
+ * cmake --build --preset build-windows-release
+ * @endcode
+ *
+ * Common Windows presets include:
+ * - @c windows-debug
+ * - @c windows-release
+ * - @c build-windows-debug
+ * - @c build-windows-release
+ *
+ * The active project is passed during configure through
+ * @c -D COSMIC_PROJECT=[project-name].
+ *
+ * If a different project is configured using the same generic preset, it is advisable
+ * to re-run configure with @c --fresh before building.
+ *
+ * @subsubsection build_linux_steps_sec Linux Build Procedure
+ *
+ * The Linux workflow follows the same preset model and uses @c Unix Makefiles.
+ *
+ * 1. Clone the repository.
+ * 2. Install the required development packages.
+ * 3. Configure with the generic Linux preset and pass @c COSMIC_PROJECT on the command line.
+ * 4. Build the selected project using its Linux build preset.
+ *
+ * Example:
+ *
+ * @code{.sh}
+ * cmake --preset linux-debug -D COSMIC_PROJECT=MyProject --fresh
+ * cmake --build --preset build-linux-debug
+ * @endcode
+ *
+ * @subsubsection build_runtime_layout_sec Runtime Output Layout
+ *
+ * Final runnable outputs are written to @c bin/ using the project, platform, and build
+ * configuration as path components:
+ *
+ * @code{.txt}
+ * bin/[project-name]/[platform]/[configuration]/
+ * @endcode
+ *
+ * Examples:
+ * - @c bin/MyProject/windows/Debug/
+ * - @c bin/MyProject/windows/Release/
+ * - @c bin/MyProject/linux/Debug/
+ * - @c bin/MyProject/linux/Release/
+ *
+ * Project assets are copied automatically into the runtime output directory during the build.
+ *
+ * @subsubsection build_windows_troubleshooting_sec Common Windows Problems
+ *
+ * If @c make does not exist:
+ * - use @c mingw32-make, or preferably build through @c cmake --build --preset build-windows-release or @c build-windows-debug
+ *
+ * If @c cmake does not respond or fails to start:
+ * @code{.sh}
+ * pacman -S --needed mingw-w64-ucrt-x86_64-cmake
+ * @endcode
+ *
+ * If a different demo is compiled:
+ * - verify that the value passed in @c COSMIC_PROJECT during configure matches the intended project
+ *
+ * @subsubsection build_execution_steps_sec Running the Project
+ *
+ * Applications should be launched from their generated runtime directory so that relative
+ * paths to copied assets and runtime DLLs remain valid.
+ *
+ * Windows example:
+ * @code{.ps1}
+ * .\bin\MyProject\windows\Debug\MyProject.exe
+ * @endcode
+ *
+ * Linux example:
+ * @code{.sh}
+ * ./bin/MyProject/linux/Debug/MyProject
+ * @endcode
+ *
+ * @subsubsection build_summary_workflow_sec Summary Workflow
+ *
+ * The general workflow for creating and lifting a basic project is:
+ * - open an @c MSYS2 UCRT64 terminal on Windows, or the corresponding Linux shell
+ * - go to the repository root
+ * - create a new folder under @c projects/
+ * - add @c project.cmake
+ * - implement the startup scene and declare its source files
+ * - add an @c assets/ directory if the project depends on runtime resources
+ * - use one of the generic Windows or Linux presets
+ * - configure with the desired preset and pass @c COSMIC_PROJECT on the command line
+ * - build with the corresponding build preset
+ * - run the executable from the generated @c bin/ directory
  *
  * To regenerate this documentation:
  * @code{.sh}

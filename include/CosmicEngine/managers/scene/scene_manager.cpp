@@ -47,6 +47,7 @@ namespace CosmicEngine
     void SceneManager::PushScene(Scene *scene)
     {
         sceneStack.push_back(scene);
+        sceneStack.back()->loadResources();
         sceneStack.back()->init();
     }
 

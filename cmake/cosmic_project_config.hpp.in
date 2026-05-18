@@ -10,6 +10,9 @@ namespace CosmicEngine::ProjectConfig
     inline constexpr int kInitialScreenHeight = @COSMIC_PROJECT_INITIAL_SCREEN_HEIGHT@;
     inline constexpr int kBaseRenderWidth = @COSMIC_PROJECT_BASE_RENDER_SCREEN_WIDTH@;
     inline constexpr int kBaseRenderHeight = @COSMIC_PROJECT_BASE_RENDER_SCREEN_HEIGHT@;
+    inline constexpr bool kScaleViewportToWindow = @COSMIC_PROJECT_VIEWPORT_SCALE_TO_WINDOW_CPP@;
+    inline constexpr bool kWindowResizable = @COSMIC_PROJECT_WINDOW_RESIZABLE_CPP@;
+    inline constexpr bool kLockWindowAspectToBaseRender = @COSMIC_PROJECT_WINDOW_LOCK_BASE_RENDER_ASPECT_CPP@;
     inline constexpr bool kStartFullscreen = @COSMIC_PROJECT_START_FULLSCREEN_CPP@;
     inline constexpr bool kStartVsync = @COSMIC_PROJECT_START_VSYNC_CPP@;
 }

@@ -74,7 +74,7 @@ assets/generated/
 docs/doxygen/
 
 # ---- Local audit / validation helpers ----
-utilities/
+/utilities/
 
 # ---- Vendored dependencies required by CMake ----
 # This project links directly against these vendored files, so they must remain trackable.

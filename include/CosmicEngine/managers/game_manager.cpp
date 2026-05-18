@@ -15,7 +15,6 @@
 #include "ui/ui_manager.hpp"
 #include "object/object_manager.hpp"
 #include "body/body_manager.hpp"
-#include "storage/sql/sql_manager.hpp"
 #include "storage/json/json_manager.hpp"
 #include "light/light_manager.hpp"
 #include "network/network_manager.hpp"
@@ -54,6 +53,9 @@ namespace CosmicEngine
         int screenHeight  = params.screenHeight;
         int baseScreenWidth = params.baseScreenWidth;
         int baseScreenHeight = params.baseScreenHeight;
+		scaleViewportToWindow = params.scaleViewportToWindow;
+		windowResizable = params.windowResizable;
+		lockWindowAspectToBaseRender = params.lockWindowAspectToBaseRender;
 		const std::string windowTitle = params.windowTitle.empty() ? "CosmicEngine" : params.windowTitle;
 		const std::string windowIconPath = params.windowIconPath;
 		bool startFullscreen = params.startFullscreen;
@@ -81,6 +83,7 @@ namespace CosmicEngine
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+			glfwWindowHint(GLFW_RESIZABLE, windowResizable ? GLFW_TRUE : GLFW_FALSE);
 			// glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 			window = glfwCreateWindow(screenWidth, screenHeight, windowTitle.c_str(), nullptr, nullptr);
@@ -90,6 +93,7 @@ namespace CosmicEngine
 				Logger::error("Failed to create the GLFW window.");
 			}
 			glfwMakeContextCurrent(window);
+			applyWindowResizePolicy();
 
 			if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 			{
@@ -120,7 +124,13 @@ namespace CosmicEngine
 				toggleFullscreen();
 			}
 
-			setFrameBufferSizeCallback([&](int width, int height){
+			setFrameBufferSizeCallback([this](int width, int height){
+				if (scaleViewportToWindow)
+				{
+					glViewport(0, 0, width, height);
+					return;
+				}
+
 				float currentAspect = (float)width / (float)height;
 				int newWidth = width;
 				int newHeight = height;
@@ -138,7 +148,6 @@ namespace CosmicEngine
 	
 				int offsetX = (width - newWidth) / 2;
 				int offsetY = (height - newHeight) / 2;
-				glfwSetWindowAspectRatio(window, baseAspect.x, baseAspect.y);
 	
 				glViewport(offsetX, offsetY, newWidth, newHeight);
 			});
@@ -209,10 +218,6 @@ namespace CosmicEngine
 		AnimationManager::GetInstance().init();
 		ObjectManager::GetInstance().init();
 		BodyManager::GetInstance().init();
-		if (!SQLManager::GetInstance().init())
-		{
-			Logger::error("Failed to initialize SQLManager.");
-		}
 		JsonManager::GetInstance().init();
 		LightManager::GetInstance().init();
 		CameraManager::GetInstance().init(baseAspectSize);
@@ -256,7 +261,7 @@ namespace CosmicEngine
 			if (currentTime - lastRenderTimer >= targetFrameTime || vsyncEnabled)
 			{
 				glm::vec3 BackbufferColor(SceneManager::GetInstance().GetBackgroundColor());
-				glClearColor(BackbufferColor.r, BackbufferColor.g, BackbufferColor.b, 1.0f);
+				glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 				#if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
 					glClear(GL_COLOR_BUFFER_BIT);
@@ -265,6 +270,20 @@ namespace CosmicEngine
 				#else
 					#error "[GameManager] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
 				#endif
+
+				GLint viewport[4] = {0, 0, 0, 0};
+				glGetIntegerv(GL_VIEWPORT, viewport);
+				glEnable(GL_SCISSOR_TEST);
+				glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
+				glClearColor(BackbufferColor.r, BackbufferColor.g, BackbufferColor.b, 1.0f);
+
+				#if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+					glClear(GL_COLOR_BUFFER_BIT);
+				#elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				#endif
+
+				glDisable(GL_SCISSOR_TEST);
 
 				ImGui_ImplOpenGL3_NewFrame();
 				ImGui_ImplGlfw_NewFrame();
@@ -473,18 +492,42 @@ namespace CosmicEngine
 		return this->baseAspectSize;
 	}
 
+	bool GameManager::isViewportScaledToWindow() const
+	{
+		return scaleViewportToWindow;
+	}
+
 	bool GameManager::isFullScreen() const
 	{
 		return this->fullScreenMode;
 	}
 
+	void GameManager::applyWindowResizePolicy()
+	{
+		if (!window)
+		{
+			return;
+		}
+
+		glfwSetWindowAttrib(window, GLFW_RESIZABLE, windowResizable ? GLFW_TRUE : GLFW_FALSE);
+
+		if (!fullScreenMode && lockWindowAspectToBaseRender)
+		{
+			glfwSetWindowAspectRatio(window, static_cast<int>(baseAspectSize.x), static_cast<int>(baseAspectSize.y));
+		}
+		else
+		{
+			glfwSetWindowAspectRatio(window, GLFW_DONT_CARE, GLFW_DONT_CARE);
+		}
+	}
+
 	void GameManager::setWindowFullScreenMode()
 	{
 		const GLFWvidmode *mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
 		glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
-		glfwSetWindowPos(window, 0, 0);
-		glfwSetWindowSize(window, mode->width, mode->height);
 		fullScreenMode = true;
+		applyWindowResizePolicy();
 		int w, h;
 		glfwGetFramebufferSize(window, &w, &h);
 		if (framebufferSizeCallback)
@@ -499,11 +542,10 @@ namespace CosmicEngine
 
 	void GameManager::setWindowWindowMode(int width, int height)
 	{
+		glfwSetWindowMonitor(window, nullptr, 100, 100, width, height, 0);
 		glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
-		glfwSetWindowPos(window, 100, 100);
-		glfwSetWindowSize(window, width, height);
-		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 		fullScreenMode = false;
+		applyWindowResizePolicy();
 		int w, h;
 		glfwGetFramebufferSize(window, &w, &h);
 		if (framebufferSizeCallback)
@@ -547,7 +589,6 @@ namespace CosmicEngine
 		safeShutdown("ScheduleManager", [] { ScheduleManager::GetInstance().shutdown(); });
 		safeShutdown("NetworkManager", [] { NetworkManager::GetInstance().shutdown(); });
 		safeShutdown("JsonManager", [] { JsonManager::GetInstance().shutdown(); });
-		safeShutdown("SQLManager", [] { SQLManager::GetInstance().shutdown(); });
 		safeShutdown("SceneManager", [] { SceneManager::GetInstance().shutdown(); });
 		safeShutdown("UIManager", [] { UIManager::GetInstance().shutdown(); });
 		safeShutdown("InputManager", [] { InputManager::GetInstance().shutdown(); });

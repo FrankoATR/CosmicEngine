@@ -9,7 +9,6 @@
     {
       "name": "base",
       "hidden": true,
-      "binaryDir": "${sourceDir}/build/${hostSystemName}/${presetName}",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
@@ -37,214 +36,142 @@
       }
     },
     {
-      "name": "windows-sandbox-3d-debug",
+      "name": "windows-debug-base",
+      "hidden": true,
       "inherits": ["windows-base"],
-      "displayName": "Windows sandbox_3D Debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "COSMIC_PROJECT": "sandbox_3D"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "windows-sandbox-3d-release",
+      "name": "windows-release-base",
+      "hidden": true,
       "inherits": ["windows-base"],
-      "displayName": "Windows sandbox_3D Release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "COSMIC_PROJECT": "sandbox_3D"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
-      "name": "windows-basicdemo-2d-debug",
-      "inherits": ["windows-base"],
-      "displayName": "Windows BasicDemo_2D Debug",
+      "name": "linux-debug-base",
+      "hidden": true,
+      "inherits": ["linux-base"],
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "COSMIC_PROJECT": "BasicDemo_2D"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "windows-basicdemo-2d-release",
-      "inherits": ["windows-base"],
-      "displayName": "Windows BasicDemo_2D Release",
+      "name": "linux-release-base",
+      "hidden": true,
+      "inherits": ["linux-base"],
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "COSMIC_PROJECT": "BasicDemo_2D"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
-      "name": "windows-basicdemo-3d-debug",
-      "inherits": ["windows-base"],
-      "displayName": "Windows BasicDemo_3D Debug",
+      "name": "windows-debug-networkdemo",
+      "displayName": "Windows Debug - NetworkDemo",
+      "inherits": ["windows-debug-base"],
+      "binaryDir": "${sourceDir}/build/Windows/networkdemo-debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "COSMIC_PROJECT": "BasicDemo_3D"
-      }
-    },
-    {
-      "name": "windows-basicdemo-3d-release",
-      "inherits": ["windows-base"],
-      "displayName": "Windows BasicDemo_3D Release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "COSMIC_PROJECT": "BasicDemo_3D"
-      }
-    },
-    {
-      "name": "windows-networkdemo-debug",
-      "inherits": ["windows-base"],
-      "displayName": "Windows NetworkDemo Debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
         "COSMIC_PROJECT": "NetworkDemo"
       }
     },
     {
-      "name": "windows-networkdemo-release",
-      "inherits": ["windows-base"],
-      "displayName": "Windows NetworkDemo Release",
+      "name": "windows-debug-basicdemo-2d",
+      "displayName": "Windows Debug - BasicDemo_2D",
+      "inherits": ["windows-debug-base"],
+      "binaryDir": "${sourceDir}/build/Windows/basicdemo-2d-debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "COSMIC_PROJECT": "NetworkDemo"
-      }
-    },
-    {
-      "name": "linux-sandbox-3d-debug",
-      "inherits": ["linux-base"],
-      "displayName": "Linux sandbox_3D Debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "COSMIC_PROJECT": "sandbox_3D"
-      }
-    },
-    {
-      "name": "linux-sandbox-3d-release",
-      "inherits": ["linux-base"],
-      "displayName": "Linux sandbox_3D Release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "COSMIC_PROJECT": "sandbox_3D"
-      }
-    },
-    {
-      "name": "linux-basicdemo-2d-debug",
-      "inherits": ["linux-base"],
-      "displayName": "Linux BasicDemo_2D Debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
         "COSMIC_PROJECT": "BasicDemo_2D"
       }
     },
     {
-      "name": "linux-basicdemo-2d-release",
-      "inherits": ["linux-base"],
-      "displayName": "Linux BasicDemo_2D Release",
+      "name": "windows-debug-basicdemo-3d",
+      "displayName": "Windows Debug - BasicDemo_3D",
+      "inherits": ["windows-debug-base"],
+      "binaryDir": "${sourceDir}/build/Windows/basicdemo-3d-debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
+        "COSMIC_PROJECT": "BasicDemo_3D"
+      }
+    },
+    {
+      "name": "windows-debug-sandbox-3d",
+      "displayName": "Windows Debug - sandbox_3D",
+      "inherits": ["windows-debug-base"],
+      "binaryDir": "${sourceDir}/build/Windows/sandbox-3d-debug",
+      "cacheVariables": {
+        "COSMIC_PROJECT": "sandbox_3D"
+      }
+    },
+    {
+      "name": "windows-release-networkdemo",
+      "displayName": "Windows Release - NetworkDemo",
+      "inherits": ["windows-release-base"],
+      "binaryDir": "${sourceDir}/build/Windows/networkdemo-release",
+      "cacheVariables": {
+        "COSMIC_PROJECT": "NetworkDemo"
+      }
+    },
+    {
+      "name": "windows-release-basicdemo-2d",
+      "displayName": "Windows Release - BasicDemo_2D",
+      "inherits": ["windows-release-base"],
+      "binaryDir": "${sourceDir}/build/Windows/basicdemo-2d-release",
+      "cacheVariables": {
         "COSMIC_PROJECT": "BasicDemo_2D"
       }
     },
     {
-      "name": "linux-basicdemo-3d-debug",
-      "inherits": ["linux-base"],
-      "displayName": "Linux BasicDemo_3D Debug",
+      "name": "windows-release-basicdemo-3d",
+      "displayName": "Windows Release - BasicDemo_3D",
+      "inherits": ["windows-release-base"],
+      "binaryDir": "${sourceDir}/build/Windows/basicdemo-3d-release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
         "COSMIC_PROJECT": "BasicDemo_3D"
       }
     },
     {
-      "name": "linux-basicdemo-3d-release",
-      "inherits": ["linux-base"],
-      "displayName": "Linux BasicDemo_3D Release",
+      "name": "windows-release-sandbox-3d",
+      "displayName": "Windows Release - sandbox_3D",
+      "inherits": ["windows-release-base"],
+      "binaryDir": "${sourceDir}/build/Windows/sandbox-3d-release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "COSMIC_PROJECT": "BasicDemo_3D"
-      }
-    },
-    {
-      "name": "linux-networkdemo-debug",
-      "inherits": ["linux-base"],
-      "displayName": "Linux NetworkDemo Debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "COSMIC_PROJECT": "NetworkDemo"
-      }
-    },
-    {
-      "name": "linux-networkdemo-release",
-      "inherits": ["linux-base"],
-      "displayName": "Linux NetworkDemo Release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "COSMIC_PROJECT": "NetworkDemo"
+        "COSMIC_PROJECT": "sandbox_3D"
       }
     }
   ],
   "buildPresets": [
     {
-      "name": "build-windows-sandbox-3d-debug",
-      "configurePreset": "windows-sandbox-3d-debug"
+      "name": "build-windows-debug-networkdemo",
+      "configurePreset": "windows-debug-networkdemo"
     },
     {
-      "name": "build-windows-sandbox-3d-release",
-      "configurePreset": "windows-sandbox-3d-release"
+      "name": "build-windows-debug-basicdemo-2d",
+      "configurePreset": "windows-debug-basicdemo-2d"
     },
     {
-      "name": "build-windows-basicdemo-2d-debug",
-      "configurePreset": "windows-basicdemo-2d-debug"
+      "name": "build-windows-debug-basicdemo-3d",
+      "configurePreset": "windows-debug-basicdemo-3d"
     },
     {
-      "name": "build-windows-basicdemo-2d-release",
-      "configurePreset": "windows-basicdemo-2d-release"
+      "name": "build-windows-debug-sandbox-3d",
+      "configurePreset": "windows-debug-sandbox-3d"
     },
     {
-      "name": "build-windows-basicdemo-3d-debug",
-      "configurePreset": "windows-basicdemo-3d-debug"
+      "name": "build-windows-release-networkdemo",
+      "configurePreset": "windows-release-networkdemo"
     },
     {
-      "name": "build-windows-basicdemo-3d-release",
-      "configurePreset": "windows-basicdemo-3d-release"
+      "name": "build-windows-release-basicdemo-2d",
+      "configurePreset": "windows-release-basicdemo-2d"
     },
     {
-      "name": "build-windows-networkdemo-debug",
-      "configurePreset": "windows-networkdemo-debug"
+      "name": "build-windows-release-basicdemo-3d",
+      "configurePreset": "windows-release-basicdemo-3d"
     },
     {
-      "name": "build-windows-networkdemo-release",
-      "configurePreset": "windows-networkdemo-release"
-    },
-    {
-      "name": "build-linux-sandbox-3d-debug",
-      "configurePreset": "linux-sandbox-3d-debug"
-    },
-    {
-      "name": "build-linux-sandbox-3d-release",
-      "configurePreset": "linux-sandbox-3d-release"
-    },
-    {
-      "name": "build-linux-basicdemo-2d-debug",
-      "configurePreset": "linux-basicdemo-2d-debug"
-    },
-    {
-      "name": "build-linux-basicdemo-2d-release",
-      "configurePreset": "linux-basicdemo-2d-release"
-    },
-    {
-      "name": "build-linux-basicdemo-3d-debug",
-      "configurePreset": "linux-basicdemo-3d-debug"
-    },
-    {
-      "name": "build-linux-basicdemo-3d-release",
-      "configurePreset": "linux-basicdemo-3d-release"
-    },
-    {
-      "name": "build-linux-networkdemo-debug",
-      "configurePreset": "linux-networkdemo-debug"
-    },
-    {
-      "name": "build-linux-networkdemo-release",
-      "configurePreset": "linux-networkdemo-release"
+      "name": "build-windows-release-sandbox-3d",
+      "configurePreset": "windows-release-sandbox-3d"
     }
   ]
 }

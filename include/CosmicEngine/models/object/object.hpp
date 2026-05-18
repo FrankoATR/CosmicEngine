@@ -27,7 +27,6 @@
     if (Type* var = static_cast<Type*>(target)) \
         if (var->GetClassName() == std::string(#Type))
 
-#include <sqlite/sqlite3.h>
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <string>

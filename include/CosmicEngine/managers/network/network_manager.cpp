@@ -8,6 +8,20 @@
 
 namespace CosmicEngine
 {
+    namespace
+    {
+        std::string TrimNetworkInput(const std::string &value)
+        {
+            const size_t first = value.find_first_not_of(" \t\r\n");
+            if (first == std::string::npos)
+            {
+                return "";
+            }
+
+            const size_t last = value.find_last_not_of(" \t\r\n");
+            return value.substr(first, last - first + 1);
+        }
+    }
 
     NetworkManager &NetworkManager::GetInstance()
     {
@@ -228,6 +242,19 @@ namespace CosmicEngine
             return false;
         }
 
+        const std::string normalizedIp = TrimNetworkInput(ip);
+        if (normalizedIp.empty())
+        {
+            RUNTIME_WARNING("[NetworkManager] Connection failed: empty server address.");
+            return false;
+        }
+
+        if (port <= 0 || port > 65535)
+        {
+            RUNTIME_WARNING("[NetworkManager] Connection failed: invalid port " << port << '.');
+            return false;
+        }
+
         if (role != NetworkRole::None)
         {
             RUNTIME_WARNING("[NetworkManager] Already running as " << (role == NetworkRole::Server ? "server" : "client") << ".");
@@ -242,7 +269,13 @@ namespace CosmicEngine
         }
 
         ENetAddress address = {};
-        enet_address_set_host(&address, ip.c_str());
+        if (enet_address_set_host(&address, normalizedIp.c_str()) != 0)
+        {
+            RUNTIME_WARNING("[NetworkManager] Connection failed: could not resolve host '" << normalizedIp << "'.");
+            enet_host_destroy(host);
+            host = nullptr;
+            return false;
+        }
         address.port = static_cast<enet_uint16>(port);
 
         serverPeer = enet_host_connect(host, &address, 2, 0);
@@ -258,11 +291,11 @@ namespace CosmicEngine
         ENetEvent event = {};
         if (enet_host_service(host, &event, 5000) > 0 && event.type == ENET_EVENT_TYPE_CONNECT)
         {
-            RUNTIME_INFO("[NetworkManager] Connected to " << ip << ":" << port << ".");
+            RUNTIME_INFO("[NetworkManager] Connected to " << normalizedIp << ":" << port << ".");
         }
         else
         {
-            RUNTIME_WARNING("[NetworkManager] Connection to " << ip << ":" << port << " failed.");
+            RUNTIME_WARNING("[NetworkManager] Connection to " << normalizedIp << ":" << port << " failed.");
             enet_peer_reset(serverPeer);
             enet_host_destroy(host);
             host = nullptr;
