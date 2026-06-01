@@ -1071,7 +1071,7 @@ namespace CosmicEngine
 
         void ResourceManager::RenderRectangle(glm::vec2 point_1, glm::vec2 point_2, glm::vec2 pivot, glm::vec2 rotation, glm::vec3 color, float alpha, float lineWidth, bool filled, ViewType viewType)
         {
-            RenderShape("COSMIC_Rectangle", {point_1, glm::vec2(point_2.x, point_1.y), point_2, glm::vec2(point_1.x, point_2.y)}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP, viewType);
+            RenderShape("COSMIC_Rectangle", {point_1, glm::vec2(point_2.x, point_1.y), point_2, glm::vec2(point_1.x, point_2.y)}, pivot, rotation, color, alpha, lineWidth, filled ? GL_TRIANGLE_FAN : GL_LINE_LOOP, viewType);
         }
 
 

@@ -83,6 +83,10 @@ namespace CosmicEngine
         void update(float deltaTime) override;
         /** @brief Draws the button. */
         void draw() override;
+        /** @brief Returns whether the button participates in keyboard/gamepad focus navigation. */
+        bool IsFocusable() const override;
+        /** @brief Invokes the click callback when available. */
+        void Activate() override;
 
         /** @brief Sets the callback invoked when the button is clicked. */
         void SetOnClick(std::function<void()> callback);

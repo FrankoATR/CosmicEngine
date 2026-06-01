@@ -182,7 +182,7 @@ namespace CosmicEngine
 
     #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
 
-        Object::Object(std::string className, glm::vec2 position, glm::vec2 size, float rotation, short int LayerId) : 
+        Object::Object(std::string className, glm::vec2 position, glm::vec2 size, float rotation, short int layerId) : 
             className(className),
             mainColor(glm::vec3(1.0f)),
             //velocityForDuration(0.0f),

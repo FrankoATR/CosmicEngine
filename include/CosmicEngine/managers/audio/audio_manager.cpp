@@ -382,16 +382,31 @@ namespace CosmicEngine
         ApplyVolumesToAll();
     }
 
+    float AudioManager::GetMasterVolume() const
+    {
+        return masterVolume;
+    }
+
     void AudioManager::SetMusicMasterVolume(float volume)
     {
         musicMasterVolume = validate_range(volume);
         ApplyVolumesToAll();
     }
 
+    float AudioManager::GetMusicMasterVolume() const
+    {
+        return musicMasterVolume;
+    }
+
     void AudioManager::SetSfxMasterVolume(float volume)
     {
         sfxMasterVolume = validate_range(volume);
         ApplyVolumesToAll();
+    }
+
+    float AudioManager::GetSfxMasterVolume() const
+    {
+        return sfxMasterVolume;
     }
 
     void AudioManager::SetPosition(const std::string &key, unsigned int milliseconds)
@@ -419,6 +434,31 @@ namespace CosmicEngine
                 ma_sound_seek_to_pcm_frame(&inst.sound, frame);
             }
         }
+    }
+
+    unsigned int AudioManager::GetPosition(const std::string &key) const
+    {
+        auto it = sounds.find(key);
+        if (it == sounds.end())
+            return 0;
+
+        const SoundData &data = it->second;
+        if (!data.initialized)
+            return 0;
+
+        ma_uint64 frame = 0;
+        if (ma_sound_get_cursor_in_pcm_frames(const_cast<ma_sound *>(&data.sound), &frame) != MA_SUCCESS)
+            return 0;
+
+        const ma_uint32 sr = ma_engine_get_sample_rate(&engine);
+        if (sr == 0)
+            return 0;
+
+        const double milliseconds = (static_cast<double>(frame) * 1000.0) / static_cast<double>(sr);
+        if (milliseconds <= 0.0)
+            return 0;
+
+        return static_cast<unsigned int>(milliseconds);
     }
 
     void AudioManager::SetListenerPosition(const glm::vec3 &position)

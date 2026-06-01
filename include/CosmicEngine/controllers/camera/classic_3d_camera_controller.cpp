@@ -21,35 +21,48 @@ namespace CosmicEngine
         }
 
         float frameDelta = static_cast<float>(deltaTime);
+        const float forwardAxis = input.GetActionAxis("camera_move_backward", "camera_move_forward");
+        const float rightAxis = input.GetActionAxis("camera_move_left", "camera_move_right");
+        const float verticalAxis = input.GetActionAxis("camera_move_down", "camera_move_up");
+        const float lookXAxis = input.GetActionAxis("camera_look_left", "camera_look_right");
+        const float lookYAxis = input.GetActionAxis("camera_look_down", "camera_look_up");
+        const float gamepadLookSpeed = 360.0f;
 
-        if (input.IsKeyPressed(GLFW_KEY_W, CosmicEngine::KeyRelease))
+        if (forwardAxis > 0.0f)
         {
-            ProcessKeyboard(camera, CosmicEngine::FORWARD, frameDelta);
+            ProcessKeyboard(camera, CosmicEngine::FORWARD, frameDelta * forwardAxis);
         }
 
-        if (input.IsKeyPressed(GLFW_KEY_S, CosmicEngine::KeyRelease))
+        if (forwardAxis < 0.0f)
         {
-            ProcessKeyboard(camera, CosmicEngine::BACKWARD, frameDelta);
+            ProcessKeyboard(camera, CosmicEngine::BACKWARD, frameDelta * -forwardAxis);
         }
 
-        if (input.IsKeyPressed(GLFW_KEY_A, CosmicEngine::KeyRelease))
+        if (rightAxis < 0.0f)
         {
-            ProcessKeyboard(camera, CosmicEngine::LEFT, frameDelta);
+            ProcessKeyboard(camera, CosmicEngine::LEFT, frameDelta * -rightAxis);
         }
 
-        if (input.IsKeyPressed(GLFW_KEY_D, CosmicEngine::KeyRelease))
+        if (rightAxis > 0.0f)
         {
-            ProcessKeyboard(camera, CosmicEngine::RIGHT, frameDelta);
+            ProcessKeyboard(camera, CosmicEngine::RIGHT, frameDelta * rightAxis);
         }
 
-        if (input.IsKeyPressed(GLFW_KEY_SPACE, CosmicEngine::KeyRelease))
+        if (verticalAxis > 0.0f)
         {
-            ProcessKeyboard(camera, CosmicEngine::UP, frameDelta);
+            ProcessKeyboard(camera, CosmicEngine::UP, frameDelta * verticalAxis);
         }
 
-        if (input.IsKeyPressed(GLFW_KEY_LEFT_SHIFT, CosmicEngine::KeyRelease))
+        if (verticalAxis < 0.0f)
         {
-            ProcessKeyboard(camera, CosmicEngine::DOWN, frameDelta);
+            ProcessKeyboard(camera, CosmicEngine::DOWN, frameDelta * -verticalAxis);
+        }
+
+        if (lookXAxis != 0.0f || lookYAxis != 0.0f)
+        {
+            camera.RotateBy(
+                lookXAxis * gamepadLookSpeed * frameDelta,
+                lookYAxis * gamepadLookSpeed * frameDelta);
         }
     }
 

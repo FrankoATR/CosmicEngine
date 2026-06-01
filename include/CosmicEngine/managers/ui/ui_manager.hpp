@@ -47,6 +47,12 @@ namespace CosmicEngine
 
         std::vector<UIElement* > elements;
         bool MouseHoverAny;
+        int focusedElementIndex;
+
+        void FocusElementAt(int index);
+        void FocusFirstInteractiveElement();
+        void FocusNextInteractiveElement(int direction);
+        void SyncFocusFromMouse();
 
     public:
         /** @brief Returns the singleton instance of the UI manager. */
@@ -79,6 +85,8 @@ namespace CosmicEngine
         void RemoveElement(UIElement* element);
         /** @brief Deletes and removes every registered UI element. */
         void Clear();
+        /** @brief Returns the currently focused interactive element when one exists. */
+        UIElement *GetFocusedElement() const;
 
     };
 

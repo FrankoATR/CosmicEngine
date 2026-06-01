@@ -24,25 +24,27 @@ namespace CosmicEngine
     void Classic2DCameraController::Update(double deltaTime)
     {
         float frameDelta = static_cast<float>(deltaTime);
+        const float horizontalAxis = input.GetActionAxis("camera_move_left", "camera_move_right");
+        const float verticalAxis = input.GetActionAxis("camera_move_up", "camera_move_down");
 
-        if (input.IsKeyPressed(GLFW_KEY_A, CosmicEngine::KeyRelease))
+        if (horizontalAxis < 0.0f)
         {
-            ProcessKeyboard(camera, CosmicEngine::LEFT, frameDelta, keyboardMoveSpeed);
+            ProcessKeyboard(camera, CosmicEngine::LEFT, frameDelta * -horizontalAxis, keyboardMoveSpeed);
         }
 
-        if (input.IsKeyPressed(GLFW_KEY_D, CosmicEngine::KeyRelease))
+        if (horizontalAxis > 0.0f)
         {
-            ProcessKeyboard(camera, CosmicEngine::RIGHT, frameDelta, keyboardMoveSpeed);
+            ProcessKeyboard(camera, CosmicEngine::RIGHT, frameDelta * horizontalAxis, keyboardMoveSpeed);
         }
 
-        if (input.IsKeyPressed(GLFW_KEY_W, CosmicEngine::KeyRelease))
+        if (verticalAxis < 0.0f)
         {
-            ProcessKeyboard(camera, CosmicEngine::UP, frameDelta, keyboardMoveSpeed);
+            ProcessKeyboard(camera, CosmicEngine::UP, frameDelta * -verticalAxis, keyboardMoveSpeed);
         }
 
-        if (input.IsKeyPressed(GLFW_KEY_S, CosmicEngine::KeyRelease))
+        if (verticalAxis > 0.0f)
         {
-            ProcessKeyboard(camera, CosmicEngine::DOWN, frameDelta, keyboardMoveSpeed);
+            ProcessKeyboard(camera, CosmicEngine::DOWN, frameDelta * verticalAxis, keyboardMoveSpeed);
         }
     }
 

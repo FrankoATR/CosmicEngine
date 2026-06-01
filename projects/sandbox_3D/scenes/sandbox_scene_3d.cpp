@@ -70,6 +70,8 @@ void Sandbox3DScene::init()
 {
     loadResources();
 
+    INP_MN.RegisterAction("sandbox_toggle_stress_display", {{GLFW_KEY_F12}, {GLFW_GAMEPAD_BUTTON_Y}, {}, {}});
+
     SCN_MN.SetBackgroundColor(glm::vec3(0.01f, 0.01f, 0.02f));
     Setup3DCamera();
     cameraController = std::make_unique<CosmicEngine::Classic3DCameraController>();
@@ -126,12 +128,12 @@ void Sandbox3DScene::draw()
 
 void Sandbox3DScene::update(double deltaTime)
 {
-    if (INP_MN.IsKeyPressed(GLFW_KEY_ESCAPE, CosmicEngine::KeyDown))
+    if (INP_MN.IsActionPressed("system_exit_game", CosmicEngine::KeyDown))
     {
         GM_MN.endprogram();
     }
 
-    if (INP_MN.IsKeyPressed(GLFW_KEY_F12, CosmicEngine::KeyDown))
+    if (INP_MN.IsActionPressed("sandbox_toggle_stress_display", CosmicEngine::KeyDown))
     {
         ToggleStressDisplayMode();
     }

@@ -202,16 +202,22 @@ namespace CosmicEngine
          * @param volume New master volume multiplier.
          */
         void SetMasterVolume(float volume);
+        /** @brief Returns the global master volume multiplier. */
+        float GetMasterVolume() const;
         /**
          * @brief Sets the master volume applied to music sounds.
          * @param volume New music volume multiplier.
          */
         void SetMusicMasterVolume(float volume);
+        /** @brief Returns the master volume applied to music sounds. */
+        float GetMusicMasterVolume() const;
         /**
          * @brief Sets the master volume applied to sound effects.
          * @param volume New sound-effects volume multiplier.
          */
         void SetSfxMasterVolume(float volume);
+        /** @brief Returns the master volume applied to sound effects. */
+        float GetSfxMasterVolume() const;
 
         /**
          * @brief Seeks a sound to a playback position in milliseconds.
@@ -219,6 +225,12 @@ namespace CosmicEngine
          * @param milliseconds Playback position in milliseconds.
          */
         void SetPosition(const std::string &key, unsigned int milliseconds);
+        /**
+         * @brief Returns the current playback position of a sound in milliseconds.
+         * @param key Logical sound key.
+         * @return Current playback position in milliseconds, or 0 when unavailable.
+         */
+        unsigned int GetPosition(const std::string &key) const;
         /**
          * @brief Sets the listener position used by spatial playback.
          * @param position Listener world position.

@@ -7,13 +7,21 @@
 
 #include "../game_manager.hpp"
 #include "../camera/camera_manager.hpp"
+#include <cosmic_project_config.hpp>
 #include "../../utils/log.hpp"
 
+#include <algorithm>
 #include <cmath>
-#include <iostream>
+#include <filesystem>
+#include <fstream>
+#include <nlohmann/json.hpp>
 
 namespace
 {
+    using nlohmann::json;
+
+    constexpr float kDefaultGamepadDeadzone = 0.15f;
+
     /**
      * @brief Converts the GLFW cursor position into normalized viewport coordinates.
      */
@@ -57,6 +65,49 @@ namespace
         normalizedY = ((static_cast<float>(framebufferHeight) - cursorFramebufferY) - static_cast<float>(viewport[1])) / viewportHeight;
         return true;
     }
+
+    std::filesystem::path GetDefaultInputConfigPath()
+    {
+        std::filesystem::path configDirectory = std::filesystem::current_path() / "config";
+        return configDirectory / (std::string(CosmicEngine::ProjectConfig::kProjectName) + "_input.json");
+    }
+
+    json BindingToJson(const CosmicEngine::InputActionBinding &binding)
+    {
+        return json{
+            {"keyboard", binding.keyboardKeys},
+            {"gamepadButtons", binding.gamepadButtons},
+            {"gamepadAxesPositive", binding.gamepadAxesPositive},
+            {"gamepadAxesNegative", binding.gamepadAxesNegative}
+        };
+    }
+
+    CosmicEngine::InputActionBinding BindingFromJson(const json &bindingJson)
+    {
+        CosmicEngine::InputActionBinding binding;
+
+        if (bindingJson.contains("keyboard") && bindingJson["keyboard"].is_array())
+        {
+            binding.keyboardKeys = bindingJson["keyboard"].get<std::vector<int>>();
+        }
+
+        if (bindingJson.contains("gamepadButtons") && bindingJson["gamepadButtons"].is_array())
+        {
+            binding.gamepadButtons = bindingJson["gamepadButtons"].get<std::vector<int>>();
+        }
+
+        if (bindingJson.contains("gamepadAxesPositive") && bindingJson["gamepadAxesPositive"].is_array())
+        {
+            binding.gamepadAxesPositive = bindingJson["gamepadAxesPositive"].get<std::vector<int>>();
+        }
+
+        if (bindingJson.contains("gamepadAxesNegative") && bindingJson["gamepadAxesNegative"].is_array())
+        {
+            binding.gamepadAxesNegative = bindingJson["gamepadAxesNegative"].get<std::vector<int>>();
+        }
+
+        return binding;
+    }
 }
 
 namespace CosmicEngine
@@ -79,6 +130,9 @@ namespace CosmicEngine
 
     void InputManager::init(GLFWwindow *window)
     {
+        configFilePath = GetDefaultInputConfigPath().string();
+        gamepadDeadzone = kDefaultGamepadDeadzone;
+        bindingsDirty = false;
         MouseSprite = nullptr;
         MouseSpriteOffSet = glm::vec2(0.0f);
         MouseSpriteSize = glm::vec2(32.0f);
@@ -97,6 +151,9 @@ namespace CosmicEngine
             InputManager::GetInstance().queuedCharacterInput.push_back(codepoint);
         });
 
+        LoadBindingsFromJson();
+        RegisterCoreActions();
+        SaveBindingsToJson(false);
         ResetMouseLookReference();
 
         RUNTIME_LIFECYCLE("Input manager", "initialized");
@@ -105,6 +162,7 @@ namespace CosmicEngine
     
     void InputManager::shutdown()
     {
+        SaveBindingsToJson(false);
         ResetMouseSettings();
 		RUNTIME_LIFECYCLE("Input manager", "shutdown");
     }
@@ -208,7 +266,7 @@ namespace CosmicEngine
                     for (int axis = 0; axis <= GLFW_GAMEPAD_AXIS_LAST; ++axis)
                     {
                         float axisValue = gamepadState.axes[axis];
-                        if (std::abs(axisValue) < 0.15f)
+                        if (std::abs(axisValue) < gamepadDeadzone)
                         {
                             axisValue = 0.0f;
                         }
@@ -254,7 +312,7 @@ namespace CosmicEngine
                 auto setAxisFromRaw = [this, axes, axisCount](int mappedAxis, int rawAxis)
                 {
                     float axisValue = (axes && rawAxis < axisCount) ? axes[rawAxis] : 0.0f;
-                    if (std::abs(axisValue) < 0.15f)
+                    if (std::abs(axisValue) < gamepadDeadzone)
                     {
                         axisValue = 0.0f;
                     }
@@ -278,6 +336,7 @@ namespace CosmicEngine
                 value = 0.0f;
         }
 
+        UpdateActionStates();
         UpdateNormalizedMousePosition(window);
     }
 
@@ -296,6 +355,90 @@ namespace CosmicEngine
         {
             cachedNormalizedMousePosition = glm::vec2(0.0f);
         }
+    }
+
+    void InputManager::RegisterCoreActions()
+    {
+        RegisterAction("camera_move_forward", {{GLFW_KEY_W}, {GLFW_GAMEPAD_BUTTON_DPAD_UP}, {}, {GLFW_GAMEPAD_AXIS_LEFT_Y}});
+        RegisterAction("camera_move_backward", {{GLFW_KEY_S}, {GLFW_GAMEPAD_BUTTON_DPAD_DOWN}, {GLFW_GAMEPAD_AXIS_LEFT_Y}, {}});
+        RegisterAction("camera_move_left", {{GLFW_KEY_A}, {GLFW_GAMEPAD_BUTTON_DPAD_LEFT}, {}, {GLFW_GAMEPAD_AXIS_LEFT_X}});
+        RegisterAction("camera_move_right", {{GLFW_KEY_D}, {GLFW_GAMEPAD_BUTTON_DPAD_RIGHT}, {GLFW_GAMEPAD_AXIS_LEFT_X}, {}});
+        RegisterAction("camera_move_up", {{GLFW_KEY_SPACE}, {}, {GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER}, {}});
+        RegisterAction("camera_move_down", {{GLFW_KEY_LEFT_SHIFT}, {}, {GLFW_GAMEPAD_AXIS_LEFT_TRIGGER}, {}});
+        RegisterAction("camera_look_left", {{GLFW_KEY_LEFT}, {}, {}, {GLFW_GAMEPAD_AXIS_RIGHT_X}});
+        RegisterAction("camera_look_right", {{GLFW_KEY_RIGHT}, {}, {GLFW_GAMEPAD_AXIS_RIGHT_X}, {}});
+        RegisterAction("camera_look_up", {{GLFW_KEY_PAGE_UP}, {}, {}, {GLFW_GAMEPAD_AXIS_RIGHT_Y}});
+        RegisterAction("camera_look_down", {{GLFW_KEY_PAGE_DOWN}, {}, {GLFW_GAMEPAD_AXIS_RIGHT_Y}, {}});
+
+        RegisterAction("ui_nav_next", {{GLFW_KEY_TAB}, {}, {}, {}});
+        RegisterAction("ui_nav_up", {{GLFW_KEY_UP}, {GLFW_GAMEPAD_BUTTON_DPAD_UP}, {}, {GLFW_GAMEPAD_AXIS_LEFT_Y}});
+        RegisterAction("ui_nav_down", {{GLFW_KEY_DOWN}, {GLFW_GAMEPAD_BUTTON_DPAD_DOWN}, {GLFW_GAMEPAD_AXIS_LEFT_Y}, {}});
+        RegisterAction("ui_nav_left", {{GLFW_KEY_LEFT}, {GLFW_GAMEPAD_BUTTON_DPAD_LEFT}, {}, {GLFW_GAMEPAD_AXIS_LEFT_X}});
+        RegisterAction("ui_nav_right", {{GLFW_KEY_RIGHT}, {GLFW_GAMEPAD_BUTTON_DPAD_RIGHT}, {GLFW_GAMEPAD_AXIS_LEFT_X}, {}});
+        RegisterAction("ui_submit", {{GLFW_KEY_ENTER, GLFW_KEY_SPACE}, {GLFW_GAMEPAD_BUTTON_A}, {}, {}});
+        RegisterAction("ui_back", {{GLFW_KEY_ESCAPE}, {GLFW_GAMEPAD_BUTTON_B, GLFW_GAMEPAD_BUTTON_START}, {}, {}});
+
+        RegisterAction("system_exit_game", {{GLFW_KEY_ESCAPE}, {GLFW_GAMEPAD_BUTTON_START}, {}, {}});
+    }
+
+    void InputManager::UpdateActionStates()
+    {
+        for (auto &[name, state] : actionDownState)
+        {
+            state = false;
+        }
+
+        for (auto &[name, state] : actionUpState)
+        {
+            state = false;
+        }
+
+        for (const auto &[name, binding] : actionBindings)
+        {
+            const float strength = ComputeActionStrength(binding);
+            const bool isActive = strength > 0.0f;
+            const bool wasActive = actionHeldState[name];
+
+            actionStrengthState[name] = strength;
+            actionHeldState[name] = isActive;
+            actionDownState[name] = isActive && !wasActive;
+            actionUpState[name] = !isActive && wasActive;
+        }
+    }
+
+    float InputManager::ComputeActionStrength(const InputActionBinding &binding) const
+    {
+        float strength = 0.0f;
+
+        for (int key : binding.keyboardKeys)
+        {
+            auto keyIt = keyHeldState.find(key);
+            if (keyIt != keyHeldState.end() && keyIt->second)
+            {
+                strength = 1.0f;
+            }
+        }
+
+        for (int button : binding.gamepadButtons)
+        {
+            auto buttonIt = joystickButtonState.find(button);
+            if (buttonIt != joystickButtonState.end() && buttonIt->second)
+            {
+                strength = 1.0f;
+            }
+        }
+
+        for (int axis : binding.gamepadAxesPositive)
+        {
+            strength = std::max(strength, std::max(0.0f, GetJoystickAxis(axis)));
+        }
+
+        for (int axis : binding.gamepadAxesNegative)
+        {
+            strength = std::max(strength, std::max(0.0f, -GetJoystickAxis(axis)));
+        }
+
+        return strength;
     }
 
     bool InputManager::IsKeyPressed(int keycode, KeyEventType eventType) const
@@ -359,6 +502,35 @@ namespace CosmicEngine
         return it->second;
     }
 
+    int InputManager::GetFirstKeyJustPressed() const
+    {
+        for (const auto &[key, pressed] : keyDownState)
+        {
+            if (pressed) return key;
+        }
+        return -1;
+    }
+
+    int InputManager::GetFirstGamepadButtonJustPressed() const
+    {
+        for (const auto &[button, pressed] : joystickButtonDownState)
+        {
+            if (pressed) return button;
+        }
+        return -1;
+    }
+
+    float InputManager::GetGamepadDeadzone() const
+    {
+        return gamepadDeadzone;
+    }
+
+    void InputManager::SetGamepadDeadzone(float value)
+    {
+        gamepadDeadzone = std::clamp(value, 0.0f, 0.99f);
+        bindingsDirty = true;
+    }
+
     bool InputManager::HasGamepad() const
     {
         return activeGamepadId != -1;
@@ -380,6 +552,179 @@ namespace CosmicEngine
     void InputManager::ClearCharacterInput()
     {
         queuedCharacterInput.clear();
+    }
+
+    void InputManager::RegisterAction(const std::string &actionName, const InputActionBinding &binding)
+    {
+        if (actionBindings.find(actionName) != actionBindings.end())
+        {
+            return;
+        }
+
+        actionBindings[actionName] = binding;
+        actionHeldState[actionName] = false;
+        actionDownState[actionName] = false;
+        actionUpState[actionName] = false;
+        actionStrengthState[actionName] = 0.0f;
+        bindingsDirty = true;
+    }
+
+    void InputManager::SetActionBinding(const std::string &actionName, const InputActionBinding &binding)
+    {
+        actionBindings[actionName] = binding;
+        actionHeldState[actionName] = false;
+        actionDownState[actionName] = false;
+        actionUpState[actionName] = false;
+        actionStrengthState[actionName] = 0.0f;
+        bindingsDirty = true;
+    }
+
+    bool InputManager::HasAction(const std::string &actionName) const
+    {
+        return actionBindings.find(actionName) != actionBindings.end();
+    }
+
+    InputActionBinding InputManager::GetActionBinding(const std::string &actionName) const
+    {
+        auto it = actionBindings.find(actionName);
+        if (it == actionBindings.end())
+        {
+            return {};
+        }
+
+        return it->second;
+    }
+
+    bool InputManager::IsActionPressed(const std::string &actionName, KeyEventType eventType) const
+    {
+        switch (eventType)
+        {
+        case KeyEventType::KeyDown:
+            return actionDownState.count(actionName) && actionDownState.at(actionName);
+        case KeyEventType::KeyUp:
+            return actionUpState.count(actionName) && actionUpState.at(actionName);
+        case KeyEventType::KeyRelease:
+            return actionHeldState.count(actionName) && actionHeldState.at(actionName);
+        default:
+            return false;
+        }
+    }
+
+    float InputManager::GetActionStrength(const std::string &actionName) const
+    {
+        auto it = actionStrengthState.find(actionName);
+        if (it == actionStrengthState.end())
+        {
+            return 0.0f;
+        }
+
+        return it->second;
+    }
+
+    float InputManager::GetActionAxis(const std::string &negativeActionName, const std::string &positiveActionName) const
+    {
+        return GetActionStrength(positiveActionName) - GetActionStrength(negativeActionName);
+    }
+
+    void InputManager::SetConfigFilePath(const std::string &path)
+    {
+        configFilePath = path;
+    }
+
+    std::string InputManager::GetConfigFilePath() const
+    {
+        return configFilePath;
+    }
+
+    bool InputManager::LoadBindingsFromJson()
+    {
+        if (configFilePath.empty())
+        {
+            return false;
+        }
+
+        std::ifstream input(configFilePath, std::ios::binary);
+        if (!input.is_open())
+        {
+            return false;
+        }
+
+        try
+        {
+            json document = json::parse(input);
+            if (document.contains("settings") && document["settings"].is_object())
+            {
+                gamepadDeadzone = std::clamp(document["settings"].value("gamepadDeadzone", kDefaultGamepadDeadzone), 0.0f, 0.99f);
+            }
+
+            if (document.contains("actions") && document["actions"].is_object())
+            {
+                for (auto it = document["actions"].begin(); it != document["actions"].end(); ++it)
+                {
+                    actionBindings[it.key()] = BindingFromJson(it.value());
+                    actionHeldState[it.key()] = false;
+                    actionDownState[it.key()] = false;
+                    actionUpState[it.key()] = false;
+                    actionStrengthState[it.key()] = 0.0f;
+                }
+            }
+
+            bindingsDirty = false;
+            return true;
+        }
+        catch (const std::exception &exception)
+        {
+            RUNTIME_WARNING("[InputManager] Failed to parse input config '" << configFilePath << "': " << exception.what());
+            return false;
+        }
+    }
+
+    bool InputManager::SaveBindingsToJson(bool force)
+    {
+        if (configFilePath.empty())
+        {
+            return false;
+        }
+
+        if (!bindingsDirty && !force)
+        {
+            return true;
+        }
+
+        json document;
+        document["version"] = 1;
+        document["settings"] = {
+            {"gamepadDeadzone", gamepadDeadzone}
+        };
+
+        json actions = json::object();
+        for (const auto &[name, binding] : actionBindings)
+        {
+            actions[name] = BindingToJson(binding);
+        }
+        document["actions"] = std::move(actions);
+
+        try
+        {
+            const std::filesystem::path outputPath(configFilePath);
+            std::filesystem::create_directories(outputPath.parent_path());
+
+            std::ofstream output(configFilePath, std::ios::binary | std::ios::trunc);
+            if (!output.is_open())
+            {
+                RUNTIME_WARNING("[InputManager] Failed to open input config for writing: " << configFilePath);
+                return false;
+            }
+
+            output << document.dump(2);
+            bindingsDirty = false;
+            return true;
+        }
+        catch (const std::exception &exception)
+        {
+            RUNTIME_WARNING("[InputManager] Failed to save input config '" << configFilePath << "': " << exception.what());
+            return false;
+        }
     }
 
 

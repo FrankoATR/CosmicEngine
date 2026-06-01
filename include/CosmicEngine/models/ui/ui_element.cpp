@@ -25,13 +25,15 @@ namespace CosmicEngine
             return "UIImage";
         case UIElementType::TextField:
             return "UITextField";
+        case UIElementType::Slider:
+            return "UISlider";
         default:
             return "UIElement";
         }
     }
 
     UIElement::UIElement(glm::vec2 Position, glm::vec2 Size, bool visible, UIElement* parent, UIElementType ElementType) : Position(Position), 
-        Size(Size), visible(visible), parent(parent), ElementType(ElementType)
+        Size(Size), visible(visible), focusState(false), parent(parent), ElementType(ElementType)
     {
         RUNTIME_LIFECYCLE(GetTypeName(this->ElementType), "created");
     }
@@ -61,6 +63,25 @@ namespace CosmicEngine
         {
             child->draw();
         }
+    }
+
+    bool UIElement::IsFocusable() const
+    {
+        return false;
+    }
+
+    void UIElement::SetFocused(bool focused)
+    {
+        focusState = focused;
+    }
+
+    bool UIElement::IsFocused() const
+    {
+        return focusState;
+    }
+
+    void UIElement::Activate()
+    {
     }
 
     void UIElement::SetPosition(glm::vec2 NewPosition)

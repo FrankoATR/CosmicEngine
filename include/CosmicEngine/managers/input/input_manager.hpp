@@ -10,8 +10,10 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <deque>
-#include <map>
 #include <functional>
+#include <map>
+#include <string>
+#include <vector>
 
 namespace CosmicEngine
 {
@@ -26,6 +28,17 @@ namespace CosmicEngine
         KeyUp,
         /** @brief The input is currently held down. */
         KeyRelease
+    };
+
+    /**
+     * @brief Describes the configurable inputs that can trigger a named action.
+     */
+    struct InputActionBinding
+    {
+        std::vector<int> keyboardKeys;
+        std::vector<int> gamepadButtons;
+        std::vector<int> gamepadAxesPositive;
+        std::vector<int> gamepadAxesNegative;
     };
 
     /**
@@ -77,9 +90,17 @@ namespace CosmicEngine
         std::map<int, bool> joystickButtonUpState;
         std::map<int, bool> joystickButtonState;
         std::map<int, float> joystickAxisState;
+        std::map<std::string, InputActionBinding> actionBindings;
+        std::map<std::string, bool> actionDownState;
+        std::map<std::string, bool> actionUpState;
+        std::map<std::string, bool> actionHeldState;
+        std::map<std::string, float> actionStrengthState;
         std::deque<unsigned int> queuedCharacterInput;
         int activeGamepadId;
         bool activeJoystickUsesGamepadApi;
+        std::string configFilePath;
+        float gamepadDeadzone;
+        bool bindingsDirty;
 
         unsigned int *MouseSprite;
         glm::vec2 MouseSpriteOffSet;
@@ -94,6 +115,9 @@ namespace CosmicEngine
         bool disableMouse;
 
         void UpdateNormalizedMousePosition(GLFWwindow* window);
+        void RegisterCoreActions();
+        void UpdateActionStates();
+        float ComputeActionStrength(const InputActionBinding &binding) const;
 
     public:
         /** @brief Returns the singleton instance of the input manager. */
@@ -139,12 +163,20 @@ namespace CosmicEngine
          * @return True when the joystick button matches the requested input state.
          */
         bool IsJoystickButtonPressed(int button, KeyEventType eventType) const;
+        /** @brief Returns the GLFW keycode pressed this frame, or -1 when none was detected. */
+        int GetFirstKeyJustPressed() const;
+        /** @brief Returns the gamepad button pressed this frame, or -1 when none was detected. */
+        int GetFirstGamepadButtonJustPressed() const;
         /**
          * @brief Returns the current normalized value of an analog joystick axis.
          * @param axis GLFW gamepad axis identifier.
          * @return Current axis value.
          */
         float GetJoystickAxis(int axis) const;
+        /** @brief Returns the configured gamepad deadzone used by action bindings. */
+        float GetGamepadDeadzone() const;
+        /** @brief Updates the configured gamepad deadzone and marks the config dirty. */
+        void SetGamepadDeadzone(float value);
         /**
          * @brief Returns whether an active controller has been detected.
          * @return True when a gamepad or joystick is available.
@@ -158,6 +190,29 @@ namespace CosmicEngine
         bool PollCharacterInput(unsigned int &character);
         /** @brief Clears all queued text input codepoints. */
         void ClearCharacterInput();
+
+        /** @brief Registers a default binding for an action without overwriting an existing persisted binding. */
+        void RegisterAction(const std::string &actionName, const InputActionBinding &binding);
+        /** @brief Replaces the current binding for an action and marks the config dirty. */
+        void SetActionBinding(const std::string &actionName, const InputActionBinding &binding);
+        /** @brief Returns whether an action exists in the current binding table. */
+        bool HasAction(const std::string &actionName) const;
+        /** @brief Returns the current binding for an action, or an empty binding when it does not exist. */
+        InputActionBinding GetActionBinding(const std::string &actionName) const;
+        /** @brief Queries a named action using the requested transition mode. */
+        bool IsActionPressed(const std::string &actionName, KeyEventType eventType) const;
+        /** @brief Returns the current analog strength of the named action. */
+        float GetActionStrength(const std::string &actionName) const;
+        /** @brief Combines two actions into a signed axis where positive minus negative is returned. */
+        float GetActionAxis(const std::string &negativeActionName, const std::string &positiveActionName) const;
+        /** @brief Overrides the JSON file path used to persist input bindings. */
+        void SetConfigFilePath(const std::string &path);
+        /** @brief Returns the JSON file path used to persist input bindings. */
+        std::string GetConfigFilePath() const;
+        /** @brief Loads bindings from the configured JSON file when possible. */
+        bool LoadBindingsFromJson();
+        /** @brief Saves bindings to the configured JSON file when possible. */
+        bool SaveBindingsToJson(bool force = false);
 
         /**
          * @brief Returns the mouse position in world-space coordinates.

@@ -94,6 +94,10 @@ namespace CosmicEngine
         void update(float deltaTime) override;
         /** @brief Draws the text field, its text, and its cursor state. */
         void draw() override;
+        /** @brief Returns whether the text field participates in keyboard/gamepad focus navigation. */
+        bool IsFocusable() const override;
+        /** @brief Activates the field by focusing it. */
+        void Activate() override;
 
         /** @brief Replaces the current text content. */
         void SetText(const std::string &text);

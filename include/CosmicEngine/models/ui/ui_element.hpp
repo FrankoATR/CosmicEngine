@@ -22,7 +22,8 @@ namespace CosmicEngine
         Button,
         Label,
         Image,
-        TextField
+        TextField,
+        Slider
     };
 
     /**
@@ -46,6 +47,7 @@ namespace CosmicEngine
         glm::vec2 Position;
         glm::vec2 Size;
         bool visible;                       ///< Whether the element is rendered and receives events.
+        bool focusState;
 
         UIElement *parent;
         std::vector<UIElement*> children;
@@ -72,6 +74,14 @@ namespace CosmicEngine
         virtual void update(float deltaTime);
         /** @brief Draws the UI element. */
         virtual void draw();
+        /** @brief Returns whether the element can receive UI focus. */
+        virtual bool IsFocusable() const;
+        /** @brief Sets whether the element is currently focused. */
+        virtual void SetFocused(bool focused);
+        /** @brief Returns whether the element is currently focused. */
+        virtual bool IsFocused() const;
+        /** @brief Invokes the element primary action when it has one. */
+        virtual void Activate();
 
         /**
          * @brief Sets the element position in UI space.

@@ -230,6 +230,7 @@ set(ENGINE_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_button.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_text.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_text_field.cpp
+    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_slider.cpp
 
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/game_manager.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/resource/resource_manager.cpp

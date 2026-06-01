@@ -35,9 +35,10 @@ namespace CosmicEngine
             return;
         }
 
-        glm::vec3 color = glm::vec3(1.0f);
+        glm::vec3 color = textColor;
 
-        if (MouseHover()) color = glm::vec3(0.0f, 1.0f, 0.0f);   //aplicar callbacks 
+        if (IsFocused()) color = glm::vec3(0.35f, 0.85f, 1.0f);
+        if (MouseHover()) color = glm::vec3(0.0f, 1.0f, 0.0f);
 
         //if (isPressed) color = glm::vec3(1.0f, 0.0f, 0.0f); //aplicar callbacks 
 
@@ -76,6 +77,20 @@ namespace CosmicEngine
         UIElement::draw();
     }
 
+    bool UIButton::IsFocusable() const
+    {
+        return true;
+    }
+
+    void UIButton::Activate()
+    {
+        if (onClick)
+        {
+            isPressed = true;
+            onClick();
+        }
+    }
+
     void UIButton::SetOnClick(std::function<void()> callback)
     {
         onClick = callback;
@@ -110,15 +125,15 @@ namespace CosmicEngine
     
         if (ReleaseMode)
         {
-            bool MR = InputManager::GetInstance().IsMouseButtonPressed(0, KeyEventType::KeyRelease);
+            bool MR = InputManager::GetInstance().IsMouseButtonPressed(0, KeyEventType::KeyUp);
 
             if (MR && isHovering && clickOnArea && onClick)
             {
                 isPressed = true;
                 onClick();
             }
-    
-            if (!MR || !isHovering)
+
+            if (MR || !isHovering)
             {
                 clickOnArea = false;
             }
@@ -129,6 +144,11 @@ namespace CosmicEngine
             {
                 isPressed = true;
                 onClick();
+            }
+
+            if (!MD || !isHovering)
+            {
+                clickOnArea = false;
             }
 
         }

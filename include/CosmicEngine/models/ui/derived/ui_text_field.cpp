@@ -77,6 +77,16 @@ namespace CosmicEngine
         UIElement::update(deltaTime);
     }
 
+    bool UITextField::IsFocusable() const
+    {
+        return true;
+    }
+
+    void UITextField::Activate()
+    {
+        SetFocused(true);
+    }
+
     void UITextField::HandleInput(float deltaTime)
     {
         auto &input = InputManager::GetInstance();
@@ -374,6 +384,7 @@ namespace CosmicEngine
 
     void UITextField::SetFocused(bool focused)
     {
+        UIElement::SetFocused(focused);
         this->focused = focused;
         if (focused)
         {
