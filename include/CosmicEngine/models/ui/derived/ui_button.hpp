@@ -44,6 +44,7 @@ namespace CosmicEngine
     {
     private:
         std::string texture;
+        std::string hoverTexture;
         std::string text;
         std::string cachedText;
         std::string font;
@@ -51,9 +52,13 @@ namespace CosmicEngine
         std::function<void()> onClick;
 
         glm::vec3 textColor;
+        glm::vec3 selectedTextColor;
         glm::vec2 cachedSize;
+        glm::vec2 textOffset; // additional offset applied to text positioning
 
         float Transparency;
+
+        float textureScale; // multiplier to render texture slightly larger/smaller than element size
 
         bool isPressed;
 
@@ -95,11 +100,24 @@ namespace CosmicEngine
         /** @brief Sets the font resource key used by the button label. */
         void SetFont(const std::string &text);
 
+        /** @brief Sets the hover texture resource key. */
+        void SetHoverTexture(const std::string &hoverTexture);
+
+        /** @brief Sets a multiplier to scale the background texture when rendered. */
+        void SetTextureScale(float scale);
+
+        /** @brief Sets an extra offset applied to the rendered text (x,y). */
+        void SetTextOffset(const glm::vec2 &offset);
+
         /**
          * @brief Sets the text color of the button label.
          * @param color Value provided by the caller.
          */
         void SetTextColor(glm::vec3 color);
+        /**
+         * @brief Sets the text color used when the button is selected (focus or hover).
+         */
+        void SetSelectedTextColor(glm::vec3 color);
     };
 
 }

@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cstdint>
 
 namespace CosmicEngine
 {
@@ -13,6 +14,67 @@ namespace CosmicEngine
     {
         constexpr float kBackspaceRepeatDelay = 0.65f;
         constexpr float kBackspaceRepeatInterval = 0.06f;
+
+        std::size_t Utf8CodepointCount(const std::string &text)
+        {
+            std::size_t count = 0;
+            for (size_t i = 0; i < text.size();)
+            {
+                const unsigned char lead = static_cast<unsigned char>(text[i]);
+                size_t advance = 1;
+                if ((lead & 0xE0) == 0xC0 && i + 1 < text.size()) advance = 2;
+                else if ((lead & 0xF0) == 0xE0 && i + 2 < text.size()) advance = 3;
+                else if ((lead & 0xF8) == 0xF0 && i + 3 < text.size()) advance = 4;
+                i += advance;
+                ++count;
+            }
+            return count;
+        }
+
+        std::size_t Utf8ByteOffsetForCodepointIndex(const std::string &text, std::size_t codepointIndex)
+        {
+            size_t byteOffset = 0;
+            size_t currentIndex = 0;
+            while (byteOffset < text.size() && currentIndex < codepointIndex)
+            {
+                const unsigned char lead = static_cast<unsigned char>(text[byteOffset]);
+                size_t advance = 1;
+                if ((lead & 0xE0) == 0xC0 && byteOffset + 1 < text.size()) advance = 2;
+                else if ((lead & 0xF0) == 0xE0 && byteOffset + 2 < text.size()) advance = 3;
+                else if ((lead & 0xF8) == 0xF0 && byteOffset + 3 < text.size()) advance = 4;
+                byteOffset += advance;
+                ++currentIndex;
+            }
+            return byteOffset;
+        }
+
+        std::string EncodeUtf8(char32_t codepoint)
+        {
+            std::string result;
+            if (codepoint <= 0x7F)
+            {
+                result.push_back(static_cast<char>(codepoint));
+            }
+            else if (codepoint <= 0x7FF)
+            {
+                result.push_back(static_cast<char>(0xC0 | (codepoint >> 6)));
+                result.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+            }
+            else if (codepoint <= 0xFFFF)
+            {
+                result.push_back(static_cast<char>(0xE0 | (codepoint >> 12)));
+                result.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+                result.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+            }
+            else
+            {
+                result.push_back(static_cast<char>(0xF0 | (codepoint >> 18)));
+                result.push_back(static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F)));
+                result.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+                result.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+            }
+            return result;
+        }
     }
 
     UITextField::UITextField(const std::string &initialText, const std::string &placeholder, const std::string &font,
@@ -26,7 +88,7 @@ namespace CosmicEngine
           focusBorderColor(glm::vec3(0.2f, 0.7f, 1.0f)),
           backgroundColor(glm::vec3(0.15f)),
           focused(false), maxLength(maxLength),
-            cursorIndex(initialText.size()),
+            cursorIndex(Utf8CodepointCount(initialText)),
           cursorBlinkTimer(0.0f), cursorVisible(true),
             backspaceHoldTimer(0.0f), backspaceRepeatTimer(0.0f),
           onSubmit(nullptr), onTextChanged(nullptr)
@@ -128,7 +190,7 @@ namespace CosmicEngine
 
         if (input.IsKeyPressed(GLFW_KEY_RIGHT, KeyEventType::KeyDown))
         {
-            if (cursorIndex < text.size())
+            if (cursorIndex < Utf8CodepointCount(text))
             {
                 ++cursorIndex;
                 ResetCursorBlink();
@@ -155,14 +217,14 @@ namespace CosmicEngine
         unsigned int codepoint = 0;
         while (input.PollCharacterInput(codepoint))
         {
-            if (static_cast<int>(text.size()) >= maxLength)
+            if (static_cast<int>(Utf8CodepointCount(text)) >= maxLength)
             {
                 break;
             }
 
-            if (codepoint >= 32 && codepoint <= 126)
+            if (codepoint >= 32 && codepoint != 127)
             {
-                InsertCharacter(static_cast<char>(codepoint));
+                InsertCharacter(codepoint);
             }
         }
     }
@@ -182,14 +244,15 @@ namespace CosmicEngine
         ResetCursorBlink();
     }
 
-    void UITextField::InsertCharacter(char character)
+    void UITextField::InsertCharacter(unsigned int codepoint)
     {
-        if (static_cast<int>(text.size()) >= maxLength)
+        if (static_cast<int>(Utf8CodepointCount(text)) >= maxLength)
         {
             return;
         }
 
-        text.insert(text.begin() + static_cast<std::string::difference_type>(cursorIndex), character);
+        const std::size_t byteOffset = Utf8ByteOffsetForCodepointIndex(text, cursorIndex);
+        text.insert(byteOffset, EncodeUtf8(static_cast<char32_t>(codepoint)));
         ++cursorIndex;
         NotifyTextChanged();
     }
@@ -201,7 +264,9 @@ namespace CosmicEngine
             return;
         }
 
-        text.erase(text.begin() + static_cast<std::string::difference_type>(cursorIndex - 1));
+        const std::size_t eraseEnd = Utf8ByteOffsetForCodepointIndex(text, cursorIndex);
+        const std::size_t eraseBegin = Utf8ByteOffsetForCodepointIndex(text, cursorIndex - 1);
+        text.erase(eraseBegin, eraseEnd - eraseBegin);
         --cursorIndex;
         NotifyTextChanged();
     }
@@ -218,7 +283,8 @@ namespace CosmicEngine
             return 0.0f;
         }
 
-        return ResourceManager::GetInstance().MeasureText(text.substr(0, cursorIndex), font, glm::vec3(1.0f)).x;
+        const std::size_t byteOffset = Utf8ByteOffsetForCodepointIndex(text, cursorIndex);
+        return ResourceManager::GetInstance().MeasureText(text.substr(0, byteOffset), font, glm::vec3(1.0f)).x;
     }
 
     void UITextField::draw()
@@ -329,7 +395,7 @@ namespace CosmicEngine
     void UITextField::SetText(const std::string &text)
     {
         this->text = text;
-        cursorIndex = std::min(cursorIndex, this->text.size());
+        cursorIndex = std::min(cursorIndex, Utf8CodepointCount(this->text));
     }
 
     std::string UITextField::GetText() const
@@ -388,7 +454,7 @@ namespace CosmicEngine
         this->focused = focused;
         if (focused)
         {
-            cursorIndex = std::min(cursorIndex, text.size());
+            cursorIndex = std::min(cursorIndex, Utf8CodepointCount(text));
             ResetCursorBlink();
         }
         else

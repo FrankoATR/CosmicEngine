@@ -48,7 +48,10 @@ namespace CosmicEngine
         std::vector<UIElement* > elements;
         bool MouseHoverAny;
         int focusedElementIndex;
+        bool usingMouseInput;
+        glm::vec2 lastMousePosUI;
 
+        int FindFocusedTextFieldIndex() const;
         void FocusElementAt(int index);
         void FocusFirstInteractiveElement();
         void FocusNextInteractiveElement(int direction);

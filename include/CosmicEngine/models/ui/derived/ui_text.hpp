@@ -48,7 +48,12 @@ namespace CosmicEngine
         glm::vec2 cachedSize;
 
         glm::vec3 textColor;
+        float textScale = 1.0f;
         float Transparency;
+        // Multiline support
+        bool multiline;
+        int maxLines;
+        bool leftAlign;
 
     public:
         /**
@@ -60,7 +65,7 @@ namespace CosmicEngine
          * @param visible Initial visibility state.
          * @param parent Optional parent UI element.
          */
-        UIText(const std::string &text, const std::string &font, glm::vec2 Position, glm::vec2 Size, bool visible = true, UIElement* parent = nullptr);
+        UIText(const std::string &text, const std::string &font, glm::vec2 Position, glm::vec2 Size, bool visible = true, UIElement* parent = nullptr, bool multiline = false, int maxLines = 1, bool leftAlign = false);
         /** @brief Releases the text element. */
         virtual ~UIText();
 
@@ -79,6 +84,10 @@ namespace CosmicEngine
          * @param color Value provided by the caller.
          */
         void SetTextColor(glm::vec3 color);
+        /** @brief Sets a uniform scale multiplier applied when rendering the text. */
+        void SetTextScale(float scale);
+        // Multiline control (only used when constructed with multiline=true)
+        void SetMaxLines(int maxLines);
     };
 
 }

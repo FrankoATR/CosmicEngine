@@ -9,12 +9,60 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <cstdint>
 #include <stdexcept>
 
 #include "../../utils/log.hpp"
 
 namespace CosmicEngine
 {
+    namespace
+    {
+        void LoadGlyph(FT_Face face, char32_t codepoint, std::map<char32_t, TextCharacter> &charactersResources)
+        {
+            if (FT_Load_Char(face, static_cast<FT_ULong>(codepoint), FT_LOAD_RENDER))
+            {
+                RUNTIME_WARNING("[Font] Failed to load glyph: " << static_cast<unsigned int>(codepoint));
+                return;
+            }
+
+            unsigned int texture;
+            glGenTextures(1, &texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RED,
+                face->glyph->bitmap.width,
+                face->glyph->bitmap.rows,
+                0,
+                GL_RED,
+                GL_UNSIGNED_BYTE,
+                face->glyph->bitmap.buffer);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+            TextCharacter character = {
+                texture,
+                glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+                glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+                static_cast<unsigned int>(face->glyph->advance.x)
+            };
+
+            charactersResources.insert(std::pair<char32_t, TextCharacter>(codepoint, character));
+        }
+
+        void LoadGlyphRange(FT_Face face, char32_t first, char32_t last, std::map<char32_t, TextCharacter> &charactersResources)
+        {
+            for (char32_t codepoint = first; codepoint <= last; ++codepoint)
+            {
+                LoadGlyph(face, codepoint, charactersResources);
+            }
+        }
+    }
 
     Font::Font(const std::string &fontPath, unsigned int fontSize)
     {
@@ -67,41 +115,10 @@ namespace CosmicEngine
         FT_Set_Pixel_Sizes(face, 0, fontSize);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-        for (GLubyte c = 0; c < 128; c++)
-        {
-            if (FT_Load_Char(face, c, FT_LOAD_RENDER))
-            {
-				RUNTIME_WARNING("[Font] Failed to load glyph: " << static_cast<int>(c));
-                continue;
-            }
-            unsigned int texture;
-            glGenTextures(1, &texture);
-            glBindTexture(GL_TEXTURE_2D, texture);
-            glTexImage2D(
-                GL_TEXTURE_2D,
-                0,
-                GL_RED,
-                face->glyph->bitmap.width,
-                face->glyph->bitmap.rows,
-                0,
-                GL_RED,
-                GL_UNSIGNED_BYTE,
-                face->glyph->bitmap.buffer);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            TextCharacter character = {
-                texture,
-                glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-                glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-                static_cast<unsigned int>(face->glyph->advance.x)
-            };
-
-            characters_resources.insert(std::pair<char, TextCharacter>(c, character));
-        }
+        // Load Basic Latin plus Latin-1 Supplement so Spanish accented
+        // characters and punctuation are available out of the box.
+        LoadGlyphRange(face, 0x0020, 0x007E, characters_resources);
+        LoadGlyphRange(face, 0x00A0, 0x00FF, characters_resources);
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -135,7 +152,7 @@ namespace CosmicEngine
             }
     }
 
-    const std::map<char, TextCharacter>& Font::GetCharacters() const
+    const std::map<char32_t, TextCharacter>& Font::GetCharacters() const
     {
         return characters_resources;
     }

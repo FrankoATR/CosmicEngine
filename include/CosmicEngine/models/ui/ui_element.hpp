@@ -23,6 +23,7 @@ namespace CosmicEngine
         Label,
         Image,
         TextField,
+        TextArea,
         Slider
     };
 

@@ -68,110 +68,62 @@
       }
     },
     {
-      "name": "windows-debug-networkdemo",
-      "displayName": "Windows Debug - NetworkDemo",
+      "name": "windows-debug-puzzlerpg",
+      "displayName": "Windows Debug - PuzzleRPG",
       "inherits": ["windows-debug-base"],
-      "binaryDir": "${sourceDir}/build/Windows/networkdemo-debug",
+      "binaryDir": "${sourceDir}/build/Windows/puzzlerpg-debug",
       "cacheVariables": {
-        "COSMIC_PROJECT": "NetworkDemo"
+        "COSMIC_PROJECT": "PuzzleRPG",
+        "COSMIC_PROJECT_PROGRAM_ICON_PATH": "assets/textures/icon/icon.ico"
       }
     },
     {
-      "name": "windows-debug-basicdemo-2d",
-      "displayName": "Windows Debug - BasicDemo_2D",
-      "inherits": ["windows-debug-base"],
-      "binaryDir": "${sourceDir}/build/Windows/basicdemo-2d-debug",
-      "cacheVariables": {
-        "COSMIC_PROJECT": "BasicDemo_2D"
-      }
-    },
-    {
-      "name": "windows-debug-basicdemo-3d",
-      "displayName": "Windows Debug - BasicDemo_3D",
-      "inherits": ["windows-debug-base"],
-      "binaryDir": "${sourceDir}/build/Windows/basicdemo-3d-debug",
-      "cacheVariables": {
-        "COSMIC_PROJECT": "BasicDemo_3D"
-      }
-    },
-    {
-      "name": "windows-debug-sandbox-3d",
-      "displayName": "Windows Debug - sandbox_3D",
-      "inherits": ["windows-debug-base"],
-      "binaryDir": "${sourceDir}/build/Windows/sandbox-3d-debug",
-      "cacheVariables": {
-        "COSMIC_PROJECT": "sandbox_3D"
-      }
-    },
-    {
-      "name": "windows-release-networkdemo",
-      "displayName": "Windows Release - NetworkDemo",
+      "name": "windows-release-puzzlerpg",
+      "displayName": "Windows Release - PuzzleRPG",
       "inherits": ["windows-release-base"],
-      "binaryDir": "${sourceDir}/build/Windows/networkdemo-release",
+      "binaryDir": "${sourceDir}/build/Windows/puzzlerpg-release",
       "cacheVariables": {
-        "COSMIC_PROJECT": "NetworkDemo"
+        "COSMIC_PROJECT": "PuzzleRPG",
+        "COSMIC_PROJECT_PROGRAM_ICON_PATH": "assets/textures/icon/icon.ico"
       }
     },
     {
-      "name": "windows-release-basicdemo-2d",
-      "displayName": "Windows Release - BasicDemo_2D",
-      "inherits": ["windows-release-base"],
-      "binaryDir": "${sourceDir}/build/Windows/basicdemo-2d-release",
+      "name": "linux-debug-puzzlerpg",
+      "displayName": "Linux Debug - PuzzleRPG",
+      "inherits": ["linux-debug-base"],
+      "binaryDir": "${sourceDir}/build/Linux/puzzlerpg-debug",
       "cacheVariables": {
-        "COSMIC_PROJECT": "BasicDemo_2D"
+        "COSMIC_PROJECT": "PuzzleRPG",
+        "COSMIC_PROJECT_PROGRAM_ICON_PATH": "assets/textures/icon/icon.ico"
       }
     },
     {
-      "name": "windows-release-basicdemo-3d",
-      "displayName": "Windows Release - BasicDemo_3D",
-      "inherits": ["windows-release-base"],
-      "binaryDir": "${sourceDir}/build/Windows/basicdemo-3d-release",
+      "name": "linux-release-puzzlerpg",
+      "displayName": "Linux Release - PuzzleRPG",
+      "inherits": ["linux-release-base"],
+      "binaryDir": "${sourceDir}/build/Linux/puzzlerpg-release",
       "cacheVariables": {
-        "COSMIC_PROJECT": "BasicDemo_3D"
-      }
-    },
-    {
-      "name": "windows-release-sandbox-3d",
-      "displayName": "Windows Release - sandbox_3D",
-      "inherits": ["windows-release-base"],
-      "binaryDir": "${sourceDir}/build/Windows/sandbox-3d-release",
-      "cacheVariables": {
-        "COSMIC_PROJECT": "sandbox_3D"
+        "COSMIC_PROJECT": "PuzzleRPG",
+        "COSMIC_PROJECT_PROGRAM_ICON_PATH": "assets/textures/icon/icon.ico"
       }
     }
   ],
   "buildPresets": [
     {
-      "name": "build-windows-debug-networkdemo",
-      "configurePreset": "windows-debug-networkdemo"
+      "name": "build-windows-debug-puzzlerpg",
+      "configurePreset": "windows-debug-puzzlerpg"
     },
     {
-      "name": "build-windows-debug-basicdemo-2d",
-      "configurePreset": "windows-debug-basicdemo-2d"
+      "name": "build-windows-release-puzzlerpg",
+      "configurePreset": "windows-release-puzzlerpg"
     },
     {
-      "name": "build-windows-debug-basicdemo-3d",
-      "configurePreset": "windows-debug-basicdemo-3d"
+      "name": "build-linux-debug-puzzlerpg",
+      "configurePreset": "linux-debug-puzzlerpg"
     },
     {
-      "name": "build-windows-debug-sandbox-3d",
-      "configurePreset": "windows-debug-sandbox-3d"
-    },
-    {
-      "name": "build-windows-release-networkdemo",
-      "configurePreset": "windows-release-networkdemo"
-    },
-    {
-      "name": "build-windows-release-basicdemo-2d",
-      "configurePreset": "windows-release-basicdemo-2d"
-    },
-    {
-      "name": "build-windows-release-basicdemo-3d",
-      "configurePreset": "windows-release-basicdemo-3d"
-    },
-    {
-      "name": "build-windows-release-sandbox-3d",
-      "configurePreset": "windows-release-sandbox-3d"
+      "name": "build-linux-release-puzzlerpg",
+      "configurePreset": "linux-release-puzzlerpg"
     }
   ]
 }

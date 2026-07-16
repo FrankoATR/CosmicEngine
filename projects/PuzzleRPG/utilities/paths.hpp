@@ -1,0 +1,125 @@
+#ifndef PUZZLERPG_PATHS_HPP
+#define PUZZLERPG_PATHS_HPP
+
+// Punto unico de verdad para rutas y keys de recursos runtime de PuzzleRPG.
+
+#define PUZZLERPG_ASSET_DIR                 "assets"
+#define PUZZLERPG_FONT_DIR                  PUZZLERPG_ASSET_DIR "/fonts"
+#define PUZZLERPG_LEVELS_DIR                "levels"
+#define PUZZLERPG_MUSIC_DIR                 PUZZLERPG_ASSET_DIR "/music"
+#define PUZZLERPG_TEXTURE_DIR               PUZZLERPG_ASSET_DIR "/textures"
+#define PUZZLERPG_TEXTURE_BG_DIR            PUZZLERPG_TEXTURE_DIR "/bg"
+#define PUZZLERPG_TEXTURE_UI_DIR            PUZZLERPG_TEXTURE_DIR "/ui"
+#define PUZZLERPG_SPRITESHEET_DIR           PUZZLERPG_TEXTURE_DIR "/spritesheets"
+
+#define PUZZLERPG_FONT_MAIN_KEY             "puzzle_font"
+#define PUZZLERPG_FONT_MAIN_PATH            PUZZLERPG_FONT_DIR "/monogram-extended.ttf"
+#define PUZZLERPG_FONT_MAIN_SIZE            34
+
+#define PUZZLERPG_FONT_TITLE_KEY            "puzzle_font_big"
+#define PUZZLERPG_FONT_TITLE_PATH           PUZZLERPG_FONT_DIR "/monogram-extended.ttf"
+#define PUZZLERPG_FONT_TITLE_SIZE           58
+
+#define PUZZLERPG_UI_BUTTON_IDLE_KEY        "ui/button-idle"
+#define PUZZLERPG_UI_BUTTON_IDLE_PATH       PUZZLERPG_TEXTURE_UI_DIR "/button-idle.png"
+#define PUZZLERPG_UI_BUTTON_HOVER_KEY       "ui/button-hover"
+#define PUZZLERPG_UI_BUTTON_HOVER_PATH      PUZZLERPG_TEXTURE_UI_DIR "/button-hover.png"
+#define PUZZLERPG_UI_BUTTON_IDLE_M_KEY      "ui/button-idle-m"
+#define PUZZLERPG_UI_BUTTON_IDLE_M_PATH     PUZZLERPG_TEXTURE_UI_DIR "/button-m-idle.png"
+#define PUZZLERPG_UI_BUTTON_HOVER_M_KEY     "ui/button-hover-m"
+#define PUZZLERPG_UI_BUTTON_HOVER_M_PATH    PUZZLERPG_TEXTURE_UI_DIR "/button-m-hover.png"
+#define PUZZLERPG_UI_BUTTON_IDLE_L_KEY      "ui/button-idle-l"
+#define PUZZLERPG_UI_BUTTON_IDLE_L_PATH     PUZZLERPG_TEXTURE_UI_DIR "/button-l-idle.png"
+#define PUZZLERPG_UI_BUTTON_HOVER_L_KEY     "ui/button-hover-l"
+#define PUZZLERPG_UI_BUTTON_HOVER_L_PATH    PUZZLERPG_TEXTURE_UI_DIR "/button-l-hover.png"
+#define PUZZLERPG_UI_CELL_KEY               "ui/cell"
+#define PUZZLERPG_UI_CELL_PATH              PUZZLERPG_TEXTURE_UI_DIR "/cell.png"
+#define PUZZLERPG_UI_MESSAGE_KEY            "ui/message"
+#define PUZZLERPG_UI_MESSAGE_PATH           PUZZLERPG_TEXTURE_UI_DIR "/message.png"
+#define PUZZLERPG_UI_FOCUS_KEY              "ui/focus"
+#define PUZZLERPG_UI_FOCUS_PATH             PUZZLERPG_TEXTURE_UI_DIR "/focus.png"
+#define PUZZLERPG_UI_FOCUS_ROWS             1
+#define PUZZLERPG_UI_FOCUS_COLS             4
+#define PUZZLERPG_UI_FOCUS_PAD              0
+#define PUZZLERPG_UI_LOGO_KEY               "ui/logo"
+#define PUZZLERPG_UI_LOGO_PATH              PUZZLERPG_TEXTURE_DIR "/logo.png"
+
+#define PUZZLERPG_MENU_BACKGROUND_PATH      PUZZLERPG_TEXTURE_BG_DIR "/main-bg.png"
+
+// Spritesheets: nombres/rutas y metadata de layout centralizados.
+#define PUZZLERPG_SHEET_TILE_FLOOR_PATH     PUZZLERPG_SPRITESHEET_DIR "/ground-1x1.png"
+#define PUZZLERPG_SHEET_TILE_FLOOR_ROWS     15
+#define PUZZLERPG_SHEET_TILE_FLOOR_COLS     13
+#define PUZZLERPG_SHEET_TILE_FLOOR_PAD      0
+
+#define PUZZLERPG_SHEET_TILE_WALL_PATH      PUZZLERPG_SPRITESHEET_DIR "/walls-1x1.png"
+#define PUZZLERPG_SHEET_TILE_WALL_ROWS      7
+#define PUZZLERPG_SHEET_TILE_WALL_COLS      5
+#define PUZZLERPG_SHEET_TILE_WALL_PAD       0
+
+#define PUZZLERPG_SHEET_TILE_WALL_2X2_PATH  PUZZLERPG_SPRITESHEET_DIR "/walls-2x2.png"
+#define PUZZLERPG_SHEET_TILE_WALL_2X2_ROWS  6
+#define PUZZLERPG_SHEET_TILE_WALL_2X2_COLS  4
+#define PUZZLERPG_SHEET_TILE_WALL_2X2_PAD   0
+
+#define PUZZLERPG_SHEET_TILE_WALL_3X3_PATH  PUZZLERPG_SPRITESHEET_DIR "/walls-3x3.png"
+#define PUZZLERPG_SHEET_TILE_WALL_3X3_ROWS  3
+#define PUZZLERPG_SHEET_TILE_WALL_3X3_COLS  3
+#define PUZZLERPG_SHEET_TILE_WALL_3X3_PAD   0
+
+#define PUZZLERPG_SHEET_PLAYER_PATH         PUZZLERPG_SPRITESHEET_DIR "/player_sheet.png"
+#define PUZZLERPG_SHEET_PLAYER_ROWS         4
+#define PUZZLERPG_SHEET_PLAYER_COLS         8
+#define PUZZLERPG_SHEET_PLAYER_PAD          0
+
+#define PUZZLERPG_SHEET_PICKUP_PATH         PUZZLERPG_SPRITESHEET_DIR "/pickable-items-1x1.png"
+#define PUZZLERPG_SHEET_PICKUP_ROWS         2
+#define PUZZLERPG_SHEET_PICKUP_COLS         3
+#define PUZZLERPG_SHEET_PICKUP_PAD          0
+
+#define PUZZLERPG_SHEET_PLATE_PATH          PUZZLERPG_SPRITESHEET_DIR "/pressurae-items-1x1.png"
+#define PUZZLERPG_SHEET_PLATE_ROWS          1
+#define PUZZLERPG_SHEET_PLATE_COLS          2
+#define PUZZLERPG_SHEET_PLATE_PAD           0
+
+#define PUZZLERPG_SHEET_RECEPTACLE_PATH     PUZZLERPG_SPRITESHEET_DIR "/altar-items-1x1.png"
+#define PUZZLERPG_SHEET_RECEPTACLE_ROWS     1
+#define PUZZLERPG_SHEET_RECEPTACLE_COLS     2
+#define PUZZLERPG_SHEET_RECEPTACLE_PAD      0
+
+#define PUZZLERPG_SHEET_DOOR_PATH           PUZZLERPG_SPRITESHEET_DIR "/door_sheet.png"
+#define PUZZLERPG_SHEET_DOOR_ROWS           1
+#define PUZZLERPG_SHEET_DOOR_COLS           2
+#define PUZZLERPG_SHEET_DOOR_PAD            0
+
+#define PUZZLERPG_SHEET_BUTTON_PATH         PUZZLERPG_SPRITESHEET_DIR "/button_sheet.png"
+#define PUZZLERPG_SHEET_BUTTON_ROWS         1
+#define PUZZLERPG_SHEET_BUTTON_COLS         2
+#define PUZZLERPG_SHEET_BUTTON_PAD          0
+
+#define PUZZLERPG_SHEET_PUSHABLE_PATH       PUZZLERPG_SPRITESHEET_DIR "/pushable-items-1x1.png"
+#define PUZZLERPG_SHEET_PUSHABLE_ROWS       2
+#define PUZZLERPG_SHEET_PUSHABLE_COLS       3
+#define PUZZLERPG_SHEET_PUSHABLE_PAD        0
+
+#define PUZZLERPG_SHEET_TELEPORTER_PATH     PUZZLERPG_SPRITESHEET_DIR "/teleporter_sheet.png"
+#define PUZZLERPG_SHEET_TELEPORTER_ROWS     1
+#define PUZZLERPG_SHEET_TELEPORTER_COLS     4
+#define PUZZLERPG_SHEET_TELEPORTER_PAD      0
+
+#define PUZZLERPG_SHEET_SIGN_PATH           PUZZLERPG_SPRITESHEET_DIR "/sign.png"
+#define PUZZLERPG_SHEET_SIGN_ROWS           1
+#define PUZZLERPG_SHEET_SIGN_COLS           1
+#define PUZZLERPG_SHEET_SIGN_PAD            0
+
+#define PUZZLERPG_SHEET_TORCH_PATH          PUZZLERPG_SPRITESHEET_DIR "/torch_sheet.png"
+#define PUZZLERPG_SHEET_TORCH_ROWS          1
+#define PUZZLERPG_SHEET_TORCH_COLS          4
+#define PUZZLERPG_SHEET_TORCH_PAD           0
+
+#define PUZZLERPG_SHEET_DECOR_PATH          PUZZLERPG_SPRITESHEET_DIR "/ground-items-1x1.png"
+#define PUZZLERPG_SHEET_DECOR_ROWS          4
+#define PUZZLERPG_SHEET_DECOR_COLS          6
+#define PUZZLERPG_SHEET_DECOR_PAD           0
+
+#endif

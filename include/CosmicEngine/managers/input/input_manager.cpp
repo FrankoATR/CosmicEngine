@@ -375,7 +375,7 @@ namespace CosmicEngine
         RegisterAction("ui_nav_down", {{GLFW_KEY_DOWN}, {GLFW_GAMEPAD_BUTTON_DPAD_DOWN}, {GLFW_GAMEPAD_AXIS_LEFT_Y}, {}});
         RegisterAction("ui_nav_left", {{GLFW_KEY_LEFT}, {GLFW_GAMEPAD_BUTTON_DPAD_LEFT}, {}, {GLFW_GAMEPAD_AXIS_LEFT_X}});
         RegisterAction("ui_nav_right", {{GLFW_KEY_RIGHT}, {GLFW_GAMEPAD_BUTTON_DPAD_RIGHT}, {GLFW_GAMEPAD_AXIS_LEFT_X}, {}});
-        RegisterAction("ui_submit", {{GLFW_KEY_ENTER, GLFW_KEY_SPACE}, {GLFW_GAMEPAD_BUTTON_A}, {}, {}});
+        RegisterAction("ui_submit", {{GLFW_KEY_ENTER}, {GLFW_GAMEPAD_BUTTON_A}, {}, {}});
         RegisterAction("ui_back", {{GLFW_KEY_ESCAPE}, {GLFW_GAMEPAD_BUTTON_B, GLFW_GAMEPAD_BUTTON_START}, {}, {}});
 
         RegisterAction("system_exit_game", {{GLFW_KEY_ESCAPE}, {GLFW_GAMEPAD_BUTTON_START}, {}, {}});
@@ -835,8 +835,9 @@ namespace CosmicEngine
         else
         {
             glfwSetInputMode(GameManager::GetInstance().getWindowPtr(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            // Reset mouse-look reference when re-enabling the cursor to avoid large deltas
+            ResetMouseLookReference();
         }
-        glfwSetCursorPos(GameManager::GetInstance().getWindowPtr(), GameManager::GetInstance().getWindowSize().x / 2, GameManager::GetInstance().getWindowSize().y / 2);
     }
 
     bool InputManager::GetIsDisableMouse()

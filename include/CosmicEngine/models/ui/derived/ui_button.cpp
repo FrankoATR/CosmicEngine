@@ -9,8 +9,8 @@ namespace CosmicEngine
 {
 
     UIButton::UIButton(const std::string &text, const std::string &font, const std::string &texture, glm::vec2 Position, glm::vec2 Size, bool ReleaseMode, bool visible, UIElement *parent) : 
-        text(text), font(font), texture(texture), UIElement(Position, Size, visible, parent, UIElementType::Button), textColor(glm::vec3(1.0f, 1.0f, 1.0f)), isPressed(false),
-        clickOnArea(false), onClick(nullptr), ReleaseMode(ReleaseMode), cachedText(text)
+        text(text), font(font), texture(texture), hoverTexture(), UIElement(Position, Size, visible, parent, UIElementType::Button), textColor(glm::vec3(1.0f, 1.0f, 1.0f)), selectedTextColor(glm::vec3(1.0f, 0.9f, 0.0f)), isPressed(false),
+        clickOnArea(false), onClick(nullptr), ReleaseMode(ReleaseMode), cachedText(text), textOffset(0.0f), textureScale(1.0f)
     {
         auto tmp = ResourceManager::GetInstance().MeasureText(text, font, glm::vec3(1.0f));
         cachedSize.x = Position.x + (Size.x - tmp.x) / 2;
@@ -37,21 +37,32 @@ namespace CosmicEngine
 
         glm::vec3 color = textColor;
 
-        if (IsFocused()) color = glm::vec3(0.35f, 0.85f, 1.0f);
-        if (MouseHover()) color = glm::vec3(0.0f, 1.0f, 0.0f);
+        // unify visuals: both keyboard focus and mouse hover use the selected color
+        if (IsFocused() || MouseHover()) color = selectedTextColor;
 
-        //if (isPressed) color = glm::vec3(1.0f, 0.0f, 0.0f); //aplicar callbacks 
+        // choose which texture to show (hover/focus takes precedence)
+        std::string drawTexture = texture;
+        if ((MouseHover() || IsFocused()) && !hoverTexture.empty()) drawTexture = hoverTexture;
 
-        if(!texture.empty())
+        // calculate texture draw rect (allow scaling to make texture slightly larger)
+        glm::vec2 drawPos = Position;
+        glm::vec2 drawSize = Size;
+        if (textureScale != 1.0f)
         {
-            ResourceManager::GetInstance().Render2DSpriteUnlit(texture, Position, Size, 0.0f, glm::vec3(1.0f), 1.0f, ViewType::UI);
+            drawSize = Size * textureScale;
+            drawPos = Position - (drawSize - Size) / 2.0f;
+        }
+
+        if(!drawTexture.empty())
+        {
+            ResourceManager::GetInstance().Render2DSpriteUnlit(drawTexture, drawPos, drawSize, 0.0f, glm::vec3(1.0f), 1.0f, ViewType::UI);
         }
         else
         {
             ResourceManager::GetInstance().RenderRectangle(
-                Position,
-                Position + Size,
-                glm::vec2(Position.x + Size.x / 2, Position.y + Size.y / 2),
+                drawPos,
+                drawPos + drawSize,
+                glm::vec2(drawPos.x + drawSize.x / 2, drawPos.y + drawSize.y / 2),
                 glm::vec2(0.0f, 0.0f),
                 color,
                 1.0f, 
@@ -67,8 +78,9 @@ namespace CosmicEngine
             {
                 cachedText = text;
                 auto tmp = ResourceManager::GetInstance().MeasureText(text, font, glm::vec3(1.0f));
-                cachedSize.x = Position.x + (Size.x - tmp.x) / 2;
-                cachedSize.y = Position.y + (Size.y - tmp.y) / 2;
+                // center text relative to the drawn texture rectangle (drawPos/drawSize)
+                cachedSize.x = drawPos.x + (drawSize.x - tmp.x) / 2 + textOffset.x;
+                cachedSize.y = drawPos.y + (drawSize.y - tmp.y) / 2 + textOffset.y;
             }
 
             ResourceManager::GetInstance().RenderText(text, font, glm::vec3(cachedSize.x, cachedSize.y, 1.0f), glm::vec3(1.0f), glm::vec3(), glm::vec3(0.0f), color, 1.0f, ViewType::UI);
@@ -106,9 +118,29 @@ namespace CosmicEngine
         this->font = font;
     }
 
+    void UIButton::SetHoverTexture(const std::string &hoverTexture)
+    {
+        this->hoverTexture = hoverTexture;
+    }
+
+    void UIButton::SetTextureScale(float scale)
+    {
+        this->textureScale = scale > 0.0f ? scale : 1.0f;
+    }
+
+    void UIButton::SetTextOffset(const glm::vec2 &offset)
+    {
+        this->textOffset = offset;
+    }
+
     void UIButton::SetTextColor(glm::vec3 color)
     {
         textColor = color;
+    }
+
+    void UIButton::SetSelectedTextColor(glm::vec3 color)
+    {
+        selectedTextColor = color;
     }
 
     void UIButton::HandleInput()

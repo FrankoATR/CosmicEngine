@@ -53,6 +53,7 @@ namespace CosmicEngine
         float linearLight;
         float quadraticLight;
         float shininess;
+        glm::vec3 colorTint = glm::vec3(1.0f);
 
         #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
             glm::vec2 position;
@@ -104,11 +105,38 @@ namespace CosmicEngine
          */
         void SetVisible(bool visible);
 
-        /**
-         * @brief Returns whether the light is visible.
-         * @return True when the light is marked as visible.
-         */
-        bool GetVisible() const;
+          /**
+            * @brief Returns whether the light is visible.
+            * @return True when the light is marked as visible.
+            */
+          bool GetVisible() const;
+
+          /** @name Attenuation / Specular
+            * Methods here are independent of the underlying vector type (2D/3D)
+            * and therefore declared once outside the GAME_MODE_CONFIGURATION branches.
+            */
+          //@{
+          void SetConstantLight(float newConstantLight);
+          float GetConstantLight() const;
+
+          void SetLinearLight(float newLinearLight);
+          float GetLinearLight() const;
+
+          void SetQuadraticLight(float newQuadraticLight);
+          float GetQuadraticLight() const;
+
+          void SetShininess(float newShininess);
+          float GetShininess() const;
+          //@}
+
+          /**
+           * @brief Sets the color tint applied to this light's contribution.
+           * @param newColorTint RGB tint, default white (no tint).
+           */
+          void SetColorTint(glm::vec3 newColorTint);
+
+          /** @brief Returns the color tint applied to this light's contribution. */
+          glm::vec3 GetColorTint() const;
 
         /** @brief Marks the light for removal from the runtime. */
         void Destroy();
@@ -152,6 +180,40 @@ namespace CosmicEngine
              * @return The 2D position of the light.
              */
             glm::vec2 GetPosition() const;
+
+            /**
+             * @brief Sets the ambient light contribution.
+             * @param newAmbientLight Value provided by the caller.
+             */
+            void SetAmbientLight(glm::vec2 newAmbientLight);
+            /**
+             * @brief Returns the ambient light contribution.
+             * @return The ambient light contribution.
+             */
+            glm::vec2 GetAmbientLight() const;
+
+            /**
+             * @brief Sets the diffuse light contribution.
+             * @param newDiffuseLight Value provided by the caller.
+             */
+            void SetDiffuseLight(glm::vec2 newDiffuseLight);
+            /**
+             * @brief Returns the diffuse light contribution.
+             * @return The diffuse light contribution.
+             */
+            glm::vec2 GetDiffuseLight() const;
+
+            /**
+             * @brief Sets the specular light contribution.
+             * @param newSpecularLight Value provided by the caller.
+             */
+            void SetSpecularLight(glm::vec2 newSpecularLight);
+            /**
+             * @brief Returns the specular light contribution.
+             * @return The specular light contribution.
+             */
+            glm::vec2 GetSpecularLight() const;
+            /* Attenuation and shininess accessors moved to shared declarations above. */
 
         #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
             /**
@@ -222,50 +284,7 @@ namespace CosmicEngine
              * @return The specular light contribution.
              */
             glm::vec3 GetSpecularLight() const;
-
-            /**
-             * @brief Sets the constant attenuation factor.
-             * @param newConstantLight Value provided by the caller.
-             */
-            void SetConstantLight(float newConstantLight);
-            /**
-             * @brief Returns the constant attenuation factor.
-             * @return The constant attenuation factor.
-             */
-            float GetConstantLight() const;
-
-            /**
-             * @brief Sets the linear attenuation factor.
-             * @param newLinearLight Value provided by the caller.
-             */
-            void SetLinearLight(float newLinearLight);
-            /**
-             * @brief Returns the linear attenuation factor.
-             * @return The linear attenuation factor.
-             */
-            float GetLinearLight() const;
-
-            /**
-             * @brief Sets the quadratic attenuation factor.
-             * @param newQuadraticLight Value provided by the caller.
-             */
-            void SetQuadraticLight(float newQuadraticLight);
-            /**
-             * @brief Returns the quadratic attenuation factor.
-             * @return The quadratic attenuation factor.
-             */
-            float GetQuadraticLight() const;
-
-            /**
-             * @brief Sets the specular shininess factor.
-             * @param newShininess Value provided by the caller.
-             */
-            void SetShininess(float newShininess);
-            /**
-             * @brief Returns the specular shininess factor.
-             * @return The specular shininess factor.
-             */
-            float GetShininess() const;
+            /* Attenuation and shininess accessors moved to shared declarations above. */
 
         #else
             #error "[Light] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
