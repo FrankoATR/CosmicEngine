@@ -7,6 +7,7 @@
  */
 
 #include <iostream>
+#include <cstdint>
 #include <map>
 #include <glm/glm.hpp>
 
@@ -52,7 +53,7 @@ namespace CosmicEngine
     class Font
     {
     private:
-        std::map<char, TextCharacter> characters_resources;
+        std::map<char32_t, TextCharacter> characters_resources;
         unsigned int VAO, VBO;
 
     public:
@@ -70,7 +71,7 @@ namespace CosmicEngine
          * @brief Returns the loaded glyph map.
          * @return The loaded glyph map.
          */
-        const std::map<char, TextCharacter>& GetCharacters() const;
+        const std::map<char32_t, TextCharacter>& GetCharacters() const;
         /**
          * @brief Returns the VAO used for text rendering.
          * @return The VAO used for text rendering.

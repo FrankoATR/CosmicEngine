@@ -28,11 +28,12 @@
     "#version 330 core\n"
     "in vec2 TexCoords;\n"
     "out vec4 color;\n"
-    "uniform sampler2D image;\n"
-    "uniform vec3 spriteColor;\n"
+        "uniform sampler2D image;\n"
+        "uniform vec3 spriteColor;\n"
+        "uniform float spriteAlpha;\n"
     "void main()\n"
     "{\n"
-    "color = vec4(spriteColor, 1.0) * texture(image, TexCoords);\n"
+        "color = vec4(spriteColor, spriteAlpha) * texture(image, TexCoords);\n"
     "}\0";
 
     /** @brief 2D lit sprite-sheet vertex shader source (world-space position + UV remap for point-light shading). */
@@ -79,15 +80,17 @@
             vec2 ambient;
             vec2 diffuse;
             vec2 specular;
+            vec3 color;
         };
 
-        #define NR_POINT_LIGHTS 8
+        #define NR_POINT_LIGHTS 32
 
         in vec2 TexCoords;
         in vec2 WorldPos;
 
         uniform sampler2D image;
         uniform vec3 spriteColor;
+        uniform float spriteAlpha;
         uniform int activePointLightCount;
         uniform DirLight dirLight;
         uniform PointLight pointLights[NR_POINT_LIGHTS];
@@ -104,20 +107,37 @@
 
         void main()
         {
-            vec4 texel = texture(image, TexCoords) * vec4(spriteColor, 1.0);
+            vec4 texel = texture(image, TexCoords) * vec4(spriteColor, spriteAlpha);
             if (texel.a <= 0.01)
             {
                 discard;
             }
 
-            float lighting = dirLight.ambient.x + dirLight.diffuse.x;
+            float baseLighting = dirLight.ambient.x + dirLight.diffuse.x;
+            float pointLighting = 0.0;
+            vec3 pointColorAccum = vec3(0.0);
             for (int i = 0; i < activePointLightCount; ++i)
             {
-                lighting += CalcPointLight(pointLights[i], WorldPos);
+                float energy = CalcPointLight(pointLights[i], WorldPos);
+                pointLighting += energy;
+                pointColorAccum += pointLights[i].color * energy;
             }
+            vec3 pointColor = pointLighting > 0.0001 ? (pointColorAccum / pointLighting) : vec3(1.0);
 
-            lighting = clamp(lighting, 0.03, 0.95);
-            color = vec4(texel.rgb * lighting, texel.a);
+            baseLighting = clamp(baseLighting, 0.03, 1.0);
+
+            // Night lighting first darkens the texel. Point lights then drive
+            // it back toward its original albedo instead of looking like a
+            // white overlay painted on top of the sprite.
+            float recovery = clamp(pointLighting * 1.35, 0.0, 1.0);
+            float overbright = max(pointLighting * 1.35 - 1.0, 0.0);
+
+            vec3 nightColor = texel.rgb * baseLighting;
+            vec3 tint = mix(vec3(1.0), pointColor, recovery);
+            vec3 restoredColor = mix(nightColor, texel.rgb * tint, recovery);
+            vec3 lit = restoredColor + pointColor * overbright * 0.12;
+            lit = clamp(lit, 0.0, 1.0);
+            color = vec4(lit, texel.a);
         }
     )glsl";
 

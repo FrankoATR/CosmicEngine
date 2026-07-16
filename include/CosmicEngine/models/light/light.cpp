@@ -102,6 +102,38 @@ namespace CosmicEngine
             return this->position;
         }
 
+        void Light::SetAmbientLight(glm::vec2 newAmbientLight)
+        {
+            this->ambientLight = newAmbientLight;
+        }
+
+        glm::vec2 Light::GetAmbientLight() const
+        {
+            return this->ambientLight;
+        }
+
+        void Light::SetDiffuseLight(glm::vec2 newDiffuseLight)
+        {
+            this->diffuseLight = newDiffuseLight;
+        }
+
+        glm::vec2 Light::GetDiffuseLight() const
+        {
+            return this->diffuseLight;
+        }
+
+        void Light::SetSpecularLight(glm::vec2 newSpecularLight)
+        {
+            this->specularLight = newSpecularLight;
+        }
+
+        glm::vec2 Light::GetSpecularLight() const
+        {
+            return this->specularLight;
+        }
+
+        /* Attenuation and shininess accessors moved to shared implementations below. */
+
 
     #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
         Light::Light(
@@ -174,48 +206,62 @@ namespace CosmicEngine
             return this->specularLight;
         }
 
-        void Light::SetConstantLight(float newConstantLight)
-        {
-            this->constantLight = newConstantLight;
-        }
-
-        float Light::GetConstantLight() const
-        {
-            return this->constantLight;
-        }
-
-        void Light::SetLinearLight(float newLinearLight)
-        {
-            this->linearLight = newLinearLight;
-        }
-
-        float Light::GetLinearLight() const
-        {
-            return this->linearLight;
-        }
-
-        void Light::SetQuadraticLight(float newQuadraticLight)
-        {
-            this->quadraticLight = newQuadraticLight;
-        }
-
-        float Light::GetQuadraticLight() const
-        {
-            return this->quadraticLight;
-        }
-
-        void Light::SetShininess(float newShininess)
-        {
-            this->shininess = newShininess;
-        }
-
-        float Light::GetShininess() const
-        {
-            return this->shininess;
-        }
+        /* Attenuation and shininess accessors moved to shared implementations below. */
     
     #else
         #error "[Light] You must choose a game mode configuration (GAME_2D_CONFIGURATION Or GAME_3D_CONFIGURATION)"
     #endif
 
+    /* Shared implementations for attenuation and specular shininess
+     * These members are type-independent and therefore defined once.
+     */
+    void Light::SetConstantLight(float newConstantLight)
+    {
+        this->constantLight = newConstantLight;
+    }
+
+    float Light::GetConstantLight() const
+    {
+        return this->constantLight;
+    }
+
+    void Light::SetLinearLight(float newLinearLight)
+    {
+        this->linearLight = newLinearLight;
+    }
+
+    float Light::GetLinearLight() const
+    {
+        return this->linearLight;
+    }
+
+    void Light::SetQuadraticLight(float newQuadraticLight)
+    {
+        this->quadraticLight = newQuadraticLight;
+    }
+
+    float Light::GetQuadraticLight() const
+    {
+        return this->quadraticLight;
+    }
+
+    void Light::SetShininess(float newShininess)
+    {
+        this->shininess = newShininess;
+    }
+
+    float Light::GetShininess() const
+    {
+        return this->shininess;
+    }
+
+    void Light::SetColorTint(glm::vec3 newColorTint)
+    {
+        this->colorTint = newColorTint;
+    }
+
+    glm::vec3 Light::GetColorTint() const
+    {
+        return this->colorTint;
+    }
 }

@@ -1,6 +1,10 @@
-# Guia De Configuracion De Proyectos En CosmicEngine
+# CosmicEngine — Guía de Configuración de Proyectos
 
-Este documento describe el flujo general necesario para crear, configurar, compilar y ejecutar un proyecto basico dentro del framework CosmicEngine en una maquina limpia. El mismo proceso aplica a cualquier proyecto alojado dentro de `projects/`.
+**CosmicEngine** es un framework de videojuegos en C++ con OpenGL que soporta modos 2D y 3D. Incluye gestores de escenas, renderizado por capas, iluminación dinámica, audio, entrada (teclado, ratón y gamepad), UI, red UDP y un sistema de recursos basado en claves.
+
+El proyecto de demostración incluido y compilable es **PuzzleRPG** (`projects/PuzzleRPG/`): un juego 2D top-down de puzzles cooperativos. Consulta su [README propio](projects/PuzzleRPG/README.md) para detalles del juego.
+
+Este documento describe el flujo general para crear, configurar, compilar y ejecutar cualquier proyecto dentro de `projects/`.
 
 ## Estructura Recomendada Del Proyecto
 
@@ -120,64 +124,37 @@ Los nombres de paquetes pueden variar segun la distribucion Linux.
 
 ## Procedimiento De Compilacion En Windows
 
-La compilacion en Windows se realiza desde la raiz del repositorio mediante presets de CMake orientados por proyecto. No hace falta entrar manualmente a `projects/<demo>/build`.
+La compilacion en Windows se realiza desde la raiz del repositorio mediante presets de CMake. No hace falta entrar manualmente al directorio de build.
 
 1. Abre una terminal `MSYS2 UCRT64`.
 2. Ve a la raiz del repositorio.
-3. Configura usando el preset del proyecto y configuracion deseados.
+3. Configura con el preset deseado.
 4. Compila con el build preset correspondiente.
 
-Ejemplo para `sandbox_3D` en release:
+**PuzzleRPG** (demo incluida) — debug:
 
 ```bash
-cd CosmicEngine
-cmake --preset windows-release-sandbox-3d
-cmake --build --preset build-windows-release-sandbox-3d
+cmake --preset windows-debug-puzzlerpg
+cmake --build --preset build-windows-debug-puzzlerpg -j 8
 ```
 
-Ejemplo para `NetworkDemo` en debug:
+**PuzzleRPG** — release:
 
 ```bash
-cd CosmicEngine
-cmake --preset windows-debug-networkdemo
-cmake --build --preset build-windows-debug-networkdemo
+cmake --preset windows-release-puzzlerpg
+cmake --build --preset build-windows-release-puzzlerpg -j 8
 ```
 
-Ejemplo equivalente en PowerShell:
+Los presets disponibles en el repositorio son:
 
-```powershell
-cd CosmicEngine
-cmake --preset windows-release-networkdemo
-cmake --build --preset build-windows-release-networkdemo
-```
+| Preset de configure          | Preset de build                    |
+| ---------------------------- | ---------------------------------- |
+| `windows-debug-puzzlerpg`    | `build-windows-debug-puzzlerpg`    |
+| `windows-release-puzzlerpg`  | `build-windows-release-puzzlerpg`  |
+| `linux-debug-puzzlerpg`      | `build-linux-debug-puzzlerpg`      |
+| `linux-release-puzzlerpg`    | `build-linux-release-puzzlerpg`    |
 
-Los presets publicos disponibles en Windows son:
-
-1. `windows-release-networkdemo`
-2. `windows-debug-networkdemo`
-3. `windows-release-basicdemo-2d`
-4. `windows-debug-basicdemo-2d`
-5. `windows-release-basicdemo-3d`
-6. `windows-debug-basicdemo-3d`
-7. `windows-release-sandbox-3d`
-8. `windows-debug-sandbox-3d`
-9. `build-windows-release-networkdemo`
-10. `build-windows-debug-networkdemo`
-11. `build-windows-release-basicdemo-2d`
-12. `build-windows-debug-basicdemo-2d`
-13. `build-windows-release-basicdemo-3d`
-14. `build-windows-debug-basicdemo-3d`
-15. `build-windows-release-sandbox-3d`
-16. `build-windows-debug-sandbox-3d`
-
-Estos nombres corresponden a los proyectos de ejemplo incluidos actualmente en el repositorio. Si se crea un proyecto nuevo dentro de `projects/`, puede seguirse la misma estructura de presets cuando se necesite un arbol de build dedicado por proyecto, por ejemplo:
-
-1. `windows-release-myproject`
-2. `windows-debug-myproject`
-3. `build-windows-release-myproject`
-4. `build-windows-debug-myproject`
-
-La recomendacion es conservar el mismo patron: un preset de configure por proyecto y configuracion, y un build preset asociado que reutilice ese configure preset.
+Para proyectos nuevos dentro de `projects/` se recomienda seguir el mismo patrón: un preset de configure por proyecto y configuración, y un build preset asociado. Cada preset usa su propio directorio de build, por lo que cambiar entre proyectos no requiere limpiar el cache ni usar `--fresh`.
 
 Cada preset usa su propio directorio de build, por lo que cambiar entre proyectos no requiere reutilizar el mismo cache ni ejecutar `--fresh` como paso normal.
 
@@ -222,9 +199,9 @@ Reinstala CMake desde el entorno `UCRT64`:
 pacman -S --needed mingw-w64-ucrt-x86_64-cmake
 ```
 
-### Se compila otra demo distinta
+### Se compila un proyecto distinto al esperado
 
-Verifica que el valor enviado en `COSMIC_PROJECT` corresponda al proyecto esperado durante la configuracion.
+Verifica que el preset de configure seleccionado corresponda al proyecto deseado. Cada preset fija la variable `COSMIC_PROJECT` automáticamente.
 
 ## Ejecucion Del Proyecto
 

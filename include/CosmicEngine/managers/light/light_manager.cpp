@@ -13,7 +13,11 @@ namespace CosmicEngine
 {
     namespace
     {
-        constexpr size_t kMaxGpuPointLights = 8;
+        #if GAME_MODE_CONFIGURATION == GAME_2D_CONFIGURATION
+            constexpr size_t kMaxGpuPointLights = 32;
+        #elif GAME_MODE_CONFIGURATION == GAME_3D_CONFIGURATION
+            constexpr size_t kMaxGpuPointLights = 8;
+        #endif
         constexpr float kDefaultMaterialShininess = 32.0f;
         constexpr float kStaticPointLightRefreshDistanceSq = 0.04f;
         constexpr float kActiveLightHysteresisDistance = 10.0f;
@@ -207,6 +211,7 @@ namespace CosmicEngine
                 shader->SetFloat("pointLights[" + std::to_string(i) + "].constant", light->constantLight);
                 shader->SetFloat("pointLights[" + std::to_string(i) + "].linear", light->linearLight);
                 shader->SetFloat("pointLights[" + std::to_string(i) + "].quadratic", light->quadraticLight);
+                shader->SetVec3("pointLights[" + std::to_string(i) + "].color", light->colorTint);
             }
 
             shader->EndUse();

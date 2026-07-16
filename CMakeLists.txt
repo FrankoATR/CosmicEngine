@@ -37,6 +37,20 @@ endif()
 
 include("${COSMIC_PROJECT_DIR}/project.cmake")
 
+if(DEFINED COSMIC_PROJECT_PROGRAM_ICON_PATH)
+    if(NOT COSMIC_PROJECT_PROGRAM_ICON_PATH STREQUAL "")
+        if(IS_ABSOLUTE "${COSMIC_PROJECT_PROGRAM_ICON_PATH}")
+            set(PROJECT_PROGRAM_ICON_RESOLVED "${COSMIC_PROJECT_PROGRAM_ICON_PATH}")
+        else()
+            set(PROJECT_PROGRAM_ICON_RESOLVED "${COSMIC_PROJECT_DIR}/${COSMIC_PROJECT_PROGRAM_ICON_PATH}")
+        endif()
+        if(DEFINED PROJECT_PROGRAM_ICON_RESOLVED)
+            file(TO_CMAKE_PATH "${PROJECT_PROGRAM_ICON_RESOLVED}" PROJECT_PROGRAM_ICON_CMAKE)
+            set(PROGRAM_ICON "${PROJECT_PROGRAM_ICON_CMAKE}")
+        endif()
+    endif()
+endif()
+
 if(NOT DEFINED COSMIC_PROJECT_NAME)
     set(COSMIC_PROJECT_NAME "${COSMIC_PROJECT}")
 endif()
@@ -229,7 +243,9 @@ set(ENGINE_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/ui_element.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_button.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_text.cpp
+    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_image.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_text_field.cpp
+    ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_text_area.cpp
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/models/ui/derived/ui_slider.cpp
 
     ${CMAKE_SOURCE_DIR}/include/CosmicEngine/managers/game_manager.cpp

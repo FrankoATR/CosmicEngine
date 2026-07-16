@@ -68,7 +68,7 @@ namespace CosmicEngine
         void HandleInput(float deltaTime);
         void ResetCursorBlink();
         void NotifyTextChanged();
-        void InsertCharacter(char character);
+        void InsertCharacter(unsigned int codepoint);
         void RemoveCharacterBeforeCursor();
         glm::vec3 GetCurrentTextColor() const;
         float GetCursorOffsetX() const;

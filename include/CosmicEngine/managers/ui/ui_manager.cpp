@@ -21,6 +21,8 @@ namespace CosmicEngine
     UIManager::UIManager()
     {
         RUNTIME_LIFECYCLE("UI manager", "created");
+        usingMouseInput = true;
+        lastMousePosUI = glm::vec2(0.0f);
     }
 
     UIManager::~UIManager()
@@ -34,6 +36,8 @@ namespace CosmicEngine
     {
         this->MouseHoverAny = false;
         focusedElementIndex = -1;
+        usingMouseInput = true;
+        lastMousePosUI = InputManager::GetInstance().GetMousePosition_UI();
         RUNTIME_LIFECYCLE("UI manager", "initialized");
     }
 
@@ -48,44 +52,108 @@ namespace CosmicEngine
     {
         this->MouseHoverAny = false;
 
-        SyncFocusFromMouse();
-        if (focusedElementIndex == -1)
+        const int focusedTextFieldIndex = FindFocusedTextFieldIndex();
+        const bool textFieldCapturingInput = focusedTextFieldIndex != -1;
+        if (textFieldCapturingInput && focusedElementIndex != focusedTextFieldIndex)
         {
-            FocusFirstInteractiveElement();
+            FocusElementAt(focusedTextFieldIndex);
         }
 
-        UIElement *focusedElement = GetFocusedElement();
-        const bool focusedTextField = dynamic_cast<UITextField *>(focusedElement) != nullptr;
+        // Determine input source: mouse movement/button vs keyboard/gamepad actions
+        glm::vec2 currMouse = InputManager::GetInstance().GetMousePosition_UI();
+        float dx = currMouse.x - lastMousePosUI.x;
+        float dy = currMouse.y - lastMousePosUI.y;
+        bool mouseMoved = (dx * dx + dy * dy) > 1.0f; // UI-space threshold (squared distance)
+        bool mouseClicked = InputManager::GetInstance().IsMouseButtonPressed(GLFW_MOUSE_BUTTON_1, KeyEventType::KeyDown) ||
+                            InputManager::GetInstance().IsMouseButtonPressed(GLFW_MOUSE_BUTTON_2, KeyEventType::KeyDown);
+        bool keyboardNav = InputManager::GetInstance().IsActionPressed("ui_nav_next", KeyEventType::KeyDown) ||
+                           InputManager::GetInstance().IsActionPressed("ui_nav_up", KeyEventType::KeyDown) ||
+                           InputManager::GetInstance().IsActionPressed("ui_nav_down", KeyEventType::KeyDown) ||
+                           InputManager::GetInstance().IsActionPressed("ui_nav_left", KeyEventType::KeyDown) ||
+                           InputManager::GetInstance().IsActionPressed("ui_nav_right", KeyEventType::KeyDown) ||
+                           InputManager::GetInstance().IsActionPressed("ui_submit", KeyEventType::KeyDown);
 
-        if (InputManager::GetInstance().IsActionPressed("ui_nav_next", KeyEventType::KeyDown))
+        bool newUsingMouse = usingMouseInput;
+        if (textFieldCapturingInput)
         {
-            FocusNextInteractiveElement(1);
+            newUsingMouse = true;
+        }
+        else if (mouseMoved || mouseClicked)
+        {
+            newUsingMouse = true;
+        }
+        else if (keyboardNav || InputManager::GetInstance().GetFirstKeyJustPressed() >= 0 || InputManager::GetInstance().GetFirstGamepadButtonJustPressed() >= 0)
+        {
+            newUsingMouse = false;
         }
 
-        if (!focusedTextField)
+        // React to input-mode change
+        if (newUsingMouse != usingMouseInput)
         {
-            if (InputManager::GetInstance().IsActionPressed("ui_nav_up", KeyEventType::KeyDown) ||
-                InputManager::GetInstance().IsActionPressed("ui_nav_left", KeyEventType::KeyDown))
+            usingMouseInput = newUsingMouse;
+            if (usingMouseInput)
             {
-                FocusNextInteractiveElement(-1);
+                // switched to mouse: show cursor, clear persistent keyboard focus
+                InputManager::GetInstance().SetDisableMouse(false);
+                InputManager::GetInstance().SetActiveMouseInput();
+                if (focusedElementIndex != -1)
+                {
+                    elements[focusedElementIndex]->SetFocused(false);
+                    focusedElementIndex = -1;
+                }
             }
+            else
+            {
+                // switched to keyboard/gamepad: hide cursor and enable keyboard focus
+                InputManager::GetInstance().SetDisableMouse(true);
+                InputManager::GetInstance().SetInactiveMouseInput();
+                if (focusedElementIndex == -1)
+                {
+                    FocusFirstInteractiveElement();
+                }
+            }
+        }
 
-            if (InputManager::GetInstance().IsActionPressed("ui_nav_down", KeyEventType::KeyDown) ||
-                InputManager::GetInstance().IsActionPressed("ui_nav_right", KeyEventType::KeyDown))
+        lastMousePosUI = currMouse;
+
+        // If using mouse input, do not drive focus with mouse movement; rely on per-element hover.
+        if (!usingMouseInput)
+        {
+            // keyboard/gamepad navigation drives focus
+            UIElement *focusedElement = GetFocusedElement();
+            const bool focusedTextField = dynamic_cast<UITextField *>(focusedElement) != nullptr;
+
+            if (InputManager::GetInstance().IsActionPressed("ui_nav_next", KeyEventType::KeyDown))
             {
                 FocusNextInteractiveElement(1);
             }
-        }
 
-        if (InputManager::GetInstance().IsActionPressed("ui_submit", KeyEventType::KeyDown))
-        {
-            focusedElement = GetFocusedElement();
-            if (focusedElement)
+            if (!focusedTextField)
             {
-                focusedElement->Activate();
+                if (InputManager::GetInstance().IsActionPressed("ui_nav_up", KeyEventType::KeyDown) ||
+                    InputManager::GetInstance().IsActionPressed("ui_nav_left", KeyEventType::KeyDown))
+                {
+                    FocusNextInteractiveElement(-1);
+                }
+
+                if (InputManager::GetInstance().IsActionPressed("ui_nav_down", KeyEventType::KeyDown) ||
+                    InputManager::GetInstance().IsActionPressed("ui_nav_right", KeyEventType::KeyDown))
+                {
+                    FocusNextInteractiveElement(1);
+                }
+            }
+
+            if (!focusedTextField && InputManager::GetInstance().IsActionPressed("ui_submit", KeyEventType::KeyDown))
+            {
+                focusedElement = GetFocusedElement();
+                if (focusedElement)
+                {
+                    focusedElement->Activate();
+                }
             }
         }
 
+        // Always update elements (they will handle mouse clicks when appropriate)
         for (auto &element : elements)
         {
             if (!element || !element->IsVisible())
@@ -99,6 +167,21 @@ namespace CosmicEngine
                 this->MouseHoverAny = true;
             }
         }
+    }
+
+    int UIManager::FindFocusedTextFieldIndex() const
+    {
+        for (int index = 0; index < static_cast<int>(elements.size()); ++index)
+        {
+            UIElement *element = elements[index];
+            auto *textField = dynamic_cast<UITextField *>(element);
+            if (textField && textField->IsVisible() && textField->IsFocused())
+            {
+                return index;
+            }
+        }
+
+        return -1;
     }
 
     void UIManager::draw()
@@ -118,7 +201,7 @@ namespace CosmicEngine
     void UIManager::AddElement(UIElement* element)
     {
         elements.push_back(element);
-        if (focusedElementIndex == -1 && element && element->IsFocusable() && element->IsVisible())
+        if (focusedElementIndex == -1 && element && element->IsFocusable() && element->IsVisible() && !usingMouseInput)
         {
             FocusElementAt(static_cast<int>(elements.size()) - 1);
         }

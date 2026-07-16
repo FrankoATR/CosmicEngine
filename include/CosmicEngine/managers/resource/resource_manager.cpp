@@ -14,6 +14,7 @@
 
 #include <sstream>
 #include <fstream>
+#include <cstdint>
 #include <functional>
 #include <memory>
 
@@ -26,6 +27,79 @@ namespace CosmicEngine
         bool IsBuiltInResourceKey(const std::string &key)
         {
             return key.rfind("COSMIC_", 0) == 0;
+        }
+
+        std::vector<char32_t> DecodeUtf8(const std::string &text)
+        {
+            std::vector<char32_t> codepoints;
+            codepoints.reserve(text.size());
+
+            for (size_t i = 0; i < text.size();)
+            {
+                const unsigned char lead = static_cast<unsigned char>(text[i]);
+
+                if (lead < 0x80)
+                {
+                    codepoints.push_back(static_cast<char32_t>(lead));
+                    ++i;
+                    continue;
+                }
+
+                size_t remaining = 0;
+                char32_t codepoint = 0;
+                if ((lead & 0xE0) == 0xC0)
+                {
+                    remaining = 1;
+                    codepoint = static_cast<char32_t>(lead & 0x1F);
+                }
+                else if ((lead & 0xF0) == 0xE0)
+                {
+                    remaining = 2;
+                    codepoint = static_cast<char32_t>(lead & 0x0F);
+                }
+                else if ((lead & 0xF8) == 0xF0)
+                {
+                    remaining = 3;
+                    codepoint = static_cast<char32_t>(lead & 0x07);
+                }
+                else
+                {
+                    codepoints.push_back(static_cast<char32_t>(lead));
+                    ++i;
+                    continue;
+                }
+
+                if (i + remaining >= text.size())
+                {
+                    codepoints.push_back(static_cast<char32_t>(lead));
+                    ++i;
+                    continue;
+                }
+
+                bool valid = true;
+                for (size_t j = 1; j <= remaining; ++j)
+                {
+                    const unsigned char next = static_cast<unsigned char>(text[i + j]);
+                    if ((next & 0xC0) != 0x80)
+                    {
+                        valid = false;
+                        break;
+                    }
+                    codepoint = (codepoint << 6) | static_cast<char32_t>(next & 0x3F);
+                }
+
+                if (!valid)
+                {
+                    codepoints.push_back(static_cast<char32_t>(lead));
+                    ++i;
+                    continue;
+                }
+
+                codepoints.push_back(codepoint);
+                i += remaining + 1;
+            }
+
+            return codepoints;
         }
     }
 
@@ -722,6 +796,7 @@ namespace CosmicEngine
         spriteShader->SetModel("model", glm::vec3(position, 0.0f), glm::vec3(size, 0.0f), glm::vec3(0.0f, 0.0f, rotation));
         spriteShader->SetProjection("projection", viewType);
         spriteShader->SetVec3("spriteColor", color);
+        spriteShader->SetFloat("spriteAlpha", alpha);
         spriteShader->SetVec2("uvMin", glm::vec2(0.0f, 0.0f));
         spriteShader->SetVec2("uvMax", glm::vec2(1.0f, 1.0f));
 
@@ -785,6 +860,7 @@ namespace CosmicEngine
         shader->SetModel("model", glm::vec3(position, 0.0f), glm::vec3(size, 0.0f), glm::vec3(0.0f, 0.0f, rotation));
         shader->SetProjection("projection", viewType);
         shader->SetVec3("spriteColor", color);
+        shader->SetFloat("spriteAlpha", alpha);
         shader->SetVec2("uvMin", glm::vec2(0.0f, 0.0f));
         shader->SetVec2("uvMax", glm::vec2(1.0f, 1.0f));
 
@@ -827,6 +903,7 @@ namespace CosmicEngine
         spriteSheetShader->SetProjection("projection", viewType);
 
         spriteSheetShader->SetVec3("spriteColor", color);
+        spriteSheetShader->SetFloat("spriteAlpha", alpha);
 
 
         int spriteWidth = ((textureSheet->texture->GetWidth() - (textureSheet->padding * textureSheet->columns)) / textureSheet->columns);
@@ -910,6 +987,7 @@ namespace CosmicEngine
         shader->SetProjection("projection", viewType);
 
         shader->SetVec3("spriteColor", color);
+        shader->SetFloat("spriteAlpha", alpha);
 
         unsigned int textureIndex = 0;
         for (auto pair : shaderVar_textureKey)
@@ -963,8 +1041,8 @@ namespace CosmicEngine
         float width = 0.0f;
         float maxHeight = 0.0f;
     
-        for (char c : text) {
-            auto it = characters.find(c);
+        for (char32_t codepoint : DecodeUtf8(text)) {
+            auto it = characters.find(codepoint);
             if (it == characters.end())
             {
                 continue;
@@ -1009,10 +1087,9 @@ namespace CosmicEngine
         glBindVertexArray(fontResource->GetVAO());
         glBindBuffer(GL_ARRAY_BUFFER, fontResource->GetVBO());
 
-        std::string::const_iterator c;
-        for (c = text.begin(); c != text.end(); c++)
+        for (char32_t codepoint : DecodeUtf8(text))
         {
-            auto it = characters.find(*c);
+            auto it = characters.find(codepoint);
             if (it == characters.end())
             {
                 continue;
