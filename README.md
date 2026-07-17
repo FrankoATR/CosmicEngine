@@ -6,6 +6,14 @@ El proyecto de demostración incluido y compilable es **PuzzleRPG** (`projects/P
 
 Este documento describe el flujo general para crear, configurar, compilar y ejecutar cualquier proyecto dentro de `projects/`.
 
+## Documentación
+
+| Documento | Descripción |
+| --------- | ----------- |
+| [Referencia API (Doxygen)](https://frankoatr.github.io/CosmicEngine/) | Documentación generada automáticamente de todas las clases y métodos del motor |
+| [Manual Técnico](docs/manual_tecnico.md) | Arquitectura interna del motor, gestores, modelos de datos, pipeline de renderizado y sistema de construcción |
+| [Manual de Usuario](docs/manual_usuario.md) | Guía práctica para crear un proyecto, escenas, entidades y usar todos los sistemas del motor |
+
 ## Estructura Recomendada Del Proyecto
 
 Un proyecto basico debe mantenerse autonomo dentro de `projects/[nombre-del-proyecto]`. Una estructura recomendada es:
