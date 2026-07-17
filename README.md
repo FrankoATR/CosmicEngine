@@ -2,7 +2,7 @@
 
 **CosmicEngine** es un framework de videojuegos en C++ con OpenGL que soporta modos 2D y 3D. Incluye gestores de escenas, renderizado por capas, iluminación dinámica, audio, entrada (teclado, ratón y gamepad), UI, red UDP y un sistema de recursos basado en claves.
 
-El proyecto de demostración incluido y compilable es **PuzzleRPG** (`projects/PuzzleRPG/`): un juego 2D top-down de puzzles cooperativos. Consulta su [README propio](projects/PuzzleRPG/README.md) para detalles del juego.
+El proyecto de demostración incluido y compilable es **PuzzleRPG** (`projects/PuzzleRPG/`): un juego 2D top-down de puzzles cooperativos.
 
 Este documento describe el flujo general para crear, configurar, compilar y ejecutar cualquier proyecto dentro de `projects/`.
 
