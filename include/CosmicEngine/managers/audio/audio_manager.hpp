@@ -103,8 +103,17 @@ namespace CosmicEngine
         ma_uint32 sfxVoicesPerSound = 12;
 
         glm::vec3 listenerPos{0.0f, 0.0f, 0.0f};
+        glm::vec3 listenerForward{0.0f, 0.0f, -1.0f};
+        glm::vec3 listenerUp{0.0f, 1.0f, 0.0f};
 
         float panRangeUnits = 10.0f;
+
+        // Spatial attenuation applied to World3D sounds. Defaults mirror miniaudio's
+        // own defaults so existing projects behave exactly as before unless they call
+        // SetSpatialAttenuation().
+        float spatialMinDistance = 1.0f;
+        float spatialMaxDistance = 3.402823466e+38f;
+        float spatialRolloff = 1.0f;
 
         AudioManager();
         ~AudioManager();
@@ -236,6 +245,33 @@ namespace CosmicEngine
          * @param position Listener world position.
          */
         void SetListenerPosition(const glm::vec3 &position);
+        /**
+         * @brief Sets the orientation of the 3D audio listener.
+         *
+         * Without this the listener keeps miniaudio's default facing of (0,0,-1), so
+         * World3D panning is only correct while the camera happens to look down -Z.
+         * Call it every frame with the active camera's basis to keep left/right
+         * panning matching what is on screen.
+         *
+         * @param forward Direction the listener faces.
+         * @param up Listener up vector.
+         */
+        void SetListenerDirection(const glm::vec3 &forward, const glm::vec3 &up = glm::vec3(0.0f, 1.0f, 0.0f));
+
+        /**
+         * @brief Configures distance attenuation for World3D sounds.
+         *
+         * miniaudio's default inverse attenuation starts rolling off at 1 world unit,
+         * which makes sounds nearly inaudible in projects whose worlds are hundreds of
+         * units across. Raise @p minDistance to the radius that should still play at
+         * full volume.
+         *
+         * @param minDistance Distance up to which the sound plays at full volume.
+         * @param maxDistance Distance beyond which attenuation stops increasing.
+         * @param rolloff Attenuation steepness (1.0 = miniaudio default).
+         */
+        void SetSpatialAttenuation(float minDistance, float maxDistance, float rolloff = 1.0f);
+
         /**
          * @brief Sets the range used to compute 2D stereo panning.
          * @param units World-space range corresponding to full pan.

@@ -2,6 +2,8 @@
 
 #include "../../utils/log.hpp"
 
+#include <glm/geometric.hpp>
+
 #include <algorithm>
 
 namespace CosmicEngine
@@ -119,6 +121,9 @@ namespace CosmicEngine
         {
             ma_sound_set_spatialization_enabled(&snd, MA_TRUE);
             ma_sound_set_position(&snd, pos.x, pos.y, pos.z);
+            ma_sound_set_min_distance(&snd, spatialMinDistance);
+            ma_sound_set_max_distance(&snd, spatialMaxDistance);
+            ma_sound_set_rolloff(&snd, spatialRolloff);
         }
         break;
         }
@@ -468,6 +473,30 @@ namespace CosmicEngine
 
         listenerPos = position;
         ma_engine_listener_set_position(&engine, 0, listenerPos.x, listenerPos.y, listenerPos.z);
+    }
+
+    void AudioManager::SetListenerDirection(const glm::vec3 &forward, const glm::vec3 &up)
+    {
+        if (!engineInitialized)
+            return;
+
+        const float forwardLength = glm::length(forward);
+        const float upLength = glm::length(up);
+        if (forwardLength < 1e-5f || upLength < 1e-5f)
+            return; // ignore degenerate bases rather than corrupting the listener
+
+        listenerForward = forward / forwardLength;
+        listenerUp = up / upLength;
+
+        ma_engine_listener_set_direction(&engine, 0, listenerForward.x, listenerForward.y, listenerForward.z);
+        ma_engine_listener_set_world_up(&engine, 0, listenerUp.x, listenerUp.y, listenerUp.z);
+    }
+
+    void AudioManager::SetSpatialAttenuation(float minDistance, float maxDistance, float rolloff)
+    {
+        spatialMinDistance = std::max(0.0f, minDistance);
+        spatialMaxDistance = std::max(spatialMinDistance, maxDistance);
+        spatialRolloff = std::max(0.0f, rolloff);
     }
 
     void AudioManager::SetPanRangeUnits(float units)

@@ -291,6 +291,7 @@ set(WINDOWS_LINK_LIBRARIES
     ${CMAKE_SOURCE_DIR}/lib/libenet.a
     ole32
     uuid
+    shell32   # ShellExecute, used to open external links from in-game UI
 )
 
 

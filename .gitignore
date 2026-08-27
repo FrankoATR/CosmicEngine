@@ -90,3 +90,20 @@ lib/glad/*
 !lib/libassimp.a
 !lib/libzlibstatic.a
 !lib/libenet.a
+
+# ---- Assets de proyectos ----
+# Excluidos del repositorio por licencias de terceros. Ver los ASSETS-LICENSES.md
+# de cada proyecto: varias fuentes (CraftPix, Pixabay, SFX sin licencia declarada)
+# permiten usar los assets en el juego pero PROHIBEN redistribuir los archivos.
+# El repositorio publica solo codigo; los binarios de release si llevan los assets.
+projects/*/assets/
+
+# MiniScene es la excepcion: sus assets son prototipos hechos a mano por el equipo,
+# sin dependencias de terceros, asi que si se publican.
+!projects/MiniScene/assets/
+!projects/MiniScene/assets/**
+
+# ---- Estado local del editor / runtime ----
+imgui.ini
+config/
+CMakeUserPresets.json
