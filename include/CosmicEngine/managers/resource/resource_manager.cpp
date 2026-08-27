@@ -1235,8 +1235,6 @@ namespace CosmicEngine
 
         void ResourceManager::RenderRectangle(glm::vec2 point_1, glm::vec2 point_2, glm::vec2 pivot, glm::vec2 rotation, glm::vec3 color, float alpha, float lineWidth, bool filled, ViewType viewType)
         {
-            (void)filled;
-
             auto dynamic_temp = Get_Dynamic_VAO_VBO("COSMIC_Rectangle");
             std::vector<glm::vec3> vertices = {
                 glm::vec3(point_1, 0.0f),
@@ -1264,7 +1262,11 @@ namespace CosmicEngine
 
             glLineWidth(lineWidth);
             glBindVertexArray(dynamic_temp.first);
-            glDrawArrays(GL_LINE_LOOP, 0, static_cast<GLsizei>(vertices.size()));
+            // Honor `filled` exactly like the 2D-mode overload does: without this, 3D
+            // projects could never draw a solid rectangle, which silently broke every
+            // filled UI background (UISlider tracks/fills, UITextField/UITextArea
+            // backgrounds) into hollow outlines.
+            glDrawArrays(filled ? GL_TRIANGLE_FAN : GL_LINE_LOOP, 0, static_cast<GLsizei>(vertices.size()));
             glBindVertexArray(0);
 
             shapeShader->EndUse();
@@ -1284,14 +1286,12 @@ namespace CosmicEngine
 
         void ResourceManager::RenderTriangle(glm::vec3 point_1, glm::vec3 point_2, glm::vec3 point_3, glm::vec3 pivot, glm::vec3 rotation, glm::vec3 color, float alpha, float lineWidth, bool filled, ViewType viewType)
         {
-            RenderShape("COSMIC_Triangle", {point_1, point_2, point_3}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP, viewType);
+            RenderShape("COSMIC_Triangle", {point_1, point_2, point_3}, pivot, rotation, color, alpha, lineWidth, filled ? GL_TRIANGLE_FAN : GL_LINE_LOOP, viewType);
         }
 
         void ResourceManager::RenderRectangle(glm::vec3 point_1, glm::vec3 point_2, glm::vec3 pivot, glm::vec3 rotation, glm::vec3 color, float alpha, float lineWidth, bool filled, ViewType viewType)
         {
-            //RenderShape("COSMIC_Rectangle", {point_1, glm::vec3(point_2.x, point_1.y, 0.0f), point_2, glm::vec3(point_1.x, point_2.y, 0.0f)}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP, viewType);
-            RenderShape("COSMIC_Rectangle", {point_1, glm::vec3(point_2.x, point_1.y, point_1.z), point_2, glm::vec3(point_1.x, point_2.y, point_2.z)}, pivot, rotation, color, alpha, lineWidth, GL_LINE_LOOP, viewType);
-            //TODO ADAP VERSION VEC2 AND VEC3 SEPARETLY
+            RenderShape("COSMIC_Rectangle", {point_1, glm::vec3(point_2.x, point_1.y, point_1.z), point_2, glm::vec3(point_1.x, point_2.y, point_2.z)}, pivot, rotation, color, alpha, lineWidth, filled ? GL_TRIANGLE_FAN : GL_LINE_LOOP, viewType);
         }
 
 

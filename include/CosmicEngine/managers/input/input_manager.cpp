@@ -143,6 +143,11 @@ namespace CosmicEngine
         lastMouseY = 0.0f;
         firstMouseInput = true;
         disableMouse = false;
+        // Apply the flag to GLFW so the real cursor state matches what this manager
+        // reports. GameManager::init() disables the cursor outright in 3D mode, which
+        // left GetIsDisableMouse() claiming "visible" while it was actually hidden --
+        // so nothing ever restored it and menus opened with no cursor at all.
+        glfwSetInputMode(window, GLFW_CURSOR, disableMouse ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
         activeGamepadId = -1;
         activeJoystickUsesGamepadApi = false;
 

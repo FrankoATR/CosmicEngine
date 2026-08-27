@@ -106,6 +106,78 @@
         "COSMIC_PROJECT": "PuzzleRPG",
         "COSMIC_PROJECT_PROGRAM_ICON_PATH": "assets/textures/icon/icon.ico"
       }
+    },
+    {
+      "name": "windows-debug-nabazu",
+      "displayName": "Windows Debug - NaBazu",
+      "inherits": ["windows-debug-base"],
+      "binaryDir": "${sourceDir}/build/Windows/nabazu-debug",
+      "cacheVariables": {
+        "COSMIC_PROJECT": "NaBazu"
+      }
+    },
+    {
+      "name": "windows-release-nabazu",
+      "displayName": "Windows Release - NaBazu",
+      "inherits": ["windows-release-base"],
+      "binaryDir": "${sourceDir}/build/Windows/nabazu-release",
+      "cacheVariables": {
+        "COSMIC_PROJECT": "NaBazu"
+      }
+    },
+    {
+      "name": "linux-debug-nabazu",
+      "displayName": "Linux Debug - NaBazu",
+      "inherits": ["linux-debug-base"],
+      "binaryDir": "${sourceDir}/build/Linux/nabazu-debug",
+      "cacheVariables": {
+        "COSMIC_PROJECT": "NaBazu"
+      }
+    },
+    {
+      "name": "linux-release-nabazu",
+      "displayName": "Linux Release - NaBazu",
+      "inherits": ["linux-release-base"],
+      "binaryDir": "${sourceDir}/build/Linux/nabazu-release",
+      "cacheVariables": {
+        "COSMIC_PROJECT": "NaBazu"
+      }
+    },
+    {
+      "name": "windows-debug-miniscene",
+      "displayName": "Windows Debug - MiniScene",
+      "inherits": ["windows-debug-base"],
+      "binaryDir": "${sourceDir}/build/Windows/miniscene-debug",
+      "cacheVariables": {
+        "COSMIC_PROJECT": "MiniScene"
+      }
+    },
+    {
+      "name": "windows-release-miniscene",
+      "displayName": "Windows Release - MiniScene",
+      "inherits": ["windows-release-base"],
+      "binaryDir": "${sourceDir}/build/Windows/miniscene-release",
+      "cacheVariables": {
+        "COSMIC_PROJECT": "MiniScene"
+      }
+    },
+    {
+      "name": "linux-debug-miniscene",
+      "displayName": "Linux Debug - MiniScene",
+      "inherits": ["linux-debug-base"],
+      "binaryDir": "${sourceDir}/build/Linux/miniscene-debug",
+      "cacheVariables": {
+        "COSMIC_PROJECT": "MiniScene"
+      }
+    },
+    {
+      "name": "linux-release-miniscene",
+      "displayName": "Linux Release - MiniScene",
+      "inherits": ["linux-release-base"],
+      "binaryDir": "${sourceDir}/build/Linux/miniscene-release",
+      "cacheVariables": {
+        "COSMIC_PROJECT": "MiniScene"
+      }
     }
   ],
   "buildPresets": [
@@ -124,6 +196,38 @@
     {
       "name": "build-linux-release-puzzlerpg",
       "configurePreset": "linux-release-puzzlerpg"
+    },
+    {
+      "name": "build-windows-debug-nabazu",
+      "configurePreset": "windows-debug-nabazu"
+    },
+    {
+      "name": "build-windows-release-nabazu",
+      "configurePreset": "windows-release-nabazu"
+    },
+    {
+      "name": "build-linux-debug-nabazu",
+      "configurePreset": "linux-debug-nabazu"
+    },
+    {
+      "name": "build-linux-release-nabazu",
+      "configurePreset": "linux-release-nabazu"
+    },
+    {
+      "name": "build-windows-debug-miniscene",
+      "configurePreset": "windows-debug-miniscene"
+    },
+    {
+      "name": "build-windows-release-miniscene",
+      "configurePreset": "windows-release-miniscene"
+    },
+    {
+      "name": "build-linux-debug-miniscene",
+      "configurePreset": "linux-debug-miniscene"
+    },
+    {
+      "name": "build-linux-release-miniscene",
+      "configurePreset": "linux-release-miniscene"
     }
   ]
 }
