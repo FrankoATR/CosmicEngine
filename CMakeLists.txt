@@ -44,9 +44,11 @@ if(DEFINED COSMIC_PROJECT_PROGRAM_ICON_PATH)
         else()
             set(PROJECT_PROGRAM_ICON_RESOLVED "${COSMIC_PROJECT_DIR}/${COSMIC_PROJECT_PROGRAM_ICON_PATH}")
         endif()
-        if(DEFINED PROJECT_PROGRAM_ICON_RESOLVED)
+        if(EXISTS "${PROJECT_PROGRAM_ICON_RESOLVED}")
             file(TO_CMAKE_PATH "${PROJECT_PROGRAM_ICON_RESOLVED}" PROJECT_PROGRAM_ICON_CMAKE)
             set(PROGRAM_ICON "${PROJECT_PROGRAM_ICON_CMAKE}")
+        else()
+            message(WARNING "Program icon not found: ${PROJECT_PROGRAM_ICON_RESOLVED}. Building without a custom icon.")
         endif()
     endif()
 endif()
@@ -443,12 +445,22 @@ if (NOT WIN32)
     )
 endif()
 
-add_custom_target(copy_project_assets
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "${PROJECT_ASSET_OUTPUT_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_ASSET_OUTPUT_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${COSMIC_PROJECT_ASSET_DIR_RESOLVED}" "${PROJECT_ASSET_OUTPUT_DIR}"
-    COMMENT "Copying assets for project ${COSMIC_PROJECT}"
-)
+if(EXISTS "${COSMIC_PROJECT_ASSET_DIR_RESOLVED}")
+    add_custom_target(copy_project_assets
+        COMMAND ${CMAKE_COMMAND} -E remove_directory "${PROJECT_ASSET_OUTPUT_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_ASSET_OUTPUT_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${COSMIC_PROJECT_ASSET_DIR_RESOLVED}" "${PROJECT_ASSET_OUTPUT_DIR}"
+        COMMENT "Copying assets for project ${COSMIC_PROJECT}"
+    )
+else()
+    # Assets are not distributed for every project; build the binary anyway and
+    # leave an empty asset directory so the runtime layout stays consistent.
+    message(WARNING "Asset directory not found for project ${COSMIC_PROJECT}: ${COSMIC_PROJECT_ASSET_DIR_RESOLVED}. The project will compile, but it needs its assets to run.")
+    add_custom_target(copy_project_assets
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_ASSET_OUTPUT_DIR}"
+        COMMENT "No assets found for project ${COSMIC_PROJECT}; skipping asset copy"
+    )
+endif()
 
 add_dependencies(${PROJECT_NAME} copy_project_assets)
 

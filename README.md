@@ -2,7 +2,13 @@
 
 **CosmicEngine** es un framework de videojuegos en C++ con OpenGL que soporta modos 2D y 3D. Incluye gestores de escenas, renderizado por capas, iluminación dinámica, audio, entrada (teclado, ratón y gamepad), UI, red UDP y un sistema de recursos basado en claves.
 
-El proyecto de demostración incluido y compilable es **PuzzleRPG** (`projects/PuzzleRPG/`): un juego 2D top-down de puzzles cooperativos.
+El repositorio incluye tres proyectos de ejemplo dentro de `projects/`:
+
+- **PuzzleRPG**: juego 2D top-down de puzzles cooperativos con editor de niveles integrado.
+- **NaBazu**: rail shooter 3D con naves, misiles guiados y oleadas de enemigos.
+- **MiniScene**: escena minima (sprite, entrada de teclado, colision AABB y sonido) usada como ejemplo de partida y como base del experimento de comparacion documentado en el trabajo academico asociado.
+
+**Nota sobre assets:** los assets de PuzzleRPG y NaBazu no se distribuyen en este repositorio. Ambos proyectos configuran y compilan sin ellos (el build emite una advertencia y omite la copia de assets), pero necesitan sus assets para ejecutarse. **MiniScene incluye sus assets y compila y corre tal cual**, por lo que es el punto de partida recomendado para probar el framework.
 
 Este documento describe el flujo general para crear, configurar, compilar y ejecutar cualquier proyecto dentro de `projects/`.
 
