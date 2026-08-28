@@ -1,0 +1,10 @@
+# mode=scene,n=10000,struct=grid,cell=64,depth=5,node=4,seed=42,warmup_s=2,measure_s=5,config=2D,ticks=474,frames=4,measured_ticks=0,startup_ms=1586.29,glfw_first_draw_ms=1518.62,renderer=Intel(R) Graphics,gl=3.3.0 - Build 32.0.101.8724
+kind,value,extra
+startup_ms,1586.29,process_to_first_frame
+glfw_ms,1518.62,glfw_init_to_first_frame
+mem_ws_bytes,7.97491e+07,baseline
+mem_private_bytes,5.27278e+07,baseline
+mem_peak_ws_bytes,7.97491e+07,baseline
+mem_ws_bytes,8.30874e+07,after_spawn
+mem_private_bytes,5.59268e+07,after_spawn
+mem_peak_ws_bytes,8.30874e+07,after_spawn
