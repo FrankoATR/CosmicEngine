@@ -107,3 +107,10 @@ projects/*/assets/
 imgui.ini
 config/
 CMakeUserPresets.json
+
+# ---- Benchmark (CONIA 2026) generated/runtime files ----
+projects/Bench2D/assets/textures/noise_*.png
+projects/Bench2D/*.log
+projects/Bench2D/figures_partial/
+projects/Bench2D/results_pairtest_*.csv
+projects/Bench2D/analyze.py

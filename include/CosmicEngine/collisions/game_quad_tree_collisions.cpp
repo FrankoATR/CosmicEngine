@@ -213,6 +213,9 @@ namespace CosmicEngine
                 if (BodiesOverlap(leftBody, rightBody))
                 {
                     leftBody->OnCollision(rightBody, GetCollisionSide(leftBody, rightBody));
+                    // Notify the second body as well, so that both entities of a pair learn
+                    // about the contact (same semantics as the grid collision area).
+                    rightBody->OnCollision(leftBody, GetCollisionSide(rightBody, leftBody));
                 }
             }
         }
@@ -470,6 +473,9 @@ namespace CosmicEngine
                 if (BodiesOverlap(leftBody, rightBody))
                 {
                     leftBody->OnCollision(rightBody, GetCollisionSide(leftBody, rightBody));
+                    // Notify the second body as well, so that both entities of a pair learn
+                    // about the contact (same semantics as the grid collision area).
+                    rightBody->OnCollision(leftBody, GetCollisionSide(rightBody, leftBody));
                 }
             }
         }

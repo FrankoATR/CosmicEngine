@@ -246,7 +246,13 @@ namespace CosmicEngine
 			lastTime = currentTime;
 			accumulator += frameTime;
 
-			while (accumulator >= fixedDeltaTime)
+			// Spiral-of-death guard: never run more than kMaxCatchUpSteps fixed steps per
+			// frame. If the simulation still lags behind, the remaining backlog is dropped so
+			// that presentation keeps going (the game slows down instead of freezing).
+			constexpr int kMaxCatchUpSteps = 5;
+			int catchUpSteps = 0;
+
+			while (accumulator >= fixedDeltaTime && catchUpSteps < kMaxCatchUpSteps)
 			{
 				InputManager::GetInstance().update(window);
 				AudioManager::GetInstance().update();
@@ -255,6 +261,12 @@ namespace CosmicEngine
 				AnimationManager::GetInstance().update(fixedDeltaTime * (gameticks / 20.0f));
 				SceneManager::GetInstance().update(fixedDeltaTime * (gameticks / 20.0f));
 				accumulator -= fixedDeltaTime;
+				++catchUpSteps;
+			}
+
+			if (catchUpSteps == kMaxCatchUpSteps && accumulator >= fixedDeltaTime)
+			{
+				accumulator = 0.0; // drop the backlog we cannot recover
 			}
 
 			double targetFrameTime = 1.0 / targetFPS;

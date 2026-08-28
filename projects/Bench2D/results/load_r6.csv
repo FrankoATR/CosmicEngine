@@ -1,0 +1,23 @@
+# mode=load,n=1000,struct=grid,cell=64,depth=5,node=4,seed=42,warmup_s=2,measure_s=5,config=2D,ticks=0,frames=0,measured_ticks=0,startup_ms=1359.53,glfw_first_draw_ms=1289.68,renderer=NVIDIA GeForce RTX 5060 Laptop GPU/PCIe/SSE2,gl=3.3.0 NVIDIA 592.01
+kind,value,extra
+startup_ms,1359.53,process_to_first_frame
+glfw_ms,1289.68,glfw_init_to_first_frame
+load_ms,0.4386,noise_256_0
+load_ms,0.4056,noise_256_1
+load_ms,0.3355,noise_256_2
+load_ms,1.5176,noise_512_0
+load_ms,1.4178,noise_512_1
+load_ms,1.6729,noise_512_2
+load_ms,4.1328,noise_1024_0
+load_ms,4.3854,noise_1024_1
+load_ms,4.5101,noise_1024_2
+load_ms,17.919,noise_2048_0
+load_ms,20.3312,noise_2048_1
+load_ms,17.3091,noise_2048_2
+load_ms,3.0731,font_32
+mem_ws_bytes,1.41517e+08,baseline
+mem_private_bytes,2.8013e+08,baseline
+mem_peak_ws_bytes,1.7032e+08,baseline
+mem_ws_bytes,1.41521e+08,after_spawn
+mem_private_bytes,2.8013e+08,after_spawn
+mem_peak_ws_bytes,1.7032e+08,after_spawn

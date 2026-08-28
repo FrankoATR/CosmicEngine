@@ -1,0 +1,10 @@
+# mode=startup,n=1000,struct=grid,cell=64,depth=5,node=4,seed=42,warmup_s=2,measure_s=5,config=2D,ticks=0,frames=0,measured_ticks=0,startup_ms=1266.52,glfw_first_draw_ms=1199.63,renderer=NVIDIA GeForce RTX 5060 Laptop GPU/PCIe/SSE2,gl=3.3.0 NVIDIA 592.01
+kind,value,extra
+startup_ms,1266.52,process_to_first_frame
+glfw_ms,1199.63,glfw_init_to_first_frame
+mem_ws_bytes,1.12222e+08,baseline
+mem_private_bytes,1.81555e+08,baseline
+mem_peak_ws_bytes,1.12222e+08,baseline
+mem_ws_bytes,1.12226e+08,after_spawn
+mem_private_bytes,1.81555e+08,after_spawn
+mem_peak_ws_bytes,1.12226e+08,after_spawn
